@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'; 
+import { useState, useEffect, useMemo, useRef } from 'react'; 
 import { auth, db } from '../firebase'; 
 import { doc, updateDoc } from 'firebase/firestore';
 import { gerarTabuleiro } from '../utils/motorTabuleiro'; 
@@ -15,12 +15,29 @@ const getPatente = (nivel) => {
   return { titulo: 'Chefe de Plantão', cor: '#10b981' };
 };
 
+// ==========================================
+// 🛡️ A MÁSCARA DE CENSURA (Segurança Anti-Spoiler)
+// ==========================================
+const aplicarCensura = (textoDica, palavraSecreta) => {
+  if (!textoDica || !palavraSecreta) return textoDica;
+  
+  // Limpa a palavra secreta para encontrar o radical (evita que plurais vazem)
+  const palavraLimpa = palavraSecreta.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+  const radical = palavraLimpa.length > 4 ? palavraLimpa.substring(0, palavraLimpa.length - 2) : palavraLimpa;
+
+  return textoDica.split(' ').map(palavra => {
+    const pLimpa = palavra.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z]/g, '');
+    if (pLimpa.includes(radical) && pLimpa.length >= radical.length) return '***';
+    return palavra;
+  }).join(' ');
+};
+
 export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtual, usuario, dadosUsuario, setDadosUsuario }) {
   const meuUid = auth.currentUser?.uid || usuario?.uid || dadosUsuario?.uid;
 
   const [valores, setValores] = useState({}); 
   const [direcaoAtual, setDirecaoAtual] = useState('horizontal');
-  const [dica, setDica] = useState('A IA está preparando o seu plantão... 🧠');
+  const [dica, setDica] = useState('A IA está preparando seu plantão... 🧠');
   const [vitoria, setVitoria] = useState(false);
   const [jogoIniciado, setJogoIniciado] = useState(false); 
   const [chaveRecarregamento, setChaveRecarregamento] = useState(0); 
@@ -33,6 +50,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   const [ganhouPergaminho, setGanhouPergaminho] = useState(false);
   
   const [errosNaPartida, setErrosNaPartida] = useState(0);
+
   const [levelUps, setLevelUps] = useState([]);
   const cadeadoRecompensa = useRef(false);
 
@@ -65,60 +83,69 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   };
 
   const { gradePronta, limites } = useMemo(() => {
-    // Esse log invisível "engana" o inspetor do React, provando que a variável
-    // está sendo usada, e garante que o mapa seja refeito ao passar de fase!
     console.debug("Gerando novo plantão. Rodada:", chaveRecarregamento);
-    
-    return gerarTabuleiro(bancoDePalavras, chaveXP);
-  }, [bancoDePalavras, chaveXP, chaveRecarregamento]);
+    return gerarTabuleiro(bancoDePalavras, chaveXP, nivelAtual);
+  }, [bancoDePalavras, chaveXP, chaveRecarregamento, nivelAtual]); 
 
   const palavrasDoTabuleiro = useMemo(() => {
     const palavras = new Set();
     gradePronta.forEach(linha => {
       linha.forEach(c => {
-        if (c.palavraInicial) palavras.add(c.palavraInicial);
+        if (c.palavraInicialHorizontal) palavras.add(c.palavraInicialHorizontal);
+        if (c.palavraInicialVertical) palavras.add(c.palavraInicialVertical);
       });
     });
     return Array.from(palavras);
   }, [gradePronta]);
 
-  // 🔥 ERRO 2 CORRIGIDO: Envolvemos a função em um useCallback para o Linter não reclamar
-  const obterConfiguracaoDica = useCallback(() => {
-    const nomeDoutora = dadosUsuario?.username || dadosUsuario?.nome || 'Doutora';
-    let intensidade = "";
-    let tom = "";
-
-    if (nivelAtual === 0) {
-      intensidade = "EXTREMAMENTE FÁCIL. Este é o nível tutorial. Dê uma definição bem leiga e informe com qual letra a palavra começa, ou faça no estilo 'preencha a lacuna'. A dica deve ser óbvia e encorajadora.";
-      tom = "Você é um professor orientador muito gentil e acolhedor.";
-    } else if (nivelAtual <= 2) {
-      intensidade = "Fácil e direta. Foque no conceito anatômico ou médico básico sem pegadinhas. Não dê a resposta direta.";
-      tom = "Você é um professor orientador parceiro.";
-    } else if (nivelAtual <= 5) {
-      intensidade = "Moderada. Traga um cenário clínico rápido do dia a dia (ex: fratura comum, sintoma clássico, indicação cirúrgica).";
-      tom = "Você é um médico preceptor exigente.";
-    } else {
-      intensidade = "MUITO DIFÍCIL. Nível de prova de residência médica. Foque em detalhes obscuros, exceções ou inervações específicas.";
-      tom = "Você é um professor carrasco e rigoroso de medicina.";
-    }
-
-    return { nome: nomeDoutora, intensidade, tom };
-  }, [dadosUsuario, nivelAtual]);
+  const mapaDicasBasicas = useMemo(() => {
+    const mapa = {};
+    gradePronta.forEach(linha => {
+      linha.forEach(c => {
+        if (c.palavraInicialHorizontal && c.dicaBasicaHorizontal) {
+          mapa[c.palavraInicialHorizontal] = c.dicaBasicaHorizontal;
+        }
+        if (c.palavraInicialVertical && c.dicaBasicaVertical) {
+          mapa[c.palavraInicialVertical] = c.dicaBasicaVertical;
+        }
+      });
+    });
+    return mapa;
+  }, [gradePronta]);
 
   useEffect(() => {
     const preCarregarDicasEmLote = async () => {
       if (palavrasDoTabuleiro.length === 0) return;
       if (jogoIniciado) return; 
-      
-      const API_KEY = 'AIzaSyCuBiqm9Gv9s7VM5FpEtLtRpdu_JdPE2is'; 
-      const config = obterConfiguracaoDica();
-      
-      let contextoDaMateria = `área de ${materia}`;
-      if (materia === 'Patologia') contextoDaMateria = `Patologia (focando em biópsia e sintomas)`;
 
-      const prompt = `${config.tom} Ao dar a dica, dirija-se à aluna pelo nome: Dra. ${config.nome}. Crie uma dica para CADA palavra da lista abaixo (${contextoDaMateria}). 
-      Nível de dificuldade exigido: ${config.intensidade}.
-      Retorne APENAS um objeto JSON válido. A chave deve ser a palavra EXATAMENTE como enviei, e o valor deve ser a dica. Sem formatação markdown ou textos adicionais.
+      // 🔥 Fase 1: Níveis Iniciais com a Máscara Ativada
+      if (nivelAtual <= 2) {
+        const dicasEstaticas = {};
+        palavrasDoTabuleiro.forEach(palavra => {
+          let dicaOriginal = mapaDicasBasicas[palavra] || "Encontre esta estrutura.";
+          
+          // A magia da censura acontece aqui:
+          dicaOriginal = aplicarCensura(dicaOriginal, palavra);
+          
+          dicasEstaticas[palavra] = `${dicaOriginal} (Dica: Começa com a letra ${palavra[0]})`;
+        });
+        setDicasSalvas(prev => ({ ...prev, ...dicasEstaticas }));
+        setDica('Prontuários carregados! Clique em um número para começar.');
+        setJogoIniciado(true);
+        return; 
+      }
+      
+      // Fase 2: IA Rigorosa
+      setDica(`Consultando a IA (Nível ${nivelAtual})...`);
+      const API_KEY = 'AIzaSyCuBiqm9Gv9s7VM5FpEtLtRpdu_JdPE2is'; 
+      
+      const prompt = `Você é um gerador de dicas de palavras cruzadas para estudantes de medicina.
+      Crie uma dica para CADA palavra da lista abaixo.
+      REGRAS OBRIGATÓRIAS:
+      1. MÁXIMO de 15 palavras por dica.
+      2. É ESTRITAMENTE PROIBIDO usar a própria palavra ou seus radicais na dica.
+      3. Foque em correlação clínica, função ou sintoma.
+      Retorne APENAS um objeto JSON válido, onde a chave é a palavra exata e o valor é a dica.
       Lista: ${palavrasDoTabuleiro.join(', ')}`;
 
       try {
@@ -134,33 +161,40 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         
         const dicasGeradas = JSON.parse(textoResposta);
         setDicasSalvas(prev => ({ ...prev, ...dicasGeradas }));
-        setDica('Prontuários carregados! Clique em um número para começar a investigar.');
+        setDica('Dicas clínicas prontas! Clique em um número para começar.');
         setJogoIniciado(true); 
       } catch (erro) {
-        // 🔥 ERRO 1 CORRIGIDO: Agora usamos a variável 'erro' pedindo para o console printar ela
-        console.error("Erro na API de dicas:", erro);
-        setDica("Clique no número de uma palavra para ver a dica da IA.");
+        console.error("Erro na IA:", erro);
+        setDica("Clique no número de uma palavra para ver a dica.");
         setJogoIniciado(true); 
       }
     };
     preCarregarDicasEmLote();
-  }, [palavrasDoTabuleiro, materia, nivelAtual, jogoIniciado, obterConfiguracaoDica]); // 🔥 ERRO 2 CORRIGIDO: Adicionado aqui
+  }, [palavrasDoTabuleiro, nivelAtual, jogoIniciado, mapaDicasBasicas]);
 
   const gerarDica = async (termo) => {
     if (dicasSalvas[termo]) {
       setDica(dicasSalvas[termo]); 
       return; 
     }
-    setDica(`Consultando os arquivos do hospital (Nível ${nivelAtual})...`);
-    
-    const API_KEY = 'AIzaSyCuBiqm9Gv9s7VM5FpEtLtRpdu_JdPE2is'; 
-    const config = obterConfiguracaoDica();
-    
-    let contextoDaMateria = `para o termo anatômico/médico: ${termo}`;
-    
-    const prompt = `${config.tom} Dirija-se à aluna pelo nome: Dra. ${config.nome}. Crie uma dica para um jogo de palavras cruzadas ${contextoDaMateria}. 
-    Nível de dificuldade exigido: ${config.intensidade}. Seja direto. Retorne apenas o texto da dica.`;
 
+    if (nivelAtual <= 2) {
+       let dicaOriginal = mapaDicasBasicas[termo] || "Encontre esta estrutura.";
+       
+       // 🔥 Censura individual
+       dicaOriginal = aplicarCensura(dicaOriginal, termo);
+       
+       const dicaFormatada = `${dicaOriginal} (Dica: Começa com a letra ${termo[0]})`;
+       setDica(dicaFormatada);
+       setDicasSalvas(prev => ({ ...prev, [termo]: dicaFormatada }));
+       return;
+    }
+
+    setDica(`Consultando a IA (Nível ${nivelAtual})...`);
+    const API_KEY = 'AIzaSyCuBiqm9Gv9s7VM5FpEtLtRpdu_JdPE2is'; 
+    
+    const prompt = `Você é um gerador de dicas para estudantes de medicina. O termo é [${termo}]. Escreva uma dica clínica objetiva com NO MÁXIMO 15 palavras. É ESTRITAMENTE PROIBIDO usar a palavra '${termo}' ou seus radicais.`;
+    
     try {
         const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
             method: 'POST',
@@ -172,9 +206,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         setDica(novaDica);
         setDicasSalvas(prev => ({ ...prev, [termo]: novaDica }));
     } catch (erro) {
-        // 🔥 ERRO 1 CORRIGIDO DE NOVO: Printando o erro
-        console.error("Erro na API ao gerar dica individual:", erro);
-        setDica("Ops! Deu um erro de conexão com os arquivos do hospital.");
+        setDica("Ops! Deu um erro de conexão com a IA.");
     }
   };
 
@@ -223,8 +255,12 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
             linha.forEach(c => {
               if (!c.vazia && c.letraCerta !== ' ') numLetras++;
               if (c.numero) numPalavras++;
-              if (c.palavraInicial && c.palavraInicial.length > tamanhoMaiorPalavra) {
-                tamanhoMaiorPalavra = c.palavraInicial.length;
+              
+              if (c.palavraInicialHorizontal && c.palavraInicialHorizontal.length > tamanhoMaiorPalavra) {
+                tamanhoMaiorPalavra = c.palavraInicialHorizontal.length;
+              }
+              if (c.palavraInicialVertical && c.palavraInicialVertical.length > tamanhoMaiorPalavra) {
+                tamanhoMaiorPalavra = c.palavraInicialVertical.length;
               }
             });
           });
@@ -248,7 +284,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           }
 
           const missoesAtuais = dadosUsuario.missoesDiarias?.missoes || [];
-          
           const missoesAtualizadas = missoesAtuais.map(missao => {
             if (missao.concluida) return missao; 
             let novoProgresso = missao.progressoAtual || 0;
@@ -260,18 +295,10 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
           const statsAntigas = dadosUsuario.estatisticas?.[chaveXP] || { partidas: 0, tempo: 0, letras: 0 };
           const recordeTempo = statsAntigas.melhorTempo ? Math.min(statsAntigas.melhorTempo, tempoDecorrido) : tempoDecorrido;
-          
-          const novasStatsLocal = {
-            partidas: statsAntigas.partidas + 1,
-            tempo: statsAntigas.tempo + tempoDecorrido,
-            letras: statsAntigas.letras + numLetras,
-            melhorTempo: recordeTempo
-          };
+          const novasStatsLocal = { partidas: statsAntigas.partidas + 1, tempo: statsAntigas.tempo + tempoDecorrido, letras: statsAntigas.letras + numLetras, melhorTempo: recordeTempo };
 
           const hoje = new Date().toISOString().split('T')[0];
-          const statsGerais = dadosUsuario.estatisticasGerais || {
-            streakAtual: 0, maiorStreak: 0, ultimoDia: '', diasSeguidos: 0, errosTotais: 0, maiorPalavra: 0, historico: []
-          };
+          const statsGerais = dadosUsuario.estatisticasGerais || { streakAtual: 0, maiorStreak: 0, ultimoDia: '', diasSeguidos: 0, errosTotais: 0, maiorPalavra: 0, historico: [] };
 
           let novosDiasSeguidos = statsGerais.diasSeguidos;
           if (statsGerais.ultimoDia !== hoje) {
@@ -286,22 +313,10 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           const novosErrosTotais = (statsGerais.errosTotais || 0) + errosNaPartida;
 
           const novoHistorico = [...(statsGerais.historico || []), {
-            data: hoje,
-            materia: subMateria,
-            tempo: tempoDecorrido,
-            erros: errosNaPartida,
-            letrasCorretas: numLetras
+            data: hoje, materia: subMateria, tempo: tempoDecorrido, erros: errosNaPartida, letrasCorretas: numLetras
           }].slice(-30);
 
-          const novasStatsGerais = {
-            streakAtual: novaStreak,
-            maiorStreak: novaMaiorStreak,
-            ultimoDia: hoje,
-            diasSeguidos: novosDiasSeguidos,
-            errosTotais: novosErrosTotais,
-            maiorPalavra: novaMaiorPalavra,
-            historico: novoHistorico
-          };
+          const novasStatsGerais = { streakAtual: novaStreak, maiorStreak: novaMaiorStreak, ultimoDia: hoje, diasSeguidos: novosDiasSeguidos, errosTotais: novosErrosTotais, maiorPalavra: novaMaiorPalavra, historico: novoHistorico };
 
           let oldSomaNiveis = 0;
           Object.keys(dadosUsuario.xpTopicos || {}).forEach(k => {
@@ -324,14 +339,11 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           const newPatente = getPatente(newSomaNiveis);
 
           let alertasNivel = [];
-          if (newPatente.titulo !== oldPatente.titulo && oldSomaNiveis > 0) {
-            alertasNivel.push({ isPromocao: true, nome: 'PROMOÇÃO DE CARREIRA', antigo: oldPatente.titulo, novo: newPatente.titulo, icone: '🌟', cor: newPatente.cor });
-          } else if (newSomaNiveis > oldSomaNiveis && oldSomaNiveis > 0) {
-            alertasNivel.push({ nome: 'Nível Global', antigo: oldSomaNiveis, novo: newSomaNiveis, icone: '🌍' });
-          }
-          if (newSubLevel > oldSubLevel && oldSubLevel > 0) {
-            alertasNivel.push({ nome: subMateria, antigo: oldSubLevel, novo: newSubLevel, icone: '⭐' });
-          }
+          if (newPatente.titulo !== oldPatente.titulo && oldSomaNiveis > 0) alertasNivel.push({ isPromocao: true, nome: 'PROMOÇÃO DE CARREIRA', antigo: oldPatente.titulo, novo: newPatente.titulo, icone: '🌟', cor: newPatente.cor });
+          else if (newSomaNiveis > oldSomaNiveis && oldSomaNiveis > 0) alertasNivel.push({ nome: 'Nível Global', antigo: oldSomaNiveis, novo: newSomaNiveis, icone: '🌍' });
+          
+          if (newSubLevel > oldSubLevel && oldSubLevel > 0) alertasNivel.push({ nome: subMateria, antigo: oldSubLevel, novo: newSubLevel, icone: '⭐' });
+          
           if (alertasNivel.length > 0) {
             setLevelUps(alertasNivel);
             setTimeout(() => setLevelUps([]), 8000); 
@@ -349,20 +361,16 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
               "missoesDiarias.missoes": missoesAtualizadas
             });
             setDadosUsuario(prev => ({ 
-              ...prev, 
-              pontuacaoTotal: novoXPGlobal, 
-              xpTopicos: { ...prev.xpTopicos, [chaveXP]: newSubXP },
+              ...prev, pontuacaoTotal: novoXPGlobal, xpTopicos: { ...prev.xpTopicos, [chaveXP]: newSubXP },
               estatisticas: { ...prev.estatisticas, [chaveXP]: novasStatsLocal },
-              estatisticasGerais: novasStatsGerais,
-              missoesDiarias: { ...prev.missoesDiarias, missoes: missoesAtualizadas }
+              estatisticasGerais: novasStatsGerais, missoesDiarias: { ...prev.missoesDiarias, missoes: missoesAtualizadas }
             }));
-          } catch (error) { console.error("Erro ao salvar os dados da partida:", error); }
+          } catch (error) { console.error("Erro ao salvar os dados:", error); }
         }
       };
       calcularE_SalvarXP();
     } else if (!todasCertas && vitoria) {
-      setVitoria(false); 
-      cadeadoRecompensa.current = false; 
+      setVitoria(false); cadeadoRecompensa.current = false; 
     }
   }, [valores, gradePronta, vitoria, usuario, dadosUsuario, setDadosUsuario, nivelAtual, tempoDecorrido, chaveXP, xpAtualSubtopico, materia, subMateria, materiaBlindada, errosNaPartida, meuUid]);
 
@@ -383,7 +391,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   };
 
   const handleFocus = (celula) => {
-    if (celula.palavraInicial) gerarDica(celula.palavraInicial);
     let novaDirecao = direcaoAtual;
     if (celula.pertenceHorizontal && celula.pertenceVertical) {
       if (direcaoAtual === 'horizontal' && celula.pertenceHorizontal) novaDirecao = 'horizontal';
@@ -391,8 +398,23 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       else novaDirecao = 'horizontal';
     } else if (celula.pertenceHorizontal) novaDirecao = 'horizontal';
     else if (celula.pertenceVertical) novaDirecao = 'vertical';
+    
     setDirecaoAtual(novaDirecao);
     atualizarDestaqueVisual(celula.linha, celula.coluna, novaDirecao);
+
+    const idDaPalavra = novaDirecao === 'horizontal' ? celula.idHorizontal : celula.idVertical;
+    let palavraDaDica = null;
+    gradePronta.forEach(linha => {
+      linha.forEach(c => {
+        if (novaDirecao === 'horizontal' && c.idHorizontal === idDaPalavra && c.inicioHorizontal) {
+           palavraDaDica = c.palavraInicialHorizontal;
+        }
+        if (novaDirecao === 'vertical' && c.idVertical === idDaPalavra && c.inicioVertical) {
+           palavraDaDica = c.palavraInicialVertical;
+        }
+      });
+    });
+    if (palavraDaDica) gerarDica(palavraDaDica);
   };
 
   const handleClick = (celula) => {
@@ -400,22 +422,32 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       const direcaoInvertida = direcaoAtual === 'horizontal' ? 'vertical' : 'horizontal';
       setDirecaoAtual(direcaoInvertida);
       atualizarDestaqueVisual(celula.linha, celula.coluna, direcaoInvertida);
+
+      const idDaPalavra = direcaoInvertida === 'horizontal' ? celula.idHorizontal : celula.idVertical;
+      let palavraDaDica = null;
+      gradePronta.forEach(linha => {
+        linha.forEach(c => {
+          if (direcaoInvertida === 'horizontal' && c.idHorizontal === idDaPalavra && c.inicioHorizontal) {
+             palavraDaDica = c.palavraInicialHorizontal;
+          }
+          if (direcaoInvertida === 'vertical' && c.idVertical === idDaPalavra && c.inicioVertical) {
+             palavraDaDica = c.palavraInicialVertical;
+          }
+        });
+      });
+      if (palavraDaDica) gerarDica(palavraDaDica);
     }
   };
 
   const handleInput = (e, l, c) => {
     const val = e.target.value.toUpperCase();
-    
     const letraCorretaDaCelula = gradePronta[l][c].letraCerta.toUpperCase();
-    if (val !== '' && val !== letraCorretaDaCelula) {
-      setErrosNaPartida(prev => prev + 1);
-    }
+    if (val !== '' && val !== letraCorretaDaCelula) setErrosNaPartida(prev => prev + 1);
 
     setValores(prev => ({ ...prev, [`${l}-${c}`]: val })); 
     
     if (val !== '') {
-      let nextL = l;
-      let nextC = c;
+      let nextL = l; let nextC = c;
       while (true) {
         if (direcaoAtual === 'vertical') nextL++; else nextC++;
         const linhaDaMatriz = gradePronta[nextL];
@@ -427,18 +459,14 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         if (idDaProxima !== idDaAtual) break; 
         if (proximaCelula.letraCerta === ' ') continue;
         const inputFuturo = document.getElementById(`input-${nextL}-${nextC}`);
-        if (inputFuturo) {
-          inputFuturo.focus();
-          break; 
-        }
+        if (inputFuturo) { inputFuturo.focus(); break; }
       }
     }
   };
 
   const handleKeyDown = (e, l, c) => {
     if (e.key === 'Backspace' && !valores[`${l}-${c}`]) {
-      let prevL = l;
-      let prevC = c;
+      let prevL = l; let prevC = c;
       while (true) {
         if (direcaoAtual === 'vertical') prevL--; else prevC--;
         const linhaDaMatriz = gradePronta[prevL];
@@ -449,39 +477,22 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         const idDaAtual = direcaoAtual === 'horizontal' ? gradePronta[l][c].idHorizontal : gradePronta[l][c].idVertical;
         if (idDaAnterior !== idDaAtual) break;
         if (celulaAnterior.letraCerta === ' ') continue;
-        document.getElementById(`input-${prevL}-${prevC}`)?.focus(); 
-        break;
+        document.getElementById(`input-${prevL}-${prevC}`)?.focus(); break;
       }
     }
   };
 
   const avancarParaProximoNivel = () => {
-    setValores({}); 
-    setVitoria(false); 
-    setJogoIniciado(false); 
-    setCelulasDestacadas([]); 
-    cadeadoRecompensa.current = false; 
-    setGanhouPergaminho(false);
-    setLevelUps([]); 
-    setDicasSalvas({}); 
-    setTempoDecorrido(0); 
-    setErrosNaPartida(0); 
-    setRelatorioXP(null);
-    setDica('A IA está preparando os seus prontuários... 🧠');
+    setValores({}); setVitoria(false); setJogoIniciado(false); setCelulasDestacadas([]); 
+    cadeadoRecompensa.current = false; setGanhouPergaminho(false); setLevelUps([]); 
+    setDicasSalvas({}); setTempoDecorrido(0); setErrosNaPartida(0); setRelatorioXP(null);
+    setDica('A IA está preparando seu plantão... 🧠');
     setChaveRecarregamento(prev => prev + 1); 
   };
 
   return (
     <div className="tela-container" style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '15px 20px', position: 'relative' }}>
-      
-      <style>
-        {`
-          @keyframes slideInUpLeft {
-            0% { transform: translateX(-100%) scale(0.8); opacity: 0; }
-            100% { transform: translateX(0) scale(1); opacity: 1; }
-          }
-        `}
-      </style>
+      <style>{`@keyframes slideInUpLeft { 0% { transform: translateX(-100%) scale(0.8); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }`}</style>
 
       {levelUps.length > 0 && (
         <div style={{ position: 'fixed', bottom: '40px', left: '40px', display: 'flex', flexDirection: 'column', gap: '20px', zIndex: 9999 }}>
@@ -514,7 +525,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         </div>
       )}
 
-      {/* CABEÇALHO */}
       <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '800px', alignItems: 'center', marginBottom: '10px', flexShrink: 0 }}>
         <button className="botao-voltar" onClick={() => setTelaAtual('menu')} style={{ margin: 0 }}>⬅ Sair</button>
         <div style={{ fontWeight: 'bold', fontSize: '1.5rem', color: vitoria ? '#2ed573' : (jogoIniciado ? '#ff4757' : '#94a3b8'), backgroundColor: '#fff', padding: '5px 20px', borderRadius: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>

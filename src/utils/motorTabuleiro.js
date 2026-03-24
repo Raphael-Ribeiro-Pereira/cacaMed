@@ -60,15 +60,23 @@ const tentarPosicionar = (matrizAtual, palavras, indexAtual) => {
           ...novaMatriz[lAtual][cAtual],
           vazia: false,
           letraCerta: palavra[i],
-          // A numeração provisória ainda fica aqui, mas será sobrescrita no final
           numero: i === 0 && !novaMatriz[lAtual][cAtual].numero ? itemAtual.numero : novaMatriz[lAtual][cAtual].numero,
-          palavraInicial: i === 0 ? palavra : novaMatriz[lAtual][cAtual].palavraInicial,
+          
+          // 🔥 MUDANÇA: Memória dividida em Horizontal e Vertical!
+          palavraInicialHorizontal: (i === 0 && encaixe.direcao === 'horizontal') ? palavra : novaMatriz[lAtual][cAtual].palavraInicialHorizontal,
+          palavraInicialVertical: (i === 0 && encaixe.direcao === 'vertical') ? palavra : novaMatriz[lAtual][cAtual].palavraInicialVertical,
+          
           pertenceHorizontal: encaixe.direcao === 'horizontal' ? true : novaMatriz[lAtual][cAtual].pertenceHorizontal,
           pertenceVertical: encaixe.direcao === 'vertical' ? true : novaMatriz[lAtual][cAtual].pertenceVertical,
           inicioHorizontal: (i === 0 && encaixe.direcao === 'horizontal') ? true : novaMatriz[lAtual][cAtual].inicioHorizontal,
           inicioVertical: (i === 0 && encaixe.direcao === 'vertical') ? true : novaMatriz[lAtual][cAtual].inicioVertical,
           idHorizontal: encaixe.direcao === 'horizontal' ? idIdentificadorDaPalavra : novaMatriz[lAtual][cAtual].idHorizontal,
           idVertical: encaixe.direcao === 'vertical' ? idIdentificadorDaPalavra : novaMatriz[lAtual][cAtual].idVertical,
+          
+          // 🔥 MUDANÇA: Dicas e Dificuldades também ganham memórias separadas
+          dicaBasicaHorizontal: (i === 0 && encaixe.direcao === 'horizontal') ? itemAtual.dicaBasica : novaMatriz[lAtual][cAtual].dicaBasicaHorizontal,
+          dicaBasicaVertical: (i === 0 && encaixe.direcao === 'vertical') ? itemAtual.dicaBasica : novaMatriz[lAtual][cAtual].dicaBasicaVertical,
+          dificuldade: i === 0 ? itemAtual.dificuldade : novaMatriz[lAtual][cAtual].dificuldade
         };
         if (encaixe.direcao === 'horizontal') cAtual++; else lAtual++;
       }
@@ -83,12 +91,18 @@ const tentarPosicionar = (matrizAtual, palavras, indexAtual) => {
   return false; 
 };
 
-export const gerarTabuleiro = (bancoDePalavras, materia) => {
+export const gerarTabuleiro = (bancoDePalavras, materia, nivelAtual = 0) => {
   let tamanhoMatriz = 16;
   if (bancoDePalavras && materia) {
     const palavrasOriginais = bancoDePalavras[materia];
     if (palavrasOriginais && palavrasOriginais.length > 0) {
-      const palavrasDaFase = [...palavrasOriginais].sort(() => Math.random() - 0.5).slice(0, 15);
+      
+      const limiteDificuldade = nivelAtual + 1;
+      const palavrasFiltradas = palavrasOriginais.filter(p => p.dificuldade <= limiteDificuldade);
+      const bancoParaSortear = palavrasFiltradas.length >= 6 ? palavrasFiltradas : palavrasOriginais;
+
+      const palavrasDaFase = [...bancoParaSortear].sort(() => Math.random() - 0.5).slice(0, 15);
+      
       let tamanhoMaiorPalavra = 0;
       palavrasDaFase.forEach(item => {
         if (item.palavra.length > tamanhoMaiorPalavra) tamanhoMaiorPalavra = item.palavra.length;
@@ -106,11 +120,6 @@ export const gerarTabuleiro = (bancoDePalavras, materia) => {
       
       const matrizFinal = tentarPosicionar(matrizVazia, palavrasDaFase, 0) || matrizVazia;
       
-      // ==========================================
-      // A MÁGICA NOVA: RENNUMERAÇÃO SEQUENCIAL
-      // Varremos a matriz de cima pra baixo, da esquerda pra direita.
-      // Se a célula for o Início de alguma palavra, ela ganha um número novo e perfeito!
-      // ==========================================
       let contadorSequencial = 1;
       for (let l = 0; l < tamanhoMatriz; l++) {
         for (let c = 0; c < tamanhoMatriz; c++) {
@@ -120,14 +129,12 @@ export const gerarTabuleiro = (bancoDePalavras, materia) => {
               celula.numero = contadorSequencial;
               contadorSequencial++;
             } else {
-              // Limpa números velhos de letras do meio da palavra
               celula.numero = null; 
             }
           }
         }
       }
       
-      // Calculando os limites para renderização
       let minRow = tamanhoMatriz, maxRow = 0;
       let minCol = tamanhoMatriz, maxCol = 0;
       let temPalavra = false;

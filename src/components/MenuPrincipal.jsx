@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase'; // 🔥 Erro 1 corrigido: Removido o 'auth' daqui
+import { auth, db } from '../firebase'; // 🔥 O auth voltou para garantir a identidade!
 
 const TEMPLATES_MISSOES = [
   { id: 'cruzadinha_1', tipo: 'cruzadinha', meta: 1, titulo: 'Plantonista Novato', descricao: 'Conclua 1 fase de Cruzadinha.', recompensaXP: 50 },
@@ -22,11 +22,9 @@ const obterTituloEpico = (materia) => {
   return { titulo: 'Bisturi de Ouro', emoji: '🩺', cor: '#fbbf24' };
 };
 
-// 🔥 Erro 2 corrigido: Inserido o 'usuario' nas propriedades
 export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual }) {
-  
-  // 🔥 Erro 3 corrigido: Leitura de UID à prova de falhas
-  const meuUid = usuario?.uid || dadosUsuario?.uid; 
+  // 🔥 ID blindado com o auth
+  const meuUid = auth.currentUser?.uid || usuario?.uid || dadosUsuario?.uid; 
 
   const nomeUsuario = dadosUsuario?.username || dadosUsuario?.nome || 'Usuário';
   const infoPerfil = String(dadosUsuario?.titulo || dadosUsuario?.genero || dadosUsuario?.sexo || '').toLowerCase().trim();
@@ -39,6 +37,9 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual }) {
   const [minhasPartidasSemana, setMinhasPartidasSemana] = useState(0);
   const [missoesDeHoje, setMissoesDeHoje] = useState([]);
 
+  // ==========================================
+  // 🔥 RESTAURAÇÃO DO NÍVEL GLOBAL (O Nível 37 voltou!)
+  // ==========================================
   let somaNiveis = 0;
   let maxXp = -1;
   let materiaEspecialista = 'Clínico Geral';
@@ -54,6 +55,7 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual }) {
       emojiEspecialista = obterTituloEpico(materiaEspecialista).emoji;
     }
   });
+  
   const nivelGlobal = somaNiveis;
 
   const getPatente = (nivel) => {
@@ -66,10 +68,14 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual }) {
   };
   const statusPatente = getPatente(nivelGlobal);
 
-  const xpNivelAtualBase = nivelGlobal <= 1 ? 0 : Math.pow(nivelGlobal - 1, 2) * 1000;
-  const xpProximoNivelBase = nivelGlobal === 0 ? 1 : Math.pow(nivelGlobal, 2) * 1000;
-  const xpGlobal = dadosUsuario?.pontuacaoTotal || 0;
-  const progressoPorcentagem = Math.min(100, Math.max(0, ((xpGlobal - xpNivelAtualBase) / (xpProximoNivelBase - xpNivelAtualBase)) * 100));
+  // 🔥 A Barra de XP agora mostra a evolução da Especialidade dela, assim a barra nunca trava!
+  let progressoPorcentagem = 0;
+  if (maxXp > 0) {
+     const nivelEspecialidade = Math.floor(Math.sqrt(maxXp / 1000)) + 1;
+     const xpNivelAtualBase = Math.pow(nivelEspecialidade - 1, 2) * 1000;
+     const xpProximoNivelBase = Math.pow(nivelEspecialidade, 2) * 1000;
+     progressoPorcentagem = Math.min(100, Math.max(0, ((maxXp - xpNivelAtualBase) / (xpProximoNivelBase - xpNivelAtualBase)) * 100));
+  }
 
   useEffect(() => {
     const buscarDestaques = async () => {
@@ -123,9 +129,10 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual }) {
   }, [dadosUsuario, meuUid]);
 
   useEffect(() => {
+    // 🔥 Agora com o meuUid garantido, as missões vão renderizar!
     if (!dadosUsuario || !meuUid) return;
 
-    const hoje = new Date().toLocaleDateString('pt-BR'); 
+    const hoje = new Date().toISOString().split('T')[0]; 
     const missoesSalvas = dadosUsuario.missoesDiarias || {};
 
     if (missoesSalvas.data !== hoje || !missoesSalvas.missoes || missoesSalvas.missoes.length === 0) {
@@ -157,7 +164,6 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual }) {
     novasMissoes[indexMissao].resgatada = true;
     setMissoesDeHoje(novasMissoes);
 
-    // 🔥 Erro 4 corrigido: Proteção do cálculo de XP
     const novoXPGlobal = (dadosUsuario?.pontuacaoTotal || 0) + missao.recompensaXP;
 
     try {

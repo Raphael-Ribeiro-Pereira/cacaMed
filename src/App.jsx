@@ -12,7 +12,7 @@ import Jogo from './components/Jogo';
 import Ranking from './components/Ranking';
 import Estatisticas from './components/Estatisticas';
 
-// 🔥 AS DUAS TELAS NOVAS IMPORTADAS AQUI:
+// TELAS NOVAS IMPORTADAS AQUI:
 import SelecaoFlashcards from './components/SelecaoFlashcards';
 import FlashCards from './components/FlashCards'; 
 
@@ -27,7 +27,7 @@ function App() {
   const [materia, setMateria] = useState('');
   const [subMateria, setSubMateria] = useState('');
 
-  // 🔥 ESTADOS DO BARALHO DE FLASHCARDS
+  // ESTADOS DO BARALHO DE FLASHCARDS
   const [baralhoAtivo, setBaralhoAtivo] = useState(null);
   const [areaFlashcard, setAreaFlashcard] = useState(''); 
   const [dificuldadeFlashcard, setDificuldadeFlashcard] = useState('medio');
@@ -62,7 +62,8 @@ function App() {
         let contadorPalavras = 1;
 
         for (let i = 1; i < linhas.length; i++) {
-          const colunas = linhas[i].split(',');
+          // Usamos uma regex simples para evitar que vírgulas no meio das descrições quebrem a planilha
+          const colunas = linhas[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
           
           if (colunas[0] && colunas[0].trim() !== '' && colunas[1] && colunas[1].trim() !== '') {
             const palavraSegura = colunas[0]
@@ -75,6 +76,11 @@ function App() {
             const materiaBruta = colunas[1].trim();
             const subMateriaBruta = colunas[2] && colunas[2].trim() !== '' ? colunas[2].trim() : 'Geral';
 
+            // 🔥 AS NOVAS COLUNAS SENDO LIDAS AQUI:
+            const dificuldadeStr = colunas[3] ? colunas[3].replace(/"/g, '').trim() : '0';
+            const dificuldade = isNaN(parseInt(dificuldadeStr)) ? 0 : parseInt(dificuldadeStr);
+            const dicaBasica = colunas[4] ? colunas[4].replace(/"/g, '').trim() : '';
+
             const materiaBlindada = materiaBruta.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
             const subMateriaBlindada = subMateriaBruta.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
 
@@ -85,7 +91,9 @@ function App() {
             bancoFormatado[chaveBanco].push({ 
               palavra: palavraSegura, 
               numero: contadorPalavras,
-              palavraComEspaco: colunas[0].trim() 
+              palavraComEspaco: colunas[0].replace(/"/g, '').trim(),
+              dificuldade: dificuldade, // 🔥 Salva no cache do jogo
+              dicaBasica: dicaBasica    // 🔥 Salva no cache do jogo
             });
             contadorPalavras++;
           }
@@ -104,7 +112,6 @@ function App() {
     setTelaAtual('jogo');
   };
 
-  // 🔥 FUNÇÃO QUE INICIA O FLASHCARD ATUALIZADA
   const iniciarFlashcards = (deck, areaNome, dificuldadeDesejada) => {
     setBaralhoAtivo(deck);
     setAreaFlashcard(areaNome);
@@ -119,7 +126,7 @@ function App() {
   return (
     <>
       {telaAtual === 'login' && <Login />}
-      {telaAtual === 'menu' && usuario && <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
+      {telaAtual === 'menu' && usuario && <MenuPrincipal dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'perfil' && usuario && <PerfilUsuario usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       
       {/* CRUZADINHAS */}
@@ -132,7 +139,6 @@ function App() {
       {telaAtual === 'ranking' && usuario && <Ranking dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'estatisticas' && usuario && <Estatisticas dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       
-      {/* 🔥 AS TELAS DOS FLASHCARDS COM TODOS OS PARÂMETROS: */}
       {telaAtual === 'selecaoFlashcards' && usuario && <SelecaoFlashcards setTelaAtual={setTelaAtual} iniciarFlashcards={iniciarFlashcards} />}
       {telaAtual === 'flashcards' && usuario && <FlashCards baralho={baralhoAtivo} area={areaFlashcard} dificuldade={dificuldadeFlashcard} setTelaAtual={setTelaAtual} usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />}
     </>
