@@ -1,236 +1,265 @@
-import { useState } from 'react';
-import { auth, db } from '../firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import React, { useState, useEffect } from "react";
+import { Mail, Lock, Eye, EyeOff, Stethoscope } from "lucide-react";
+import { motion, useAnimation } from "framer-motion";
+import { auth } from '../firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
-export default function Login() {
-  const [isLogin, setIsLogin] = useState(true);
-  
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  
-  const [username, setUsername] = useState('');
-  const [faculdade, setFaculdade] = useState('');
-  const [genero, setGenero] = useState('feminino'); 
-  
-  const [dataNascimento, setDataNascimento] = useState('');
-  const [periodo, setPeriodo] = useState('');
-  const [materiaPreferida, setMateriaPreferida] = useState('');
-  
-  const [erro, setErro] = useState('');
-  const [carregando, setCarregando] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErro('');
-    setCarregando(true);
-
-    try {
-      if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, senha);
-      } else {
-        if (!username || !faculdade || !dataNascimento || !periodo || !materiaPreferida) {
-          setErro("Por favor, preencha todos os campos do prontuário.");
-          setCarregando(false);
-          return;
-        }
-
-        const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-        const user = userCredential.user;
-
-        const fotoEscolhida = genero === 'feminino' ? '/fem.png' : '/masc.png';
-
-        await setDoc(doc(db, "usuarios", user.uid), {
-          username: username,
-          email: email,
-          faculdade: faculdade,
-          dataNascimento: dataNascimento,
-          periodo: periodo,
-          materiaPreferida: materiaPreferida,
-          genero: genero,
-          fotoUrl: fotoEscolhida, 
-          pontuacaoTotal: 0,
-          niveis: {}
-        });
+function EcgPulse() {
+  const controls = useAnimation();
+  useEffect(() => {
+    let mounted = true;
+    const run = async () => {
+      while (mounted) {
+        const r = Math.random() * -25 - 15;
+        const s = Math.random() * 15 + 15;
+        const flat = "M 0 15 L 10 15 L 15 15 L 18 15 L 22 15 L 25 15 L 30 15 L 40 15";
+        const beat = `M 0 15 L 10 15 L 12 12 L 15 15 L 18 ${r} L 22 ${s} L 25 12 L 28 15 L 30 15 L 40 15`;
+        await controls.start({ d: beat, transition: { duration: 0.12, ease: "easeOut" } });
+        await controls.start({ d: flat, transition: { duration: 0.2, ease: "easeInOut" } });
+        await new Promise(r => setTimeout(r, Math.random() * 700 + 500));
       }
+    };
+    run();
+    return () => { mounted = false; };
+  }, [controls]);
+
+  return (
+    <svg viewBox="0 0 40 30" className="w-12 h-6 text-cyan-500 drop-shadow-[0_0_6px_rgba(6,182,212,0.7)]" preserveAspectRatio="none">
+      <motion.path stroke="currentColor" strokeWidth="1.5" fill="none" animate={controls} initial={{ d: "M 0 15 L 40 15" }} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export default function Login({ setTelaAtual }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [erro, setErro] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setErro("");
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      console.error(error);
-      if (error.code === 'auth/email-already-in-use') setErro('Esse e-mail já está em uso!');
-      else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') setErro('E-mail ou senha incorretos.');
-      else if (error.code === 'auth/weak-password') setErro('A senha deve ter pelo menos 6 caracteres.');
-      else setErro('Ocorreu um erro. Tente novamente.');
+      setErro("Credenciais inválidas ou Doutor não encontrado no sistema.");
+    } finally {
+      setLoading(false);
     }
-    
-    setCarregando(false);
   };
 
   return (
-    <div className="tela-container" style={{ justifyContent: 'center', minHeight: '100vh', padding: '20px' }}>
-      {/* MÁGICA AQUI: maxWidth 550px e minWidth 350px para garantir que não encolha demais */}
-      <div style={{ backgroundColor: 'white', padding: '45px 40px', borderRadius: '24px', boxShadow: '0 12px 40px rgba(0,0,0,0.12)', width: '100%', maxWidth: '550px', minWidth: '350px', maxHeight: '90vh', overflowY: 'auto' }}>
-        
-        <h1 style={{ textAlign: 'center', color: '#2c3e50', fontSize: '2.8rem', margin: '0 0 10px 0', letterSpacing: '-1px' }}>CAÇA MED</h1>
-        <p style={{ textAlign: 'center', color: '#7f8fa6', marginBottom: '35px', fontSize: '1.1rem' }}>
-          {isLogin ? 'Bem-vindo de volta ao plantão!' : 'Preencha seu Prontuário Médico'}
-        </p>
+    <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-hidden flex items-center justify-center selection:bg-cyan-500/30">
+      
+      <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)`, backgroundSize: '28px 28px' }} />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.06)_0%,#0B1120_70%)]" />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_30%,#0B1120_100%)]" />
 
-        {erro && <div style={{ backgroundColor: '#ffefef', color: '#ff4757', padding: '15px', borderRadius: '10px', marginBottom: '25px', textAlign: 'center', fontWeight: 'bold', fontSize: '1.05rem' }}>{erro}</div>}
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          
-          {!isLogin && (
-            <>
-              <input 
-                type="text" 
-                placeholder="Seu Nome ou Apelido" 
-                value={username} 
-                onChange={(e) => setUsername(e.target.value)}
-                style={{ padding: '15px', borderRadius: '10px', border: '2px solid #dfe4ea', fontSize: '1.1rem', boxSizing: 'border-box', transition: 'border-color 0.2s', outline: 'none' }}
-                onFocus={(e) => e.target.style.borderColor = '#2c3e50'}
-                onBlur={(e) => e.target.style.borderColor = '#dfe4ea'}
-              />
-              
-              <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
-                <input 
-                  type="text" 
-                  placeholder="Faculdade (Ex: USCS)" 
-                  value={faculdade} 
-                  onChange={(e) => setFaculdade(e.target.value)}
-                  style={{ padding: '15px', borderRadius: '10px', border: '2px solid #dfe4ea', fontSize: '1.1rem', flex: '1.5', boxSizing: 'border-box', minWidth: 0, outline: 'none' }}
-                  onFocus={(e) => e.target.style.borderColor = '#2c3e50'}
-                  onBlur={(e) => e.target.style.borderColor = '#dfe4ea'}
-                />
-                <input 
-                  type="text" 
-                  placeholder="Período (Ex: 3º)" 
-                  value={periodo} 
-                  onChange={(e) => setPeriodo(e.target.value)}
-                  style={{ padding: '15px', borderRadius: '10px', border: '2px solid #dfe4ea', fontSize: '1.1rem', flex: '1', boxSizing: 'border-box', minWidth: 0, outline: 'none' }}
-                  onFocus={(e) => e.target.style.borderColor = '#2c3e50'}
-                  onBlur={(e) => e.target.style.borderColor = '#dfe4ea'}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
-                <label style={{ fontSize: '0.95rem', color: '#7f8fa6', fontWeight: 'bold', marginBottom: '-12px', marginLeft: '5px' }}>Data de Nascimento:</label>
-                <input 
-                  type="date" 
-                  value={dataNascimento} 
-                  onChange={(e) => setDataNascimento(e.target.value)}
-                  style={{ padding: '15px', borderRadius: '10px', border: '2px solid #dfe4ea', fontSize: '1.1rem', fontFamily: 'inherit', color: dataNascimento ? '#2f3542' : '#a4b0be', boxSizing: 'border-box', outline: 'none' }}
-                  onFocus={(e) => e.target.style.borderColor = '#2c3e50'}
-                  onBlur={(e) => e.target.style.borderColor = '#dfe4ea'}
-                />
-              </div>
-
-              <input 
-                type="text" 
-                placeholder="Matéria Preferida (Ex: Anatomia)" 
-                value={materiaPreferida} 
-                onChange={(e) => setMateriaPreferida(e.target.value)}
-                style={{ padding: '15px', borderRadius: '10px', border: '2px solid #dfe4ea', fontSize: '1.1rem', boxSizing: 'border-box', outline: 'none' }}
-                onFocus={(e) => e.target.style.borderColor = '#2c3e50'}
-                onBlur={(e) => e.target.style.borderColor = '#dfe4ea'}
-              />
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: '5px' }}>
-                <div 
-                  onClick={() => setGenero('feminino')}
-                  style={{ 
-                    flex: 1, 
-                    padding: '12px', 
-                    textAlign: 'center', 
-                    borderRadius: '10px', 
-                    border: genero === 'feminino' ? '2px solid #2ed573' : '2px solid #dfe4ea',
-                    backgroundColor: genero === 'feminino' ? '#f1fdf5' : 'transparent',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '1.1rem',
-                    color: genero === 'feminino' ? '#2ed573' : '#a4b0be',
-                    transition: 'all 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                >
-                  👩‍⚕️ Doutora
-                </div>
-                <div 
-                  onClick={() => setGenero('masculino')}
-                  style={{ 
-                    flex: 1, 
-                    padding: '12px', 
-                    textAlign: 'center', 
-                    borderRadius: '10px', 
-                    border: genero === 'masculino' ? '2px solid #1e90ff' : '2px solid #dfe4ea',
-                    backgroundColor: genero === 'masculino' ? '#f0f8ff' : 'transparent',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '1.1rem',
-                    color: genero === 'masculino' ? '#1e90ff' : '#a4b0be',
-                    transition: 'all 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                >
-                  👨‍⚕️ Doutor
-                </div>
-              </div>
-            </>
-          )}
-
-          <input 
-            type="email" 
-            placeholder="E-mail" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)}
-            style={{ padding: '15px', borderRadius: '10px', border: '2px solid #dfe4ea', fontSize: '1.1rem', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
-            onFocus={(e) => e.target.style.borderColor = '#2c3e50'}
-            onBlur={(e) => e.target.style.borderColor = '#dfe4ea'}
-          />
-          <input 
-            type="password" 
-            placeholder="Senha (mín. 6 caracteres)" 
-            value={senha} 
-            onChange={(e) => setSenha(e.target.value)}
-            style={{ padding: '15px', borderRadius: '10px', border: '2px solid #dfe4ea', fontSize: '1.1rem', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
-            onFocus={(e) => e.target.style.borderColor = '#2c3e50'}
-            onBlur={(e) => e.target.style.borderColor = '#dfe4ea'}
-          />
-
-          <button 
-            type="submit" 
-            disabled={carregando}
-            style={{ 
-              backgroundColor: '#2c3e50', 
-              color: 'white', 
-              padding: '18px',
-              borderRadius: '12px', 
-              border: 'none', 
-              fontSize: '1.2rem', 
-              fontWeight: 'bold', 
-              cursor: carregando ? 'not-allowed' : 'pointer',
-              marginTop: '15px',
-              opacity: carregando ? 0.7 : 1,
-              boxSizing: 'border-box',
-              transition: 'transform 0.1s, background-color 0.2s'
-            }}
-            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
-            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            {carregando ? 'Carregando...' : (isLogin ? 'Entrar no Plantão' : 'Criar Prontuário')}
-          </button>
-        </form>
-
-        <p style={{ textAlign: 'center', marginTop: '25px', color: '#7f8fa6', fontSize: '1.05rem' }}>
-          {isLogin ? "Ainda não tem CRM? " : "Já tem registro médico? "}
-          <span 
-            onClick={() => { setIsLogin(!isLogin); setErro(''); }}
-            style={{ color: '#2ed573', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}
-          >
-            {isLogin ? 'Cadastre-se' : 'Faça Login'}
-          </span>
-        </p>
-
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] flex items-center overflow-hidden">
+        <motion.svg width="200%" height="100%" xmlns="http://www.w3.org/2000/svg" initial={{ x: 0 }} animate={{ x: "-50%" }} transition={{ repeat: Infinity, ease: "linear", duration: 20 }}>
+          <pattern id="ekg-login" x="0" y="0" width="500" height="200" patternUnits="userSpaceOnUse">
+            <path d="M0 100 H 150 L 160 90 L 170 100 H 180 L 195 70 L 210 140 L 225 40 L 240 110 L 255 100 H 290 L 310 85 L 330 100 H 500" fill="none" stroke="#06b6d4" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+          </pattern>
+          <rect x="0" y="0" width="100%" height="100%" fill="url(#ekg-login)" />
+        </motion.svg>
       </div>
+
+      {/* Cartão Principal REDIMENSIONADO PARA ORIGINAL (max-w-[400px]) */}
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-[400px] mx-4"
+      >
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <motion.div
+              whileHover={{ rotate: 180 }}
+              transition={{ duration: 0.5, ease: "backOut" }}
+              className="w-10 h-10 rounded-xl bg-[#0f1f2e] border border-cyan-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+            >
+              <Stethoscope className="w-5 h-5 text-cyan-400" style={{ filter: 'drop-shadow(0 0 6px rgba(6,182,212,0.6))' }} />
+            </motion.div>
+            <h1 className="text-white text-2xl font-bold tracking-wide">
+              CAÇA-MED<motion.span animate={{ opacity: [1, 0, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>_</motion.span>
+            </h1>
+          </div>
+          <p className="text-cyan-400 text-[10px] uppercase font-bold tracking-[0.2em]">🩺 Bater Ponto — Entrar no Plantão</p>
+        </div>
+
+        <div className="bg-[#151F32] rounded-[24px] border border-white/[0.04] shadow-[0_20px_60px_rgba(0,0,0,0.6)] p-6 md:p-8 relative overflow-hidden">
+          
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-cyan-500/5 blur-[40px] rounded-full pointer-events-none" />
+
+          <div className="absolute top-4 right-4 opacity-60">
+            <EcgPulse />
+          </div>
+
+          <form onSubmit={handleLogin} className="relative z-10 space-y-4">
+            
+            {erro && (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-500/10 border border-red-500/30 text-red-400 p-2.5 rounded-lg text-xs text-center font-medium">
+                {erro}
+              </motion.div>
+            )}
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase font-bold tracking-widest text-slate-500 block">E-mail Profissional</label>
+              <div className={`flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 transition-all duration-300 ${
+                emailFocused ? 'border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.15)]' : 'border-white/[0.05] hover:border-white/[0.1]'
+              }`}>
+                <Mail className={`w-4 h-4 shrink-0 transition-colors ${emailFocused ? 'text-cyan-400' : 'text-slate-600'}`} />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  onFocus={() => { setEmailFocused(true); setPasswordFocused(false); }}
+                  onBlur={() => setEmailFocused(false)}
+                  placeholder="doutor@cacamed.com"
+                  className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600 font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase font-bold tracking-widest text-slate-500 block">Senha de Acesso</label>
+              <div className={`flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 transition-all duration-300 ${
+                passwordFocused ? 'border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.15)]' : 'border-white/[0.05] hover:border-white/[0.1]'
+              }`}>
+                <Lock className={`w-4 h-4 shrink-0 transition-colors ${passwordFocused ? 'text-cyan-400' : 'text-slate-600'}`} />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  onFocus={() => { setPasswordFocused(true); setEmailFocused(false); }}
+                  onBlur={() => setPasswordFocused(false)}
+                  placeholder="Mín. 6 caracteres"
+                  className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600 font-medium"
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-slate-500 hover:text-slate-300 transition-colors shrink-0">
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button type="button" onClick={() => setShowForgot(true)} className="text-[10px] font-bold text-cyan-500/70 hover:text-cyan-400 transition-colors uppercase tracking-wider">
+                Emergência: Esqueceu a senha?
+              </button>
+            </div>
+
+            <motion.button
+              type="submit"
+              disabled={loading || !email || !password}
+              whileHover={{ y: -1, boxShadow: '0 0 25px rgba(6,182,212,0.4)' }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-[#0B1120] transition-all shadow-[0_0_15px_rgba(6,182,212,0.25)] flex items-center justify-center gap-2 text-sm font-black disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="animate-pulse">Acessando...</span>
+              ) : (
+                <>
+                  <Stethoscope className="w-4 h-4" /> Entrar no Plantão
+                </>
+              )}
+            </motion.button>
+          </form>
+
+          <div className="mt-6 pt-4 border-t border-white/[0.04] flex justify-center">
+            <div className="flex items-center gap-1.5">
+              <div className="w-8 h-[2px] bg-gradient-to-r from-transparent to-cyan-500/40 rounded-full" />
+              <div className="w-1.5 h-1.5 rounded-full bg-cyan-500/60 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+              <div className="w-8 h-[2px] bg-gradient-to-l from-transparent to-cyan-500/40 rounded-full" />
+            </div>
+          </div>
+        </div>
+
+        <p className="text-center mt-5 text-slate-500 text-xs font-medium">
+          Ainda não é plantonista?{" "}
+          <button onClick={() => setTelaAtual('cadastro')} type="button" className="text-cyan-400 hover:text-cyan-300 font-bold transition-colors underline underline-offset-4">
+            Cadastre-se na recepção
+          </button>
+        </p>
+      </motion.div>
+
+      {/* MODAL ESQUECEU A SENHA */}
+      {showForgot && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1120]/90 backdrop-blur-md"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.93, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="w-full max-w-[380px] bg-[#151F32] rounded-[24px] border border-amber-500/20 shadow-[0_20px_60px_rgba(0,0,0,0.6)] p-6 relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-20 bg-amber-500/10 blur-[40px] rounded-full pointer-events-none" />
+
+            <div className="relative z-10">
+              <div className="text-center mb-6">
+                <div className="w-12 h-12 mx-auto rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+                  <span className="text-xl">🔑</span>
+                </div>
+                <h2 className="text-white text-xl font-bold">Recuperar Acesso</h2>
+                <p className="text-slate-400 text-xs mt-1.5">Enviaremos as instruções para o seu e-mail.</p>
+              </div>
+
+              {forgotSent ? (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-4">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(16,185,129,0.25)]">
+                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }} className="text-xl">✅</motion.span>
+                  </div>
+                  <p className="text-emerald-400 text-base font-bold mb-1">Código enviado!</p>
+                  <p className="text-slate-400 text-xs">Verifique a caixa de entrada de <br/><span className="text-white font-bold">{forgotEmail}</span></p>
+                </motion.div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-slate-500 mb-1.5 block">E-mail Cadastrado</label>
+                    <div className="flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 border-amber-500/20 focus-within:border-amber-500/60 focus-within:shadow-[0_0_15px_rgba(245,158,11,0.15)] transition-all">
+                      <Mail className="w-4 h-4 text-amber-500/60 shrink-0" />
+                      <input
+                        type="email"
+                        value={forgotEmail}
+                        onChange={e => setForgotEmail(e.target.value)}
+                        placeholder="seu.email@cacamed.com"
+                        className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600 font-medium"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  <motion.button
+                    whileHover={{ y: -1, boxShadow: '0 0 20px rgba(245,158,11,0.3)' }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setForgotSent(true)}
+                    disabled={!forgotEmail.includes('@')}
+                    className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#0B1120] font-bold transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Enviar Instruções
+                  </motion.button>
+                </div>
+              )}
+
+              <button
+                onClick={() => { setShowForgot(false); setForgotSent(false); setForgotEmail(""); }}
+                className="w-full mt-3 py-2.5 rounded-xl bg-[#0B1120] border border-white/[0.05] text-slate-400 hover:text-white font-bold transition-all text-xs"
+              >
+                Voltar ao Login
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import './index.css';
 
 import Login from './components/Login';
+import Cadastro from './components/Cadastro'; // <-- AQUI ESTÁ O NOVO IMPORT
 import MenuPrincipal from './components/MenuPrincipal';
 import PerfilUsuario from './components/PerfilUsuario';
 import SelecaoTopicos from './components/SelecaoTopicos';
@@ -15,6 +16,10 @@ import Estatisticas from './components/Estatisticas';
 // TELAS NOVAS IMPORTADAS AQUI:
 import SelecaoFlashcards from './components/SelecaoFlashcards';
 import FlashCards from './components/FlashCards'; 
+
+// 🔥 IMPORTANDO A NOVA TELA DO HOUSE
+import SelecaoDDX from './components/SelecaoDDX'; 
+import JogoDDX from './components/JogoDDX';
 
 function App() {
   const [usuario, setUsuario] = useState(null); 
@@ -31,6 +36,9 @@ function App() {
   const [baralhoAtivo, setBaralhoAtivo] = useState(null);
   const [areaFlashcard, setAreaFlashcard] = useState(''); 
   const [dificuldadeFlashcard, setDificuldadeFlashcard] = useState('medio');
+
+  // 🔥 ESTADO DO MODO DDX (Para guardar a equipe e dificuldade)
+  const [configDDX, setConfigDDX] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -62,21 +70,13 @@ function App() {
         let contadorPalavras = 1;
 
         for (let i = 1; i < linhas.length; i++) {
-          // Usamos uma regex simples para evitar que vírgulas no meio das descrições quebrem a planilha
           const colunas = linhas[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
           
           if (colunas[0] && colunas[0].trim() !== '' && colunas[1] && colunas[1].trim() !== '') {
-            const palavraSegura = colunas[0]
-              .trim()
-              .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
-              .replace(/-/g, " ") 
-              .replace(/\s+/g, " ") 
-              .toUpperCase();
-            
+            const palavraSegura = colunas[0].trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/-/g, " ").replace(/\s+/g, " ").toUpperCase();
             const materiaBruta = colunas[1].trim();
             const subMateriaBruta = colunas[2] && colunas[2].trim() !== '' ? colunas[2].trim() : 'Geral';
 
-            // 🔥 AS NOVAS COLUNAS SENDO LIDAS AQUI:
             const dificuldadeStr = colunas[3] ? colunas[3].replace(/"/g, '').trim() : '0';
             const dificuldade = isNaN(parseInt(dificuldadeStr)) ? 0 : parseInt(dificuldadeStr);
             const dicaBasica = colunas[4] ? colunas[4].replace(/"/g, '').trim() : '';
@@ -92,8 +92,8 @@ function App() {
               palavra: palavraSegura, 
               numero: contadorPalavras,
               palavraComEspaco: colunas[0].replace(/"/g, '').trim(),
-              dificuldade: dificuldade, // 🔥 Salva no cache do jogo
-              dicaBasica: dicaBasica    // 🔥 Salva no cache do jogo
+              dificuldade: dificuldade, 
+              dicaBasica: dicaBasica    
             });
             contadorPalavras++;
           }
@@ -119,14 +119,20 @@ function App() {
     setTelaAtual('flashcards');
   };
 
-  if (carregandoAuth || (!bancoDePalavras && telaAtual !== 'login')) {
+  const iniciarDDX = (configuracoes) => {
+    setConfigDDX(configuracoes);
+    setTelaAtual('jogoDDX');
+  };
+
+  if (carregandoAuth || (!bancoDePalavras && telaAtual !== 'login' && telaAtual !== 'cadastro')) {
     return <div className="tela-container"><h2 style={{color: '#2c3e50'}}>Acessando Prontuários... 🩺</h2></div>;
   }
 
   return (
     <>
-      {telaAtual === 'login' && <Login />}
-      {telaAtual === 'menu' && usuario && <MenuPrincipal dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
+      {telaAtual === 'login' && <Login setTelaAtual={setTelaAtual} />}
+      {telaAtual === 'cadastro' && <Cadastro setTelaAtual={setTelaAtual} />}
+      {telaAtual === 'menu' && usuario && <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'perfil' && usuario && <PerfilUsuario usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       
       {/* CRUZADINHAS */}
@@ -139,6 +145,11 @@ function App() {
       {telaAtual === 'ranking' && usuario && <Ranking dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'estatisticas' && usuario && <Estatisticas dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       
+      {/* 🔥 MODO HOUSE (DDX) */}
+      {telaAtual === 'selecaoDDX' && usuario && <SelecaoDDX setTelaAtual={setTelaAtual} iniciarDDX={iniciarDDX} />}
+      {telaAtual === 'jogoDDX' && usuario && <JogoDDX setTelaAtual={setTelaAtual} configDDX={configDDX} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />}
+
+      {/* FLASHCARDS */}
       {telaAtual === 'selecaoFlashcards' && usuario && <SelecaoFlashcards setTelaAtual={setTelaAtual} iniciarFlashcards={iniciarFlashcards} />}
       {telaAtual === 'flashcards' && usuario && <FlashCards baralho={baralhoAtivo} area={areaFlashcard} dificuldade={dificuldadeFlashcard} setTelaAtual={setTelaAtual} usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />}
     </>

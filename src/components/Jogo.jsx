@@ -2,9 +2,11 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { auth, db } from '../firebase'; 
 import { doc, updateDoc } from 'firebase/firestore';
 import { gerarTabuleiro } from '../utils/motorTabuleiro'; 
-
-import PainelVitoria from './PainelVitoria';
 import Tabuleiro from './Tabuleiro';
+
+// Ícones idênticos ao Figma
+import { Clock, FastForward, LogOut, Stethoscope, Trophy, Ticket, Star } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const getPatente = (nivel) => {
   if (nivel <= 5) return { titulo: 'Estudante (Básico)', cor: '#64748b' };
@@ -15,13 +17,8 @@ const getPatente = (nivel) => {
   return { titulo: 'Chefe de Plantão', cor: '#10b981' };
 };
 
-// ==========================================
-// 🛡️ A MÁSCARA DE CENSURA (Segurança Anti-Spoiler)
-// ==========================================
 const aplicarCensura = (textoDica, palavraSecreta) => {
   if (!textoDica || !palavraSecreta) return textoDica;
-  
-  // Limpa a palavra secreta para encontrar o radical (evita que plurais vazem)
   const palavraLimpa = palavraSecreta.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
   const radical = palavraLimpa.length > 4 ? palavraLimpa.substring(0, palavraLimpa.length - 2) : palavraLimpa;
 
@@ -34,6 +31,17 @@ const aplicarCensura = (textoDica, palavraSecreta) => {
 
 export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtual, usuario, dadosUsuario, setDadosUsuario }) {
   const meuUid = auth.currentUser?.uid || usuario?.uid || dadosUsuario?.uid;
+
+  // 🛑 O TRATADO DE PAZ DO ZOOM (O SEGREDO DESTA TELA) 🛑
+  useEffect(() => {
+    // Ao entrar no jogo, retiramos o zoom de 150% para a interface caber no h-screen
+    document.documentElement.style.fontSize = '16px';
+    
+    return () => {
+      // Ao sair, devolvemos os 150% para os Menus
+      document.documentElement.style.fontSize = '24px';
+    };
+  }, []);
 
   const [valores, setValores] = useState({}); 
   const [direcaoAtual, setDirecaoAtual] = useState('horizontal');
@@ -48,7 +56,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   const [tempoDecorrido, setTempoDecorrido] = useState(0);
   const [relatorioXP, setRelatorioXP] = useState(null);
   const [ganhouPergaminho, setGanhouPergaminho] = useState(false);
-  
   const [errosNaPartida, setErrosNaPartida] = useState(0);
 
   const [levelUps, setLevelUps] = useState([]);
@@ -69,9 +76,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   useEffect(() => {
     let intervalo;
     if (jogoIniciado && !vitoria) {
-      intervalo = setInterval(() => {
-        setTempoDecorrido(prev => prev + 1);
-      }, 1000);
+      intervalo = setInterval(() => setTempoDecorrido(prev => prev + 1), 1000);
     }
     return () => clearInterval(intervalo);
   }, [vitoria, jogoIniciado, chaveRecarregamento]);
@@ -83,7 +88,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   };
 
   const { gradePronta, limites } = useMemo(() => {
-    console.debug("Gerando novo plantão. Rodada:", chaveRecarregamento);
     return gerarTabuleiro(bancoDePalavras, chaveXP, nivelAtual);
   }, [bancoDePalavras, chaveXP, chaveRecarregamento, nivelAtual]); 
 
@@ -102,12 +106,8 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     const mapa = {};
     gradePronta.forEach(linha => {
       linha.forEach(c => {
-        if (c.palavraInicialHorizontal && c.dicaBasicaHorizontal) {
-          mapa[c.palavraInicialHorizontal] = c.dicaBasicaHorizontal;
-        }
-        if (c.palavraInicialVertical && c.dicaBasicaVertical) {
-          mapa[c.palavraInicialVertical] = c.dicaBasicaVertical;
-        }
+        if (c.palavraInicialHorizontal && c.dicaBasicaHorizontal) mapa[c.palavraInicialHorizontal] = c.dicaBasicaHorizontal;
+        if (c.palavraInicialVertical && c.dicaBasicaVertical) mapa[c.palavraInicialVertical] = c.dicaBasicaVertical;
       });
     });
     return mapa;
@@ -115,18 +115,13 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
   useEffect(() => {
     const preCarregarDicasEmLote = async () => {
-      if (palavrasDoTabuleiro.length === 0) return;
-      if (jogoIniciado) return; 
+      if (palavrasDoTabuleiro.length === 0 || jogoIniciado) return; 
 
-      // 🔥 Fase 1: Níveis Iniciais com a Máscara Ativada
       if (nivelAtual <= 2) {
         const dicasEstaticas = {};
         palavrasDoTabuleiro.forEach(palavra => {
           let dicaOriginal = mapaDicasBasicas[palavra] || "Encontre esta estrutura.";
-          
-          // A magia da censura acontece aqui:
           dicaOriginal = aplicarCensura(dicaOriginal, palavra);
-          
           dicasEstaticas[palavra] = `${dicaOriginal} (Dica: Começa com a letra ${palavra[0]})`;
         });
         setDicasSalvas(prev => ({ ...prev, ...dicasEstaticas }));
@@ -135,36 +130,22 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         return; 
       }
       
-      // Fase 2: IA Rigorosa
       setDica(`Consultando a IA (Nível ${nivelAtual})...`);
-      const API_KEY = 'AIzaSyCuBiqm9Gv9s7VM5FpEtLtRpdu_JdPE2is'; 
-      
-      const prompt = `Você é um gerador de dicas de palavras cruzadas para estudantes de medicina.
-      Crie uma dica para CADA palavra da lista abaixo.
-      REGRAS OBRIGATÓRIAS:
-      1. MÁXIMO de 15 palavras por dica.
-      2. É ESTRITAMENTE PROIBIDO usar a própria palavra ou seus radicais na dica.
-      3. Foque em correlação clínica, função ou sintoma.
-      Retorne APENAS um objeto JSON válido, onde a chave é a palavra exata e o valor é a dica.
-      Lista: ${palavrasDoTabuleiro.join(', ')}`;
+      const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+      const prompt = `Você é um gerador de dicas de palavras cruzadas para estudantes de medicina. Crie uma dica para CADA palavra da lista abaixo. REGRAS OBRIGATÓRIAS: 1. MÁXIMO de 15 palavras por dica. 2. É ESTRITAMENTE PROIBIDO usar a própria palavra ou seus radicais na dica. 3. Foque em correlação clínica, função ou sintoma. Retorne APENAS um objeto JSON válido, onde a chave é a palavra exata e o valor é a dica. Lista: ${palavrasDoTabuleiro.join(', ')}`;
 
       try {
         const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         });
         const dados = await resposta.json();
-        
         let textoResposta = dados.candidates[0].content.parts[0].text;
         textoResposta = textoResposta.replace(/```json/gi, '').replace(/```/g, '').trim();
-        
         const dicasGeradas = JSON.parse(textoResposta);
         setDicasSalvas(prev => ({ ...prev, ...dicasGeradas }));
         setDica('Dicas clínicas prontas! Clique em um número para começar.');
         setJogoIniciado(true); 
       } catch (erro) {
-        console.error("Erro na IA:", erro);
         setDica("Clique no número de uma palavra para ver a dica.");
         setJogoIniciado(true); 
       }
@@ -174,32 +155,22 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
   const gerarDica = async (termo) => {
     if (dicasSalvas[termo]) {
-      setDica(dicasSalvas[termo]); 
-      return; 
+      setDica(dicasSalvas[termo]); return; 
     }
-
     if (nivelAtual <= 2) {
        let dicaOriginal = mapaDicasBasicas[termo] || "Encontre esta estrutura.";
-       
-       // 🔥 Censura individual
        dicaOriginal = aplicarCensura(dicaOriginal, termo);
-       
        const dicaFormatada = `${dicaOriginal} (Dica: Começa com a letra ${termo[0]})`;
        setDica(dicaFormatada);
        setDicasSalvas(prev => ({ ...prev, [termo]: dicaFormatada }));
        return;
     }
-
     setDica(`Consultando a IA (Nível ${nivelAtual})...`);
     const API_KEY = 'AIzaSyCuBiqm9Gv9s7VM5FpEtLtRpdu_JdPE2is'; 
-    
     const prompt = `Você é um gerador de dicas para estudantes de medicina. O termo é [${termo}]. Escreva uma dica clínica objetiva com NO MÁXIMO 15 palavras. É ESTRITAMENTE PROIBIDO usar a palavra '${termo}' ou seus radicais.`;
-    
     try {
         const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         });
         const dados = await resposta.json();
         const novaDica = dados.candidates[0].content.parts[0].text;
@@ -212,64 +183,39 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
   const autoCompletarNivel = () => {
     const todosOsValoresCorretos = {};
-    gradePronta.forEach(linha => {
-      linha.forEach(celula => {
-        if (!celula.vazia && celula.letraCerta !== ' ') { 
-          todosOsValoresCorretos[`${celula.linha}-${celula.coluna}`] = celula.letraCerta;
-        }
-      });
-    });
+    gradePronta.forEach(linha => linha.forEach(celula => {
+        if (!celula.vazia && celula.letraCerta !== ' ') todosOsValoresCorretos[`${celula.linha}-${celula.coluna}`] = celula.letraCerta;
+    }));
     setValores(todosOsValoresCorretos);
   };
 
   useEffect(() => {
-    let todasCertas = true;
-    let temPalavra = false;
-
-    gradePronta.forEach(linha => {
-      linha.forEach(celula => {
+    let todasCertas = true; let temPalavra = false;
+    gradePronta.forEach(linha => linha.forEach(celula => {
         if (!celula.vazia && celula.letraCerta !== ' ') { 
           temPalavra = true;
           const valorDigitado = valores[`${celula.linha}-${celula.coluna}`];
-          if (!valorDigitado || valorDigitado.toUpperCase() !== celula.letraCerta.toUpperCase()) {
-            todasCertas = false;
-          }
+          if (!valorDigitado || valorDigitado.toUpperCase() !== celula.letraCerta.toUpperCase()) todasCertas = false;
         }
-      });
-    });
+    }));
 
     if (temPalavra && todasCertas && !vitoria && !cadeadoRecompensa.current) {
-      cadeadoRecompensa.current = true; 
-      setVitoria(true);
-      setCelulasDestacadas([]); 
-      
+      cadeadoRecompensa.current = true; setVitoria(true); setCelulasDestacadas([]); 
       if (xpAtualSubtopico === 0) setGanhouPergaminho(true);
 
       const calcularE_SalvarXP = async () => {
         if (meuUid && dadosUsuario) {
-          let numLetras = 0;
-          let numPalavras = 0;
-          let tamanhoMaiorPalavra = 0;
-          
-          gradePronta.forEach(linha => {
-            linha.forEach(c => {
+          let numLetras = 0; let numPalavras = 0; let tamanhoMaiorPalavra = 0;
+          gradePronta.forEach(linha => linha.forEach(c => {
               if (!c.vazia && c.letraCerta !== ' ') numLetras++;
               if (c.numero) numPalavras++;
-              
-              if (c.palavraInicialHorizontal && c.palavraInicialHorizontal.length > tamanhoMaiorPalavra) {
-                tamanhoMaiorPalavra = c.palavraInicialHorizontal.length;
-              }
-              if (c.palavraInicialVertical && c.palavraInicialVertical.length > tamanhoMaiorPalavra) {
-                tamanhoMaiorPalavra = c.palavraInicialVertical.length;
-              }
-            });
-          });
+              if (c.palavraInicialHorizontal && c.palavraInicialHorizontal.length > tamanhoMaiorPalavra) tamanhoMaiorPalavra = c.palavraInicialHorizontal.length;
+              if (c.palavraInicialVertical && c.palavraInicialVertical.length > tamanhoMaiorPalavra) tamanhoMaiorPalavra = c.palavraInicialVertical.length;
+          }));
 
           let xpFinalDaFase = 0;
-
           if (xpAtualSubtopico === 0) {
-            setRelatorioXP({ isTutorial: true });
-            xpFinalDaFase = 1;
+            setRelatorioXP({ isTutorial: true }); xpFinalDaFase = 1;
           } else {
             const xpBase = (numLetras * 2) + (numPalavras * 10);
             const multNivel = 1 + ((nivelAtual - 1) * 0.1); 
@@ -278,7 +224,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
             if (tempoDecorrido <= tempoIdeal * 0.25) multTempo = 2.0; 
             else if (tempoDecorrido <= tempoIdeal * 0.5) multTempo = 1.5; 
             else if (tempoDecorrido <= tempoIdeal) multTempo = 1.2; 
-
             xpFinalDaFase = Math.floor(xpBase * multNivel * multTempo);
             setRelatorioXP({ ganho: xpFinalDaFase, base: xpBase, multNivel: multNivel.toFixed(1), multTempo: multTempo.toFixed(1) });
           }
@@ -296,7 +241,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           const statsAntigas = dadosUsuario.estatisticas?.[chaveXP] || { partidas: 0, tempo: 0, letras: 0 };
           const recordeTempo = statsAntigas.melhorTempo ? Math.min(statsAntigas.melhorTempo, tempoDecorrido) : tempoDecorrido;
           const novasStatsLocal = { partidas: statsAntigas.partidas + 1, tempo: statsAntigas.tempo + tempoDecorrido, letras: statsAntigas.letras + numLetras, melhorTempo: recordeTempo };
-
           const hoje = new Date().toISOString().split('T')[0];
           const statsGerais = dadosUsuario.estatisticasGerais || { streakAtual: 0, maiorStreak: 0, ultimoDia: '', diasSeguidos: 0, errosTotais: 0, maiorPalavra: 0, historico: [] };
 
@@ -311,11 +255,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           const novaMaiorStreak = Math.max(statsGerais.maiorStreak || 0, novaStreak);
           const novaMaiorPalavra = Math.max(statsGerais.maiorPalavra || 0, tamanhoMaiorPalavra);
           const novosErrosTotais = (statsGerais.errosTotais || 0) + errosNaPartida;
-
-          const novoHistorico = [...(statsGerais.historico || []), {
-            data: hoje, materia: subMateria, tempo: tempoDecorrido, erros: errosNaPartida, letrasCorretas: numLetras
-          }].slice(-30);
-
+          const novoHistorico = [...(statsGerais.historico || []), { data: hoje, materia: subMateria, tempo: tempoDecorrido, erros: errosNaPartida, letrasCorretas: numLetras }].slice(-30);
           const novasStatsGerais = { streakAtual: novaStreak, maiorStreak: novaMaiorStreak, ultimoDia: hoje, diasSeguidos: novosDiasSeguidos, errosTotais: novosErrosTotais, maiorPalavra: novaMaiorPalavra, historico: novoHistorico };
 
           let oldSomaNiveis = 0;
@@ -341,7 +281,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           let alertasNivel = [];
           if (newPatente.titulo !== oldPatente.titulo && oldSomaNiveis > 0) alertasNivel.push({ isPromocao: true, nome: 'PROMOÇÃO DE CARREIRA', antigo: oldPatente.titulo, novo: newPatente.titulo, icone: '🌟', cor: newPatente.cor });
           else if (newSomaNiveis > oldSomaNiveis && oldSomaNiveis > 0) alertasNivel.push({ nome: 'Nível Global', antigo: oldSomaNiveis, novo: newSomaNiveis, icone: '🌍' });
-          
           if (newSubLevel > oldSubLevel && oldSubLevel > 0) alertasNivel.push({ nome: subMateria, antigo: oldSubLevel, novo: newSubLevel, icone: '⭐' });
           
           if (alertasNivel.length > 0) {
@@ -406,12 +345,8 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     let palavraDaDica = null;
     gradePronta.forEach(linha => {
       linha.forEach(c => {
-        if (novaDirecao === 'horizontal' && c.idHorizontal === idDaPalavra && c.inicioHorizontal) {
-           palavraDaDica = c.palavraInicialHorizontal;
-        }
-        if (novaDirecao === 'vertical' && c.idVertical === idDaPalavra && c.inicioVertical) {
-           palavraDaDica = c.palavraInicialVertical;
-        }
+        if (novaDirecao === 'horizontal' && c.idHorizontal === idDaPalavra && c.inicioHorizontal) palavraDaDica = c.palavraInicialHorizontal;
+        if (novaDirecao === 'vertical' && c.idVertical === idDaPalavra && c.inicioVertical) palavraDaDica = c.palavraInicialVertical;
       });
     });
     if (palavraDaDica) gerarDica(palavraDaDica);
@@ -422,17 +357,12 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       const direcaoInvertida = direcaoAtual === 'horizontal' ? 'vertical' : 'horizontal';
       setDirecaoAtual(direcaoInvertida);
       atualizarDestaqueVisual(celula.linha, celula.coluna, direcaoInvertida);
-
       const idDaPalavra = direcaoInvertida === 'horizontal' ? celula.idHorizontal : celula.idVertical;
       let palavraDaDica = null;
       gradePronta.forEach(linha => {
         linha.forEach(c => {
-          if (direcaoInvertida === 'horizontal' && c.idHorizontal === idDaPalavra && c.inicioHorizontal) {
-             palavraDaDica = c.palavraInicialHorizontal;
-          }
-          if (direcaoInvertida === 'vertical' && c.idVertical === idDaPalavra && c.inicioVertical) {
-             palavraDaDica = c.palavraInicialVertical;
-          }
+          if (direcaoInvertida === 'horizontal' && c.idHorizontal === idDaPalavra && c.inicioHorizontal) palavraDaDica = c.palavraInicialHorizontal;
+          if (direcaoInvertida === 'vertical' && c.idVertical === idDaPalavra && c.inicioVertical) palavraDaDica = c.palavraInicialVertical;
         });
       });
       if (palavraDaDica) gerarDica(palavraDaDica);
@@ -491,11 +421,13 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   };
 
   return (
-    <div className="tela-container" style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '15px 20px', position: 'relative' }}>
+    <div className="h-screen bg-[#0B1120] text-white font-sans relative overflow-hidden flex flex-col selection:bg-cyan-500/30">
       <style>{`@keyframes slideInUpLeft { 0% { transform: translateX(-100%) scale(0.8); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }`}</style>
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.03)_0%,#0B1120_100%)]" />
 
+      {/* ALERTAS DE LEVEL UP */}
       {levelUps.length > 0 && (
-        <div style={{ position: 'fixed', bottom: '40px', left: '40px', display: 'flex', flexDirection: 'column', gap: '20px', zIndex: 9999 }}>
+        <div style={{ position: 'fixed', bottom: '40px', left: '40px', display: 'flex', flexDirection: 'column', gap: '20px', zIndex: 99999 }}>
           {levelUps.map((lu, idx) => {
             if (lu.isPromocao) {
               return (
@@ -503,9 +435,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                   <div style={{ fontSize: '4.5rem' }}>{lu.icone}</div> 
                   <div style={{ paddingRight: '15px' }}>
                     <div style={{ fontWeight: 'bold', fontSize: '1.8rem', color: lu.cor, marginBottom: '8px', textTransform: 'uppercase' }}>Nova Patente Alcançada!</div>
-                    <div style={{ fontSize: '1.4rem', color: '#334155' }}>
-                      De <span style={{color: '#94a3b8', textDecoration: 'line-through'}}>{lu.antigo}</span> ➔ <span style={{color: lu.cor, fontWeight: 'bold', fontSize: '1.8rem'}}>{lu.novo}</span>
-                    </div>
+                    <div style={{ fontSize: '1.4rem', color: '#334155' }}>De <span style={{color: '#94a3b8', textDecoration: 'line-through'}}>{lu.antigo}</span> ➔ <span style={{color: lu.cor, fontWeight: 'bold', fontSize: '1.8rem'}}>{lu.novo}</span></div>
                   </div>
                 </div>
               );
@@ -515,9 +445,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                 <div style={{ fontSize: '3.8rem' }}>{lu.icone}</div> 
                 <div style={{ paddingRight: '15px' }}>
                   <div style={{ fontWeight: 'bold', fontSize: '1.6rem', color: '#fbbf24', marginBottom: '8px' }}>Nível Aumentado!</div>
-                  <div style={{ fontSize: '1.3rem', color: '#f8fafc' }}>
-                    {lu.nome}: <span style={{color: '#94a3b8', textDecoration: 'line-through'}}>{lu.antigo}</span> ➔ <span style={{color: '#2ed573', fontWeight: 'bold', fontSize: '1.6rem'}}>{lu.novo}</span>
-                  </div>
+                  <div style={{ fontSize: '1.3rem', color: '#f8fafc' }}>{lu.nome}: <span style={{color: '#94a3b8', textDecoration: 'line-through'}}>{lu.antigo}</span> ➔ <span style={{color: '#2ed573', fontWeight: 'bold', fontSize: '1.6rem'}}>{lu.novo}</span></div>
                 </div>
               </div>
             );
@@ -525,58 +453,153 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '800px', alignItems: 'center', marginBottom: '10px', flexShrink: 0 }}>
-        <button className="botao-voltar" onClick={() => setTelaAtual('menu')} style={{ margin: 0 }}>⬅ Sair</button>
-        <div style={{ fontWeight: 'bold', fontSize: '1.5rem', color: vitoria ? '#2ed573' : (jogoIniciado ? '#ff4757' : '#94a3b8'), backgroundColor: '#fff', padding: '5px 20px', borderRadius: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-          ⏱ {formatarTempo(tempoDecorrido)}
-        </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button onClick={autoCompletarNivel} disabled={!jogoIniciado} style={{ backgroundColor: '#ff4757', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '15px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold', opacity: jogoIniciado ? 1 : 0.4 }}>Passar Fase</button>
-          <div title={nivelAtual === 0 ? "Ganhe para desbloquear o Nível 1!" : `${xpProgressoNesteNivel} / ${xpNecessarioParaUpar} XP`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#e0e6ed', padding: '5px 15px', borderRadius: '15px', cursor: 'help' }}>
-            <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#2c3e50' }}>Nível {nivelAtual}</span>
-            <div style={{ width: '100%', height: '4px', backgroundColor: '#cbd5e1', borderRadius: '2px', marginTop: '3px', overflow: 'hidden' }}>
-              <div style={{ width: `${porcentagemBarra}%`, height: '100%', backgroundColor: '#1e90ff', transition: 'width 0.5s ease-out' }}></div>
+      {/* HEADER 100% FIEL AO FIGMA */}
+      <header className="h-14 bg-[#1e293b]/50 border-b border-white/[0.05] backdrop-blur-md flex items-center justify-between px-6 relative z-10 shrink-0">
+        <button onClick={() => setTelaAtual('topicos')} className="flex items-center gap-2 text-slate-400 hover:text-rose-400 transition-colors text-xs">
+          <LogOut className="w-4 h-4" />
+          <span className="hidden md:inline">Sair</span>
+        </button>
+
+        <div className="flex items-center gap-8">
+          <div className="flex flex-col items-center">
+            <span className="text-cyan-400 text-[9px] uppercase tracking-widest mb-0.5">Nível {nivelAtual}</span>
+            <div className="w-24 h-1 bg-[#0F172A] rounded-full overflow-hidden" title={`${xpProgressoNesteNivel} / ${xpNecessarioParaUpar} XP`}>
+              <div className="h-full bg-cyan-400 rounded-full shadow-[0_0_6px_rgba(34,211,238,0.6)]" style={{ width: `${porcentagemBarra}%` }} />
             </div>
           </div>
+          <div className="flex items-center gap-2 bg-[#0F172A] px-3 py-1.5 rounded-full border border-white/[0.05]">
+            <Clock className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="font-mono text-white text-sm tracking-wider">{formatarTempo(tempoDecorrido)}</span>
+          </div>
         </div>
-      </div>
-      
-      <h2 style={{ margin: '0 0 10px 0', flexShrink: 0 }}>{materia} <span style={{ fontSize: '1.1rem', color: '#7f8fa6', fontWeight: 'normal' }}>| {subMateria}</span></h2>
 
-      {vitoria && ganhouPergaminho && (
-        <div style={{ backgroundColor: '#fffbeb', border: '2px solid #fbbf24', padding: '15px 30px', borderRadius: '15px', textAlign: 'center', marginBottom: '15px', flexShrink: 0, boxShadow: '0 4px 15px rgba(251, 191, 36, 0.2)' }}>
-          <h3 style={{ margin: 0, color: '#d97706', fontSize: '1.4rem' }}>📜 Pergaminho Desbloqueado!</h3>
-          <p style={{ margin: '5px 0 0 0', color: '#b45309', fontWeight: 'bold' }}>Você completou seu primeiro plantão nesta área e alcançou o Nível 1!</p>
-        </div>
-      )}
+        <button onClick={autoCompletarNivel} disabled={!jogoIniciado} className="flex items-center gap-1.5 bg-[#0F172A] hover:bg-[#151F32] border border-white/[0.1] px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-all text-xs disabled:opacity-40 disabled:cursor-not-allowed">
+          <span className="hidden md:inline">Passar</span>
+          <FastForward className="w-3.5 h-3.5" />
+        </button>
+      </header>
 
-      {vitoria && (
-        <div style={{ flexShrink: 0, width: '100%', display: 'flex', justifyContent: 'center' }}>
-          {relatorioXP?.isTutorial ? (
-            <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '15px', border: '2px solid #fbbf24', maxWidth: '500px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ color: '#d97706', margin: '0 0 15px 0', fontSize: '1.4rem' }}>🎓 Como Funciona o XP?</h3>
-              <div style={{ color: '#475569', fontSize: '1rem', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <p style={{ margin: 0 }}><strong>1. Base de Pontos:</strong> Cada letra e palavra desvendada te dá XP.</p>
-                <p style={{ margin: 0 }}><strong>2. Bônus de Velocidade:</strong> Terminar rápido pode multiplicar seus pontos em até <strong>2x</strong>!</p>
-                <p style={{ margin: 0 }}><strong>3. Bônus de Dificuldade:</strong> Seu Nível atual também aumenta o multiplicador.</p>
-                <p style={{ margin: '10px 0 0 0', padding: '10px', backgroundColor: '#f1f5f9', borderRadius: '8px', borderLeft: '4px solid #1F6FEB', fontStyle: 'italic' }}>
-                  A partir da sua próxima partida, os pontos começarão a ser contabilizados rumo ao Nível 2. Bom plantão!
+      {/* 2-COLUMN SPLIT 100% FIEL AO FIGMA */}
+      <main className="flex-1 flex flex-row min-h-0 relative z-10">
+        
+        {/* Left: AI Hint Panel (w-[340px] Fixo) */}
+        <div className="w-[340px] shrink-0 border-r border-white/[0.05] flex flex-col p-5 bg-[#0f172a]/50">
+          <motion.div
+            initial={{ opacity: 0, x: -15 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-[#1e293b]/80 border border-cyan-500/20 rounded-2xl p-5 flex-1 flex flex-col relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[40px] rounded-full pointer-events-none" />
+
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                <Stethoscope className="w-4 h-4 text-cyan-400" />
+              </div>
+              <h2 className="text-cyan-400 text-sm tracking-wide">🩺 Dica do Caso Clínico</h2>
+            </div>
+
+            <div className="flex-1 flex flex-col justify-center">
+              <p className="text-white text-sm leading-relaxed mb-4">
+                "{dica}"
+              </p>
+              <div className="pt-3 border-t border-white/[0.05]">
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  {materia} • {subMateria}
                 </p>
               </div>
-              <button onClick={avancarParaProximoNivel} style={{ marginTop: '20px', backgroundColor: '#1F6FEB', color: 'white', border: 'none', padding: '12px 25px', borderRadius: '25px', fontWeight: 'bold', fontSize: '1.1rem', cursor: 'pointer', transition: 'transform 0.2s' }}>Entendi, vamos jogar! ➔</button>
             </div>
-          ) : (
-            <PainelVitoria relatorioXP={relatorioXP} avancarParaProximoNivel={avancarParaProximoNivel} />
-          )}
-        </div>
-      )}
-      
-      <div className="area-dica" style={{ flexShrink: 0, marginBottom: '10px', margin: '0 auto 10px auto' }}>
-          <h3>🩺 Dica da Palavra:</h3>
-          <p>{dica}</p>
-      </div>
 
-      <Tabuleiro gradePronta={gradePronta} limites={limites} valores={valores} celulasDestacadas={celulasDestacadas} bloqueado={vitoria || !jogoIniciado} handleInput={handleInput} handleKeyDown={handleKeyDown} handleFocus={handleFocus} handleClick={handleClick} />
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/[0.05]">
+              <span className="text-[9px] uppercase tracking-widest text-slate-600">Gerado por IA</span>
+              <span className="bg-[#0F172A] border border-white/[0.05] text-cyan-400 text-[10px] px-2 py-0.5 rounded-full">
+                {celulasDestacadas.length > 0 ? `${celulasDestacadas.length} Letras` : 'Selecione'}
+              </span>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Right: Board */}
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="p-5 rounded-2xl bg-[#1e293b]/20 border border-white/[0.02] shadow-[0_10px_40px_rgba(0,0,0,0.3)] w-full h-full relative overflow-hidden">
+            <Tabuleiro 
+              gradePronta={gradePronta} limites={limites} valores={valores} 
+              celulasDestacadas={celulasDestacadas} bloqueado={vitoria || !jogoIniciado} 
+              handleInput={handleInput} handleKeyDown={handleKeyDown} handleFocus={handleFocus} handleClick={handleClick} 
+            />
+          </div>
+        </div>
+      </main>
+
+      {/* Victory Modal 100% FIEL AO FIGMA */}
+      <AnimatePresence>
+        {vitoria && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1120]/90 backdrop-blur-lg">
+            {relatorioXP?.isTutorial ? (
+              <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="w-full max-w-md rounded-3xl p-8 text-center relative overflow-hidden bg-[#1e293b] border border-amber-500/30 shadow-[0_0_60px_rgba(245,158,11,0.15)]">
+                <div className="absolute -top-20 -left-20 w-48 h-48 rounded-full blur-[80px] pointer-events-none bg-amber-500/20" />
+                <h3 className="text-2xl font-bold text-amber-400 mb-6 relative z-10">🎓 Como Funciona o XP?</h3>
+                <div className="text-slate-300 text-sm text-left flex flex-col gap-3 relative z-10 mb-6">
+                  <p><strong>1. Base:</strong> Letras e palavras desvendadas.</p>
+                  <p><strong>2. Bônus Tempo:</strong> Terminar rápido multiplica até <strong>2x</strong>!</p>
+                  <p><strong>3. Bônus Nível:</strong> Seu Nível aumenta o multiplicador.</p>
+                  <div className="mt-2 p-3 bg-[#0F172A] rounded-xl border-l-4 border-cyan-500 text-cyan-400 text-xs italic">A partir da sua próxima partida, os pontos serão contabilizados!</div>
+                </div>
+                <button onClick={avancarParaProximoNivel} className="w-full bg-cyan-600 hover:bg-cyan-500 text-[#0B1120] py-3 rounded-xl transition-all relative z-10 text-sm font-bold">Entendi, vamos jogar! ➔</button>
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
+                transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                className="w-full max-w-md rounded-3xl p-8 text-center relative overflow-hidden bg-[#0f1f18] border border-emerald-500/30 shadow-[0_0_60px_rgba(16,185,129,0.15)]"
+              >
+                <div className="absolute -top-20 -left-20 w-48 h-48 rounded-full blur-[80px] pointer-events-none bg-emerald-500/30" />
+
+                <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 bg-emerald-500/10 border border-emerald-500/50 relative z-10">
+                  <Trophy className="w-8 h-8 text-emerald-400" />
+                </div>
+
+                <h2 className="text-2xl text-emerald-400 mb-1 relative z-10 font-bold">Plantão Concluído! 🎉</h2>
+                <p className="text-slate-400 text-sm mb-6 relative z-10">Todas as palavras foram preenchidas corretamente.</p>
+
+                <div className="flex justify-center gap-3 mb-6 relative z-10">
+                  <div className="bg-[#0B1120] border border-emerald-500/20 px-5 py-3 rounded-xl flex items-center gap-2">
+                    <Star className="w-4 h-4 text-emerald-400" />
+                    <span className="text-emerald-400 font-mono text-lg font-bold">+{relatorioXP?.ganho || 0} XP</span>
+                  </div>
+                  {ganhouPergaminho && (
+                    <div className="bg-[#0B1120] border border-amber-500/20 px-5 py-3 rounded-xl flex items-center gap-2">
+                      <span className="text-amber-400 font-mono text-xs font-bold">📜 Pergaminho!</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mb-6 relative z-10">
+                  <div className="flex justify-between text-[10px] uppercase tracking-wider mb-1 font-bold">
+                    <span className="text-slate-500">Nível {nivelAtual}</span>
+                    <span className="text-emerald-400">Progresso</span>
+                  </div>
+                  <div className="w-full h-2 bg-[#0B1120] rounded-full overflow-hidden border border-white/[0.05]">
+                    <motion.div
+                      initial={{ width: '0%' }} animate={{ width: `${porcentagemBarra}%` }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="h-full rounded-full bg-emerald-400"
+                      style={{ boxShadow: '0 0 12px rgba(16,185,129,0.6)' }}
+                    />
+                  </div>
+                </div>
+
+                <button onClick={avancarParaProximoNivel} className="w-full bg-[#1e293b] hover:bg-[#151F32] border border-white/[0.1] text-white py-3 rounded-xl transition-all relative z-10 text-sm font-bold">
+                  Próximo Plantão
+                </button>
+                <button onClick={() => setTelaAtual('topicos')} className="w-full mt-2 bg-transparent text-slate-400 hover:text-white py-2 transition-all relative z-10 text-xs font-bold">
+                  Sair
+                </button>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

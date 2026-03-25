@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
+import { ArrowLeft, Crown, Trophy, Flame, TrendingUp, Medal } from "lucide-react";
+import { motion } from "framer-motion";
 
 // ==========================================
-// 🌻 SISTEMA DE PARTÍCULAS DO EASTER EGG
+// 🌻 SISTEMA DE PARTÍCULAS DO EASTER EGG (INTOCADO)
 // ==========================================
 const ParticulaRomantica = ({ id, texto, posicaoInicial, onFinalizar }) => {
   const duracao = useMemo(() => (Math.random() * 2 + 3).toFixed(2), []); 
@@ -30,15 +32,21 @@ const ParticulaRomantica = ({ id, texto, posicaoInicial, onFinalizar }) => {
   );
 };
 
+const PODIUM_CONFIG = [
+  { idx: 1, order: "order-1", height: "h-20", avatarSize: "w-12 h-12", borderColor: "border-slate-400", glowColor: "rgba(148,163,184,0.4)", labelBg: "bg-slate-400", labelText: "2º", medalColor: "text-slate-300" },
+  { idx: 0, order: "order-2", height: "h-28", avatarSize: "w-16 h-16", borderColor: "border-amber-400", glowColor: "rgba(251,191,36,0.5)", labelBg: "bg-amber-400", labelText: "1º", medalColor: "text-amber-400" },
+  { idx: 2, order: "order-3", height: "h-16", avatarSize: "w-11 h-11", borderColor: "border-orange-500", glowColor: "rgba(249,115,22,0.4)", labelBg: "bg-orange-500", labelText: "3º", medalColor: "text-orange-400" },
+];
+
 export default function Ranking({ dadosUsuario, setTelaAtual }) {
   const [abaAtual, setAbaAtual] = useState('global');
-  // 🔥 Novo filtro de tempo adicionado aos estados
-  const [criterioOrdenacao, setCriterioOrdenacao] = useState('nivel'); // 'nivel', 'letras', ou 'tempo'
+  const [criterioOrdenacao, setCriterioOrdenacao] = useState('nivel');
   
   const [particulas, setParticulas] = useState([]);
   const [dadosDoBanco, setDadosDoBanco] = useState([]);
   const [carregando, setCarregando] = useState(true);
 
+  // 🌻 EASTER EGG (MANTIDO)
   const dispararParticulas = () => {
     const novosItens = [];
     const opcoesTexto = ['R', 'C', '❤️']; 
@@ -54,7 +62,6 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
 
   const removerParticula = (id) => setParticulas(prev => prev.filter(p => p.id !== id));
 
-  // Função para formatar o tempo no painel
   const formatarTempo = (segundos) => {
     if (segundos === Infinity || isNaN(segundos)) return "--:--";
     const min = Math.floor(segundos / 60).toString().padStart(2, '0');
@@ -102,7 +109,6 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
             if (xp > 0) somaNiv += Math.floor(Math.sqrt(xp / 1000)) + 1;
           });
 
-          // Puxando métricas para Precisão e Velocidade
           let totalLetras = 0;
           let totalTempo = 0;
           let totalPartidas = 0;
@@ -115,7 +121,6 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
             });
           }
 
-          // Se o cara nunca jogou, colocamos "Infinity" (infinito) para ele ir pro final da fila no filtro de tempo
           const tempoMedio = totalPartidas > 0 ? Math.floor(totalTempo / totalPartidas) : Infinity;
           const pat = getPatenteInfo(somaNiv);
 
@@ -126,7 +131,8 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
             letras: totalLetras,
             tempoMedio: tempoMedio,
             patente: pat.titulo,
-            cor: pat.cor
+            cor: pat.cor,
+            partidas: totalPartidas
           });
         });
         
@@ -146,28 +152,20 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
   const rankingProcessado = useMemo(() => {
     let lista = [...dadosDoBanco];
 
-    // 1. Aplica a Ordenação (Tempo é menor pro maior, Nível e Letras é maior pro menor)
-    if (criterioOrdenacao === 'nivel') {
-      lista.sort((a, b) => b.nivel - a.nivel);
-    } else if (criterioOrdenacao === 'letras') {
-      lista.sort((a, b) => b.letras - a.letras);
-    } else if (criterioOrdenacao === 'tempo') {
-      lista.sort((a, b) => a.tempoMedio - b.tempoMedio);
-    }
+    if (criterioOrdenacao === 'nivel') lista.sort((a, b) => b.nivel - a.nivel);
+    else if (criterioOrdenacao === 'letras') lista.sort((a, b) => b.letras - a.letras);
+    else if (criterioOrdenacao === 'tempo') lista.sort((a, b) => a.tempoMedio - b.tempoMedio);
 
-    // 2. Aplica as posições globais reais APÓS ordenar
     lista = lista.map((m, index) => ({ ...m, posicaoGlobal: index + 1 }));
 
-    // 3. Aplica o filtro de Aba
-    if (abaAtual === 'patente') {
-      lista = lista.filter(m => m.patente === patentePessoal.titulo);
-    } else if (abaAtual === 'hall') {
-      lista = lista.slice(0, 3);
-    }
+    if (abaAtual === 'patente') lista = lista.filter(m => m.patente === patentePessoal.titulo);
+    else if (abaAtual === 'hall') lista = lista.slice(0, 3);
 
-    // 4. Aplica posições relativas à tela atual
     return lista.map((m, index) => ({ ...m, posicaoExibida: index + 1 }));
   }, [dadosDoBanco, abaAtual, criterioOrdenacao, patentePessoal]);
+
+  const top3 = rankingProcessado.slice(0, 3);
+  const rest = rankingProcessado.slice(3);
 
   // ==========================================
   // 🎯 MATEMÁTICA DE RIVALIDADE (RADAR)
@@ -186,32 +184,23 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
     textoRadar = "Você é o líder absoluto desta lista!";
   } else if (meuIndex > 0) {
     const rival = rankingProcessado[meuIndex - 1];
-    
-    // Lógica inteligente dependendo do filtro selecionado
     if (criterioOrdenacao === 'nivel') {
       const diff = rival.nivel - eu.nivel + 1;
-      textoRadar = `Faltam ${diff} níveis para passar o #${rival.posicaoExibida} (${rival.nome}).`;
+      textoRadar = `Faltam ${diff} níveis para passar o #${rival.posicaoExibida} (${rival.nome.split(' ')[0]}).`;
     } else if (criterioOrdenacao === 'letras') {
       const diff = rival.letras - eu.letras + 1;
       textoRadar = `Faltam ${diff} acertos para passar o #${rival.posicaoExibida}.`;
     } else if (criterioOrdenacao === 'tempo') {
-      if (eu.tempoMedio === Infinity) {
-        textoRadar = "Jogue sua primeira partida para registrar seu tempo médio!";
-      } else {
+      if (eu.tempoMedio === Infinity) textoRadar = "Jogue uma partida para registrar seu tempo médio!";
+      else {
         const diff = eu.tempoMedio - rival.tempoMedio + 1;
-        textoRadar = `Corte ${diff}s do seu tempo médio para passar o #${rival.posicaoExibida}.`;
+        textoRadar = `Corte ${diff}s do seu tempo para passar o #${rival.posicaoExibida}.`;
       }
     }
   }
 
   return (
-    <div style={{ 
-      width: '100%', minHeight: '100vh', 
-      backgroundColor: '#f8fafc', 
-      backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)',
-      backgroundSize: '24px 24px',
-      padding: '5vh 20px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' 
-    }}>
+    <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-hidden flex flex-col selection:bg-cyan-500/30">
       
       <style>
         {`
@@ -224,148 +213,241 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
         `}
       </style>
 
+      {/* Partículas do Easter Egg ficam na raiz absoluta */}
       {particulas.map(p => (
         <ParticulaRomantica key={p.id} id={p.id} texto={p.texto} posicaoInicial={p.posicao} onFinalizar={removerParticula} />
       ))}
 
-      <div style={{ width: '100%', maxWidth: '900px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexShrink: 0 }}>
-        <button onClick={() => setTelaAtual('menu')} style={{ backgroundColor: 'white', color: '#475569', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>⬅ Voltar</button>
-        <div style={{ backgroundColor: 'white', padding: '10px 25px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', borderBottom: '4px solid #1F6FEB' }}>
-          <h1 style={{ color: '#1e293b', margin: 0, fontSize: '1.8rem' }}>🏆 Ranking de Residentes</h1>
-        </div>
-      </div>
+      {/* Background do Figma */}
+      <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)`, backgroundSize: '28px 28px' }} />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,rgba(251,191,36,0.04)_0%,#0B1120_70%)]" />
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', maxWidth: '900px', marginBottom: '30px' }}>
-        <div style={{ display: 'flex', gap: '10px', backgroundColor: 'white', padding: '8px', borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-          {['global', 'patente', 'hall'].map(aba => (
-            <button
-              key={aba} onClick={() => setAbaAtual(aba)}
-              style={{
-                flex: 1, backgroundColor: abaAtual === aba ? '#1F6FEB' : 'transparent', color: abaAtual === aba ? 'white' : '#64748b',
-                border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer',
-                transition: 'all 0.2s', fontSize: '1rem', textTransform: 'capitalize'
-              }}
-            >
-              {aba === 'global' ? '🌍 Global' : (aba === 'patente' ? '🎖️ Minha Patente' : '🏆 Hall da Fama')}
+      <div className="max-w-[1200px] mx-auto px-6 py-6 relative z-10 flex flex-col h-full w-full">
+
+        {/* ─── HEADER ─── */}
+        <header className="flex items-center justify-between mb-6 shrink-0">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setTelaAtual('menu')} className="w-10 h-10 rounded-xl bg-[#151F32] border border-white/[0.05] flex items-center justify-center text-slate-400 hover:text-white hover:border-amber-500/30 transition-colors shadow-[0_4px_15px_rgba(0,0,0,0.2)]">
+              <ArrowLeft className="w-5 h-5" />
             </button>
-          ))}
-        </div>
-
-        {/* BARRAS DE FILTRO */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
-          <span style={{ color: '#64748b', fontWeight: 'bold', alignSelf: 'center', fontSize: '0.9rem' }}>Filtro:</span>
-          <button 
-            onClick={() => setCriterioOrdenacao('nivel')} 
-            style={{ backgroundColor: criterioOrdenacao === 'nivel' ? '#1e293b' : 'white', color: criterioOrdenacao === 'nivel' ? 'white' : '#64748b', border: '1px solid #cbd5e1', padding: '6px 15px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.2s' }}
-          >🎓 Nível Geral</button>
-          <button 
-            onClick={() => setCriterioOrdenacao('letras')} 
-            style={{ backgroundColor: criterioOrdenacao === 'letras' ? '#1e293b' : 'white', color: criterioOrdenacao === 'letras' ? 'white' : '#64748b', border: '1px solid #cbd5e1', padding: '6px 15px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.2s' }}
-          >🎯 Precisão</button>
-          
-          {/* O NOVO BOTÃO DE TEMPO AQUI */}
-          <button 
-            onClick={() => setCriterioOrdenacao('tempo')} 
-            style={{ backgroundColor: criterioOrdenacao === 'tempo' ? '#1e293b' : 'white', color: criterioOrdenacao === 'tempo' ? 'white' : '#64748b', border: '1px solid #cbd5e1', padding: '6px 15px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem', transition: 'all 0.2s' }}
-          >⏱️ Mais Rápidos</button>
-        </div>
-      </div>
-
-      {carregando ? (
-        <div style={{ padding: '40px', backgroundColor: 'white', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', textAlign: 'center' }}>
-          <div style={{ fontSize: '2rem', animation: 'spin 1s linear infinite' }}>⏳</div>
-          <p style={{ color: '#64748b', fontWeight: 'bold', marginTop: '10px' }}>Sincronizando plantões...</p>
-        </div>
-      ) : (
-        <div style={{ width: '100%', maxWidth: '900px', display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '120px' }}>
-          {rankingProcessado.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#94a3b8', padding: '40px', fontSize: '1.2rem', backgroundColor: 'white', borderRadius: '16px', border: '2px dashed #cbd5e1' }}>
-              Nenhum registro encontrado com estes filtros.
+            <div>
+              <h1 className="text-white text-xl font-bold tracking-tight flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-amber-400" style={{ filter: 'drop-shadow(0 0 8px rgba(251,191,36,0.6))' }} />
+                Devoradores de Plantão
+              </h1>
+              <p className="text-slate-500 text-xs uppercase tracking-wider mt-1">Ranking Hospitalar Oficial</p>
             </div>
-          ) : (
-            rankingProcessado.map((m) => {
-              const isEu = m.uid === dadosUsuario?.uid;
-              const pos = m.posicaoExibida;
-              const isTop3 = pos <= 3;
-              const corTrofeu = pos === 1 ? '#f59e0b' : (pos === 2 ? '#94a3b8' : '#b45309');
-              
-              return (
-                <div 
-                  key={m.uid} 
-                  style={{ 
-                    backgroundColor: 'white', padding: '15px 25px', borderRadius: isTop3 ? '20px' : '12px', 
-                    boxShadow: isTop3 ? `0 8px 20px ${corTrofeu}30` : '0 4px 10px rgba(0,0,0,0.02)', 
-                    display: 'flex', alignItems: 'center', gap: '20px', 
-                    border: isEu ? '2px solid #1F6FEB' : '1px solid white',
-                    transform: isEu ? 'scale(1.02)' : 'scale(1)', transition: 'transform 0.2s'
-                  }}
-                >
-                  <div style={{ fontSize: isTop3 ? '1.8rem' : '1.2rem', fontWeight: 'bold', color: isTop3 ? corTrofeu : '#94a3b8', width: '50px', textAlign: 'center' }}>
-                    {isTop3 ? (pos === 1 ? '🥇' : (pos === 2 ? '🥈' : '🥉')) : `#${pos}`}
-                  </div>
-                  
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ fontSize: isTop3 ? '1.2rem' : '1.05rem', fontWeight: 'bold', color: '#1e293b' }}>
-                      {m.nome} {isEu && <span style={{ backgroundColor: '#e0e7ff', color: '#1F6FEB', padding: '2px 8px', borderRadius: '10px', fontSize: '0.75rem', marginLeft: '8px', verticalAlign: 'middle' }}>Você</span>}
-                    </div>
-                    <div style={{ fontSize: '0.85rem', color: m.cor, fontWeight: 'bold', marginTop: '3px' }}>🎖️ {m.patente}</div>
-                  </div>
+          </div>
 
-                  <div style={{ textAlign: 'right', display: 'flex', gap: '20px' }}>
-                    {/* Renderização dinâmica dependendo do filtro escolhido */}
-                    {criterioOrdenacao === 'nivel' && (
-                      <div>
-                        <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: isEu ? '#1F6FEB' : '#475569' }}>{m.nivel}</div>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase' }}>Níveis</div>
-                      </div>
-                    )}
-                    {criterioOrdenacao === 'letras' && (
-                      <div>
-                        <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: isEu ? '#1F6FEB' : '#475569' }}>{m.letras}</div>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase' }}>Acertos</div>
-                      </div>
-                    )}
-                    {criterioOrdenacao === 'tempo' && (
-                      <div>
-                        <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: isEu ? '#1F6FEB' : '#475569' }}>{formatarTempo(m.tempoMedio)}</div>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase' }}>Média</div>
-                      </div>
-                    )}
+          <div className="flex items-center gap-3 bg-[#151F32] border border-cyan-500/20 rounded-full px-4 py-2 shadow-[0_0_15px_rgba(0,229,255,0.08)]">
+            <div className="flex flex-col text-right">
+              <span className="text-white text-sm font-bold">{dadosUsuario?.nome?.split(' ')[0] || 'Doutor(a)'}</span>
+              <span className="text-cyan-400 text-[10px] uppercase font-bold tracking-wider">{patentePessoal.titulo}</span>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center">
+              <span className="text-cyan-400 font-mono text-xs font-bold">{eu ? `#${eu.posicaoGlobal}` : '-'}</span>
+            </div>
+          </div>
+        </header>
+
+        {/* ─── PODIUM (RENDERIZADO CONDICIONALMENTE) ─── */}
+        {carregando ? (
+           <div className="flex-1 flex flex-col items-center justify-center">
+             <div className="text-4xl animate-spin mb-4">⏳</div>
+             <p className="text-slate-400 font-bold uppercase tracking-widest">Sincronizando Plantões...</p>
+           </div>
+        ) : (
+          <>
+            {top3.length > 0 && (
+              <motion.section
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+                className="shrink-0 mb-5"
+              >
+                <div className="bg-[#151F32] rounded-3xl border border-white/[0.02] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.3)] relative overflow-hidden">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-amber-500/5 blur-[60px] rounded-full pointer-events-none" />
+
+                  <div className="flex items-end justify-center gap-4 md:gap-8">
+                    {PODIUM_CONFIG.map((cfg) => {
+                      const player = top3[cfg.idx];
+                      if (!player) return <div key={cfg.idx} className={`w-20 md:w-28 ${cfg.order}`} />; 
+                      
+                      const isEu = player.uid === dadosUsuario?.uid;
+
+                      return (
+                        <motion.div
+                          key={player.uid}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5, delay: cfg.idx * 0.15 }}
+                          className={`flex flex-col items-center ${cfg.order} ${isEu ? 'scale-105' : ''}`}
+                        >
+                          <div className="relative mb-3">
+                            {cfg.idx === 0 && (
+                              <motion.div animate={{ y: [0, -3, 0], rotate: [0, 5, -5, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="absolute -top-5 left-1/2 -translate-x-1/2 z-10">
+                                <Crown className="w-6 h-6 text-amber-400" style={{ filter: 'drop-shadow(0 0 8px rgba(251,191,36,0.8))' }} />
+                              </motion.div>
+                            )}
+                            <div className={`${cfg.avatarSize} rounded-full flex items-center justify-center font-bold text-lg border-[3px] ${cfg.borderColor} bg-[#0F172A]`} style={{ boxShadow: `0 0 20px ${cfg.glowColor}` }}>
+                              {player.nome.charAt(0).toUpperCase()}
+                            </div>
+                            {isEu && <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-cyan-500 text-[#0B1120] text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Você</div>}
+                          </div>
+                          <span className={`text-xs font-bold mb-1 text-center truncate w-24 ${isEu ? 'text-cyan-300' : 'text-white'}`}>{player.nome}</span>
+                          <span className="text-slate-500 text-[10px] mb-1.5 hidden md:block">{player.patente}</span>
+                          
+                          <span className="font-mono text-xl font-bold" style={{ color: cfg.idx === 0 ? '#fbbf24' : (cfg.idx === 1 ? '#cbd5e1' : '#fb923c'), filter: `drop-shadow(0 0 6px ${cfg.glowColor})` }}>
+                            {criterioOrdenacao === 'nivel' ? player.nivel : (criterioOrdenacao === 'letras' ? player.letras : formatarTempo(player.tempoMedio))}
+                          </span>
+                          <span className="text-slate-600 text-[9px] uppercase tracking-wider font-bold">
+                            {criterioOrdenacao === 'nivel' ? 'Níveis' : (criterioOrdenacao === 'letras' ? 'Acertos' : 'Média')}
+                          </span>
+
+                          <motion.div
+                            initial={{ height: 0 }} animate={{ height: 'auto' }} transition={{ duration: 0.6, delay: 0.3 + cfg.idx * 0.1 }}
+                            className={`${cfg.height} w-20 md:w-24 mt-3 rounded-t-xl flex items-start justify-center pt-3 relative overflow-hidden`}
+                            style={{
+                              background: cfg.idx === 0 ? 'linear-gradient(to top, rgba(251,191,36,0.15), rgba(251,191,36,0.03))' : cfg.idx === 1 ? 'linear-gradient(to top, rgba(148,163,184,0.12), rgba(148,163,184,0.02))' : 'linear-gradient(to top, rgba(249,115,22,0.12), rgba(249,115,22,0.02))',
+                              borderTop: cfg.idx === 0 ? '2px solid rgba(251,191,36,0.4)' : cfg.idx === 1 ? '2px solid rgba(148,163,184,0.3)' : '2px solid rgba(249,115,22,0.3)',
+                              borderLeft: '1px solid rgba(255,255,255,0.03)', borderRight: '1px solid rgba(255,255,255,0.03)',
+                            }}
+                          >
+                            <span className={`text-sm font-black ${cfg.medalColor} opacity-80`}>{cfg.labelText}</span>
+                          </motion.div>
+                        </motion.div>
+                      );
+                    })}
                   </div>
                 </div>
-              );
-            })
-          )}
-        </div>
-      )}
+              </motion.section>
+            )}
 
-      {/* RADAR PESSOAL FIXO */}
-      <div style={{ position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)', width: '90%', maxWidth: '800px', backgroundColor: 'white', padding: '20px 30px', borderRadius: '24px', boxShadow: '0 -10px 40px rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '3px solid #1F6FEB', zIndex: 1000 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#1F6FEB', lineHeight: '1' }}>
-            {eu ? `#${eu.posicaoExibida}` : '-'}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1e293b' }}>
-              {tituloRadar}
-            </div>
-            <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: '500' }}>
-              {textoRadar}
-            </div>
-          </div>
-        </div>
-        
-        <div 
-          onClick={dispararParticulas}
-          style={{ fontSize: '2.5rem', cursor: 'pointer', transition: 'transform 0.2s', padding: '10px' }}
-          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.3) rotate(15deg)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-          title="R ❤️ C"
-        >
-          🌻
-        </div>
+            {/* ─── LEADERBOARD TABLE ─── */}
+            <motion.section
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}
+              className="flex-1 min-h-0 flex flex-col bg-[#151F32] rounded-3xl border border-white/[0.02] shadow-[0_8px_30px_rgba(0,0,0,0.2)] overflow-hidden"
+            >
+              {/* Table Header com Filtros */}
+              <div className="flex flex-col md:flex-row items-center justify-between px-6 py-4 border-b border-white/[0.04] shrink-0 gap-4">
+                <div className="flex bg-[#0B1120] rounded-xl p-1 border border-white/[0.04]">
+                  {[['global', '🌍 Global'], ['patente', '🎖️ Mesma Patente'], ['hall', '🏆 Hall da Fama']].map(([key, label]) => (
+                    <button
+                      key={key} onClick={() => setAbaAtual(key)}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${abaAtual === key ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/40 shadow-[0_0_10px_rgba(0,229,255,0.1)]' : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center bg-[#0B1120] rounded-xl p-1 border border-white/[0.04]">
+                  {[['nivel', 'Nível', '🎓'], ['letras', 'Acertos', '🎯'], ['tempo', 'Média', '⏱️']].map(([key, label, icone]) => (
+                    <button
+                      key={key} onClick={() => setCriterioOrdenacao(key)}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all ${criterioOrdenacao === key ? 'bg-amber-500/15 text-amber-400 border border-amber-500/40 shadow-[0_0_10px_rgba(251,191,36,0.1)]' : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                      <span>{icone}</span> <span className="hidden sm:inline">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Column headers */}
+              <div className="grid grid-cols-[50px_1fr_90px_90px_120px] gap-4 px-6 py-3 border-b border-white/[0.03] text-[9px] uppercase font-bold tracking-widest text-slate-500 shrink-0">
+                <span>#</span>
+                <span>Plantonista</span>
+                <span className="text-center hidden sm:block">Patente</span>
+                <span className="text-center">Estatística</span>
+                <span className="text-center">Info Extra</span>
+              </div>
+
+              {/* Rows */}
+              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                {rest.length === 0 ? (
+                  <div className="flex items-center justify-center h-32 text-slate-500 text-sm font-bold uppercase tracking-widest">
+                    Nenhum outro plantonista encontrado.
+                  </div>
+                ) : (
+                  rest.map((player, i) => {
+                    const isEu = player.uid === dadosUsuario?.uid;
+
+                    return (
+                      <motion.div
+                        key={player.uid}
+                        initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: i * 0.03 }}
+                        className={`grid grid-cols-[50px_1fr_90px_90px_120px] gap-4 items-center px-6 py-3.5 border-b border-white/[0.02] transition-colors group relative ${
+                          isEu ? 'bg-cyan-500/[0.06] hover:bg-cyan-500/[0.1]' : 'hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        {isEu && <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-400 rounded-r shadow-[0_0_10px_rgba(0,229,255,0.6)]" />}
+
+                        <span className={`font-mono text-base font-bold ${isEu ? 'text-cyan-400' : 'text-slate-500'}`}>
+                          #{player.posicaoExibida}
+                        </span>
+
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${player.posicaoExibida <= 6 ? 'bg-[#1e293b] border border-white/[0.08] text-slate-400' : 'bg-[#0f172a] border border-white/[0.04] text-slate-500'}`}>
+                            {player.nome.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <span className={`text-sm font-bold truncate flex items-center gap-2 ${isEu ? 'text-cyan-300' : 'text-white'}`}>
+                              {player.nome}
+                              {isEu && <span className="text-[9px] text-cyan-500 bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded-md uppercase tracking-wider">Você</span>}
+                            </span>
+                          </div>
+                        </div>
+
+                        <span className="text-center text-[10px] font-bold hidden sm:block truncate" style={{ color: player.cor }}>{player.patente}</span>
+
+                        <div className="flex items-center justify-center">
+                          <span className={`font-mono text-base font-bold ${isEu ? 'text-cyan-400' : player.posicaoExibida <= 5 ? 'text-amber-400' : 'text-slate-300'}`}>
+                            {criterioOrdenacao === 'nivel' ? player.nivel : (criterioOrdenacao === 'letras' ? player.letras : formatarTempo(player.tempoMedio))}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col items-center justify-center gap-0.5">
+                          <span className="text-xs font-bold text-slate-400">{player.partidas}</span>
+                          <span className="text-[8px] text-slate-600 uppercase tracking-widest">Partidas</span>
+                        </div>
+                      </motion.div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* BARRA DO RADAR FIXA NO RODAPÉ DA TABELA */}
+              <div className="shrink-0 border-t border-cyan-500/20 bg-[#0B1120]/80 backdrop-blur-md px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  {/* EASTER EGG INJETADO DISCRETAMENTE AQUI */}
+                  <div onClick={dispararParticulas} className="cursor-pointer text-2xl hover:scale-125 transition-transform" title="R ❤️ C">🌻</div>
+                  <div>
+                    <div className="text-cyan-300 text-sm font-bold uppercase tracking-wide">{tituloRadar}</div>
+                    <div className="text-slate-400 text-xs font-medium">{textoRadar}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2 bg-[#151F32] px-3 py-1.5 rounded-lg border border-white/[0.05]">
+                    <Flame className="w-4 h-4 text-orange-400" style={{ filter: 'drop-shadow(0 0 6px rgba(249,115,22,0.8))' }} />
+                    <span className="text-orange-400 font-bold text-xs">{dadosUsuario?.estatisticasGerais?.streakAtual || 0} dias</span>
+                  </div>
+                  <div className="text-amber-400 font-mono text-lg font-bold flex items-center gap-2" style={{ filter: 'drop-shadow(0 0 6px rgba(251,191,36,0.4))' }}>
+                    {criterioOrdenacao === 'nivel' ? somaNiveisPessoal : (criterioOrdenacao === 'letras' ? '??' : '--:--')} 
+                    <span className="text-[10px] text-slate-500 uppercase tracking-widest">{criterioOrdenacao}</span>
+                  </div>
+                </div>
+              </div>
+
+            </motion.section>
+          </>
+        )}
       </div>
 
+      <style dangerouslySetInlineStyle={{__html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+      `}} />
     </div>
   );
 }

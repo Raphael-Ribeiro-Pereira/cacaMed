@@ -1,13 +1,44 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend 
 } from 'recharts';
+import {
+  ArrowLeft, Flame, Trophy, Activity, TextCursorInput, Brain, HeartPulse, Bone, Pill, Stethoscope, Shield, Microscope, Dna, Bug
+} from "lucide-react";
+import { motion } from "framer-motion";
+
+// ==========================================
+// 🧠 DICIONÁRIO DE TRADUÇÃO (REVERSE LOOKUP)
+// ==========================================
+const ESTRUTURA_MODOS = {
+  'Anatomia': { icon: Bone, color: '#38bdf8', epic: 'Arquiteto Esquelético', fases: ['Sistema esquelético', 'Sistema muscular', 'Sistema nervoso', 'Sistema circulatório', 'Sistema linfático', 'Sistema respiratório', 'Sistema digestório', 'Sistema urinário', 'Sistema reprodutor', 'Sistema endócrino', 'Sistema tegumentar'] },
+  'Farmacologia': { icon: Pill, color: '#10b981', epic: 'O Alquimista Químico', fases: ['Medicamentos', 'Classes de medicamentos', 'Mecanismos de ação', 'Receptores', 'Enzimas'] },
+  'Microbiologia': { icon: Bug, color: '#eab308', epic: 'Caçador de Vírus', fases: ['Vírus', 'Bactérias', 'Fungos', 'Parasitas'] },
+  'Histologia': { icon: Dna, color: '#06b6d4', epic: 'Mestre Celular', fases: ['Células', 'Tecidos', 'Epitelios', 'Matriz', 'Organelas'] },
+  'Imunologia': { icon: Shield, color: '#ec4899', epic: 'Guardião Imune', fases: ['Imunologia'] },
+  'Patologia': { icon: Microscope, color: '#f97316', epic: 'Caçador de Doenças', fases: ['Doencas', 'Exames'] }
+};
+
+// Constrói um mapa rápido para traduzir a chave do Firebase (ex: "ANATOMIA-SISTEMAESQUELETICO") de volta para o visual
+const MAPA_REVERSO = {};
+Object.keys(ESTRUTURA_MODOS).forEach(area => {
+  const areaBlindada = area.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+  ESTRUTURA_MODOS[area].fases.forEach(fase => {
+    const faseBlindada = fase.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+    MAPA_REVERSO[`${areaBlindada}-${faseBlindada}`] = {
+      areaOriginal: area,
+      faseOriginal: fase,
+      icon: ESTRUTURA_MODOS[area].icon,
+      color: ESTRUTURA_MODOS[area].color,
+      epic: ESTRUTURA_MODOS[area].epic
+    };
+  });
+});
 
 export default function Estatisticas({ dadosUsuario, setTelaAtual }) {
-  // ==========================================
-  // 🧮 MOTOR ANALÍTICO AVANÇADO
-  // ==========================================
+  const [hoveredPoint, setHoveredPoint] = useState(null);
+
   const estatisticas = dadosUsuario?.estatisticas || {};
   const statsGerais = dadosUsuario?.estatisticasGerais || {};
   const xpTopicos = dadosUsuario?.xpTopicos || {};
@@ -19,41 +50,73 @@ export default function Estatisticas({ dadosUsuario, setTelaAtual }) {
     let tempoGeralTotal = 0;
     let partidasGeraisTotal = 0;
     
-    const temposPorArea = [];
     const graficoPieMap = {};
+    const especialidadesCards = [];
 
-    // 1. Analisa os Níveis (XP)
+    // 1. Analisa os Níveis (XP) e monta os Cards Específicos por Subtópico
     Object.keys(xpTopicos).forEach(chave => {
       const xp = xpTopicos[chave];
       if (xp > 0) {
         const nivel = Math.floor(Math.sqrt(xp / 1000)) + 1;
+        
+        // O NOSSO TRADUTOR EM AÇÃO
+        const info = MAPA_REVERSO[chave] || {
+          areaOriginal: chave.split('-')[0] || 'Especialidade',
+          faseOriginal: chave.split('-')[1] || chave,
+          icon: HeartPulse,
+          color: '#3b82f6',
+          epic: 'Plantonista Geral'
+        };
+
         if (nivel > maiorNivel.nivel) {
-          maiorNivel = { materia: chave.replace('-', ' - '), nivel: nivel };
+          maiorNivel = { materia: info.faseOriginal, nivel: nivel };
         }
+
+        const xpProximoNivel = Math.pow(nivel, 2) * 1000;
+        const xpNivelAtualBase = Math.pow(nivel - 1, 2) * 1000;
+        const xpNesteNivel = xp - xpNivelAtualBase; 
+        const xpParaUpar = xpProximoNivel - xpNivelAtualBase; 
+        const porcentagem = xpNesteNivel === 0 ? 0 : Math.round((xpNesteNivel / xpParaUpar) * 100);
+
+        especialidadesCards.push({
+          id: chave,
+          title: info.faseOriginal, // Ex: "Sistema esquelético"
+          areaInfo: `${info.areaOriginal} • ${info.epic}`, // Ex: "Anatomia • Arquiteto Esquelético"
+          icon: info.icon,
+          color: info.color,
+          progress: porcentagem,
+          xpStr: xp > 1000 ? `${(xp/1000).toFixed(1)}k` : xp.toString(),
+          nivel: nivel,
+          tempoMedioRaw: 0,
+          partidasNoSubtopico: 0
+        });
       }
     });
 
     // 2. Analisa as Estatísticas de Partida (Tempo, Letras, etc)
     Object.keys(estatisticas).forEach(chave => {
       const stats = estatisticas[chave];
-      const [areaPrincipal, subArea] = chave.split('-');
-
+      
       if (stats.partidas > 0) {
         tempoGeralTotal += stats.tempo;
         partidasGeraisTotal += stats.partidas;
 
-        if (stats.letras > maiorLetras.total) maiorLetras = { materia: subArea || areaPrincipal, total: stats.letras };
+        const info = MAPA_REVERSO[chave] || { areaOriginal: chave.split('-')[0] || 'Geral', faseOriginal: chave.split('-')[1] || chave };
+
+        if (stats.letras > maiorLetras.total) maiorLetras = { materia: info.faseOriginal, total: stats.letras };
         if (stats.melhorTempo && stats.melhorTempo < melhorTempoAbsoluto) melhorTempoAbsoluto = stats.melhorTempo;
 
         const tempoMedioSegundos = Math.floor(stats.tempo / stats.partidas);
-        temposPorArea.push({
-          materia: chave.replace('-', ' - '),
-          mediaSegundos: tempoMedioSegundos,
-          partidas: stats.partidas,
-          recordeLocal: stats.melhorTempo || 0
-        });
 
-        graficoPieMap[areaPrincipal] = (graficoPieMap[areaPrincipal] || 0) + stats.partidas;
+        // Alimenta o gráfico de rosca agrupando pela Área Maior (ex: todas as partidas de Anatomia)
+        graficoPieMap[info.areaOriginal] = (graficoPieMap[info.areaOriginal] || 0) + stats.partidas;
+
+        // Atualiza o tempo médio e partidas no Card do Subtópico exato
+        const cardIndex = especialidadesCards.findIndex(c => c.id === chave);
+        if (cardIndex !== -1) {
+          especialidadesCards[cardIndex].tempoMedioRaw = tempoMedioSegundos;
+          especialidadesCards[cardIndex].partidasNoSubtopico = stats.partidas;
+        }
       }
     });
 
@@ -71,215 +134,232 @@ export default function Estatisticas({ dadosUsuario, setTelaAtual }) {
       materiaDominanteTexto = campeao.name;
     }
 
-    // 4. Formata o Histórico para o Gráfico de Linha (Últimas 30 partidas)
+    // 4. Formata o Histórico para o Gráfico de Linha
     const historicoData = (statsGerais.historico || []).map((h, i) => ({
-      nome: `P${i + 1}`,
+      name: `Dia ${i + 1}`,
       Tempo: h.tempo,
       Erros: h.erros,
-      materia: h.materia
+      materia: MAPA_REVERSO[`${h.materia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase()}`]?.faseOriginal || h.materia
     }));
 
-    const tempoMedioGeral = partidasGeraisTotal > 0 ? Math.floor(tempoGeralTotal / partidasGeraisTotal) : 0;
+    const chartDataFull = [...historicoData];
+    if (chartDataFull.length > 0 && chartDataFull.length < 30) {
+      const last = chartDataFull[chartDataFull.length - 1];
+      for(let i = chartDataFull.length; i < 30; i++) {
+        chartDataFull.push({ name: `Dia ${i+1}`, Tempo: last.Tempo, Erros: 0 });
+      }
+    }
+
     const mediaErros = partidasGeraisTotal > 0 ? (statsGerais.errosTotais / partidasGeraisTotal).toFixed(1) : 0;
 
     return {
-      maiorNivel,
       maiorLetras,
-      tempoMedioGeral,
       melhorTempoAbsoluto: melhorTempoAbsoluto === Infinity ? 0 : melhorTempoAbsoluto,
-      tempoGeralTotal,
       partidasGeraisTotal,
       mediaErros,
-      temposPorArea: temposPorArea.sort((a, b) => a.mediaSegundos - b.mediaSegundos),
       dadosGraficoPie,
       materiaDominanteTexto,
       porcentagemDominante,
-      historicoData,
+      historicoData: chartDataFull,
       streakAtual: statsGerais.streakAtual || 0,
       maiorStreak: statsGerais.maiorStreak || 0,
-      diasSeguidos: statsGerais.diasSeguidos || 0,
-      maiorPalavra: statsGerais.maiorPalavra || 0
+      maiorPalavra: statsGerais.maiorPalavra || 0,
+      especialidadesCards: especialidadesCards.sort((a,b) => b.nivel - a.nivel) // Ordena do maior nível para o menor
     };
   }, [estatisticas, xpTopicos, statsGerais]);
 
-  // Utilitários de Formatação
   const formatarTempo = (segundos) => {
-    if (segundos == null || isNaN(segundos)) return "00:00";
+    if (segundos == null || isNaN(segundos) || segundos === 0) return "00:00";
     const min = Math.floor(segundos / 60).toString().padStart(2, '0');
     const seg = (segundos % 60).toString().padStart(2, '0');
     return `${min}:${seg}`;
   };
 
-  const formatarTempoHoras = (segundos) => {
-    if (!segundos) return "0h 0m";
-    const h = Math.floor(segundos / 3600);
-    const m = Math.floor((segundos % 3600) / 60);
-    if (h > 0) return `${h}h ${m}m`;
-    return `${m} min`;
-  };
-
-  const CORES = ['#1F6FEB', '#8b5cf6', '#0ea5e9', '#f59e0b', '#ef4444', '#10b981', '#64748b'];
+  const CORES = ['#a855f7', '#3b82f6', '#0ea5e9', '#10b981', '#f59e0b', '#f97316', '#ef4444'];
 
   return (
-    <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#f8fafc', backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '24px 24px', padding: '5vh 20px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-x-hidden flex flex-col selection:bg-purple-500/30">
       
-      <div style={{ width: '100%', maxWidth: '1100px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-        <button onClick={() => setTelaAtual('menu')} style={{ backgroundColor: 'white', color: '#475569', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
-          ⬅ Voltar ao Plantão
-        </button>
-        <h1 style={{ color: '#1e293b', margin: 0, fontSize: '2rem', textShadow: '2px 2px 4px rgba(0,0,0,0.05)' }}>📊 Dashboard Analítico</h1>
-      </div>
+      <div className="fixed inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)`, backgroundSize: '32px 32px' }} />
+      <div className="fixed top-0 left-0 w-full h-full pointer-events-none bg-[radial-gradient(ellipse_at_top_right,rgba(139,92,246,0.05)_0%,#0B1120_60%)]" />
 
-      {dadosProcessados.partidasGeraisTotal === 0 ? (
-        <div style={{ backgroundColor: 'white', padding: '50px', borderRadius: '24px', textAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', width: '100%', maxWidth: '600px', marginTop: '50px' }}>
-          <div style={{ fontSize: '4rem', marginBottom: '20px' }}>📂</div>
-          <h2 style={{ color: '#334155', margin: '0 0 10px 0' }}>Prontuário Vazio</h2>
-          <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Conclua seu primeiro plantão para gerar estatísticas detalhadas.</p>
-        </div>
-      ) : (
-        <div style={{ width: '100%', maxWidth: '1100px', display: 'flex', flexDirection: 'column', gap: '30px' }}>
-          
-          {/* ==========================================
-              🏆 BLOCO 1: VISÃO GERAL (KPIs)
-          ========================================== */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '15px' }}>
-            
-            <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' }}>
-              <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>⏳</div>
-              <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Tempo Jogado</div>
-              <div style={{ color: '#1e293b', fontSize: '1.4rem', fontWeight: 'bold' }}>{formatarTempoHoras(dadosProcessados.tempoGeralTotal)}</div>
-            </div>
+      <div className="max-w-[1400px] mx-auto px-6 py-6 md:py-8 relative z-10 flex flex-col h-full w-full">
 
-            <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' }}>
-              <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>⚡</div>
-              <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Melhor Tempo</div>
-              <div style={{ color: '#10b981', fontSize: '1.4rem', fontWeight: 'bold' }}>{formatarTempo(dadosProcessados.melhorTempoAbsoluto)}</div>
-            </div>
-
-            <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' }}>
-              <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🔥</div>
-              <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Maior Streak</div>
-              <div style={{ color: '#f59e0b', fontSize: '1.4rem', fontWeight: 'bold' }}>{dadosProcessados.maiorStreak} vitórias</div>
-            </div>
-
-            <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' }}>
-              <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📅</div>
-              <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Dias Seguidos</div>
-              <div style={{ color: '#8b5cf6', fontSize: '1.4rem', fontWeight: 'bold' }}>{dadosProcessados.diasSeguidos} dias</div>
-            </div>
-
-            <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' }}>
-              <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>📉</div>
-              <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Média de Erros</div>
-              <div style={{ color: '#ef4444', fontSize: '1.4rem', fontWeight: 'bold' }}>{dadosProcessados.mediaErros} / jogo</div>
-            </div>
-
-            <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.02)' }}>
-              <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>🧠</div>
-              <div style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Maior Palavra</div>
-              <div style={{ color: '#0ea5e9', fontSize: '1.4rem', fontWeight: 'bold' }}>{dadosProcessados.maiorPalavra} letras</div>
-            </div>
-
+        <header className="flex items-center gap-4 mb-6 shrink-0">
+          <button onClick={() => setTelaAtual("menu")} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#151F32] border border-white/[0.05] flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/30 transition-colors shadow-[0_4px_15px_rgba(0,0,0,0.2)]">
+            <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
+          </button>
+          <div>
+            <h1 className="text-white text-xl md:text-2xl font-bold tracking-tight flex items-center gap-2">
+              📈 Dashboard Analítico
+            </h1>
+            <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">Desempenho e histórico de plantões.</p>
           </div>
+        </header>
 
-          {/* ==========================================
-              📈 BLOCO 2: GRÁFICOS E TENDÊNCIAS
-          ========================================== */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '30px' }}>
-            
-            {/* Gráfico de Linha (Evolução) */}
-            <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
-              <h3 style={{ margin: '0 0 5px 0', color: '#1e293b', fontSize: '1.4rem' }}>Evolução de Desempenho</h3>
-              <p style={{ color: '#64748b', margin: '0 0 20px 0', fontSize: '0.9rem' }}>Acompanhe seu tempo (seg) e erros nas últimas 30 partidas.</p>
-              
-              <div style={{ flex: 1, minHeight: '300px', width: '100%' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={dadosProcessados.historicoData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="nome" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                    <YAxis yAxisId="left" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                    <Tooltip 
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}
-                      labelStyle={{ fontWeight: 'bold', color: '#1e293b', marginBottom: '5px' }}
-                    />
-                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                    <Line yAxisId="left" type="monotone" dataKey="Tempo" stroke="#1F6FEB" strokeWidth={3} dot={{ r: 4, fill: '#1F6FEB', strokeWidth: 2, stroke: 'white' }} activeDot={{ r: 6 }} name="Tempo (s)" />
-                    <Line yAxisId="right" type="monotone" dataKey="Erros" stroke="#ef4444" strokeWidth={3} dot={{ r: 4, fill: '#ef4444', strokeWidth: 2, stroke: 'white' }} activeDot={{ r: 6 }} name="Erros Cometidos" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+        {dadosProcessados.partidasGeraisTotal === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <div className="text-6xl mb-4 opacity-50">📂</div>
+            <h2 className="text-white text-2xl font-bold mb-2">Prontuário Vazio</h2>
+            <p className="text-slate-500 text-sm">Conclua seu primeiro plantão para gerar estatísticas detalhadas.</p>
+          </div>
+        ) : (
+          <>
+            <motion.section
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+              className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 shrink-0"
+            >
+              {[
+                { label: 'Streak Atual', value: dadosProcessados.streakAtual.toString(), sub: 'Dias', icon: Flame, glow: '#f97316', iconColor: 'text-orange-400' },
+                { label: 'Maior Streak', value: dadosProcessados.maiorStreak.toString(), sub: 'Dias', icon: Trophy, glow: '#eab308', iconColor: 'text-yellow-400' },
+                { label: 'Taxa de Erros', value: dadosProcessados.mediaErros.toString(), sub: 'Média ⚠️', icon: Activity, glow: '#ef4444', iconColor: 'text-red-500' },
+                { label: 'Maior Palavra', value: dadosProcessados.maiorPalavra > 0 ? dadosProcessados.maiorPalavra.toString() : '-', sub: 'Letras', icon: TextCursorInput, glow: '#00e5ff', iconColor: 'text-cyan-400' },
+              ].map(s => (
+                <div key={s.label} className="bg-[#151F32] rounded-2xl p-4 md:p-5 border border-white/[0.02] shadow-[0_4px_15px_rgba(0,0,0,0.2)] relative overflow-hidden group">
+                  <div className="absolute -right-4 -top-4 w-20 h-20 blur-[30px] rounded-full pointer-events-none opacity-10 group-hover:opacity-20 transition-all" style={{ backgroundColor: s.glow }} />
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-xl border border-white/[0.05]" style={{ backgroundColor: `${s.glow}10`, borderColor: `${s.glow}20` }}>
+                      <s.icon className={`w-4 h-4 md:w-5 md:h-5 ${s.iconColor}`} style={{ filter: `drop-shadow(0 0 8px ${s.glow}80)` }} />
+                    </div>
+                    <span className="text-slate-500 text-[10px] md:text-xs font-bold uppercase tracking-wider">{s.label}</span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl md:text-4xl font-bold text-white tracking-tighter">{s.value}</span>
+                    <span className="text-slate-500 text-xs font-bold">{s.sub}</span>
+                  </div>
+                </div>
+              ))}
+            </motion.section>
 
-            {/* Gráfico de Rosca (Foco) mantido e ajustado */}
-            <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
-              <h3 style={{ margin: '0 0 5px 0', color: '#1e293b', fontSize: '1.4rem' }}>Distribuição de Foco</h3>
-              <p style={{ color: '#64748b', margin: '0 0 20px 0', fontSize: '0.9rem' }}>Veja quais grandes áreas concentram seus estudos.</p>
-              
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', flex: 1 }}>
-                <div style={{ flex: '1 1 200px', height: '250px', position: 'relative' }}>
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 md:gap-6 mb-6">
+              <motion.section
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.15 }}
+                className="bg-[#151F32] rounded-3xl p-5 md:p-6 border border-white/[0.02] shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-white text-base md:text-lg font-bold">Evolução do Tempo (Segundos)</h2>
+                    <p className="text-slate-500 text-xs">Últimas 30 Partidas</p>
+                  </div>
+                  <div className="flex bg-[#0F172A] rounded-lg p-1 border border-white/[0.05]">
+                    <span className="px-4 py-1.5 text-xs font-bold rounded-md bg-[#1e293b] text-white shadow-[0_2px_8px_rgba(0,0,0,0.2)]">Velocidade</span>
+                  </div>
+                </div>
+
+                <div className="w-full h-[200px] md:h-[250px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={dadosProcessados.historicoData} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
+                      <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                      <RechartsTooltip 
+                        contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 20px rgba(0,0,0,0.5)' }}
+                        itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                        labelStyle={{ color: '#94a3b8', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}
+                      />
+                      <Line type="monotone" dataKey="Tempo" stroke="#8b5cf6" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: '#a855f7', stroke: '#fff', strokeWidth: 2 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </motion.section>
+
+              <motion.section
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}
+                className="bg-[#151F32] rounded-3xl p-5 md:p-6 border border-white/[0.02] shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex flex-col items-center justify-center"
+              >
+                <div className="w-full text-left mb-2">
+                  <h2 className="text-white text-base md:text-lg font-bold">Foco Global</h2>
+                  <p className="text-slate-500 text-xs">Agrupado por Área Pai</p>
+                </div>
+                
+                <div className="w-full flex-1 relative min-h-[200px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={dadosProcessados.dadosGraficoPie} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none">
+                      <Pie data={dadosProcessados.dadosGraficoPie} cx="50%" cy="50%" innerRadius="60%" outerRadius="85%" paddingAngle={5} dataKey="value" stroke="none">
                         {dadosProcessados.dadosGraficoPie.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={CORES[index % CORES.length]} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value) => [`${value} Plantões`, 'Concluídos']} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} />
+                      <RechartsTooltip 
+                        contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 20px rgba(0,0,0,0.5)' }}
+                        itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
-                    <div style={{ fontSize: '2.2rem', fontWeight: 'bold', color: '#1e293b', lineHeight: '1' }}>{dadosProcessados.porcentagemDominante}%</div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold', marginTop: '5px', maxWidth: '90px', wordWrap: 'break-word' }}>{dadosProcessados.materiaDominanteTexto}</div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                    <div className="text-3xl md:text-4xl font-black text-white">{dadosProcessados.porcentagemDominante}%</div>
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1 max-w-[80px] truncate">{dadosProcessados.materiaDominanteTexto}</div>
                   </div>
                 </div>
+              </motion.section>
+            </div>
 
-                <div style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {dadosProcessados.dadosGraficoPie.map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: CORES[idx % CORES.length] }}></div>
-                        <span style={{ color: '#334155', fontWeight: 'bold', fontSize: '0.9rem' }}>{item.name}</span>
-                      </div>
-                      <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '0.9rem' }}>{item.value}x</span>
-                    </div>
-                  ))}
-                </div>
+            {/* ─── EPIC TITLES & SPECIALTIES GRID (SUBÁREAS) ─── */}
+            <motion.section
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }}
+              className="flex-1 min-h-0 flex flex-col mb-8"
+            >
+              <div className="mb-4">
+                <h2 className="text-white text-lg font-bold">Títulos Épicos & Domínio por Subtópico</h2>
+                <p className="text-slate-500 text-xs uppercase tracking-widest">O seu progresso detalhado em cada ala jogada.</p>
               </div>
-            </div>
 
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                {dadosProcessados.especialidadesCards.map((spec, index) => {
+                  const Icon = spec.icon;
+                  return (
+                    <div
+                      key={spec.id}
+                      className="bg-[#151F32] rounded-2xl p-5 border border-white/[0.02] shadow-[0_4px_20px_rgba(0,0,0,0.15)] hover:bg-[#1a263d] hover:border-white/[0.05] transition-colors group relative overflow-hidden flex flex-col"
+                    >
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-[0.06] transition-opacity pointer-events-none" style={{ background: `radial-gradient(circle at bottom right, ${spec.color}, transparent 60%)` }} />
 
-          {/* ==========================================
-              📋 BLOCO 3: O PRONTUÁRIO DETALHADO
-          ========================================== */}
-          <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
-            <h3 style={{ margin: '0 0 20px 0', color: '#1e293b', fontSize: '1.4rem' }}>⏱️ Desempenho de Velocidade por Área</h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {dadosProcessados.temposPorArea.map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: idx % 2 === 0 ? '#f8fafc' : 'white', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    <span style={{ fontWeight: 'bold', color: '#334155' }}>{item.materia}</span>
-                    <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Baseado em {item.partidas} plantões</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '30px', textAlign: 'right' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Recorde Local</span>
-                      <span style={{ fontWeight: 'bold', color: '#10b981', fontSize: '1.1rem' }}>{formatarTempo(item.recordeLocal)}</span>
+                      <div className="flex items-center gap-3 mb-4 relative z-10">
+                        <div className="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0" style={{ backgroundColor: `${spec.color}15`, borderColor: `${spec.color}30` }}>
+                          <Icon className="w-5 h-5" style={{ color: spec.color, filter: `drop-shadow(0 0 8px ${spec.color}80)` }} />
+                        </div>
+                        <div className="min-w-0">
+                          {/* O NOVO TRADUTOR MOSTRA O SUBTÓPICO PERFEITO AQUI */}
+                          <h3 className="text-white text-sm font-bold truncate">{spec.title}</h3>
+                          <span className="text-[9px] italic truncate block font-medium" style={{ color: spec.color }}>{spec.areaInfo}</span>
+                        </div>
+                      </div>
+
+                      <div className="mb-3 relative z-10">
+                        <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-1.5">
+                          <span className="text-slate-500">Nível {spec.nivel}</span>
+                          <span style={{ color: spec.color }}>{spec.progress}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-[#0B1120] rounded-full overflow-hidden border border-white/[0.05]">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${spec.progress}%` }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 1.2, delay: index * 0.1, ease: "easeOut" }}
+                            className="h-full rounded-full"
+                            style={{ backgroundColor: spec.color, boxShadow: `0 0 10px ${spec.color}80` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-auto relative z-10 flex items-center justify-between pt-2">
+                        <div className="flex flex-col">
+                          <span className="text-[8px] uppercase text-slate-500 font-bold tracking-widest">Tempo Médio</span>
+                          <span className="text-white font-mono text-xs">{formatarTempo(spec.tempoMedioRaw)}</span>
+                        </div>
+                        <div className="flex flex-col text-right">
+                          <span className="text-[8px] uppercase text-slate-500 font-bold tracking-widest">Partidas</span>
+                          <span className="text-white font-mono text-xs">{spec.partidasNoSubtopico}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', width: '80px' }}>
-                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Média</span>
-                      <span style={{ fontWeight: 'bold', color: '#1e293b', fontSize: '1.1rem' }}>{formatarTempo(item.mediaSegundos)}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-      )}
+                  );
+                })}
+              </div>
+            </motion.section>
+          </>
+        )}
+      </div>
     </div>
   );
 }
