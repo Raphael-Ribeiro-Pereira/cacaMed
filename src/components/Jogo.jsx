@@ -166,7 +166,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
        return;
     }
     setDica(`Consultando a IA (Nível ${nivelAtual})...`);
-    const API_KEY = 'AIzaSyCuBiqm9Gv9s7VM5FpEtLtRpdu_JdPE2is'; 
+    const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;; 
     const prompt = `Você é um gerador de dicas para estudantes de medicina. O termo é [${termo}]. Escreva uma dica clínica objetiva com NO MÁXIMO 15 palavras. É ESTRITAMENTE PROIBIDO usar a palavra '${termo}' ou seus radicais.`;
     try {
         const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {

@@ -1,21 +1,27 @@
 import React, { useState } from 'react';
+import { ArrowLeft, Clock, Zap, Target, BookOpen, Stethoscope, Ticket, Settings, Check, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const ELENCO_HOUSE = [
-  { id: 'house', nome: 'Dr. House', especialidade: 'Infectologia / Nefrologia', emoji: '🦯', cor: '#ef4444', desc: 'Especialista Master. Custo alto de XP, mas resolve quase tudo.' },
-  { id: 'cameron', nome: 'Dra. Cameron', especialidade: 'Imunologia', emoji: '🛡️', cor: '#3b82f6', desc: 'Protege contra doenças autoimunes e reações alérgicas graves.' },
-  { id: 'foreman', nome: 'Dr. Foreman', especialidade: 'Neurologia', emoji: '🧠', cor: '#8b5cf6', desc: 'Intervém em convulsões e danos cerebrais.' },
-  { id: 'chase', nome: 'Dr. Chase', especialidade: 'Cirurgia / Intensivismo', emoji: '🔪', cor: '#10b981', desc: 'Te salva quando o paciente precisa ser entubado ou operado às pressas.' },
-  { id: 'treze', nome: 'Treze', especialidade: 'Medicina Interna / Genética', emoji: '🧬', cor: '#ec4899', desc: 'Essencial para desvendar doenças hereditárias raras.' },
-  { id: 'wilson', nome: 'Dr. Wilson', especialidade: 'Oncologia', emoji: '🎗️', cor: '#f59e0b', desc: 'Especialista em tumores. Evita tratamentos errados para câncer.' },
-  { id: 'taub', nome: 'Dr. Taub', especialidade: 'Cirurgia Plástica / Dermato', emoji: '👁️', cor: '#06b6d4', desc: 'Identifica sintomas escondidos na pele ou reações cutâneas letais.' },
-  { id: 'kutner', nome: 'Dr. Kutner', especialidade: 'Medicina Esportiva / Trauma', emoji: '⚡', cor: '#f97316', desc: 'Age rápido em envenenamentos e traumas físicos ocultos.' },
-  { id: 'cuddy', nome: 'Dra. Cuddy', especialidade: 'Administração / Ética', emoji: '📋', cor: '#64748b', desc: 'Protege sua XP bloqueando exames caríssimos e desnecessários.' },
+  { id: 'house', name: 'Dr. House', emoji: '🦯', specialty: 'Infectologia / Nefro', passive: 'Especialista Master. Custo alto de XP, mas resolve quase tudo.', color: '#38bdf8' },
+  { id: 'cameron', name: 'Dra. Cameron', emoji: '🛡️', specialty: 'Imunologia', passive: 'Protege contra doenças autoimunes e reações alérgicas graves.', color: '#ec4899' },
+  { id: 'foreman', name: 'Dr. Foreman', emoji: '🧠', specialty: 'Neurologia', passive: 'Intervém em convulsões e danos cerebrais.', color: '#f59e0b' },
+  { id: 'chase', name: 'Dr. Chase', emoji: '🔪', specialty: 'Cirurgia / UTI', passive: 'Te salva quando o paciente precisa ser entubado ou operado às pressas.', color: '#f43f5e' },
+  { id: 'treze', name: 'Treze', emoji: '🧬', specialty: 'Med. Interna / Genética', passive: 'Essencial para desvendar doenças hereditárias raras.', color: '#10b981' },
+  { id: 'wilson', name: 'Dr. Wilson', emoji: '🎗️', specialty: 'Oncologia', passive: 'Especialista em tumores. Evita tratamentos errados para câncer.', color: '#fbbf24' },
+  { id: 'taub', name: 'Dr. Taub', emoji: '👁️', specialty: 'Cirurgia Plástica', passive: 'Identifica sintomas escondidos na pele ou reações cutâneas.', color: '#60a5fa' },
+  { id: 'kutner', name: 'Dr. Kutner', emoji: '⚡', specialty: 'Trauma / Esporte', passive: 'Age rápido em envenenamentos e traumas físicos ocultos.', color: '#eab308' },
+  { id: 'cuddy', name: 'Dra. Cuddy', emoji: '📋', specialty: 'Administração / Ética', passive: 'Protege sua XP bloqueando exames caríssimos e desnecessários.', color: '#a78bfa' },
 ];
 
 export default function SelecaoDDX({ setTelaAtual, iniciarDDX }) {
   const [tempo, setTempo] = useState('ranqueado');
   const [dificuldade, setDificuldade] = useState('residente');
-  const [equipe, setEquipe] = useState([]);
+  const [equipe, setEquipe] = useState(['house', 'foreman', 'cameron']);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
   const handleToggleMembro = (id) => {
     if (equipe.includes(id)) {
@@ -23,156 +29,215 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX }) {
     } else {
       if (equipe.length < 3) {
         setEquipe([...equipe, id]);
-      } else {
-        alert("A sala de diagnóstico está cheia! Remova alguém antes de adicionar outro especialista.");
       }
     }
   };
 
-  const handleIniciar = () => {
-    // Retiramos o alert e ativamos a função real que muda a tela!
-    iniciarDDX({ equipe, tempo, dificuldade }); 
+  const handleIniciar = async () => {
+    if (equipe.length === 0) {
+      alert("Você precisa levar pelo menos um médico com você!");
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      const genAI = new GoogleGenerativeAI(API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      
+      const promptInicial = `Aja como um preceptor médico titular. Crie um caso clínico REAL extraído ou adaptado de literaturas consagradas (Harrison, NEJM, bancos USMLE/Revalida).
+      Dificuldade solicitada: ${dificuldade}. O paciente acaba de dar entrada na UTI.
+      
+      IMPORTANTE: Você deve retornar APENAS um objeto JSON válido, sem NENHUM texto antes ou depois, e sem usar blocos de formatação markdown. O JSON deve ter exatamente esta estrutura:
+      {
+        "nome": "Nome Fictício Completo",
+        "idade": "Idade com 'anos'",
+        "tags": ["Sintoma Chave 1", "Sintoma Chave 2"],
+        "hma": "História da Moléstia Atual técnica. Termine perguntando o que o médico quer fazer.",
+        "diagnostico": "Nome exato e completo da Doença/Condição",
+        "sinaisVitais": {
+          "fc": "Frequência cardíaca (apenas o número)",
+          "pa": "Pressão arterial (ex: 120x80)",
+          "spo2": "Saturação de oxigênio (apenas o número)",
+          "temp": "Temperatura (apenas o número com ponto, ex: 38.5)"
+        }
+      }`;
+
+      const result = await model.generateContent(promptInicial);
+      const jsonLimpo = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+      const casoPreCarregado = JSON.parse(jsonLimpo);
+
+      setIsGenerating(false);
+      // Passamos o caso pronto para a próxima tela!
+      iniciarDDX({ equipe, tempo, dificuldade, casoPreCarregado }); 
+      
+    } catch (error) {
+      console.error("Erro ao gerar o caso:", error);
+      setIsGenerating(false);
+      alert("O bipe da UTI falhou na conexão. Tente chamar o paciente novamente.");
+    }
   };
 
   return (
-    <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#f8fafc', padding: '40px 20px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        
-        {/* CABEÇALHO */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <button 
-            onClick={() => setTelaAtual('menu')}
-            style={{ padding: '10px 20px', backgroundColor: 'white', border: '1px solid #cbd5e1', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', color: '#64748b', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}
-          >
-            ⬅ Voltar ao Menu
-          </button>
-          <div style={{ textAlign: 'right' }}>
-            <h1 style={{ margin: 0, color: '#0f172a', fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '2.5rem' }}>🩺</span> Departamento de Diagnósticos
-            </h1>
-            <p style={{ margin: 0, color: '#64748b', fontSize: '1.1rem' }}>Monte sua equipe para o caso</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-x-hidden flex flex-col selection:bg-cyan-500/30 pb-10">
+      
+      <div className="fixed inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px)`, backgroundSize: '32px 32px' }} />
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,rgba(0,229,255,0.05)_0%,#0B1120_80%)]" />
 
-        {/* CONFIGURAÇÕES (Tempo e Dificuldade) */}
-        <div style={{ display: 'flex', gap: '20px', marginBottom: '30px', flexWrap: 'wrap' }}>
-          
-          <div style={{ flex: 1, minWidth: '300px', backgroundColor: 'white', padding: '25px', borderRadius: '20px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-            <h3 style={{ margin: '0 0 15px 0', color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}>⏱️ Modo de Tempo</h3>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                onClick={() => setTempo('ranqueado')}
-                style={{ flex: 1, padding: '15px', borderRadius: '12px', border: tempo === 'ranqueado' ? '2px solid #ef4444' : '1px solid #cbd5e1', backgroundColor: tempo === 'ranqueado' ? '#fef2f2' : 'white', color: tempo === 'ranqueado' ? '#b91c1c' : '#64748b', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
-              >
-                Ranqueado (Com Timer)
-              </button>
-              <button 
-                onClick={() => setTempo('casual')}
-                style={{ flex: 1, padding: '15px', borderRadius: '12px', border: tempo === 'casual' ? '2px solid #3b82f6' : '1px solid #cbd5e1', backgroundColor: tempo === 'casual' ? '#eff6ff' : 'white', color: tempo === 'casual' ? '#1d4ed8' : '#64748b', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
-              >
-                Casual (Sem Pressão)
-              </button>
-            </div>
-          </div>
+      <div className="max-w-[1200px] mx-auto px-6 py-6 md:py-8 relative z-10 flex flex-col h-full w-full">
 
-          <div style={{ flex: 1, minWidth: '300px', backgroundColor: 'white', padding: '25px', borderRadius: '20px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
-            <h3 style={{ margin: '0 0 15px 0', color: '#334155', display: 'flex', alignItems: 'center', gap: '8px' }}>🎓 Dificuldade Clínica</h3>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                onClick={() => setDificuldade('residente')}
-                style={{ flex: 1, padding: '15px', borderRadius: '12px', border: dificuldade === 'residente' ? '2px solid #10b981' : '1px solid #cbd5e1', backgroundColor: dificuldade === 'residente' ? '#f0fdf4' : 'white', color: dificuldade === 'residente' ? '#047857' : '#64748b', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
-              >
-                Residente (Múltipla Escolha)
-              </button>
-              <button 
-                onClick={() => setDificuldade('formado')}
-                style={{ flex: 1, padding: '15px', borderRadius: '12px', border: dificuldade === 'formado' ? '2px solid #8b5cf6' : '1px solid #cbd5e1', backgroundColor: dificuldade === 'formado' ? '#f5f3ff' : 'white', color: dificuldade === 'formado' ? '#6d28d9' : '#64748b', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s' }}
-              >
-                Médico Formado (Digitar)
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        {/* SELEÇÃO DE EQUIPE */}
-        <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '20px', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', marginBottom: '30px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 shrink-0">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setTelaAtual('menu')} 
+              className="w-12 h-12 rounded-xl bg-[#151F32] border border-white/[0.05] flex items-center justify-center text-slate-400 hover:text-white hover:border-cyan-500/30 transition-colors shadow-[0_4px_15px_rgba(0,0,0,0.2)]"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
             <div>
-              <h3 style={{ margin: '0 0 5px 0', color: '#334155', fontSize: '1.4rem' }}>🤝 Equipe Médica</h3>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '0.95rem' }}>Eles intervirão caso você cometa um erro grave na área deles.</p>
+              <div className="flex items-center gap-2">
+                <Stethoscope className="w-5 h-5 text-emerald-400" />
+                <h1 className="text-white text-xl md:text-2xl font-bold uppercase tracking-wide">Dept. de Diagnósticos</h1>
+              </div>
+              <p className="text-slate-500 text-xs md:text-sm mt-0.5">Sala de Reuniões — Prepare sua equipe médica.</p>
             </div>
-            <div style={{ backgroundColor: '#1e293b', color: 'white', padding: '10px 20px', borderRadius: '15px', fontWeight: 'bold', fontSize: '1.2rem' }}>
-              <span style={{ color: equipe.length === 3 ? '#fbbf24' : '#38bdf8' }}>{equipe.length}</span> / 3 Selecionados
+          </div>
+          
+          <div className="flex items-center gap-2 bg-[#0F172A] border border-orange-500/20 px-4 py-2 rounded-xl text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.1)]">
+            <Ticket className="w-5 h-5" />
+            <span className="text-base font-bold">Tickets: 5</span>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8 shrink-0">
+          
+          <div className="bg-[#151F32] rounded-2xl p-5 border border-white/[0.02] shadow-[0_4px_20px_rgba(0,0,0,0.2)]">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="w-4 h-4 text-cyan-400" />
+              <span className="text-white font-bold text-sm">Modo de Tempo</span>
+            </div>
+            <div className="flex bg-[#0F172A] rounded-xl p-1.5 border border-white/[0.02]">
+              <button 
+                onClick={() => setTempo('ranqueado')} 
+                className={`flex-1 py-3 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 ${tempo === 'ranqueado' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 shadow-[0_0_15px_rgba(0,229,255,0.15)]' : 'text-slate-500 hover:text-slate-300'}`}
+              >
+                <Target className="w-4 h-4" /> Ranqueado
+              </button>
+              <button 
+                onClick={() => setTempo('casual')} 
+                className={`flex-1 py-3 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 ${tempo === 'casual' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'text-slate-500 hover:text-slate-300'}`}
+              >
+                Casual
+              </button>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '15px' }}>
-            {ELENCO_HOUSE.map((medico) => {
-              const selecionado = equipe.includes(medico.id);
-              const bloqueado = !selecionado && equipe.length >= 3;
-
-              return (
-                <div 
-                  key={medico.id}
-                  onClick={() => handleToggleMembro(medico.id)}
-                  style={{ 
-                    padding: '20px', 
-                    borderRadius: '15px', 
-                    border: selecionado ? `3px solid ${medico.cor}` : '1px solid #cbd5e1',
-                    backgroundColor: selecionado ? `${medico.cor}10` : 'white',
-                    cursor: bloqueado ? 'not-allowed' : 'pointer',
-                    opacity: bloqueado ? 0.5 : 1,
-                    transition: 'all 0.2s',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                >
-                  {selecionado && <div style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: medico.cor, color: 'white', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}>✓</div>}
-                  
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
-                    <div style={{ fontSize: '2.5rem' }}>{medico.emoji}</div>
-                    <div>
-                      <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#1e293b' }}>{medico.nome}</div>
-                      <div style={{ fontSize: '0.8rem', color: medico.cor, fontWeight: 'bold', backgroundColor: `${medico.cor}20`, padding: '3px 8px', borderRadius: '8px', display: 'inline-block', marginTop: '4px' }}>
-                        {medico.especialidade}
-                      </div>
-                    </div>
-                  </div>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', lineHeight: '1.4' }}>{medico.desc}</p>
-                </div>
-              );
-            })}
+          <div className="bg-[#151F32] rounded-2xl p-5 border border-white/[0.02] shadow-[0_4px_20px_rgba(0,0,0,0.2)]">
+            <div className="flex items-center gap-2 mb-3">
+              <Settings className="w-4 h-4 text-rose-400" />
+              <span className="text-white font-bold text-sm">Dificuldade</span>
+            </div>
+            <div className="flex bg-[#0F172A] rounded-xl p-1.5 border border-white/[0.02]">
+              <button 
+                onClick={() => setDificuldade('residente')} 
+                className={`flex-1 py-3 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 ${dificuldade === 'residente' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.15)]' : 'text-slate-500 hover:text-slate-300'}`}
+              >
+                Residente
+              </button>
+              <button 
+                onClick={() => setDificuldade('formado')} 
+                className={`flex-1 py-3 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 ${dificuldade === 'formado' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.15)]' : 'text-slate-500 hover:text-slate-300'}`}
+              >
+                <BookOpen className="w-4 h-4" /> Médico Formado
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* BOTÃO INICIAR */}
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <button 
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 shrink-0">
+          <div>
+            <h2 className="text-white text-lg font-bold">Recrutar Especialistas</h2>
+            <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">Eles intervirão caso você cometa erros graves.</p>
+          </div>
+          <div className="bg-[#151F32] border border-white/[0.08] px-4 py-2 rounded-full flex items-center gap-3 shadow-inner">
+            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Capacidade:</span>
+            <span className={`text-base font-black ${equipe.length === 3 ? 'text-emerald-400' : 'text-cyan-400'}`}>{equipe.length}/3</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 flex-1 min-h-0 mb-8">
+          {ELENCO_HOUSE.map((medico) => {
+            const isSelected = equipe.includes(medico.id);
+            const isMaxedOut = equipe.length >= 3 && !isSelected;
+
+            return (
+              <motion.button
+                key={medico.id}
+                whileHover={!isMaxedOut ? { scale: 1.02, y: -2 } : {}}
+                whileTap={!isMaxedOut ? { scale: 0.98 } : {}}
+                onClick={() => handleToggleMembro(medico.id)}
+                disabled={isMaxedOut}
+                className={`relative text-left p-4 md:p-5 rounded-2xl transition-all overflow-hidden border flex items-start gap-4 ${
+                  isSelected
+                    ? 'bg-[#1e293b] border-white/[0.2] shadow-[0_8px_30px_rgba(0,0,0,0.4)]'
+                    : isMaxedOut
+                      ? 'bg-[#0f172a]/50 border-white/[0.02] opacity-50 cursor-not-allowed grayscale-[60%]'
+                      : 'bg-[#151F32] border-white/[0.04] hover:border-white/[0.12] hover:bg-[#1a263d] shadow-[0_4px_20px_rgba(0,0,0,0.15)]'
+                }`}
+              >
+                {isSelected && <div className="absolute inset-0 opacity-[0.06] pointer-events-none" style={{ backgroundColor: medico.cor }} />}
+                
+                {isSelected && (
+                  <div className="absolute top-3 right-3 w-6 h-6 bg-[#0B1120] rounded-full flex items-center justify-center border border-white/[0.1] shadow-lg z-10">
+                    <Check className="w-3.5 h-3.5" style={{ color: medico.cor }} />
+                  </div>
+                )}
+
+                {isSelected && (
+                  <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{ boxShadow: `inset 0 0 20px ${medico.cor}20, 0 0 15px ${medico.cor}10` }} />
+                )}
+
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-[#0B1120] border flex items-center justify-center text-2xl md:text-3xl shrink-0 relative z-10" style={{ borderColor: isSelected ? `${medico.cor}50` : 'rgba(255,255,255,0.05)', backgroundColor: isSelected ? `${medico.cor}10` : '#0B1120' }}>
+                  {medico.emoji}
+                </div>
+                
+                <div className="min-w-0 flex-1 relative z-10 pr-4">
+                  <h3 className="text-white text-base md:text-lg font-bold leading-tight truncate">{medico.name}</h3>
+                  <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest block truncate mt-1" style={{ color: medico.cor }}>
+                    {medico.specialty}
+                  </span>
+                  <p className="text-slate-400 text-xs leading-relaxed mt-2 line-clamp-2 md:line-clamp-3">
+                    {medico.passive}
+                  </p>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+
+        <div className="shrink-0 flex justify-center pb-4">
+          <motion.button
+            whileHover={!isGenerating ? { scale: 1.05 } : {}}
+            whileTap={!isGenerating ? { scale: 0.95 } : {}}
             onClick={handleIniciar}
-            style={{ 
-              backgroundColor: '#0f172a', 
-              color: 'white', 
-              border: 'none', 
-              padding: '20px 50px', 
-              borderRadius: '20px', 
-              fontSize: '1.4rem', 
-              fontWeight: 'bold', 
-              cursor: 'pointer',
-              boxShadow: '0 10px 25px rgba(15, 23, 42, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '15px',
-              transition: 'transform 0.2s'
-            }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            disabled={isGenerating}
+            className="group bg-cyan-500 hover:bg-cyan-400 text-[#0B1120] py-4 px-8 md:px-12 rounded-2xl font-bold text-base md:text-lg shadow-[0_0_30px_rgba(0,229,255,0.3)] hover:shadow-[0_0_50px_rgba(0,229,255,0.5)] transition-all flex items-center gap-4 relative disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            📋 Iniciar Plantão 
-            <span style={{ backgroundColor: '#fbbf24', color: '#854d0e', padding: '5px 12px', borderRadius: '10px', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-              Custo: 1 🎟️
-            </span>
-          </button>
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-5 h-5 md:w-6 md:h-6 animate-spin text-[#0B1120]" />
+                <span>Bipando a UTI...</span>
+              </>
+            ) : (
+              <>
+                <Zap className="w-5 h-5 md:w-6 md:h-6 fill-[#0B1120]" />
+                <span>Entrar na Sala Vermelha</span>
+                <span className="bg-[#0B1120]/20 px-3 py-1 rounded-full flex items-center gap-1.5 text-xs font-bold ml-2 shadow-inner">
+                  Custo: 1 <Ticket className="w-3.5 h-3.5" />
+                </span>
+              </>
+            )}
+          </motion.button>
         </div>
 
       </div>
