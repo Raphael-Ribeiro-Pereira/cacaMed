@@ -45,30 +45,26 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX }) {
       const genAI = new GoogleGenerativeAI(API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       
-      const promptInicial = `Aja como um preceptor médico titular. Crie um caso clínico REAL extraído ou adaptado de literaturas consagradas (Harrison, NEJM, bancos USMLE/Revalida).
-      Dificuldade solicitada: ${dificuldade}. O paciente acaba de dar entrada na UTI.
-      
-      IMPORTANTE: Você deve retornar APENAS um objeto JSON válido, sem NENHUM texto antes ou depois, e sem usar blocos de formatação markdown. O JSON deve ter exatamente esta estrutura:
+      // O Prompt agora exige 4 opções de conduta inicial para usarmos no Modo Residente
+      const promptInicial = `Aja como um preceptor médico titular. Crie um caso clínico REAL de UTI adaptado de literatura (Harrison/NEJM). Dificuldade: ${dificuldade}.
+      Retorne APENAS um objeto JSON puro. Estrutura obrigatória:
       {
-        "nome": "Nome Fictício Completo",
-        "idade": "Idade com 'anos'",
-        "tags": ["Sintoma Chave 1", "Sintoma Chave 2"],
-        "hma": "História da Moléstia Atual técnica. Termine perguntando o que o médico quer fazer.",
-        "diagnostico": "Nome exato e completo da Doença/Condição",
-        "sinaisVitais": {
-          "fc": "Frequência cardíaca (apenas o número)",
-          "pa": "Pressão arterial (ex: 120x80)",
-          "spo2": "Saturação de oxigênio (apenas o número)",
-          "temp": "Temperatura (apenas o número com ponto, ex: 38.5)"
-        }
-      }`;
+        "linha1": "Nome Completo, Idade",
+        "vitais": { "fc": "115", "pa": "100x60", "spo2": "92", "temp": "38.5" },
+        "tags": ["ESTADO 1", "ESTADO 2"],
+        "linha3": "Texto técnico curto com a apresentação clínica do paciente.",
+        "diagnostico": "Nome exato da doença",
+        "opcoesIniciais": ["Opção A", "Opção B", "Opção C", "Opção D"]
+      }
+      Regra das opcoesIniciais: Devem ser 4 condutas ou exames primários plausíveis. Apenas UMA deve ser a correta/padrão-ouro. Misture a correta aleatoriamente entre as erradas.`;
 
       const result = await model.generateContent(promptInicial);
       const jsonLimpo = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
       const casoPreCarregado = JSON.parse(jsonLimpo);
 
       setIsGenerating(false);
-      // Passamos o caso pronto para a próxima tela!
+      
+      // Passa TODAS as configs para o Jogo (incluindo o modo de tempo e o JSON com as opções)
       iniciarDDX({ equipe, tempo, dificuldade, casoPreCarregado }); 
       
     } catch (error) {
@@ -121,13 +117,13 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX }) {
                 onClick={() => setTempo('ranqueado')} 
                 className={`flex-1 py-3 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 ${tempo === 'ranqueado' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 shadow-[0_0_15px_rgba(0,229,255,0.15)]' : 'text-slate-500 hover:text-slate-300'}`}
               >
-                <Target className="w-4 h-4" /> Ranqueado
+                <Target className="w-4 h-4" /> Ranqueado (10 Min)
               </button>
               <button 
                 onClick={() => setTempo('casual')} 
                 className={`flex-1 py-3 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 ${tempo === 'casual' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'text-slate-500 hover:text-slate-300'}`}
               >
-                Casual
+                Casual (Livre)
               </button>
             </div>
           </div>
@@ -142,13 +138,13 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX }) {
                 onClick={() => setDificuldade('residente')} 
                 className={`flex-1 py-3 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 ${dificuldade === 'residente' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.15)]' : 'text-slate-500 hover:text-slate-300'}`}
               >
-                Residente
+                Residente (Múltipla Escolha)
               </button>
               <button 
                 onClick={() => setDificuldade('formado')} 
                 className={`flex-1 py-3 rounded-lg text-xs md:text-sm font-bold transition-all flex items-center justify-center gap-2 ${dificuldade === 'formado' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.15)]' : 'text-slate-500 hover:text-slate-300'}`}
               >
-                <BookOpen className="w-4 h-4" /> Médico Formado
+                <BookOpen className="w-4 h-4" /> Formado (Texto Livre)
               </button>
             </div>
           </div>
