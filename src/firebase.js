@@ -4,13 +4,14 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAwIllm8soA6uZL1dU8Eon0UfoIs-OkfB8",
-  authDomain: "caca-med.firebaseapp.com",
-  projectId: "caca-med",
-  storageBucket: "caca-med.firebasestorage.app",
-  messagingSenderId: "24520481505",
-  appId: "1:24520481505:web:5ddaedce367790d53735a0"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
+console.log("Checando o cofre:", firebaseConfig); 
 
 const app = initializeApp(firebaseConfig);
 
