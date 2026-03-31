@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  Activity, AlertTriangle, BarChart2, BookOpen, Check, HelpCircle, 
+  Activity, AlertTriangle, BarChart2, Check, HelpCircle, 
   LayoutGrid, LogOut, Target, Ticket, Trophy,
 } from "lucide-react";
 import { motion, useAnimation } from "framer-motion";
@@ -27,7 +27,7 @@ const getPatente = (nivel) => {
     return 'Chefe de Plantão';
 };
 
-export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, missoesDeHoje = [], top3Semana = [] }) {
+export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top3Semana = [] }) {
   const [isHardcore, setIsHardcore] = useState(false);
 
   const themeHex = isHardcore ? "#F43F5E" : "#00E5FF";
@@ -67,8 +67,12 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, mis
 
   const level = somaNiveis || 1;
   const xpCurrent = dadosUsuario?.pontuacaoTotal || 0;
-  const xpNext = Math.ceil((xpCurrent + 1) / 1000) * 1000 + 1000;
-  const xpPercent = Math.min(100, Math.round((xpCurrent / xpNext) * 100));
+  // 🔥 CIRURGIA: Calcula a base do nível atual (ex: se tem 167.795, a base é 167.000)
+  const xpBaseAtual = Math.floor(xpCurrent / 1000) * 1000;
+  const xpNext = xpBaseAtual + 1000;
+  const progressoNesteMilestone = xpCurrent - xpBaseAtual;
+  // Agora a porcentagem é baseada apenas no que falta para os próximos 1000 (ex: 795/1000 = 79.5%)
+  const xpPercent = Math.max(0, Math.min(100, Math.round((progressoNesteMilestone / 1000) * 100)));
   const patente = getPatente(level);
 
   const handleLogout = async () => {
@@ -80,17 +84,16 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, mis
     }
   };
 
-  const missoesParaExibir = missoesDeHoje?.length > 0 ? missoesDeHoje.slice(0,3) : [
-    { titulo: "Buscador de Conhecimento", subtitulo: "Completar 3 cruzadinhas", progresso: 2, meta: 3, concluida: false },
-    { titulo: "Mão Firme", subtitulo: "Acertar 10 palavras", progresso: 10, meta: 10, concluida: true },
-    { titulo: "Residente Dedicado", subtitulo: "Logar no plantão", progresso: 1, meta: 1, concluida: true }
+  // 🔥 AQUI ESTÁ A MÁGICA: O Menu agora puxa as missões reais criadas pelo App.jsx no Firebase!
+  const missoesParaExibir = dadosUsuario?.missoesDiarias?.length === 3 ? dadosUsuario.missoesDiarias : [
+    { titulo: "Sincronizando...", subtitulo: "Acessando banco de dados", progresso: 0, meta: 1, concluida: false },
+    { titulo: "Aguarde", subtitulo: "Carregando plantões", progresso: 0, meta: 1, concluida: false },
+    { titulo: "Conectando", subtitulo: "Buscando informações", progresso: 0, meta: 1, concluida: false }
   ];
 
   return (
-    // 🔥 CORREÇÃO 1: min-h-screen e overflow-x-hidden para permitir scroll vertical
     <div className={`min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-x-hidden pb-8 ${isHardcore ? "selection:bg-rose-500/30" : "selection:bg-cyan-500/30"}`}>
       
-      {/* 🔥 CORREÇÃO 2: Backgrounds agora usam 'fixed' em vez de 'absolute' para não cortarem ao rolar */}
       <div 
         className="fixed inset-0 pointer-events-none opacity-20 transition-colors duration-1000" 
         style={{ 
@@ -128,7 +131,6 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, mis
 
       <div className={`fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_10%,#0B1120_100%)] transition-colors duration-1000 ${isHardcore ? 'bg-rose-950/10' : ''}`} />
       
-      {/* 🔥 CORREÇÃO 3: Container Principal com 'min-h-screen' em vez de 'h-screen' */}
       <div className="max-w-[1400px] mx-auto px-6 py-6 md:px-8 md:py-8 flex flex-col min-h-screen relative z-10">
         
         {/* Header Superior */}
@@ -340,27 +342,20 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, mis
           </motion.div>
 
           <div className="lg:col-span-4 flex flex-col gap-3">
-            <motion.div variants={itemVariants} whileHover={{ scale: 1.02, x: -2 }} onClick={toggleHardcore} className={`bg-[#151F32] rounded-2xl px-5 py-4 flex items-center justify-between border cursor-pointer hover:bg-[#1a263d] transition-colors shadow-md ${isHardcore ? 'border-rose-500/30' : 'border-white/[0.02]'}`}>
+            <motion.div variants={itemVariants} whileHover={{ scale: 1.02, x: -2 }} onClick={toggleHardcore} className={`bg-[#151F32] rounded-2xl px-5 py-4 flex items-center justify-between border cursor-pointer hover:bg-[#1a263d] transition-colors shadow-md flex-1 ${isHardcore ? 'border-rose-500/30' : 'border-white/[0.02]'}`}>
               <div className="flex items-center gap-3">
                 <AlertTriangle className={isHardcore ? "text-rose-500 w-5 h-5" : "text-slate-500 w-5 h-5"} />
-                <span className={`${isHardcore ? 'text-rose-400 font-bold' : 'text-slate-300 font-medium'} text-sm`}>Modo Hardcore</span>
+                <div><span className={`${isHardcore ? 'text-rose-400 font-bold' : 'text-slate-300 font-medium'} text-sm block`}>Modo Hardcore</span><span className="text-slate-600 text-[10px]">{isHardcore ? 'Alerta vermelho ativo' : 'Casos raros e cronômetro'}</span></div>
               </div>
-              <div className={`w-10 h-5 rounded-full relative shadow-inner transition-colors ${isHardcore ? 'bg-rose-500/30' : 'bg-[#0F172A]'}`}>
-                <div className={`w-4 h-4 rounded-full absolute top-[2px] left-[2px] transition-transform ${isHardcore ? 'bg-rose-500 translate-x-[20px]' : 'bg-slate-500 translate-x-0'}`}></div>
-              </div>
-            </motion.div>
-            <motion.div variants={itemVariants} whileHover={{ scale: 1.02, x: -2 }} onClick={() => setTelaAtual('selecaoFlashcards')} className={`bg-[#151F32] rounded-2xl px-5 py-4 flex items-center gap-3 border cursor-pointer hover:bg-[#1a263d] transition-colors shadow-md group ${isHardcore ? 'border-rose-500/10' : 'border-white/[0.02]'}`}>
-              <BookOpen className={`w-5 h-5 transition-colors ${isHardcore ? 'text-rose-600 group-hover:text-rose-500' : 'text-cyan-600 group-hover:text-cyan-500'}`} />
-              <span className="text-slate-300 font-medium text-sm group-hover:text-white">Sala de Pergaminhos</span>
+              <div className={`w-10 h-5 rounded-full relative shadow-inner transition-colors ${isHardcore ? 'bg-rose-500/30' : 'bg-[#0F172A]'}`}><div className={`w-4 h-4 rounded-full absolute top-[2px] left-[2px] transition-transform ${isHardcore ? 'bg-rose-500 translate-x-[20px]' : 'bg-slate-500 translate-x-0'}`} /></div>
             </motion.div>
             <motion.div variants={itemVariants} whileHover={{ scale: 1.02, x: -2 }} onClick={() => setTelaAtual('estatisticas')} className={`bg-[#151F32] rounded-2xl px-5 py-4 flex items-center gap-3 border cursor-pointer hover:bg-[#1a263d] transition-colors flex-1 shadow-md group ${isHardcore ? 'border-rose-500/10' : 'border-white/[0.02]'}`}>
               <BarChart2 className={`w-5 h-5 transition-colors ${isHardcore ? 'text-rose-500 group-hover:text-rose-400' : 'text-blue-500 group-hover:text-blue-400'}`} />
-              <span className="text-slate-300 font-medium text-sm group-hover:text-white">Estatísticas</span>
+              <div><span className="text-slate-300 font-medium text-sm group-hover:text-white block">Estatísticas</span><span className="text-slate-600 text-[10px]">Seu histórico de plantões</span></div>
             </motion.div>
           </div>
         </motion.main>
 
-        {/* Footer Actions */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.8 }} className="flex justify-end items-center gap-4 mt-6">
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`flex items-center gap-2 border px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider ${isHardcore ? 'border-rose-500/50 text-rose-500 hover:bg-rose-500/10' : 'border-rose-500/30 text-rose-400 hover:bg-rose-500/10'}`} onClick={handleLogout}>
             <LogOut className="w-4 h-4" /> Sair do Plantão
@@ -406,7 +401,7 @@ function AnimatedOrganicECG({ isHardcore }) {
   );
 }
 
-function CircularProgress({ progress, label, delay = 0, isHardcore, themeHex }) {
+function CircularProgress({ progress, label, delay = 0, themeHex }) {
   const [currentProgress, setCurrentProgress] = useState(0);
   const radius = 16;
   const circumference = 2 * Math.PI * radius;
@@ -424,9 +419,7 @@ function CircularProgress({ progress, label, delay = 0, isHardcore, themeHex }) 
         <circle cx="20" cy="20" r={radius} stroke="#1E293B" strokeWidth="2.5" fill="transparent" />
         <circle cx="20" cy="20" r={radius} stroke={themeHex} strokeWidth="2.5" fill="transparent" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className="transition-all duration-[1500ms] ease-out" />
       </svg>
-      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: delay + 0.5 }} className="absolute text-[10px] text-white font-bold">
-        {label}
-      </motion.span>
+      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: delay + 0.5 }} className="absolute text-[10px] text-white font-bold">{label}</motion.span>
     </div>
   );
 }

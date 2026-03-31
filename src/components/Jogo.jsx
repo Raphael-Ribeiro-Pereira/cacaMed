@@ -4,7 +4,6 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { gerarTabuleiro } from '../utils/motorTabuleiro'; 
 import Tabuleiro from './Tabuleiro';
 
-// Ícones idênticos ao Figma
 import { Clock, FastForward, LogOut, Stethoscope, Trophy, Ticket, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -32,20 +31,16 @@ const aplicarCensura = (textoDica, palavraSecreta) => {
 export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtual, usuario, dadosUsuario, setDadosUsuario }) {
   const meuUid = auth.currentUser?.uid || usuario?.uid || dadosUsuario?.uid;
 
-  // 🛑 O TRATADO DE PAZ DO ZOOM (O SEGREDO DESTA TELA) 🛑
   useEffect(() => {
-    // Ao entrar no jogo, retiramos o zoom de 150% para a interface caber no h-screen
     document.documentElement.style.fontSize = '16px';
-    
     return () => {
-      // Ao sair, devolvemos os 150% para os Menus
       document.documentElement.style.fontSize = '24px';
     };
   }, []);
 
   const [valores, setValores] = useState({}); 
   const [direcaoAtual, setDirecaoAtual] = useState('horizontal');
-  const [dica, setDica] = useState('A IA está preparando seu plantão... 🧠');
+  const [dica, setDica] = useState('A IA está a preparar o seu plantão... 🧠');
   const [vitoria, setVitoria] = useState(false);
   const [jogoIniciado, setJogoIniciado] = useState(false); 
   const [chaveRecarregamento, setChaveRecarregamento] = useState(0); 
@@ -55,9 +50,11 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
   const [tempoDecorrido, setTempoDecorrido] = useState(0);
   const [relatorioXP, setRelatorioXP] = useState(null);
-  const [ganhouPergaminho, setGanhouPergaminho] = useState(false);
+  
+  // 🔥 ESTADO DO CARTÃO FIDELIDADE
+  const [progressoTicket, setProgressoTicket] = useState(null);
+  
   const [errosNaPartida, setErrosNaPartida] = useState(0);
-
   const [levelUps, setLevelUps] = useState([]);
   const cadeadoRecompensa = useRef(false);
 
@@ -125,7 +122,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           dicasEstaticas[palavra] = `${dicaOriginal} (Dica: Começa com a letra ${palavra[0]})`;
         });
         setDicasSalvas(prev => ({ ...prev, ...dicasEstaticas }));
-        setDica('Prontuários carregados! Clique em um número para começar.');
+        setDica('Prontuários carregados! Clique num número para começar.');
         setJogoIniciado(true);
         return; 
       }
@@ -143,7 +140,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         textoResposta = textoResposta.replace(/```json/gi, '').replace(/```/g, '').trim();
         const dicasGeradas = JSON.parse(textoResposta);
         setDicasSalvas(prev => ({ ...prev, ...dicasGeradas }));
-        setDica('Dicas clínicas prontas! Clique em um número para começar.');
+        setDica('Dicas clínicas prontas! Clique num número para começar.');
         setJogoIniciado(true); 
       } catch (erro) {
         setDica("Clique no número de uma palavra para ver a dica.");
@@ -177,7 +174,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         setDica(novaDica);
         setDicasSalvas(prev => ({ ...prev, [termo]: novaDica }));
     } catch (erro) {
-        setDica("Ops! Deu um erro de conexão com a IA.");
+        setDica("Ops! Ocorreu um erro de ligação com a IA.");
     }
   };
 
@@ -201,7 +198,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
     if (temPalavra && todasCertas && !vitoria && !cadeadoRecompensa.current) {
       cadeadoRecompensa.current = true; setVitoria(true); setCelulasDestacadas([]); 
-      if (xpAtualSubtopico === 0) setGanhouPergaminho(true);
 
       const calcularE_SalvarXP = async () => {
         if (meuUid && dadosUsuario) {
@@ -228,14 +224,39 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
             setRelatorioXP({ ganho: xpFinalDaFase, base: xpBase, multNivel: multNivel.toFixed(1), multTempo: multTempo.toFixed(1) });
           }
 
-          const missoesAtuais = dadosUsuario.missoesDiarias?.missoes || [];
+          // 🔥 LÓGICA DO CARTÃO FIDELIDADE (1 Ticket a cada 2 Cruzadinhas)
+          const medidorAntigo = dadosUsuario.medidorTicketsCruzadinha || 0;
+          let novoMedidor = medidorAntigo + 1;
+          let ticketGanhoPartida = 0;
+
+          if (novoMedidor >= 2) {
+            novoMedidor = 0;
+            ticketGanhoPartida = 1;
+          }
+
+          setProgressoTicket({
+            atual: ticketGanhoPartida > 0 ? 2 : novoMedidor, // Se ganhou, mostra o cartão cheio (2/2)
+            ganhou: ticketGanhoPartida > 0
+          });
+
+          // LÓGICA DE MISSÕES DIÁRIAS
+          const missoesAtuais = Array.isArray(dadosUsuario.missoesDiarias) ? dadosUsuario.missoesDiarias : (dadosUsuario.missoesDiarias?.missoes || []);
+          let xpMissaoBonus = 0;
+          let ticketMissaoBonus = 0;
+
           const missoesAtualizadas = missoesAtuais.map(missao => {
-            if (missao.concluida) return missao; 
-            let novoProgresso = missao.progressoAtual || 0;
-            if (missao.tipo === 'cruzadinha') novoProgresso += 1;
-            if (missao.tipo === 'xp_global') novoProgresso += xpFinalDaFase;
-            if (novoProgresso > missao.meta) novoProgresso = missao.meta;
-            return { ...missao, progressoAtual: novoProgresso, concluida: novoProgresso >= missao.meta };
+            if (missao.concluida) return missao;
+            
+            let novoProgresso = missao.progresso || 0;
+            if (missao.id === 'jogar_cruzadinha') novoProgresso += 1;
+            if (missao.id === 'acertar_palavras') novoProgresso += numPalavras;
+            
+            if (novoProgresso >= missao.meta) {
+               novoProgresso = missao.meta;
+               xpMissaoBonus += missao.recompensaXP || 0;
+               ticketMissaoBonus += missao.recompensaTicket || 0;
+            }
+            return { ...missao, progresso: novoProgresso, concluida: novoProgresso >= missao.meta };
           });
 
           const statsAntigas = dadosUsuario.estatisticas?.[chaveXP] || { partidas: 0, tempo: 0, letras: 0 };
@@ -289,22 +310,32 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           }
 
           const xpGlobalAntigo = dadosUsuario.pontuacaoTotal || 0;
-          const novoXPGlobal = xpGlobalAntigo + xpFinalDaFase;
+          const novoXPGlobal = xpGlobalAntigo + xpFinalDaFase + xpMissaoBonus; 
+          
+          // 🔥 Soma os tickets das missões + 1 ticket (se o cartão fidelidade encheu)
+          const novosTickets = (dadosUsuario.tickets || 0) + ticketMissaoBonus + ticketGanhoPartida; 
 
           try {
             await updateDoc(doc(db, "usuarios", meuUid), { 
               pontuacaoTotal: novoXPGlobal, 
+              tickets: novosTickets,
+              medidorTicketsCruzadinha: novoMedidor, // Guarda o progresso do cartão fidelidade
               [`xpTopicos.${chaveXP}`]: newSubXP,
               [`estatisticas.${chaveXP}`]: novasStatsLocal,
               estatisticasGerais: novasStatsGerais,
-              "missoesDiarias.missoes": missoesAtualizadas
+              missoesDiarias: missoesAtualizadas
             });
             setDadosUsuario(prev => ({ 
-              ...prev, pontuacaoTotal: novoXPGlobal, xpTopicos: { ...prev.xpTopicos, [chaveXP]: newSubXP },
+              ...prev, 
+              pontuacaoTotal: novoXPGlobal, 
+              tickets: novosTickets,
+              medidorTicketsCruzadinha: novoMedidor,
+              xpTopicos: { ...prev.xpTopicos, [chaveXP]: newSubXP },
               estatisticas: { ...prev.estatisticas, [chaveXP]: novasStatsLocal },
-              estatisticasGerais: novasStatsGerais, missoesDiarias: { ...prev.missoesDiarias, missoes: missoesAtualizadas }
+              estatisticasGerais: novasStatsGerais, 
+              missoesDiarias: missoesAtualizadas
             }));
-          } catch (error) { console.error("Erro ao salvar os dados:", error); }
+          } catch (error) { console.error("Erro ao guardar os dados:", error); }
         }
       };
       calcularE_SalvarXP();
@@ -414,9 +445,10 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
   const avancarParaProximoNivel = () => {
     setValores({}); setVitoria(false); setJogoIniciado(false); setCelulasDestacadas([]); 
-    cadeadoRecompensa.current = false; setGanhouPergaminho(false); setLevelUps([]); 
+    cadeadoRecompensa.current = false; setLevelUps([]); 
     setDicasSalvas({}); setTempoDecorrido(0); setErrosNaPartida(0); setRelatorioXP(null);
-    setDica('A IA está preparando seu plantão... 🧠');
+    setProgressoTicket(null);
+    setDica('A IA está a preparar o seu plantão... 🧠');
     setChaveRecarregamento(prev => prev + 1); 
   };
 
@@ -425,7 +457,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       <style>{`@keyframes slideInUpLeft { 0% { transform: translateX(-100%) scale(0.8); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }`}</style>
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.03)_0%,#0B1120_100%)]" />
 
-      {/* ALERTAS DE LEVEL UP */}
       {levelUps.length > 0 && (
         <div style={{ position: 'fixed', bottom: '40px', left: '40px', display: 'flex', flexDirection: 'column', gap: '20px', zIndex: 99999 }}>
           {levelUps.map((lu, idx) => {
@@ -453,43 +484,36 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         </div>
       )}
 
-      {/* HEADER 100% FIEL AO FIGMA */}
-      <header className="h-14 bg-[#1e293b]/50 border-b border-white/[0.05] backdrop-blur-md flex items-center justify-between px-6 relative z-10 shrink-0">
-        <button onClick={() => setTelaAtual('topicos')} className="flex items-center gap-2 text-slate-400 hover:text-rose-400 transition-colors text-xs">
-          <LogOut className="w-4 h-4" />
-          <span className="hidden md:inline">Sair</span>
+      {/* HEADER 100% FIEL AO FIGMA (E ANABOLIZADO) */}
+      <header className="h-20 bg-[#1e293b]/50 border-b border-white/[0.05] backdrop-blur-md flex items-center justify-between px-8 relative z-10 shrink-0 shadow-sm">
+        <button onClick={() => setTelaAtual('topicos')} className="flex items-center gap-2.5 text-slate-400 hover:text-rose-400 transition-colors text-sm font-bold">
+          <LogOut className="w-5 h-5" />
+          <span className="hidden md:inline">Abandonar Plantão</span>
         </button>
 
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-10">
           <div className="flex flex-col items-center">
-            <span className="text-cyan-400 text-[9px] uppercase tracking-widest mb-0.5">Nível {nivelAtual}</span>
-            <div className="w-24 h-1 bg-[#0F172A] rounded-full overflow-hidden" title={`${xpProgressoNesteNivel} / ${xpNecessarioParaUpar} XP`}>
-              <div className="h-full bg-cyan-400 rounded-full shadow-[0_0_6px_rgba(34,211,238,0.6)]" style={{ width: `${porcentagemBarra}%` }} />
+            <span className="text-cyan-400 text-xs uppercase tracking-widest mb-1.5 font-bold">Nível {nivelAtual}</span>
+            <div className="w-36 h-2 bg-[#0F172A] rounded-full overflow-hidden border border-white/[0.05]" title={`${xpProgressoNesteNivel} / ${xpNecessarioParaUpar} XP`}>
+              <div className="h-full bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.8)]" style={{ width: `${porcentagemBarra}%` }} />
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-[#0F172A] px-3 py-1.5 rounded-full border border-white/[0.05]">
-            <Clock className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="font-mono text-white text-sm tracking-wider">{formatarTempo(tempoDecorrido)}</span>
+          <div className="flex items-center gap-3 bg-[#0F172A] px-5 py-2 rounded-full border border-white/[0.05] shadow-inner">
+            <Clock className="w-5 h-5 text-cyan-400" />
+            <span className="font-mono text-white text-lg tracking-wider font-bold">{formatarTempo(tempoDecorrido)}</span>
           </div>
         </div>
 
-        <button onClick={autoCompletarNivel} disabled={!jogoIniciado} className="flex items-center gap-1.5 bg-[#0F172A] hover:bg-[#151F32] border border-white/[0.1] px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-all text-xs disabled:opacity-40 disabled:cursor-not-allowed">
-          <span className="hidden md:inline">Passar</span>
-          <FastForward className="w-3.5 h-3.5" />
+        <button onClick={autoCompletarNivel} disabled={!jogoIniciado} className="flex items-center gap-2 bg-[#0F172A] hover:bg-[#151F32] border border-white/[0.1] px-5 py-2.5 rounded-xl text-slate-400 hover:text-white transition-all text-sm font-bold disabled:opacity-40 disabled:cursor-not-allowed shadow-md">
+          <span className="hidden md:inline">Pular Caso</span>
+          <FastForward className="w-5 h-5" />
         </button>
       </header>
 
-      {/* 2-COLUMN SPLIT 100% FIEL AO FIGMA */}
       <main className="flex-1 flex flex-row min-h-0 relative z-10">
         
-        {/* Left: AI Hint Panel (w-[340px] Fixo) */}
         <div className="w-[340px] shrink-0 border-r border-white/[0.05] flex flex-col p-5 bg-[#0f172a]/50">
-          <motion.div
-            initial={{ opacity: 0, x: -15 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-[#1e293b]/80 border border-cyan-500/20 rounded-2xl p-5 flex-1 flex flex-col relative overflow-hidden"
-          >
+          <motion.div initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }} className="bg-[#1e293b]/80 border border-cyan-500/20 rounded-2xl p-5 flex-1 flex flex-col relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[40px] rounded-full pointer-events-none" />
 
             <div className="flex items-center gap-2 mb-4">
@@ -500,13 +524,9 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
             </div>
 
             <div className="flex-1 flex flex-col justify-center">
-              <p className="text-white text-sm leading-relaxed mb-4">
-                "{dica}"
-              </p>
+              <p className="text-white text-sm leading-relaxed mb-4">"{dica}"</p>
               <div className="pt-3 border-t border-white/[0.05]">
-                <p className="text-slate-400 text-xs leading-relaxed">
-                  {materia} • {subMateria}
-                </p>
+                <p className="text-slate-400 text-xs leading-relaxed">{materia} • {subMateria}</p>
               </div>
             </div>
 
@@ -519,19 +539,13 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           </motion.div>
         </div>
 
-        {/* Right: Board */}
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="p-5 rounded-2xl bg-[#1e293b]/20 border border-white/[0.02] shadow-[0_10px_40px_rgba(0,0,0,0.3)] w-full h-full relative overflow-hidden">
-            <Tabuleiro 
-              gradePronta={gradePronta} limites={limites} valores={valores} 
-              celulasDestacadas={celulasDestacadas} bloqueado={vitoria || !jogoIniciado} 
-              handleInput={handleInput} handleKeyDown={handleKeyDown} handleFocus={handleFocus} handleClick={handleClick} 
-            />
+            <Tabuleiro gradePronta={gradePronta} limites={limites} valores={valores} celulasDestacadas={celulasDestacadas} bloqueado={vitoria || !jogoIniciado} handleInput={handleInput} handleKeyDown={handleKeyDown} handleFocus={handleFocus} handleClick={handleClick} />
           </div>
         </div>
       </main>
 
-      {/* Victory Modal 100% FIEL AO FIGMA */}
       <AnimatePresence>
         {vitoria && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1120]/90 backdrop-blur-lg">
@@ -541,18 +555,14 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                 <h3 className="text-2xl font-bold text-amber-400 mb-6 relative z-10">🎓 Como Funciona o XP?</h3>
                 <div className="text-slate-300 text-sm text-left flex flex-col gap-3 relative z-10 mb-6">
                   <p><strong>1. Base:</strong> Letras e palavras desvendadas.</p>
-                  <p><strong>2. Bônus Tempo:</strong> Terminar rápido multiplica até <strong>2x</strong>!</p>
-                  <p><strong>3. Bônus Nível:</strong> Seu Nível aumenta o multiplicador.</p>
+                  <p><strong>2. Bónus Tempo:</strong> Terminar rápido multiplica até <strong>2x</strong>!</p>
+                  <p><strong>3. Bónus Nível:</strong> O seu Nível aumenta o multiplicador.</p>
                   <div className="mt-2 p-3 bg-[#0F172A] rounded-xl border-l-4 border-cyan-500 text-cyan-400 text-xs italic">A partir da sua próxima partida, os pontos serão contabilizados!</div>
                 </div>
-                <button onClick={avancarParaProximoNivel} className="w-full bg-cyan-600 hover:bg-cyan-500 text-[#0B1120] py-3 rounded-xl transition-all relative z-10 text-sm font-bold">Entendi, vamos jogar! ➔</button>
+                <button onClick={avancarParaProximoNivel} className="w-full bg-cyan-600 hover:bg-cyan-500 text-[#0B1120] py-3 rounded-xl transition-all relative z-10 text-sm font-bold">Entendido, vamos jogar! ➔</button>
               </motion.div>
             ) : (
-              <motion.div
-                initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
-                transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-                className="w-full max-w-md rounded-3xl p-8 text-center relative overflow-hidden bg-[#0f1f18] border border-emerald-500/30 shadow-[0_0_60px_rgba(16,185,129,0.15)]"
-              >
+              <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} transition={{ type: 'spring', damping: 20, stiffness: 100 }} className="w-full max-w-md rounded-3xl p-8 text-center relative overflow-hidden bg-[#0f1f18] border border-emerald-500/30 shadow-[0_0_60px_rgba(16,185,129,0.15)]">
                 <div className="absolute -top-20 -left-20 w-48 h-48 rounded-full blur-[80px] pointer-events-none bg-emerald-500/30" />
 
                 <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 bg-emerald-500/10 border border-emerald-500/50 relative z-10">
@@ -567,12 +577,33 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                     <Star className="w-4 h-4 text-emerald-400" />
                     <span className="text-emerald-400 font-mono text-lg font-bold">+{relatorioXP?.ganho || 0} XP</span>
                   </div>
-                  {ganhouPergaminho && (
-                    <div className="bg-[#0B1120] border border-amber-500/20 px-5 py-3 rounded-xl flex items-center gap-2">
-                      <span className="text-amber-400 font-mono text-xs font-bold">📜 Pergaminho!</span>
-                    </div>
-                  )}
                 </div>
+
+                {/* 🔥 CARTÃO FIDELIDADE ADICIONADO AQUI 🔥 */}
+                {progressoTicket && (
+                  <div className="bg-[#0B1120] border border-orange-500/20 p-4 rounded-xl mb-6 relative overflow-hidden shadow-inner">
+                    {progressoTicket.ganhou && (
+                      <motion.div animate={{ opacity: [0, 0.15, 0] }} transition={{ duration: 1.5, repeat: Infinity }} className="absolute inset-0 bg-orange-500 pointer-events-none" />
+                    )}
+                    <div className="flex justify-between items-center mb-2 relative z-10">
+                      <span className="text-orange-400 font-bold text-xs uppercase tracking-wider">Cartão Fidelidade</span>
+                      <span className="text-orange-400 font-mono text-xs font-bold">{progressoTicket.atual}/2</span>
+                    </div>
+                    <div className="flex gap-2 relative z-10">
+                      <div className={`flex-1 h-8 rounded-lg flex items-center justify-center border transition-all duration-500 ${progressoTicket.atual >= 1 ? 'bg-orange-500/20 border-orange-500 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.3)]' : 'bg-[#0F172A] border-white/[0.05] text-slate-600'}`}>
+                        <Ticket className="w-4 h-4" />
+                      </div>
+                      <div className={`flex-1 h-8 rounded-lg flex items-center justify-center border transition-all duration-500 delay-300 ${progressoTicket.atual >= 2 ? 'bg-orange-500/20 border-orange-500 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.3)]' : 'bg-[#0F172A] border-white/[0.05] text-slate-600'}`}>
+                        <Ticket className="w-4 h-4" />
+                      </div>
+                    </div>
+                    {progressoTicket.ganhou && (
+                      <motion.p initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="text-orange-400 text-[10px] font-bold mt-2 text-center uppercase tracking-widest">
+                        +1 Ticket ganho! Pode ir para a UTI.
+                      </motion.p>
+                    )}
+                  </div>
+                )}
 
                 <div className="mb-6 relative z-10">
                   <div className="flex justify-between text-[10px] uppercase tracking-wider mb-1 font-bold">
@@ -580,12 +611,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                     <span className="text-emerald-400">Progresso</span>
                   </div>
                   <div className="w-full h-2 bg-[#0B1120] rounded-full overflow-hidden border border-white/[0.05]">
-                    <motion.div
-                      initial={{ width: '0%' }} animate={{ width: `${porcentagemBarra}%` }}
-                      transition={{ duration: 1.5, ease: "easeOut" }}
-                      className="h-full rounded-full bg-emerald-400"
-                      style={{ boxShadow: '0 0 12px rgba(16,185,129,0.6)' }}
-                    />
+                    <motion.div initial={{ width: '0%' }} animate={{ width: `${porcentagemBarra}%` }} transition={{ duration: 1.5, ease: "easeOut" }} className="h-full rounded-full bg-emerald-400" style={{ boxShadow: '0 0 12px rgba(16,185,129,0.6)' }} />
                   </div>
                 </div>
 

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Clock, Zap, Target, BookOpen, Stethoscope, Ticket, Settings, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Clock, Zap, Target, BookOpen, Stethoscope, Ticket, Settings, Check, Loader2, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { doc, updateDoc } from 'firebase/firestore'; // 🔥 Injetando o Firebase
+import { db, auth } from '../firebase';
 
 const ELENCO_HOUSE = [
   { id: 'house', name: 'Dr. House', emoji: '🦯', specialty: 'Infectologia / Nefro', passive: 'Especialista Master. Custo alto de XP, mas resolve quase tudo.', color: '#38bdf8' },
@@ -15,13 +17,17 @@ const ELENCO_HOUSE = [
   { id: 'cuddy', name: 'Dra. Cuddy', emoji: '📋', specialty: 'Administração / Ética', passive: 'Protege sua XP bloqueando exames caríssimos e desnecessários.', color: '#a78bfa' },
 ];
 
-export default function SelecaoDDX({ setTelaAtual, iniciarDDX }) {
+export default function SelecaoDDX({ setTelaAtual, iniciarDDX, dadosUsuario, setDadosUsuario }) {
   const [tempo, setTempo] = useState('ranqueado');
   const [dificuldade, setDificuldade] = useState('residente');
-  const [equipe, setEquipe] = useState(['house', 'foreman', 'cameron']);
+  const [equipe, setEquipe] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+  
+  // 🔥 Lendo os tickets reais do banco de dados (se for null, é 0)
+  const ticketsAtuais = dadosUsuario?.tickets || 0;
+  const semTickets = ticketsAtuais < 1;
 
   const handleToggleMembro = (id) => {
     if (equipe.includes(id)) {
@@ -34,6 +40,11 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX }) {
   };
 
   const handleIniciar = async () => {
+    if (semTickets) {
+      alert("Você não tem Tickets suficientes! Jogue algumas Cruzadinhas para ganhar mais.");
+      return;
+    }
+
     if (equipe.length === 0) {
       alert("Você precisa levar pelo menos um médico com você!");
       return;
@@ -42,10 +53,17 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX }) {
     setIsGenerating(true);
 
     try {
+      // 🎟️ COBRANÇA NA ENTRADA: Desconta o ticket no Firebase e na tela
+      const meuUid = auth.currentUser?.uid || dadosUsuario?.uid;
+      if (meuUid) {
+        const novosTickets = ticketsAtuais - 1;
+        await updateDoc(doc(db, "usuarios", meuUid), { tickets: novosTickets });
+        setDadosUsuario(prev => ({ ...prev, tickets: novosTickets }));
+      }
+
       const genAI = new GoogleGenerativeAI(API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       
-      // O Prompt agora exige 4 opções de conduta inicial para usarmos no Modo Residente
       const promptInicial = `Aja como um preceptor médico titular. Crie um caso clínico REAL de UTI adaptado de literatura (Harrison/NEJM). Dificuldade: ${dificuldade}.
       Retorne APENAS um objeto JSON puro. Estrutura obrigatória:
       {
@@ -64,13 +82,20 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX }) {
 
       setIsGenerating(false);
       
-      // Passa TODAS as configs para o Jogo (incluindo o modo de tempo e o JSON com as opções)
       iniciarDDX({ equipe, tempo, dificuldade, casoPreCarregado }); 
       
     } catch (error) {
       console.error("Erro ao gerar o caso:", error);
       setIsGenerating(false);
-      alert("O bipe da UTI falhou na conexão. Tente chamar o paciente novamente.");
+      
+      // Se a IA der erro e o caso não for gerado, devolvemos o ticket pro jogador!
+      const meuUid = auth.currentUser?.uid || dadosUsuario?.uid;
+      if (meuUid) {
+        await updateDoc(doc(db, "usuarios", meuUid), { tickets: ticketsAtuais });
+        setDadosUsuario(prev => ({ ...prev, tickets: ticketsAtuais }));
+      }
+
+      alert("O bipe da UTI falhou na conexão. O seu Ticket foi devolvido.");
     }
   };
 
@@ -99,9 +124,10 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX }) {
             </div>
           </div>
           
-          <div className="flex items-center gap-2 bg-[#0F172A] border border-orange-500/20 px-4 py-2 rounded-xl text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.1)]">
+          {/* 🔥 Visor de Tickets Inteligente */}
+          <div className={`flex items-center gap-2 border px-4 py-2 rounded-xl shadow-[0_0_15px_rgba(249,115,22,0.1)] ${semTickets ? 'bg-rose-950/30 border-rose-500/30 text-rose-400' : 'bg-[#0F172A] border-orange-500/20 text-orange-400'}`}>
             <Ticket className="w-5 h-5" />
-            <span className="text-base font-bold">Tickets: 5</span>
+            <span className="text-base font-bold">Tickets: {ticketsAtuais}</span>
           </div>
         </header>
 
@@ -213,16 +239,25 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX }) {
 
         <div className="shrink-0 flex justify-center pb-4">
           <motion.button
-            whileHover={!isGenerating ? { scale: 1.05 } : {}}
-            whileTap={!isGenerating ? { scale: 0.95 } : {}}
+            whileHover={!isGenerating && !semTickets ? { scale: 1.05 } : {}}
+            whileTap={!isGenerating && !semTickets ? { scale: 0.95 } : {}}
             onClick={handleIniciar}
-            disabled={isGenerating}
-            className="group bg-cyan-500 hover:bg-cyan-400 text-[#0B1120] py-4 px-8 md:px-12 rounded-2xl font-bold text-base md:text-lg shadow-[0_0_30px_rgba(0,229,255,0.3)] hover:shadow-[0_0_50px_rgba(0,229,255,0.5)] transition-all flex items-center gap-4 relative disabled:opacity-70 disabled:cursor-not-allowed"
+            disabled={isGenerating || semTickets}
+            className={`group py-4 px-8 md:px-12 rounded-2xl font-bold text-base md:text-lg transition-all flex items-center gap-4 relative disabled:opacity-70 disabled:cursor-not-allowed ${
+              semTickets 
+                ? 'bg-slate-800 text-slate-500 border border-slate-700' 
+                : 'bg-cyan-500 hover:bg-cyan-400 text-[#0B1120] shadow-[0_0_30px_rgba(0,229,255,0.3)] hover:shadow-[0_0_50px_rgba(0,229,255,0.5)]'
+            }`}
           >
             {isGenerating ? (
               <>
                 <Loader2 className="w-5 h-5 md:w-6 md:h-6 animate-spin text-[#0B1120]" />
                 <span>Bipando a UTI...</span>
+              </>
+            ) : semTickets ? (
+              <>
+                <Lock className="w-5 h-5 md:w-6 md:h-6 text-slate-500" />
+                <span>Sem Tickets Suficientes</span>
               </>
             ) : (
               <>

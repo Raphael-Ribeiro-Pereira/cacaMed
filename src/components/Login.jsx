@@ -77,22 +77,26 @@ export default function Login({ setTelaAtual }) {
         initial={{ opacity: 0, y: 20, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-[400px] mx-4"
+        className="relative z-10 w-full max-w-[600px] mx-4"
       >
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center gap-3 mb-2">
+        <div className="text-center mb-10">
+          <div className="flex items-center justify-center gap-4 mb-3">
             <motion.div
               whileHover={{ rotate: 180 }}
               transition={{ duration: 0.5, ease: "backOut" }}
-              className="w-10 h-10 rounded-xl bg-[#0f1f2e] border border-cyan-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+              className="w-14 h-14 rounded-2xl bg-[#0f1f2e] border border-cyan-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.15)]"
             >
-              <Stethoscope className="w-5 h-5 text-cyan-400" style={{ filter: 'drop-shadow(0 0 6px rgba(6,182,212,0.6))' }} />
+              <Stethoscope className="w-7 h-7 text-cyan-400" style={{ filter: 'drop-shadow(0 0 6px rgba(6,182,212,0.6))' }} /> {/* 4. Aumentamos o estetoscópio para w-7 h-7 */}
             </motion.div>
-            <h1 className="text-white text-2xl font-bold tracking-wide">
+            <h1 className="text-white text-4xl md:text-5xl font-black tracking-wide">
+              {/* 5. Subimos de text-2xl para text-4xl/5xl e deixamos a fonte mais grossa (font-black) */}
               CAÇA-MED<motion.span animate={{ opacity: [1, 0, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>_</motion.span>
             </h1>
           </div>
-          <p className="text-cyan-400 text-[10px] uppercase font-bold tracking-[0.2em]">🩺 Bater Ponto — Entrar no Plantão</p>
+          <p className="text-cyan-400 text-xs md:text-sm uppercase font-bold tracking-[0.25em]">
+            {/* 6. Aumentamos o subtítulo de 10px para text-sm e afastamos mais as letras (tracking-[0.25em]) */}
+            🩺 Bater Ponto — Entrar no Plantão
+          </p>
         </div>
 
         <div className="bg-[#151F32] rounded-[24px] border border-white/[0.04] shadow-[0_20px_60px_rgba(0,0,0,0.6)] p-6 md:p-8 relative overflow-hidden">
@@ -124,7 +128,7 @@ export default function Login({ setTelaAtual }) {
                   onFocus={() => { setEmailFocused(true); setPasswordFocused(false); }}
                   onBlur={() => setEmailFocused(false)}
                   placeholder="doutor@cacamed.com"
-                  className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600 font-medium"
+                  className="flex-1 w-full min-w-0 bg-transparent text-white text-base outline-none placeholder:text-slate-600 font-medium"
                 />
               </div>
             </div>
@@ -142,7 +146,7 @@ export default function Login({ setTelaAtual }) {
                   onFocus={() => { setPasswordFocused(true); setEmailFocused(false); }}
                   onBlur={() => setPasswordFocused(false)}
                   placeholder="Mín. 6 caracteres"
-                  className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600 font-medium"
+                  className="flex-1 w-full min-w-0 bg-transparent text-white text-base outline-none placeholder:text-slate-600 font-medium"
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-slate-500 hover:text-slate-300 transition-colors shrink-0">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}

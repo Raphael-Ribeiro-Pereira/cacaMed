@@ -66,3 +66,15 @@
     flex-direction: column;
   }
 }
+/* 💉 VACINA CONTRA O FUNDO BRANCO DO AUTOFILL DO NAVEGADOR */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    /* Força a cor do texto a continuar branca */
+    -webkit-text-fill-color: white !important;
+    
+    /* Um truque de CSS: Atrasa a mudança de cor do fundo em 5000 segundos, 
+       fazendo com que o fundo branco nunca apareça e o input fique transparente */
+    transition: background-color 5000s ease-in-out 0s;
+}

@@ -135,8 +135,12 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
 
   const level = somaNiveis || 1;
   const xpCurrent = dadosUsuario?.pontuacaoTotal || 0;
-  const xpNext = Math.ceil((xpCurrent + 1) / 1000) * 1000 + 1000;
-  const xpPercent = Math.min(100, Math.round((xpCurrent / xpNext) * 100));
+  // 🔥 CIRURGIA: Calcula a base do nível atual (ex: se tem 167.795, a base é 167.000)
+  const xpBaseAtual = Math.floor(xpCurrent / 1000) * 1000;
+  const xpNext = xpBaseAtual + 1000;
+  const progressoNesteMilestone = xpCurrent - xpBaseAtual;
+  // Agora a porcentagem é baseada apenas no que falta para os próximos 1000 (ex: 795/1000 = 79.5%)
+  const xpPercent = Math.max(0, Math.min(100, Math.round((progressoNesteMilestone / 1000) * 100)));
 
   const totalPlantoes = dadosUsuario?.estatisticasGerais?.historico?.length || 0;
   const streak = dadosUsuario?.missoesDiarias?.streak || 0;
