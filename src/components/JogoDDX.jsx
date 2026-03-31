@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
-import { AlertTriangle, Activity, Thermometer, Droplets, HeartPulse, Send, Zap, Target, Skull, Loader2, Bug, Clock, LogOut } from "lucide-react";
+import { AlertTriangle, Activity, Thermometer, Droplets, HeartPulse, Send, Zap, Target, Skull, Loader2, Bug, Clock, LogOut, ClipboardList } from "lucide-react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// --- Monitor de ECG Animado Realista (Passo 2) ---
+// --- Monitor de ECG Animado Realista ---
 function MonitorVital({ bpm }) {
   const controls = useAnimation();
 
-  let corSinal = "#22c55e"; // Verde (Normal: 60 - 100)
+  let corSinal = "#22c55e"; // Verde
   let statusTexto = "ESTÁVEL";
 
   if (bpm > 100 || bpm < 60) {
-    corSinal = "#eab308"; // Amarelo (Alerta)
+    corSinal = "#eab308"; // Amarelo
     statusTexto = "ALERTA";
   }
   if (bpm > 140 || bpm < 40) {
-    corSinal = "#ef4444"; // Vermelho (Crítico)
+    corSinal = "#ef4444"; // Vermelho
     statusTexto = "CRÍTICO";
   }
   if (bpm === 0) {
@@ -91,7 +91,7 @@ function MonitorVital({ bpm }) {
   );
 }
 
-// Mapa expandido com especialidades e cores para o Chat da Equipe
+// Mapa de Médicos
 const DOCTOR_MAP = {
   house: { emoji: '🦯', name: 'Dr. House', specialty: 'Diagnóstico Geral / Nefro', color: '#38bdf8' },
   cameron: { emoji: '🛡️', name: 'Dra. Cameron', specialty: 'Imunologia / Alergia', color: '#ec4899' },
@@ -118,11 +118,11 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [timeLeft, setTimeLeft] = useState(tempoModo === 'ranqueado' ? 600 : null);
   
-  // Controle do Modal de Saída
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showBriefing, setShowBriefing] = useState(true);
   
-  const [patientInfo, setPatientInfo] = useState({ nome: 'Gerando...', idade: '--', resumo: 'Aguardando ambulância...', tags: [] });
-  const [vitais, setVitais] = useState({ fc: '--', pa: '--', spo2: '--', temp: '--' });
+  const [patientInfo, setPatientInfo] = useState({ nome: 'Gerando...', idade: '--', sexo: 'N/I', resumo: 'Aguardando ambulância...', qp: 'Aguardando queixa...', tags: [] });
+  const [vitais, setVitais] = useState({ fc: '--', pa: '--', spo2: '--', temp: '--', fr: '--' });
   const [diagnosticoCorreto, setDiagnosticoCorreto] = useState('');
   const [opcoesResidente, setOpcoesResidente] = useState([]);
 
@@ -142,10 +142,12 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
       setPatientInfo({
         nome: casoPreCarregado.linha1.split(',')[0],
         idade: casoPreCarregado.linha1.split(',')[1] || '??',
+        sexo: casoPreCarregado.sexo || 'N/I',
         resumo: casoPreCarregado.linha3,
+        qp: casoPreCarregado.qp || 'Sintomas agudos inespecíficos',
         tags: casoPreCarregado.tags || []
       });
-      setVitais(casoPreCarregado.vitais || { fc: '110', pa: '110x70', spo2: '94', temp: '37.8' });
+      setVitais(casoPreCarregado.vitais || { fc: 110, pa: '110x70', spo2: 94, temp: 37.8, fr: 22 });
       setDiagnosticoCorreto(casoPreCarregado.diagnostico || 'Erro Desconhecido');
       setOpcoesResidente(casoPreCarregado.opcoesIniciais || []);
       
@@ -155,15 +157,15 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
       ]);
       setGameState('playing');
     } else {
-      setPatientInfo({ nome: "Paciente Emergência", idade: "30a", resumo: "Paciente instável.", tags: ["ESTADO CRÍTICO"] });
-      setVitais({ fc: '110', pa: '110x70', spo2: '94', temp: '37.8' });
+      setPatientInfo({ nome: "Paciente Emergência", idade: "30a", sexo: 'M', resumo: "Paciente instável.", qp: "Rebaixamento de consciência", tags: ["ESTADO CRÍTICO"] });
+      setVitais({ fc: 110, pa: '110x70', spo2: 94, temp: 37.8, fr: 24 });
       setChat([{ id: 1, sender: 'ai', text: "Inicie a avaliação." }]);
       setGameState('playing');
     }
   }, [casoPreCarregado]);
 
   useEffect(() => {
-    if (gameState !== 'playing' || timeLeft === null) return;
+    if (gameState !== 'playing' || timeLeft === null || showBriefing) return;
     if (timeLeft <= 0) {
       setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: 'TEMPO ESGOTADO. Parada cardíaca irreversível.' }]);
       setGameState('lost');
@@ -171,7 +173,7 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
     }
     const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, gameState]);
+  }, [timeLeft, gameState, showBriefing]);
 
   const formatTime = (seconds) => {
     if (seconds === null) return "--:--";
@@ -180,68 +182,131 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  // 🔥 O NOVO CÉREBRO DA IA (PROMPT JSON) 🔥
   const handleAcao = async (textoAcao) => {
-    if (!textoAcao || gameState !== 'playing' || isAiThinking) return;
+    if (!textoAcao || gameState !== 'playing' || isAiThinking || showBriefing) return;
     
     setInputText("");
     setChat(prev => [...prev, { id: Date.now(), sender: 'player', text: textoAcao }]);
     setIsAiThinking(true);
 
     const historico = chat.map(m => `${m.sender}: ${m.text}`).join('\n');
-    
-    // Constrói o perfil da equipe para a IA saber quem pode intervir
-    const equipeDetalhes = equipe.map(id => `${id} (${DOCTOR_MAP[id].name} - Especialidade: ${DOCTOR_MAP[id].specialty})`).join(', ');
-    const opcoesTexto = opcoesResidente.length > 0 ? `\nOpções disponíveis no painel do residente: [${opcoesResidente.join(' | ')}]` : '';
+    const equipeDetalhes = equipe.map(id => `${id} (${DOCTOR_MAP[id]?.name || id} - Especialidade: ${DOCTOR_MAP[id]?.specialty || ''})`).join(', ');
 
-    const promptTurno = `Diagnóstico Gabarito: ${diagnosticoCorreto}. 
-    Equipe médica ativa no caso: ${equipeDetalhes}.${opcoesTexto}
+    // Construção do Prompt Mestre com as Variáveis Atuais
+    const promptTurno = `---
+ROLE & MISSION
+---
+Você é o **Motor de Simulação Médica Avançada** e o **Preceptor Clínico** do jogo Caça-Med. Sua única função é simular a fisiologia de um paciente crítico e julgar friamente cada ação do jogador (médico plantonista).
 
-    Regras estritas:
-    1. INTERVENÇÃO DA EQUIPE: Se o médico errar a conduta, pedir exame inútil ou tentar dar alta, UM MEMBRO DA EQUIPE DEVE INTERVIR para impedi-lo (escolha o médico cuja especialidade mais se aproxime do erro ou do caso). A intervenção deve corrigir o médico incorporando a personalidade sarcástica/técnica do personagem, explicando o erro e sugerindo a conduta correta (use uma das opções do painel, se houver). Inicie a resposta EXATAMENTE com a tag: "[INTERVENCAO] id_do_medico:" (exemplo: "[INTERVENCAO] house: Você é cego? O paciente está infartando, peça um ECG!"). A ação do médico será CANCELADA pela equipe.
-    2. RESULTADOS: Se a conduta for válida e ninguém precisar intervir, aja como Preceptor e forneça os resultados com VALORES REAIS.
-    3. DERROTA: Se o erro for letal e a equipe for ignorada ou já tiver intervindo antes sem sucesso, use [DERROTA] no final e decrete óbito.
-    4. VITÓRIA: Se acertar o diagnóstico (${diagnosticoCorreto}), use [VITORIA] no final.
-    
-    Histórico:\n${historico}\nMédico: ${textoAcao}\nResposta:`;
+PROIBIÇÕES ABSOLUTAS:
+1. Nunca revele o diagnóstico oculto ou o tratamento ouro antes do jogador descobri-los.
+2. Nunca invente doenças, medicamentos ou mecanismos fisiológicos que não estejam no gabarito.
+3. Nunca responda em tom coloquial ou de "assistente". Seu tom é frio, técnico e implacável.
+
+---
+HIDDEN CONTEXT (O JOGO SABE, O JOGADOR NÃO)
+---
+GABARITO OCULTO:
+- Doença real do paciente: ${diagnosticoCorreto}
+- Exame ouro para confirmação: ${casoPreCarregado?.gabarito?.exame_ouro || 'Indisponível'}
+- Tratamento(s) salvador(es): ${casoPreCarregado?.gabarito?.tratamento_salvador?.join(', ') || 'Tratamento de suporte'}
+- Tratamento(s) letal(is): ${casoPreCarregado?.gabarito?.tratamento_letal?.join(', ') || 'Nenhum específico'}
+
+ESTADO ATUAL DO PACIENTE:
+- FC Atual: ${vitais.fc} bpm | PA Atual: ${vitais.pa} mmHg
+- SpO2 Atual: ${vitais.spo2}% | Temp Atual: ${vitais.temp}°C | FR Atual: ${vitais.fr || '--'} rpm
+- Histórico de Ações já realizadas neste plantão:
+${historico}
+
+EQUIPE DISPONÍVEL (ID e personalidade):
+${equipeDetalhes}
+
+---
+PHYSIOLOGICAL & GAME RULES
+---
+Para a ação digitada pelo jogador, avalie TRÊS DIMENSÕES antes de gerar o JSON:
+
+1. CAUSA-E-EFEITO FISIOLÓGICO E EXAMES
+   - Siga a biologia real. Vasodilatadores derrubam PA. O2 melhora SpO2.
+   - Se o jogador pedir um exame, forneça o laudo clínico realista compatível com a doença no campo "narrativa_sala".
+   - SEMPRE justifique a mudança nos vitais com mecanismos fisiopatológicos no campo "_raciocinio_medico".
+
+2. REGRA DE INTERRUPÇÃO DA EQUIPE
+   - Se o jogador tentar uma ação abertamente letal ou grotesca, UM dos médicos da equipe DEVE intervir e cancelar a ação.
+   - O paciente não morre na interrupção, mas o estresse piora levemente os vitais.
+
+3. CRITÉRIOS DE VITÓRIA / DERROTA
+   - VITÓRIA: O jogador administra o tratamento salvador E acerta o diagnóstico. Declare estado_jogo: "vitoria".
+   - DERROTA: Se a conduta for imediatamente letal ou a PA chegar a 0x0 / FC a 0. Declare estado_jogo: "derrota".
+   - CASO CONTRÁRIO: Mantenha estado_jogo: "jogando".
+
+---
+MANDATORY OUTPUT FORMAT (STRICT JSON ONLY)
+---
+NUNCA use formatação markdown como \`\`\`json. Comece sua resposta diretamente com a chave { e termine com }. Formato EXATO:
+{
+  "_raciocinio_medico": "Seu pensamento fisiológico interno. (Ex: Furosemida reduz a pré-carga, piorando PA em TEP).",
+  "narrativa_sala": "Texto imersivo para o jogador. Se pediu exame, dê o laudo. (Ex: O monitor apita. Raio-X mostra cardiomegalia).",
+  "novos_vitais": { "fc": 140, "pa": "70x40", "spo2": 88, "temp": 37.0, "fr": 28 },
+  "intervencao_equipe": { "ocorreu": true, "id_medico": "house", "mensagem": "Você quer matar o paciente? Pare!" },
+  "estado_jogo": "jogando"
+}
+
+Ação do jogador agora: "${textoAcao}"`;
 
     const res = await chamarIA(promptTurno);
     setIsAiThinking(false);
 
     if (!res) {
-      setChat(prev => [...prev, { id: Date.now(), sender: 'ai', text: 'O sistema do hospital caiu. Tente enviar a ordem novamente.' }]);
+      setChat(prev => [...prev, { id: Date.now(), sender: 'ai', text: 'O sistema do hospital caiu (Erro de API). Tente enviar novamente.' }]);
       return;
     }
 
-    if (res.includes('[VITORIA]')) {
-      setChat(prev => [...prev, { id: Date.now(), sender: 'ai', text: res.replace('[VITORIA]', '').trim() }, { id: Date.now()+1, sender: 'system', text: 'Sinais vitais estabilizados. Alta programada.' }]);
-      setGameState('won');
-      if (dadosUsuario) salvarDadosUsuario({ ...dadosUsuario, pontuacaoTotal: (dadosUsuario.pontuacaoTotal || 0) + 1000 });
-    } else if (res.includes('[DERROTA]')) {
-      setChat(prev => [...prev, { id: Date.now(), sender: 'ai', text: res.replace('[DERROTA]', '').trim() }, { id: Date.now()+1, sender: 'system', text: 'Óbito registrado.' }]);
-      setGameState('lost');
-    } else if (res.includes('[INTERVENCAO]')) {
-      const textoLimpo = res.replace('[INTERVENCAO]', '').trim();
-      const splitIdx = textoLimpo.indexOf(':');
-      let docId = 'house';
-      let docMsg = textoLimpo;
-      
-      if (splitIdx !== -1) {
-        docId = textoLimpo.substring(0, splitIdx).trim().toLowerCase();
-        docMsg = textoLimpo.substring(splitIdx + 1).trim();
+    try {
+      // Peneira de Limpeza: Remove a formatação markdown se a IA ignorar a ordem
+      let limpo = res.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const dadosIA = JSON.parse(limpo);
+
+      // 1. Atualiza o Monitor de Sinais Vitais em Tempo Real
+      if (dadosIA.novos_vitais) {
+        setVitais(prev => ({ ...prev, ...dadosIA.novos_vitais }));
       }
 
-      const doctor = DOCTOR_MAP[docId] || { name: 'Equipe', emoji: '🩺', color: '#94a3b8' };
+      // 2. Coloca a Narrativa da IA no Chat
+      if (dadosIA.narrativa_sala) {
+        setChat(prev => [...prev, { id: Date.now(), sender: 'ai', text: dadosIA.narrativa_sala }]);
+      }
 
-      setChat(prev => [...prev, { 
-        id: Date.now(), 
-        sender: 'team', 
-        doctorName: doctor.name, 
-        emoji: doctor.emoji, 
-        color: doctor.color, 
-        text: docMsg 
-      }]);
-    } else {
-      setChat(prev => [...prev, { id: Date.now(), sender: 'ai', text: res }]);
+      // 3. Verifica se Alguém da Equipe Interrompeu
+      if (dadosIA.intervencao_equipe && dadosIA.intervencao_equipe.ocorreu) {
+        const docId = dadosIA.intervencao_equipe.id_medico?.toLowerCase() || 'house';
+        const doctor = DOCTOR_MAP[docId] || DOCTOR_MAP['house'];
+        
+        setChat(prev => [...prev, { 
+          id: Date.now() + 1, 
+          sender: 'team', 
+          doctorName: doctor.name, 
+          emoji: doctor.emoji, 
+          color: doctor.color, 
+          text: dadosIA.intervencao_equipe.mensagem 
+        }]);
+      }
+
+      // 4. Verifica Condição de Fim de Jogo
+      if (dadosIA.estado_jogo === 'vitoria') {
+        setChat(prev => [...prev, { id: Date.now()+2, sender: 'system', text: 'Sinais vitais estabilizados. Alta programada.' }]);
+        setGameState('won');
+        if (dadosUsuario) salvarDadosUsuario({ ...dadosUsuario, pontuacaoTotal: (dadosUsuario.pontuacaoTotal || 0) + 1000 });
+      } else if (dadosIA.estado_jogo === 'derrota') {
+        setChat(prev => [...prev, { id: Date.now()+2, sender: 'system', text: 'Óbito registrado.' }]);
+        setGameState('lost');
+        setVitais(prev => ({ ...prev, fc: 0, pa: '0x0', spo2: 0 })); // Força o Flatline!
+      }
+
+    } catch (err) {
+      console.error("Erro no JSON da IA:", err, res);
+      setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: '⚠️ Anomalia no Prontuário Eletrônico. Reformule a sua ordem.' }]);
     }
   };
 
@@ -253,13 +318,100 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
   const bpmReal = gameState === 'lost' ? 0 : (parseInt(vitais.fc) || 0);
 
   return (
-    <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans flex flex-col md:flex-row overflow-x-hidden">
+    <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans flex flex-col md:flex-row overflow-x-hidden relative">
       
-      {/* SIDEBAR */}
-      <aside className="w-full md:w-[320px] lg:w-[380px] bg-[#0f172a] border-r border-white/[0.05] flex flex-col md:h-screen sticky top-0 z-20 shadow-2xl">
+      {/* 🔥 O MODAL DA PRANCHETA (BRIEFING) DARK MODE */}
+      <AnimatePresence>
+        {showBriefing && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0, y: 20 }} 
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 md:p-8 bg-[#0B1120]/85 backdrop-blur-md"
+          >
+            <motion.div 
+              initial={{ y: 50, scale: 0.95 }} 
+              animate={{ y: 0, scale: 1 }} 
+              transition={{ type: "spring", damping: 25, stiffness: 120 }}
+              className="relative w-full max-w-lg bg-[#151F32] rounded-xl shadow-[0_30px_100px_rgba(0,0,0,0.8),_0_0_0_1px_rgba(255,255,255,0.05)] pt-10 pb-8 px-8 text-slate-300 font-sans border-t-4 border-cyan-500/40"
+            >
+              <div className="absolute top-6 right-8 rotate-[15deg] pointer-events-none">
+                <div className="border-[3px] border-rose-500/40 text-rose-500/50 px-3 py-0.5 rounded text-lg font-black tracking-widest uppercase">
+                  Urgência
+                </div>
+              </div>
+
+              <div className="border-b-[1.5px] border-white/[0.05] pb-4 mb-5 flex items-end justify-between">
+                <div>
+                  <h2 className="text-xl font-black uppercase tracking-tight text-white leading-none">CAÇA-MED Hospital</h2>
+                  <p className="text-[9px] font-bold text-cyan-500/70 uppercase tracking-[0.2em] mt-1.5">Ficha de Admissão — Leito 04</p>
+                </div>
+                <ClipboardList className="w-6 h-6 text-slate-500 mb-1" />
+              </div>
+
+              <div className="space-y-5 relative z-10">
+                <div className="grid grid-cols-4 gap-3">
+                  <div className="col-span-2 border-b border-white/[0.05] pb-1">
+                    <span className="block text-[8px] uppercase font-bold text-slate-500 mb-0.5 tracking-wider">Nome do Paciente</span>
+                    <span className="font-bold text-sm text-slate-200 truncate block">{patientInfo.nome}</span>
+                  </div>
+                  <div className="border-b border-white/[0.05] pb-1">
+                    <span className="block text-[8px] uppercase font-bold text-slate-500 mb-0.5 tracking-wider">Idade</span>
+                    <span className="font-bold text-sm text-slate-200">{patientInfo.idade}</span>
+                  </div>
+                  <div className="border-b border-white/[0.05] pb-1">
+                    <span className="block text-[8px] uppercase font-bold text-slate-500 mb-0.5 tracking-wider">Sexo</span>
+                    <span className="font-bold text-sm text-slate-200">{patientInfo.sexo}</span>
+                  </div>
+                </div>
+
+                <div className="bg-[#0B1120]/40 p-3 rounded-md border border-white/[0.02]">
+                  <span className="block text-[9px] uppercase font-bold text-cyan-500/70 mb-1 tracking-widest">Queixa Principal (QP)</span>
+                  <p className="text-sm font-semibold italic text-slate-300">"{patientInfo.qp}"</p>
+                </div>
+
+                <div>
+                  <span className="block text-[9px] uppercase font-bold text-cyan-500/70 mb-1.5 tracking-widest border-b border-white/[0.05] pb-1">História da Moléstia Atual (HMA)</span>
+                  <p className="text-sm leading-relaxed text-justify text-slate-400 font-medium mt-2">
+                    {patientInfo.resumo}
+                  </p>
+                </div>
+
+                <div className="pt-2">
+                  <span className="block text-[9px] uppercase font-bold text-cyan-500/70 mb-2 tracking-widest border-b border-white/[0.05] pb-1">Sinais Vitais de Triagem</span>
+                  <div className="flex justify-between items-center bg-[#0B1120] text-white rounded-md p-3 shadow-inner border border-white/[0.02]">
+                    <div className="text-center"><span className="text-slate-500 text-[8px] uppercase block mb-0.5">PA</span><span className="font-mono text-sm font-bold">{vitais.pa}</span></div>
+                    <div className="w-px h-6 bg-slate-800"></div>
+                    <div className="text-center"><span className="text-slate-500 text-[8px] uppercase block mb-0.5">FC</span><span className="font-mono text-sm font-bold text-rose-400">{vitais.fc}</span></div>
+                    <div className="w-px h-6 bg-slate-800"></div>
+                    <div className="text-center"><span className="text-slate-500 text-[8px] uppercase block mb-0.5">FR</span><span className="font-mono text-sm font-bold text-cyan-400">{vitais.fr || '--'}</span></div>
+                    <div className="w-px h-6 bg-slate-800"></div>
+                    <div className="text-center"><span className="text-slate-500 text-[8px] uppercase block mb-0.5">SpO2</span><span className="font-mono text-sm font-bold text-blue-400">{vitais.spo2}%</span></div>
+                    <div className="w-px h-6 bg-slate-800"></div>
+                    <div className="text-center"><span className="text-slate-500 text-[8px] uppercase block mb-0.5">Temp</span><span className="font-mono text-sm font-bold text-amber-400">{vitais.temp}°C</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-center border-t border-white/[0.05] pt-5">
+                <button 
+                  onClick={() => setShowBriefing(false)} 
+                  className="w-full bg-cyan-600/10 hover:bg-rose-600 text-cyan-400 hover:text-white border border-cyan-500/20 hover:border-rose-500 px-6 py-3.5 rounded-md font-bold text-xs uppercase tracking-[0.2em] transition-all duration-300 shadow-md hover:shadow-[0_0_20px_rgba(225,29,72,0.4)] flex items-center justify-center gap-2 group"
+                >
+                  <Activity className="w-4 h-4 text-cyan-500/60 group-hover:text-white transition-colors" />
+                  Assumir Plantão
+                </button>
+              </div>
+
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* SIDEBAR DO JOGO */}
+      <aside className={`w-full md:w-[320px] lg:w-[380px] bg-[#0f172a] border-r border-white/[0.05] flex flex-col md:h-screen sticky top-0 z-20 shadow-2xl transition-all duration-700 ${showBriefing ? 'blur-sm grayscale opacity-50' : ''}`}>
         <div className="p-5 border-b border-white/[0.05] bg-[#0B1120] relative">
           
-          {/* Cabeçalho Organizado: Luz da UTI e Cronômetro lado a lado */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${gameState === 'lost' ? 'bg-slate-600' : 'bg-red-500'}`} />
@@ -288,8 +440,6 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
               </div>
             ))}
           </div>
-
-          <p className="text-slate-500 text-xs mt-4 leading-relaxed italic opacity-80">"{patientInfo.resumo}"</p>
         </div>
 
         <div className="p-4 flex-1 flex flex-col bg-[#050B14]">
@@ -319,11 +469,11 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
       </aside>
 
       {/* CHAT AREA */}
-      <main className="flex-1 flex flex-col relative bg-[#0B1120]">
+      <main className={`flex-1 flex flex-col relative bg-[#0B1120] transition-all duration-700 ${showBriefing ? 'blur-md opacity-30' : ''}`}>
         
-        {/* BOTÃO FLUTUANTE PREMIUM */}
         <button 
           onClick={() => setShowExitModal(true)} 
+          disabled={showBriefing}
           className="absolute top-5 right-6 z-30 flex items-center gap-2 text-slate-400 hover:text-rose-400 transition-all bg-[#151F32]/80 backdrop-blur-md border border-white/[0.05] hover:border-rose-500/30 px-4 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_0_15px_rgba(244,63,94,0.2)]"
         >
           <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Abandonar Plantão</span>
@@ -390,7 +540,6 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
               <div ref={chatEndRef} />
             </div>
 
-            {/* CONTROLES DINÂMICOS */}
             <div className="p-4 bg-[#0B1120]/90 backdrop-blur-md border-t border-white/[0.05] sticky bottom-0 z-10 w-full">
               
               {gameState === 'playing' && !isAiThinking && dificuldade === 'formado' && (
@@ -401,7 +550,7 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-4xl mx-auto w-full">
                   {opcoesResidente.map((opcao, idx) => (
                     <button 
-                      key={idx} onClick={() => handleAcao(opcao)} disabled={gameState !== 'playing' || isAiThinking}
+                      key={idx} onClick={() => handleAcao(opcao)} disabled={gameState !== 'playing' || isAiThinking || showBriefing}
                       className="bg-[#151F32] hover:bg-[#1e293b] border border-white/[0.05] hover:border-cyan-500/40 text-slate-300 hover:text-white p-3 rounded-lg text-left text-xs transition-all flex items-center justify-between group disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                     >
                       <span className="pr-4">{opcao}</span>
@@ -410,19 +559,19 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
                   ))}
                   <div className="sm:col-span-2 mt-1">
                     <form onSubmit={handleFormSubmit} className="flex gap-2">
-                      <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} disabled={gameState !== 'playing' || isAiThinking} placeholder="Ou digite o diagnóstico final aqui..." className="flex-1 bg-[#151F32]/50 border border-white/[0.05] rounded-lg px-4 py-2 text-white outline-none focus:border-cyan-500 text-xs" />
-                      <button type="submit" disabled={!inputText.trim() || gameState !== 'playing' || isAiThinking} className="bg-cyan-500/20 text-cyan-400 px-4 rounded-lg font-bold hover:bg-cyan-500 hover:text-[#0B1120] transition-all text-xs border border-cyan-500/30">Enviar</button>
+                      <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} disabled={gameState !== 'playing' || isAiThinking || showBriefing} placeholder="Ou digite o diagnóstico final aqui..." className="flex-1 bg-[#151F32]/50 border border-white/[0.05] rounded-lg px-4 py-2 text-white outline-none focus:border-cyan-500 text-xs" />
+                      <button type="submit" disabled={!inputText.trim() || gameState !== 'playing' || isAiThinking || showBriefing} className="bg-cyan-500/20 text-cyan-400 px-4 rounded-lg font-bold hover:bg-cyan-500 hover:text-[#0B1120] transition-all text-xs border border-cyan-500/30">Enviar</button>
                     </form>
                   </div>
                 </div>
               ) : (
                 <form onSubmit={handleFormSubmit} className="flex gap-3 max-w-4xl mx-auto w-full">
                   <input 
-                    type="text" value={inputText} onChange={e => setInputText(e.target.value)} disabled={gameState !== 'playing' || isAiThinking}
+                    type="text" value={inputText} onChange={e => setInputText(e.target.value)} disabled={gameState !== 'playing' || isAiThinking || showBriefing}
                     placeholder="Solicite exames ou prescreva o tratamento..."
                     className="flex-1 bg-[#151F32] border border-white/[0.1] rounded-xl px-4 py-3 text-white outline-none focus:border-cyan-500 transition-all text-sm shadow-inner"
                   />
-                  <button type="submit" disabled={!inputText.trim() || gameState !== 'playing' || isAiThinking} className="bg-cyan-500 text-black px-6 md:px-8 rounded-xl font-bold hover:bg-cyan-400 transition-all shadow-lg disabled:opacity-50 flex items-center gap-2">
+                  <button type="submit" disabled={!inputText.trim() || gameState !== 'playing' || isAiThinking || showBriefing} className="bg-cyan-500 text-black px-6 md:px-8 rounded-xl font-bold hover:bg-cyan-400 transition-all shadow-lg disabled:opacity-50 flex items-center gap-2">
                     <Send className="w-4 h-4" /> <span className="hidden sm:inline">Emitir Ordem</span>
                   </button>
                 </form>
@@ -432,10 +581,9 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
         )}
       </main>
 
-      {/* Modal de Confirmação de Saída */}
       <AnimatePresence>
         {showExitModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <motion.div initial={{ scale: 0.95, y: 10 }} animate={{ scale: 1, y: 0 }} className="max-w-md w-full p-8 rounded-3xl bg-[#151F32] border border-rose-500/30 text-center shadow-[0_20px_60px_rgba(244,63,94,0.15)] relative overflow-hidden">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-20 bg-rose-500/10 blur-[40px] rounded-full pointer-events-none" />
               
@@ -470,7 +618,7 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
 
       <AnimatePresence>
         {(gameState === 'won' || gameState === 'lost') && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <div className={`max-w-md w-full p-8 rounded-3xl text-center border ${gameState === 'won' ? 'bg-emerald-950/40 border-emerald-500' : 'bg-rose-950/40 border-rose-500'}`}>
               <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
                 {gameState === 'won' ? <Target className="w-8 h-8 text-emerald-400" /> : <Skull className="w-8 h-8 text-rose-500" />}

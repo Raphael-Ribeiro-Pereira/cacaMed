@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  Activity, AlertTriangle, BarChart2, Check, HelpCircle, 
+  Activity, AlertTriangle, BarChart2, Check, HelpCircle,
   LayoutGrid, LogOut, Target, Ticket, Trophy,
 } from "lucide-react";
 import { motion, useAnimation } from "framer-motion";
@@ -19,15 +19,15 @@ const itemVariants = {
 
 // --- Funções Auxiliares de Gamificação ---
 const getPatente = (nivel) => {
-    if (nivel <= 5) return 'Estudante Básico';
-    if (nivel <= 15) return 'Estudante Clínico';
-    if (nivel <= 30) return 'Interno';
-    if (nivel <= 50) return 'Residente R1';
-    if (nivel <= 80) return 'Médico Especialista';
-    return 'Chefe de Plantão';
+  if (nivel <= 5) return 'Estudante Básico';
+  if (nivel <= 15) return 'Estudante Clínico';
+  if (nivel <= 30) return 'Interno';
+  if (nivel <= 50) return 'Residente R1';
+  if (nivel <= 80) return 'Médico Especialista';
+  return 'Chefe de Plantão';
 };
 
-export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top3Semana = [] }) {
+export default function MenuPrincipal ({ usuario, dadosUsuario, setTelaAtual, top3Semana = [] }) {
   const [isHardcore, setIsHardcore] = useState(false);
 
   const themeHex = isHardcore ? "#F43F5E" : "#00E5FF";
@@ -45,8 +45,8 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
 
   // --- LÓGICA DO JOGADOR REAL ---
   const fullName = dadosUsuario?.nome || dadosUsuario?.username || "Dr. Desconhecido";
-  const primeiroNome = fullName.split(' ')[0] === 'Dr.' || fullName.split(' ')[0] === 'Dra.' ? fullName.split(' ').slice(0,2).join(' ') : fullName.split(' ')[0];
-  
+  const primeiroNome = fullName.split(' ')[0] === 'Dr.' || fullName.split(' ')[0] === 'Dra.' ? fullName.split(' ').slice(0, 2).join(' ') : fullName.split(' ')[0];
+
   const infoPerfil = String(dadosUsuario?.titulo || dadosUsuario?.genero || dadosUsuario?.sexo || '').toLowerCase().trim();
   const ehFeminino = infoPerfil.includes('doutora') || infoPerfil.includes('dra') || infoPerfil.includes('fem') || infoPerfil === 'f';
   const imagemPerfil = ehFeminino ? '/fem.png' : '/masc.png';
@@ -54,7 +54,7 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
   let somaNiveis = 0;
   let maxXp = -1;
   let materiaEspecialista = 'Clínica Geral';
-  
+
   const xpTopicos = dadosUsuario?.xpTopicos || {};
   Object.keys(xpTopicos).forEach(chave => {
     const xpDaMateria = xpTopicos[chave];
@@ -77,10 +77,10 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
 
   const handleLogout = async () => {
     try {
-        await signOut(auth);
-        setTelaAtual('login');
+      await signOut(auth);
+      setTelaAtual('login');
     } catch (error) {
-        console.error("Erro ao sair:", error);
+      console.error("Erro ao sair:", error);
     }
   };
 
@@ -93,10 +93,10 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
 
   return (
     <div className={`min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-x-hidden pb-8 ${isHardcore ? "selection:bg-rose-500/30" : "selection:bg-cyan-500/30"}`}>
-      
-      <div 
-        className="fixed inset-0 pointer-events-none opacity-20 transition-colors duration-1000" 
-        style={{ 
+
+      <div
+        className="fixed inset-0 pointer-events-none opacity-20 transition-colors duration-1000"
+        style={{
           backgroundImage: `
             linear-gradient(to right, ${isHardcore ? 'rgba(244, 63, 94, 0.05)' : 'rgba(0, 229, 255, 0.05)'} 1px, transparent 1px),
             linear-gradient(to bottom, ${isHardcore ? 'rgba(244, 63, 94, 0.05)' : 'rgba(0, 229, 255, 0.05)'} 1px, transparent 1px),
@@ -105,19 +105,19 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
           `,
           backgroundSize: '20px 20px, 20px 20px, 100px 100px, 100px 100px',
           backgroundPosition: 'center center'
-        }} 
+        }}
       />
 
-      <div 
-        className="fixed inset-0 pointer-events-none opacity-[0.03] transition-colors duration-1000" 
-        style={{ 
+      <div
+        className="fixed inset-0 pointer-events-none opacity-[0.03] transition-colors duration-1000"
+        style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M45 35v10H35v10h10v10h10V55h10V45H55V35H45z' fill='${isHardcore ? '%23F43F5E' : '%2300E5FF'}' fill-rule='evenodd'/%3E%3C/svg%3E")`,
           backgroundSize: '100px 100px'
-        }} 
+        }}
       />
 
       <div className="fixed inset-0 pointer-events-none opacity-[0.04] flex items-center overflow-hidden">
-        <motion.svg 
+        <motion.svg
           width="200%" height="100%" xmlns="http://www.w3.org/2000/svg"
           initial={{ x: 0 }} animate={{ x: "-50%" }}
           transition={{ repeat: Infinity, ease: "linear", duration: isHardcore ? 5 : 15 }}
@@ -130,16 +130,16 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
       </div>
 
       <div className={`fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_10%,#0B1120_100%)] transition-colors duration-1000 ${isHardcore ? 'bg-rose-950/10' : ''}`} />
-      
+
       <div className="max-w-[1400px] mx-auto px-6 py-6 md:px-8 md:py-8 flex flex-col min-h-screen relative z-10">
-        
+
         {/* Header Superior */}
-        <motion.header 
+        <motion.header
           initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }}
           className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8"
         >
           <div className="flex items-center gap-4 group cursor-default">
-            <motion.div 
+            <motion.div
               whileHover={{ rotate: 180 }} transition={{ duration: 0.5, ease: "backOut" }}
               className={`w-12 h-12 rounded-2xl bg-[#0f1f2e] border border-[#1e2e42] flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-shadow duration-500 ${isHardcore ? 'shadow-rose-500/20' : 'shadow-cyan-500/10'}`}
             >
@@ -170,7 +170,7 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
                 {materiaEspecialista}
               </div>
               <div className="w-32 h-1.5 bg-[#1E293B] rounded-full overflow-hidden">
-                <motion.div 
+                <motion.div
                   initial={{ width: 0 }} animate={{ width: `${xpPercent}%`, backgroundColor: isHardcore ? "#F43F5E" : "#22D3EE" }}
                   transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
                   className={`h-full rounded-full transition-colors duration-500 ${isHardcore ? 'shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'shadow-[0_0_8px_rgba(34,211,238,0.5)]'}`}
@@ -187,11 +187,11 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mb-4 ml-2">
           <h2 className={`text-white text-base font-bold flex items-center gap-2 tracking-wide uppercase transition-colors duration-500`}>
             <motion.div
-              animate={{ 
+              animate={{
                 scale: [1, 1.25, 1, 1.25, 1],
                 filter: [
-                  `drop-shadow(0 0 2px ${isHardcore ? 'rgba(244,63,94,0.3)' : 'rgba(0,229,255,0.3)'})`, glowShadowClass, 
-                  `drop-shadow(0 0 2px ${isHardcore ? 'rgba(244,63,94,0.3)' : 'rgba(0,229,255,0.3)'})`, glowShadowClass, 
+                  `drop-shadow(0 0 2px ${isHardcore ? 'rgba(244,63,94,0.3)' : 'rgba(0,229,255,0.3)'})`, glowShadowClass,
+                  `drop-shadow(0 0 2px ${isHardcore ? 'rgba(244,63,94,0.3)' : 'rgba(0,229,255,0.3)'})`, glowShadowClass,
                   `drop-shadow(0 0 2px ${isHardcore ? 'rgba(244,63,94,0.3)' : 'rgba(0,229,255,0.3)'})`
                 ]
               }}
@@ -208,10 +208,10 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
 
         {/* Grid Principal (Bento) */}
         <motion.main variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
-          
+
           {/* Top Row - Substituído se for Hardcore */}
           {isHardcore ? (
-            <motion.div 
+            <motion.div
               variants={itemVariants} whileHover={{ scale: 1.01 }} onClick={() => setTelaAtual('selecaoDDX')}
               className="lg:col-span-12 bg-gradient-to-br from-rose-950/40 to-[#151F32] rounded-3xl px-6 py-5 relative overflow-hidden group hover:from-rose-900/50 transition-all cursor-pointer border border-rose-500/20 shadow-[0_4px_30px_rgba(244,63,94,0.1)] hover:shadow-[0_8px_40px_rgba(244,63,94,0.3)] flex flex-row items-center justify-between gap-6"
             >
@@ -237,7 +237,7 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
           ) : (
             <>
               {/* Card: Cruzadinhas */}
-              <motion.div 
+              <motion.div
                 variants={itemVariants} whileHover={{ y: -2, scale: 1.005 }} onClick={() => setTelaAtual('topicos')}
                 className="lg:col-span-8 bg-[#151F32] rounded-3xl p-6 relative overflow-hidden group hover:bg-[#1a263d] transition-colors cursor-pointer border border-white/[0.02] shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:shadow-[0_8px_30px_rgba(0,229,255,0.06)] flex items-center gap-5"
               >
@@ -255,7 +255,7 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
                     <span className="text-slate-400">{xpPercent}%</span>
                   </div>
                   <div className="w-full h-1.5 bg-[#0F172A] rounded-full overflow-hidden">
-                    <motion.div 
+                    <motion.div
                       initial={{ width: 0 }} whileInView={{ width: `${xpPercent}%` }} viewport={{ once: true }} transition={{ duration: 1.5, delay: 0.6, ease: "easeOut" }}
                       className="h-full bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.4)]"
                     />
@@ -264,7 +264,7 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
               </motion.div>
 
               {/* Card: Diagnósticos */}
-              <motion.div 
+              <motion.div
                 variants={itemVariants} whileHover={{ y: -2, scale: 1.01 }} onClick={() => setTelaAtual('selecaoDDX')}
                 className="lg:col-span-4 bg-[#151F32] rounded-3xl p-6 relative overflow-hidden group hover:bg-[#1a263d] transition-colors cursor-pointer border border-white/[0.02] shadow-[0_4px_20px_rgba(0,0,0,0.2)] flex items-center gap-4"
               >
@@ -299,13 +299,13 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
                   <motion.div key={index} whileHover={{ x: 5 }} className="flex items-center gap-3 cursor-default">
                     {missao.concluida || finalPerc >= 100 ? (
                       <div className="relative w-10 h-10 flex items-center justify-center">
-                        <svg className="w-full h-full transform -rotate-90"><circle cx="20" cy="20" r="16" stroke={themeHex} strokeWidth="2.5" fill="transparent" /></svg>
-                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.5 + (index*0.2) }}>
+                        <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 transform -rotate-90"><circle cx="24" cy="24" r="16" stroke={themeHex} strokeWidth="2.5" fill="transparent" /></svg>
+                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.5 + (index * 0.2) }}>
                           <Check className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 ${themeClass}`} />
                         </motion.div>
                       </div>
                     ) : (
-                      <CircularProgress progress={finalPerc} label={`${finalPerc}%`} delay={0.5 + (index*0.2)} isHardcore={isHardcore} themeHex={themeHex} />
+                      <CircularProgress progress={finalPerc} label={`${finalPerc}%`} delay={0.5 + (index * 0.2)} isHardcore={isHardcore} themeHex={themeHex} />
                     )}
                     <div>
                       <h4 className="text-white text-xs md:text-sm font-semibold">{missao.titulo}</h4>
@@ -324,18 +324,18 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
             </div>
             <div className="flex-1 flex items-end justify-center gap-4 pb-2">
               <div className="flex flex-col items-center">
-                <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 3, delay: 0.2 }} className="w-10 h-10 rounded-full border border-slate-500 flex items-center justify-center text-[10px] font-bold text-slate-300 mb-2 bg-[#0F172A]">{top3Semana[1]?.nome?.substring(0,3) || 'Dr.B'}</motion.div>
+                <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 3, delay: 0.2 }} className="w-10 h-10 rounded-full border border-slate-500 flex items-center justify-center text-[10px] font-bold text-slate-300 mb-2 bg-[#0F172A]">{top3Semana[1]?.nome?.substring(0, 3) || 'Dr.B'}</motion.div>
                 <motion.div initial={{ height: 0 }} animate={{ height: 60 }} transition={{ duration: 0.8, delay: 0.5 }} className="w-12 bg-[#1E293B] rounded-t-xl flex items-center justify-center"><span className="text-slate-400 font-bold text-sm">2</span></motion.div>
               </div>
               <div className="flex flex-col items-center z-10">
-                <motion.div animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 3 }} className={`w-12 h-12 rounded-full border-2 flex items-center justify-center text-[10px] font-bold mb-2 bg-[#0F172A] ${isHardcore ? 'border-rose-500 text-rose-500' : 'border-orange-500 text-orange-400'}`}>{top3Semana[0]?.nome?.substring(0,4) || 'Dr.A'}</motion.div>
+                <motion.div animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 3 }} className={`w-12 h-12 rounded-full border-2 flex items-center justify-center text-[10px] font-bold mb-2 bg-[#0F172A] ${isHardcore ? 'border-rose-500 text-rose-500' : 'border-orange-500 text-orange-400'}`}>{top3Semana[0]?.nome?.substring(0, 4) || 'Dr.A'}</motion.div>
                 <motion.div initial={{ height: 0 }} animate={{ height: 85 }} transition={{ duration: 1, delay: 0.3 }} className={`w-14 bg-[#1E293B]/40 border-2 rounded-t-xl flex items-center justify-center relative overflow-hidden ${isHardcore ? 'border-rose-500/30' : 'border-orange-500/30'}`}>
                   <div className={`absolute inset-0 bg-gradient-to-t ${isHardcore ? 'from-rose-500/10' : 'from-orange-500/10'} to-transparent`}></div>
                   <span className={`${isHardcore ? 'text-rose-500' : 'text-orange-400'} font-bold text-xl relative z-10`}>1</span>
                 </motion.div>
               </div>
               <div className="flex flex-col items-center">
-                <motion.div animate={{ y: [0, -2, 0] }} transition={{ repeat: Infinity, duration: 3, delay: 0.4 }} className={`w-10 h-10 rounded-full border flex items-center justify-center text-[10px] font-bold mb-2 bg-[#0F172A] ${isHardcore ? 'border-rose-700 text-rose-600' : 'border-orange-700 text-orange-600'}`}>{top3Semana[2]?.nome?.substring(0,3) || 'Dr.C'}</motion.div>
+                <motion.div animate={{ y: [0, -2, 0] }} transition={{ repeat: Infinity, duration: 3, delay: 0.4 }} className={`w-10 h-10 rounded-full border flex items-center justify-center text-[10px] font-bold mb-2 bg-[#0F172A] ${isHardcore ? 'border-rose-700 text-rose-600' : 'border-orange-700 text-orange-600'}`}>{top3Semana[2]?.nome?.substring(0, 3) || 'Dr.C'}</motion.div>
                 <motion.div initial={{ height: 0 }} animate={{ height: 45 }} transition={{ duration: 0.8, delay: 0.6 }} className="w-12 bg-[#1E293B] rounded-t-xl flex items-center justify-center"><span className={`${isHardcore ? 'text-rose-700' : 'text-orange-700'} font-bold text-sm`}>3</span></motion.div>
               </div>
             </div>
@@ -370,16 +370,16 @@ export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top
   );
 }
 
-function AnimatedOrganicECG({ isHardcore }) {
+function AnimatedOrganicECG ({ isHardcore }) {
   const controls = useAnimation();
   useEffect(() => {
     let isMounted = true;
     const animate = async () => {
       while (isMounted) {
-        const topY = Math.random() * 5 + 1;    
-        const botY = Math.random() * 5 + 18;   
-        const waitTime = isHardcore ? Math.random() * 300 + 200 : Math.random() * 800 + 400; 
-        const beatDuration = isHardcore ? Math.random() * 0.1 + 0.1 : Math.random() * 0.15 + 0.15; 
+        const topY = Math.random() * 5 + 1;
+        const botY = Math.random() * 5 + 18;
+        const waitTime = isHardcore ? Math.random() * 300 + 200 : Math.random() * 800 + 400;
+        const beatDuration = isHardcore ? Math.random() * 0.1 + 0.1 : Math.random() * 0.15 + 0.15;
         const beatPath = `M 2 12 L 6 12 L 9 ${topY} L 15 ${botY} L 18 12 L 22 12`;
         const restPath = `M 2 12 L 6 12 L 9 11 L 15 13 L 18 12 L 22 12`;
 
@@ -401,11 +401,11 @@ function AnimatedOrganicECG({ isHardcore }) {
   );
 }
 
-function CircularProgress({ progress, label, delay = 0, themeHex }) {
+function CircularProgress ({ progress, label, delay = 0, themeHex }) {
   const [currentProgress, setCurrentProgress] = useState(0);
   const radius = 16;
   const circumference = 2 * Math.PI * radius;
-  
+
   useEffect(() => {
     const timer = setTimeout(() => setCurrentProgress(progress), delay * 1000);
     return () => clearTimeout(timer);
@@ -415,9 +415,9 @@ function CircularProgress({ progress, label, delay = 0, themeHex }) {
 
   return (
     <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
-      <svg className="w-full h-full transform -rotate-90">
-        <circle cx="20" cy="20" r={radius} stroke="#1E293B" strokeWidth="2.5" fill="transparent" />
-        <circle cx="20" cy="20" r={radius} stroke={themeHex} strokeWidth="2.5" fill="transparent" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className="transition-all duration-[1500ms] ease-out" />
+      <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 transform -rotate-90">
+        <circle cx="24" cy="24" r={radius} stroke="#1E293B" strokeWidth="2.5" fill="transparent" />
+        <circle cx="24" cy="24" r={radius} stroke={themeHex} strokeWidth="2.5" fill="transparent" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className="transition-all duration-[1500ms] ease-out" />
       </svg>
       <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: delay + 0.5 }} className="absolute text-[10px] text-white font-bold">{label}</motion.span>
     </div>
