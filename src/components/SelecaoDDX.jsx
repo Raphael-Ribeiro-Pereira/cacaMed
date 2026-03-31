@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Clock, Zap, Target, BookOpen, Stethoscope, Ticket, Settings, Check, Loader2, Lock } from "lucide-react";
 import { motion } from "framer-motion";
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { doc, updateDoc } from 'firebase/firestore'; // 🔥 Injetando o Firebase
+import { doc, updateDoc } from 'firebase/firestore'; 
 import { db, auth } from '../firebase';
+
+// 🔥 IMPORTANDO O NOSSO BANCO DE CASOS REAIS
+import casosBase from '../data/casos.json';
 
 const ELENCO_HOUSE = [
   { id: 'house', name: 'Dr. House', emoji: '🦯', specialty: 'Infectologia / Nefro', passive: 'Especialista Master. Custo alto de XP, mas resolve quase tudo.', color: '#38bdf8' },
@@ -23,9 +25,6 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX, dadosUsuario, set
   const [equipe, setEquipe] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-  
-  // 🔥 Lendo os tickets reais do banco de dados (se for null, é 0)
   const ticketsAtuais = dadosUsuario?.tickets || 0;
   const semTickets = ticketsAtuais < 1;
 
@@ -61,34 +60,24 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX, dadosUsuario, set
         setDadosUsuario(prev => ({ ...prev, tickets: novosTickets }));
       }
 
-      const genAI = new GoogleGenerativeAI(API_KEY);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-      
-      const promptInicial = `Aja como um preceptor médico titular. Crie um caso clínico REAL de UTI adaptado de literatura (Harrison/NEJM). Dificuldade: ${dificuldade}.
-      Retorne APENAS um objeto JSON puro. Estrutura obrigatória:
-      {
-        "linha1": "Nome Completo, Idade",
-        "vitais": { "fc": "115", "pa": "100x60", "spo2": "92", "temp": "38.5" },
-        "tags": ["ESTADO 1", "ESTADO 2"],
-        "linha3": "Texto técnico curto com a apresentação clínica do paciente.",
-        "diagnostico": "Nome exato da doença",
-        "opcoesIniciais": ["Opção A", "Opção B", "Opção C", "Opção D"]
-      }
-      Regra das opcoesIniciais: Devem ser 4 condutas ou exames primários plausíveis. Apenas UMA deve ser a correta/padrão-ouro. Misture a correta aleatoriamente entre as erradas.`;
+      // 🔥 O NOVO MOTOR: Sorteio Instantâneo do Json local
+      // Sorteia um número de 0 até o tamanho do array de casos
+      const indiceSorteado = Math.floor(Math.random() * casosBase.length);
+      const casoSorteado = casosBase[indiceSorteado];
 
-      const result = await model.generateContent(promptInicial);
-      const jsonLimpo = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
-      const casoPreCarregado = JSON.parse(jsonLimpo);
+      // Simulamos 1.5 segundos de "Loading" apenas para criar tensão e imersão
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       setIsGenerating(false);
       
-      iniciarDDX({ equipe, tempo, dificuldade, casoPreCarregado }); 
+      // Envia o caso sorteado perfeitamente estruturado para a tela da UTI
+      iniciarDDX({ equipe, tempo, dificuldade, casoPreCarregado: casoSorteado }); 
       
     } catch (error) {
-      console.error("Erro ao gerar o caso:", error);
+      console.error("Erro ao carregar o prontuário:", error);
       setIsGenerating(false);
       
-      // Se a IA der erro e o caso não for gerado, devolvemos o ticket pro jogador!
+      // Devolve o ticket em caso de falha catastrófica
       const meuUid = auth.currentUser?.uid || dadosUsuario?.uid;
       if (meuUid) {
         await updateDoc(doc(db, "usuarios", meuUid), { tickets: ticketsAtuais });
@@ -124,7 +113,6 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX, dadosUsuario, set
             </div>
           </div>
           
-          {/* 🔥 Visor de Tickets Inteligente */}
           <div className={`flex items-center gap-2 border px-4 py-2 rounded-xl shadow-[0_0_15px_rgba(249,115,22,0.1)] ${semTickets ? 'bg-rose-950/30 border-rose-500/30 text-rose-400' : 'bg-[#0F172A] border-orange-500/20 text-orange-400'}`}>
             <Ticket className="w-5 h-5" />
             <span className="text-base font-bold">Tickets: {ticketsAtuais}</span>

@@ -1,0 +1,187 @@
+[
+  {
+    "id": "neuro_status_epilepticus_25",
+    "especialidade": "Neurologia",
+    "linha1": "Neusa Maria Dias, 65 anos",
+    "sexo": "F",
+    "qp": "Convulsões e perda de consciência",
+    "linha3": "Paciente com diagnóstico de Alzheimer e histórico de epilepsia é trazida por familiares devido a quadro de abalos motores bilaterais e perda de consciência há mais de 20 minutos. Sem história de febre ou vômitos recentes. Faz uso regular de valproato.",
+    "tags": ["CONVULSÃO", "INCONSCIENTE", "EPILEPSIA"],
+    "vitais": {
+      "fc": 130,
+      "pa": "120x90",
+      "fr": 28,
+      "spo2": 95,
+      "temp": 36.5
+    },
+    "diagnostico": "Status Epilepticus Convulsivo Generalizado",
+    "gabarito": {
+      "exame_ouro": "Eletroencefalograma (EEG)",
+      "tratamento_salvador": [
+        "Protocolo ABCDE",
+        "Benzodiazepínicos (Diazepam ou Midazolam)",
+        "Anticonvulsivante não-benzodiazepínico (Fenitoína ou Valproato)",
+        "Intubação orotraqueal se refratário"
+      ],
+      "tratamento_letal": [
+        "Dar alta após cessar abalos",
+        "Administrar apenas glicose sem tiamina",
+        "Não proteger via aérea"
+      ]
+    },
+    "opcoesIniciais": [
+      "Administrar Diazepam 10mg EV imediato",
+      "Solicitar Tomografia de Crânio",
+      "Aguardar resolução espontânea da crise",
+      "Dar alta com ajuste de medicação oral"
+    ]
+  },
+  {
+    "id": "cardio_pcr_33",
+    "especialidade": "Emergência",
+    "linha1": "Maria Auxiliadora Santos, 61 anos",
+    "sexo": "F",
+    "qp": "Dor no peito e desmaio",
+    "linha3": "Paciente hipertensa sentiu dor precordial intensa em aperto com irradiação para braço esquerdo e tontura enquanto passeava em um shopping. Evoluiu rapidamente para perda de consciência súbita. Foi identificada ausência de pulso e movimentos respiratórios.",
+    "tags": ["PCR", "FIBRILAÇÃO VENTRICULAR", "HIPERTENSA"],
+    "vitais": {
+      "fc": 0,
+      "pa": "0x0",
+      "fr": 0,
+      "spo2": 0,
+      "temp": 36.0
+    },
+    "diagnostico": "Parada Cardiorrespiratória em ritmo chocável (FV)",
+    "gabarito": {
+      "exame_ouro": "Análise de ritmo pelo DEA/Monitor",
+      "tratamento_salvador": [
+        "Compressões torácicas de alta qualidade",
+        "Desfibrilação imediata",
+        "Epinefrina 1mg a cada 3-5 min",
+        "Amiodarona 300mg após 3º choque"
+      ],
+      "tratamento_letal": [
+        "Interromper compressões por longo tempo",
+        "Não realizar choque em ritmo chocável",
+        "Administrar apenas oxigênio"
+      ]
+    },
+    "opcoesIniciais": [
+      "Iniciar RCP e solicitar DEA",
+      "Administrar Morfina para dor precordial",
+      "Solicitar ECG de 12 derivações",
+      "Apenas elevar as pernas da paciente"
+    ]
+  },
+  {
+    "id": "emerg_sepse_36",
+    "especialidade": "Infectologia",
+    "linha1": "Francisco de Oliveira, 68 anos",
+    "sexo": "M",
+    "qp": "Diarreia com sangue e febre",
+    "linha3": "Paciente trazido por familiares com história de diarreia intensa há 2 dias (6 episódios/dia), dor abdominal e vômitos. Evoluiu com sangue nas fezes, febre de 39°C e queda importante do estado geral, apresentando-se confuso e sudoreico.",
+    "tags": ["FEBRE", "SEPSE", "HIPOTENSÃO"],
+    "vitais": {
+      "fc": 135,
+      "pa": "90x65",
+      "fr": 23,
+      "spo2": 97,
+      "temp": 39.0
+    },
+    "diagnostico": "Sepse com foco abdominal (Gastroenterite Bacteriana)",
+    "gabarito": {
+      "exame_ouro": "Lactato sérico e Hemoculturas",
+      "tratamento_salvador": [
+        "Expansão volêmica com Cristaloide (30mL/kg)",
+        "Antibioticoterapia de amplo espectro precoce",
+        "Coleta de culturas (sangue e fezes)",
+        "Vasopressores se hipotensão persistente"
+      ],
+      "tratamento_letal": [
+        "Dar alta com sintomáticos",
+        "Restrição hídrica",
+        "Atrasar antibiótico por mais de 6 horas"
+      ]
+    },
+    "opcoesIniciais": [
+      "Iniciar expansão volêmica com Cristaloide",
+      "Prescrever Loperamida para diarreia",
+      "Solicitar Colonoscopia de urgência",
+      "Dar alta com orientações de hidratação oral"
+    ]
+  },
+  {
+    "id": "clinica_tep_08",
+    "especialidade": "Clínica Médica",
+    "linha1": "Carmen Rocha Oliveira, 54 anos",
+    "sexo": "F",
+    "qp": "Dor ao respirar e dispneia",
+    "linha3": "Paciente com histórico de câncer de mama e hipertensão apresenta dor ventilatório-dependente súbita em hemitórax direito há 9 horas. Relata falta de ar associada. Ao exame, apresenta braço esquerdo edemaciado e doloroso.",
+    "tags": ["DISPNEIA", "DOR PLEURÍTICA", "TAQUIPNEIA"],
+    "vitais": {
+      "fc": 105,
+      "pa": "140x90",
+      "fr": 27,
+      "spo2": 83,
+      "temp": 36.8
+    },
+    "diagnostico": "Tromboembolismo Pulmonar (TEP)",
+    "gabarito": {
+      "exame_ouro": "Angiotomografia de Tórax",
+      "篤atamento_salvador": [
+        "Oxigenoterapia suplementar",
+        "Anticoagulação com Heparina",
+        "Monitorização hemodinâmica",
+        "Trombolítico se instabilidade"
+      ],
+      "tratamento_letal": [
+        "Dar alta como dor muscular",
+        "Realizar teste ergométrico",
+        "Administrar apenas AINEs"
+      ]
+    },
+    "opcoesIniciais": [
+      "Solicitar Angiotomografia de Tórax",
+      "Prescrever Diclofenaco IM",
+      "Solicitar Ultrassom de Abdome Total",
+      "Dar alta com diagnóstico de ansiedade"
+    ]
+  },
+  {
+    "id": "gastro_pancreatite_14",
+    "especialidade": "Gastroenterologia",
+    "linha1": "Maria Aparecida Cavalcante, 49 anos",
+    "sexo": "F",
+    "qp": "Dor abdominal intensa e vômitos",
+    "linha3": "Paciente refere dor intensa e contínua em região epigástrica com irradiação para o dorso, iniciada há 24h. Relata náuseas, sudorese e piora após ingestão de alimentos gordurosos. Possui diagnóstico prévio de colelitíase sem tratamento.",
+    "tags": ["DOR ABDOMINAL", "VÔMITOS", "COLELITÍASE"],
+    "vitais": {
+      "fc": 120,
+      "pa": "176x102",
+      "fr": 25,
+      "spo2": 94,
+      "temp": 36.0
+    },
+    "diagnostico": "Pancreatite Aguda Biliar",
+    "gabarito": {
+      "exame_ouro": "Amilase e Lipase séricas",
+      "tratamento_salvador": [
+        "Jejum oral absoluto",
+        "Hidratação venosa vigorosa",
+        "Analgesia potente (Opioides)",
+        "Monitorização de sinais vitais"
+      ],
+      "tratamento_letal": [
+        "Alimentação gordurosa imediata",
+        "Dar alta sem investigação laboratorial",
+        "Não realizar hidratação venosa"
+      ]
+    },
+    "opcoesIniciais": [
+      "Dosar Amilase e Lipase séricas",
+      "Solicitar Endoscopia Digestiva Alta",
+      "Prescrever dieta rica em fibras",
+      "Dar alta com antiácidos orais"
+    ]
+  }
+]
