@@ -1,34 +1,92 @@
 import React, { useState, useEffect, useRef } from "react";
-import { AlertTriangle, Activity, Thermometer, Droplets, HeartPulse, Send, Zap, Target, Skull, Loader2, Bug, Clock } from "lucide-react";
+import { AlertTriangle, Activity, Thermometer, Droplets, HeartPulse, Send, Zap, Target, Skull, Loader2, Bug, Clock, LogOut } from "lucide-react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// --- Monitor de ECG Animado ---
-function OrganicMonitorEKG() {
+// --- Monitor de ECG Animado Realista (Passo 2) ---
+function MonitorVital({ bpm }) {
   const controls = useAnimation();
+
+  let corSinal = "#22c55e"; // Verde (Normal: 60 - 100)
+  let statusTexto = "ESTÁVEL";
+
+  if (bpm > 100 || bpm < 60) {
+    corSinal = "#eab308"; // Amarelo (Alerta)
+    statusTexto = "ALERTA";
+  }
+  if (bpm > 140 || bpm < 40) {
+    corSinal = "#ef4444"; // Vermelho (Crítico)
+    statusTexto = "CRÍTICO";
+  }
+  if (bpm === 0) {
+    corSinal = "#ef4444"; 
+    statusTexto = "FLATLINE";
+  }
+
   useEffect(() => {
     let isMounted = true;
-    const run = async () => {
+
+    const animateEcg = async () => {
       while (isMounted) {
-        const rPeak = Math.random() * -40 - 20;
-        const sWave = Math.random() * 20 + 20;
-        const flat = "M 0 50 L 20 50 L 30 50 L 40 50 L 45 50 L 50 50 L 60 50 L 70 50 L 80 50 L 90 50 L 100 50 L 300 50";
-        const beat = `M 0 50 L 20 50 L 30 45 L 40 50 L 45 ${rPeak} L 55 ${sWave} L 60 45 L 70 50 L 80 50 L 90 50 L 100 50 L 300 50`;
-        await controls.start({ d: beat, transition: { duration: 0.15, ease: "easeOut" } });
-        await controls.start({ d: flat, transition: { duration: 0.25, ease: "easeInOut" } });
-        await new Promise(r => setTimeout(r, Math.random() * 600 + 400));
+        if (bpm <= 0) {
+          await controls.start({
+            d: "M 0 12 L 40 12",
+            transition: { duration: 1, ease: "linear" }
+          });
+          await new Promise(r => setTimeout(r, 100));
+          continue;
+        }
+
+        const tempoCiclo = 60 / bpm; 
+        const tempoBatimento = Math.min(0.2, tempoCiclo * 0.4); 
+        const tempoDescanso = tempoCiclo - tempoBatimento;
+
+        const topY = Math.random() * -10 + 2; 
+        const botY = Math.random() * 5 + 18;  
+
+        const beatPath = `M 0 12 L 8 12 L 10 10 L 12 12 L 15 ${topY} L 18 ${botY} L 21 12 L 25 10 L 28 12 L 40 12`;
+        const flatPath = `M 0 12 L 40 12`;
+
+        if (!isMounted) break;
+        await controls.start({ d: beatPath, transition: { duration: tempoBatimento, ease: "easeOut" } });
+
+        if (!isMounted) break;
+        await controls.start({ d: flatPath, transition: { duration: tempoDescanso, ease: "linear" } });
       }
     };
-    run();
+
+    animateEcg();
     return () => { isMounted = false; };
-  }, [controls]);
+  }, [bpm, controls]);
 
   return (
-    <div className="w-full h-14 mb-3 border-b border-white/[0.05] overflow-hidden relative shrink-0">
-      <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `linear-gradient(to right, rgba(16,185,129,0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(16,185,129,0.1) 1px, transparent 1px)`, backgroundSize: '10px 10px' }} />
-      <svg viewBox="0 0 200 100" className="w-full h-full text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" preserveAspectRatio="none">
-        <motion.path stroke="currentColor" strokeWidth="2" fill="none" animate={controls} initial={{ d: "M 0 50 L 300 50" }} strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+    <div className="bg-[#0B1120] border border-white/[0.05] p-4 rounded-2xl flex flex-col justify-center shadow-inner relative overflow-hidden h-28 w-full shrink-0 mb-3">
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[length:100%_4px] pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-24 h-24 blur-[40px] opacity-20 transition-colors duration-1000" style={{ backgroundColor: corSinal }}></div>
+
+      <div className="flex justify-between w-full mb-1 z-10">
+        <span className="text-slate-500 font-bold text-xs tracking-widest uppercase">FC (BPM)</span>
+        <span className="text-[10px] font-black uppercase tracking-widest transition-colors duration-1000" style={{ color: corSinal }}>
+          {statusTexto}
+        </span>
+      </div>
+
+      <div className="flex items-end gap-4 w-full z-10 flex-1">
+        <motion.span
+          key={bpm} 
+          initial={{ scale: 1.1, color: '#fff' }}
+          animate={{ scale: 1, color: corSinal }}
+          className="text-4xl font-black font-mono leading-none tracking-tighter w-16"
+        >
+          {bpm}
+        </motion.span>
+
+        <div className="flex-1 h-12 relative flex items-center">
+          <svg viewBox="0 0 40 24" className="w-full h-full transition-colors duration-1000" style={{ color: corSinal, filter: `drop-shadow(0 0 8px ${corSinal}80)` }} preserveAspectRatio="none">
+            <motion.path stroke="currentColor" strokeWidth="1.5" fill="none" animate={controls} initial={{ d: "M 0 12 L 40 12" }} strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      </div>
     </div>
   );
 }
@@ -59,6 +117,9 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
   const [gameState, setGameState] = useState('loading'); 
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [timeLeft, setTimeLeft] = useState(tempoModo === 'ranqueado' ? 600 : null);
+  
+  // Controle do Modal de Saída
+  const [showExitModal, setShowExitModal] = useState(false);
   
   const [patientInfo, setPatientInfo] = useState({ nome: 'Gerando...', idade: '--', resumo: 'Aguardando ambulância...', tags: [] });
   const [vitais, setVitais] = useState({ fc: '--', pa: '--', spo2: '--', temp: '--' });
@@ -159,7 +220,6 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
       setChat(prev => [...prev, { id: Date.now(), sender: 'ai', text: res.replace('[DERROTA]', '').trim() }, { id: Date.now()+1, sender: 'system', text: 'Óbito registrado.' }]);
       setGameState('lost');
     } else if (res.includes('[INTERVENCAO]')) {
-      // Processa a Intervenção da Equipe
       const textoLimpo = res.replace('[INTERVENCAO]', '').trim();
       const splitIdx = textoLimpo.indexOf(':');
       let docId = 'house';
@@ -190,26 +250,31 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
     handleAcao(inputText.trim());
   };
 
+  const bpmReal = gameState === 'lost' ? 0 : (parseInt(vitais.fc) || 0);
+
   return (
     <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans flex flex-col md:flex-row overflow-x-hidden">
       
-      {/* SIDEBAR: FOCO NOS AJUSTES DAS BADGES MANTIDOS */}
+      {/* SIDEBAR */}
       <aside className="w-full md:w-[320px] lg:w-[380px] bg-[#0f172a] border-r border-white/[0.05] flex flex-col md:h-screen sticky top-0 z-20 shadow-2xl">
         <div className="p-5 border-b border-white/[0.05] bg-[#0B1120] relative">
           
-          {tempoModo === 'ranqueado' && (
-            <div className={`absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-xs font-bold shadow-lg border ${timeLeft <= 60 ? 'bg-red-500/20 text-red-500 border-red-500/50 animate-pulse' : 'bg-orange-500/10 text-orange-400 border-orange-500/30'}`}>
-              <Clock className="w-3.5 h-3.5" />
-              {formatTime(timeLeft)}
+          {/* Cabeçalho Organizado: Luz da UTI e Cronômetro lado a lado */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${gameState === 'lost' ? 'bg-slate-600' : 'bg-red-500'}`} />
+              <span className="text-white text-[10px] uppercase tracking-widest">UTI — Leito 04</span>
             </div>
-          )}
-
-          <div className="flex items-center gap-2 mb-2 mt-1">
-            <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${gameState === 'lost' ? 'bg-slate-600' : 'bg-red-500'}`} />
-            <span className="text-white text-[10px] uppercase tracking-widest">UTI — Leito 04</span>
+            
+            {tempoModo === 'ranqueado' && (
+              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-xs font-bold shadow-lg border ${timeLeft <= 60 ? 'bg-red-500/20 text-red-500 border-red-500/50 animate-pulse' : 'bg-orange-500/10 text-orange-400 border-orange-500/30'}`}>
+                <Clock className="w-3.5 h-3.5" />
+                {formatTime(timeLeft)}
+              </div>
+            )}
           </div>
           
-          <h2 className="text-xl text-white font-bold mb-3 pr-20">{patientInfo.nome}</h2>
+          <h2 className="text-xl text-white font-bold mb-3">{patientInfo.nome}</h2>
           
           <div className="flex flex-wrap gap-2 items-start">
             <div className="inline-flex items-center gap-1.5 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide">
@@ -229,14 +294,13 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
 
         <div className="p-4 flex-1 flex flex-col bg-[#050B14]">
           <span className="text-slate-600 text-[9px] uppercase font-bold mb-2">Monitor em Tempo Real</span>
-          <OrganicMonitorEKG />
           
-          <div className="grid grid-cols-2 gap-2">
+          <MonitorVital bpm={bpmReal} />
+          
+          <div className="grid grid-cols-2 gap-2 mt-2">
             {[
-              { label: 'FC (bpm)', value: gameState==='lost' ? '0' : vitais.fc, color: 'emerald', icon: HeartPulse },
               { label: 'PA (mmHg)', value: gameState==='lost' ? '0x0' : vitais.pa, color: 'cyan', icon: Activity },
               { label: 'SpO2 (%)', value: gameState==='lost' ? '0' : vitais.spo2, color: 'blue', icon: Droplets },
-              { label: 'Temp (°C)', value: gameState==='lost' ? '--' : vitais.temp, color: 'orange', icon: Thermometer },
             ].map(v => (
               <div key={v.label} className="bg-[#0B1120] border border-white/[0.03] p-3 rounded-lg flex flex-col items-center justify-center relative shadow-inner">
                 <v.icon className={`w-3 h-3 text-${v.color}-500 absolute top-2 left-2 opacity-30`} />
@@ -244,12 +308,27 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
                 <span className={`text-${v.color}-400 text-2xl font-mono tracking-tighter`}>{v.value}</span>
               </div>
             ))}
+            
+            <div className="col-span-2 bg-[#0B1120] border border-white/[0.03] p-3 rounded-lg flex flex-col items-center justify-center relative shadow-inner">
+                <Thermometer className="w-3 h-3 text-orange-500 absolute top-2 left-2 opacity-30" />
+                <span className="text-orange-500 text-[8px] uppercase font-bold">Temp (°C)</span>
+                <span className="text-orange-400 text-2xl font-mono tracking-tighter">{gameState==='lost' ? '--' : vitais.temp}</span>
+            </div>
           </div>
         </div>
       </aside>
 
       {/* CHAT AREA */}
       <main className="flex-1 flex flex-col relative bg-[#0B1120]">
+        
+        {/* BOTÃO FLUTUANTE PREMIUM */}
+        <button 
+          onClick={() => setShowExitModal(true)} 
+          className="absolute top-5 right-6 z-30 flex items-center gap-2 text-slate-400 hover:text-rose-400 transition-all bg-[#151F32]/80 backdrop-blur-md border border-white/[0.05] hover:border-rose-500/30 px-4 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_0_15px_rgba(244,63,94,0.2)]"
+        >
+          <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Abandonar Plantão</span>
+        </button>
+
         {gameState === 'loading' ? (
           <div className="flex-1 flex flex-col items-center justify-center text-cyan-500">
             <Loader2 className="w-10 h-10 animate-spin mb-4" />
@@ -263,7 +342,7 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
                   <motion.div key={msg.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex ${msg.sender === 'player' ? 'justify-end' : 'justify-start'}`}>
                     
                     {msg.sender === 'system' && (
-                      <div className="w-full flex justify-center my-2">
+                      <div className="w-full flex justify-center my-2 mt-10">
                         <div className={`border text-[10px] md:text-xs font-mono px-4 py-1.5 rounded-full flex items-center gap-2 shadow-lg ${msg.text.includes('ESGOTA') || msg.text.includes('Óbito') ? 'bg-red-950/50 border-red-500/30 text-red-400' : 'bg-[#0F172A] border-white/[0.05] text-slate-400'}`}>
                           <Zap className="w-3 h-3" /> {msg.text}
                         </div>
@@ -279,7 +358,6 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
                       </div>
                     )}
                     
-                    {/* NOVO: Balão de Interrupção da Equipe */}
                     {msg.sender === 'team' && (
                       <div className="max-w-[85%] md:max-w-[70%] bg-[#1e293b]/80 border-l-4 text-white p-3 md:p-4 rounded-xl rounded-tl-sm shadow-xl relative overflow-hidden" style={{ borderColor: msg.color }}>
                         <div className="absolute inset-0 opacity-10" style={{ backgroundColor: msg.color }} />
@@ -353,6 +431,42 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
           </>
         )}
       </main>
+
+      {/* Modal de Confirmação de Saída */}
+      <AnimatePresence>
+        {showExitModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div initial={{ scale: 0.95, y: 10 }} animate={{ scale: 1, y: 0 }} className="max-w-md w-full p-8 rounded-3xl bg-[#151F32] border border-rose-500/30 text-center shadow-[0_20px_60px_rgba(244,63,94,0.15)] relative overflow-hidden">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-20 bg-rose-500/10 blur-[40px] rounded-full pointer-events-none" />
+              
+              <div className="w-16 h-16 mx-auto mb-4 bg-rose-500/10 rounded-full flex items-center justify-center border border-rose-500/20 shadow-inner">
+                <AlertTriangle className="w-8 h-8 text-rose-500" />
+              </div>
+              
+              <h2 className="text-2xl font-bold text-white mb-2">Abandonar Plantão?</h2>
+              
+              <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+                Se você sair agora, o paciente ficará desassistido e <strong className="text-rose-400">você perderá definitivamente o Ticket</strong> utilizado para entrar nesta sala. Tem certeza?
+              </p>
+              
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowExitModal(false)} 
+                  className="flex-1 py-3.5 rounded-xl bg-[#0B1120] text-white font-bold hover:bg-slate-800 transition-colors border border-white/[0.05] text-sm"
+                >
+                  Ficar na UTI
+                </button>
+                <button 
+                  onClick={() => setTelaAtual('menu')} 
+                  className="flex-1 py-3.5 rounded-xl bg-rose-600/20 text-rose-500 font-bold hover:bg-rose-600 hover:text-white transition-all border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.1)] text-sm"
+                >
+                  Sim, Abandonar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {(gameState === 'won' || gameState === 'lost') && (
