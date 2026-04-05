@@ -4,7 +4,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { gerarTabuleiro } from '../utils/motorTabuleiro'; 
 import Tabuleiro from './Tabuleiro';
 
-import { Clock, FastForward, LogOut, Stethoscope, Trophy, Ticket, Star, Lock, ChevronDown, User, Activity, FileText } from "lucide-react";
+import { Clock, FastForward, LogOut, Stethoscope, Trophy, Ticket, Star, Lock, ChevronDown, User, Activity } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const getPatente = (nivel) => {
@@ -58,11 +58,8 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   const [levelUps, setLevelUps] = useState([]);
   const cadeadoRecompensa = useRef(false);
 
-  // 🔥 A SALA DE ESPERA (A cura para o Bug do Tabuleiro!)
+  // O COFRE DE XP (A Sala de Espera que resolve o bug do tabuleiro)
   const [xpPendente, setXpPendente] = useState(null);
-
-  const [novaMateriaDesbloqueada, setNovaMateriaDesbloqueada] = useState(null);
-  const [prontuarioAberto, setProntuarioAberto] = useState(false);
 
   const materiaBlindada = materia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
   const subMateriaBlindada = subMateria.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
@@ -203,6 +200,9 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   };
 
   useEffect(() => {
+    // Se o tabuleiro ainda não gerou casas válidas, abortamos a verificação para evitar vitórias falsas.
+    if (!gradePronta || gradePronta.length === 0) return;
+
     let todasCertas = true; let temPalavra = false;
     gradePronta.forEach(linha => linha.forEach(celula => {
         if (!celula.vazia && celula.letraCerta !== ' ') { 
@@ -215,7 +215,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     if (temPalavra && todasCertas && !vitoria && !cadeadoRecompensa.current) {
       cadeadoRecompensa.current = true; setVitoria(true); setCelulasDestacadas([]); 
 
-      // 🔥 FASE DA SALA DE ESPERA: Em vez de atualizar o perfil, apenas calcula e guarda!
       const prepararXPPendente = () => {
         if (meuUid && dadosUsuario) {
           let numLetras = 0; let numPalavras = 0; let tamanhoMaiorPalavra = 0;
@@ -294,21 +293,11 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           
           if (alertasNivel.length > 0) { setLevelUps(alertasNivel); setTimeout(() => setLevelUps([]), 8000); }
 
-          if (newSubLevel > oldSubLevel) {
-            if (newSubLevel === 5) {
-               setNovaMateriaDesbloqueada({ nome: "Departamento de Anatomia", descricao: "Acesso concedido. Prepare-se para casos de traumas complexos e reconstrução óssea." });
-            } else if (newSubLevel === 10) {
-               setNovaMateriaDesbloqueada({ nome: "Unidade de Cardiologia", descricao: "Atenção: Os pacientes desta ala perdem satisfação rapidamente. Foco no monitor vital!" });
-            } else if (newSubLevel === 15) {
-               setNovaMateriaDesbloqueada({ nome: "Ala Neurológica", descricao: "O tempo de reação é crucial aqui. Sintomas podem ser mascarados. Boa sorte." });
-            }
-          }
-
           const xpGlobalAntigo = dadosUsuario.pontuacaoTotal || 0;
           const novoXPGlobal = xpGlobalAntigo + xpFinalDaFase + xpMissaoBonus; 
           const novosTickets = (dadosUsuario.tickets || 0) + ticketMissaoBonus + ticketGanhoPartida; 
 
-          // A MAGIA: Em vez de fazer updateDoc aqui, guardamos o pacote pronto!
+          // Guarda as informações na "Sala de Espera" em vez de enviar logo
           const payloadFirebase = {
              pontuacaoTotal: novoXPGlobal, tickets: novosTickets, medidorTicketsCruzadinha: novoMedidor,
              [`xpTopicos.${chaveXP}`]: newSubXP, [`estatisticas.${chaveXP}`]: novasStatsLocal, estatisticasGerais: novasStatsGerais, missoesDiarias: missoesAtualizadas
@@ -426,7 +415,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     }
   };
 
-  // 🔥 O GATILHO: Apenas quando ele clica em "Próximo" o cofre é despejado!
   const avancarParaProximoNivel = async () => {
     if (xpPendente && meuUid) {
       try {
@@ -441,8 +429,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     cadeadoRecompensa.current = false; setLevelUps([]); 
     setDicasSalvas({}); setTempoDecorrido(0); setErrosNaPartida(0); setRelatorioXP(null);
     setProgressoTicket(null); setPalavraSelecionada(null); setNiveisDesbloqueados({}); setPenalidadeXP(0);
-    setNovaMateriaDesbloqueada(null); setProntuarioAberto(false);
-    setXpPendente(null); // Limpa o cofre
+    setXpPendente(null); 
     setMensagemGeral('A IA está a preparar o seu plantão... 🧠');
     setChaveRecarregamento(prev => prev + 1); 
   };
@@ -457,13 +444,10 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
   return (
     <div className="h-screen bg-[#0B1120] text-white font-sans relative overflow-hidden flex flex-col selection:bg-cyan-500/30">
-      <style>{`
-        @keyframes slideInUpLeft { 0% { transform: translateX(-100%) scale(0.8); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }
-        @keyframes carimboBang { 0% { transform: scale(5) rotate(-30deg); opacity: 0; } 50% { transform: scale(0.8) rotate(5deg); opacity: 1; } 100% { transform: scale(1) rotate(-15deg); opacity: 1; } }
-      `}</style>
+      <style>{`@keyframes slideInUpLeft { 0% { transform: translateX(-100%) scale(0.8); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }`}</style>
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.03)_0%,#0B1120_100%)]" />
 
-      {levelUps.length > 0 && !novaMateriaDesbloqueada && (
+      {levelUps.length > 0 && (
         <div style={{ position: 'fixed', bottom: '40px', left: '40px', display: 'flex', flexDirection: 'column', gap: '20px', zIndex: 99999 }}>
           {levelUps.map((lu, idx) => {
             if (lu.isPromocao) {
@@ -609,74 +593,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       </main>
 
       <AnimatePresence>
-        {vitoria && novaMateriaDesbloqueada && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#0B1120]/95 backdrop-blur-md">
-            
-            <motion.div 
-               initial={{ y: 200, rotate: -5, opacity: 0 }} 
-               animate={{ y: 0, rotate: 0, opacity: 1 }}
-               transition={{ type: "spring", damping: 15, stiffness: 60 }}
-               className={`w-[450px] bg-[#d9c4a9] rounded-sm shadow-[0_30px_60px_rgba(0,0,0,0.5)] relative flex flex-col transition-all duration-700 ${prontuarioAberto ? 'min-h-[500px]' : 'h-[300px]'}`}
-            >
-              {!prontuarioAberto && (
-                 <div 
-                    onClick={() => setProntuarioAberto(true)}
-                    className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer group"
-                 >
-                    <div className="text-rose-700/80 font-black text-5xl uppercase tracking-tighter border-[6px] border-rose-700/80 p-4 rounded-xl group-hover:scale-110 group-hover:text-rose-600 group-hover:border-rose-600 transition-all" style={{ animation: 'carimboBang 0.5s ease-out forwards' }}>
-                       CONFIDENCIAL
-                    </div>
-                    <span className="absolute bottom-10 text-[#5c4f3c] text-sm font-bold uppercase tracking-widest animate-pulse">
-                       Clique para Romper o Selo
-                    </span>
-                 </div>
-              )}
-
-              <div className="absolute -top-8 right-10 bg-[#c4b096] w-40 h-8 rounded-t-lg border-t border-l border-r border-[#b09e86] shadow-inner" />
-
-              <AnimatePresence>
-                 {prontuarioAberto && (
-                    <motion.div 
-                       initial={{ height: 0, opacity: 0 }} 
-                       animate={{ height: 'auto', opacity: 1 }}
-                       transition={{ duration: 0.6, ease: "easeInOut" }}
-                       className="p-8 flex-1 bg-[#fdfbf7] m-4 rounded shadow-inner flex flex-col items-center text-center relative overflow-hidden"
-                    >
-                       <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `repeating-linear-gradient(transparent, transparent 27px, #94a3b8 28px)` }} />
-                       
-                       <FileText className="w-12 h-12 text-[#334155] mb-4 relative z-10" />
-                       
-                       <h2 className="text-2xl font-black text-[#1e293b] mb-2 uppercase tracking-tight relative z-10">
-                          Acesso Concedido
-                       </h2>
-                       
-                       <div className="w-16 h-1 bg-cyan-600 mb-6 relative z-10" />
-
-                       <h3 className="text-lg font-bold text-[#334155] mb-4 relative z-10">
-                          {novaMateriaDesbloqueada.nome}
-                       </h3>
-
-                       <p className="text-[#475569] text-sm leading-relaxed mb-8 relative z-10 font-medium">
-                          {novaMateriaDesbloqueada.descricao}
-                       </p>
-
-                       <button 
-                          onClick={avancarParaProximoNivel} 
-                          className="mt-auto bg-[#1e293b] hover:bg-[#0f172a] text-white px-8 py-3 rounded-md font-bold uppercase tracking-wider text-xs transition-colors shadow-lg relative z-10"
-                       >
-                          Assinar Termo e Continuar
-                       </button>
-                    </motion.div>
-                 )}
-              </AnimatePresence>
-            </motion.div>
-
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {vitoria && !novaMateriaDesbloqueada && (
+        {vitoria && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1120]/90 backdrop-blur-lg">
             {relatorioXP?.isTutorial ? (
               <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="w-full max-w-md rounded-3xl p-8 text-center relative overflow-hidden bg-[#1e293b] border border-amber-500/30 shadow-[0_0_60px_rgba(245,158,11,0.15)]">
@@ -708,6 +625,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                   </div>
                 </div>
                 
+                {/* AVISO DE PUNIÇÃO SE ELE USOU AS DICAS */}
                 {relatorioXP?.penalidade > 0 && (
                    <div className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl mb-6 relative z-10">
                      <p className="text-rose-400 text-xs font-bold uppercase tracking-wider">Punição de Dicas Aplicada: -{relatorioXP.penalidade} XP</p>
