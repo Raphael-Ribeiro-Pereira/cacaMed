@@ -4,7 +4,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { gerarTabuleiro } from '../utils/motorTabuleiro'; 
 import Tabuleiro from './Tabuleiro';
 
-import { Clock, FastForward, LogOut, Stethoscope, Trophy, Ticket, Star } from "lucide-react";
+import { Clock, FastForward, LogOut, Stethoscope, Trophy, Ticket, Star, Lock, ChevronDown, User, Activity, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const getPatente = (nivel) => {
@@ -33,30 +33,36 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
   useEffect(() => {
     document.documentElement.style.fontSize = '16px';
-    return () => {
-      document.documentElement.style.fontSize = '24px';
-    };
+    return () => { document.documentElement.style.fontSize = '24px'; };
   }, []);
 
   const [valores, setValores] = useState({}); 
   const [direcaoAtual, setDirecaoAtual] = useState('horizontal');
-  const [dica, setDica] = useState('A IA está a preparar o seu plantão... 🧠');
+  const [mensagemGeral, setMensagemGeral] = useState('A IA está a preparar o seu plantão... 🧠');
   const [vitoria, setVitoria] = useState(false);
   const [jogoIniciado, setJogoIniciado] = useState(false); 
   const [chaveRecarregamento, setChaveRecarregamento] = useState(0); 
   
   const [celulasDestacadas, setCelulasDestacadas] = useState([]);
+  
   const [dicasSalvas, setDicasSalvas] = useState({});
+  const [palavraSelecionada, setPalavraSelecionada] = useState(null);
+  const [niveisDesbloqueados, setNiveisDesbloqueados] = useState({}); 
+  const [penalidadeXP, setPenalidadeXP] = useState(0);
 
   const [tempoDecorrido, setTempoDecorrido] = useState(0);
   const [relatorioXP, setRelatorioXP] = useState(null);
-  
-  // 🔥 ESTADO DO CARTÃO FIDELIDADE
   const [progressoTicket, setProgressoTicket] = useState(null);
   
   const [errosNaPartida, setErrosNaPartida] = useState(0);
   const [levelUps, setLevelUps] = useState([]);
   const cadeadoRecompensa = useRef(false);
+
+  // 🔥 A SALA DE ESPERA (A cura para o Bug do Tabuleiro!)
+  const [xpPendente, setXpPendente] = useState(null);
+
+  const [novaMateriaDesbloqueada, setNovaMateriaDesbloqueada] = useState(null);
+  const [prontuarioAberto, setProntuarioAberto] = useState(false);
 
   const materiaBlindada = materia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
   const subMateriaBlindada = subMateria.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
@@ -72,9 +78,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
   useEffect(() => {
     let intervalo;
-    if (jogoIniciado && !vitoria) {
-      intervalo = setInterval(() => setTempoDecorrido(prev => prev + 1), 1000);
-    }
+    if (jogoIniciado && !vitoria) intervalo = setInterval(() => setTempoDecorrido(prev => prev + 1), 1000);
     return () => clearInterval(intervalo);
   }, [vitoria, jogoIniciado, chaveRecarregamento]);
 
@@ -119,17 +123,32 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         palavrasDoTabuleiro.forEach(palavra => {
           let dicaOriginal = mapaDicasBasicas[palavra] || "Encontre esta estrutura.";
           dicaOriginal = aplicarCensura(dicaOriginal, palavra);
-          dicasEstaticas[palavra] = `${dicaOriginal} (Dica: Começa com a letra ${palavra[0]})`;
+          dicasEstaticas[palavra] = {
+            laudo: `${dicaOriginal} (Dica: Começa com a letra ${palavra[0]})`,
+            residente: "Indisponível (Modo Básico não possui Residentes).",
+            paciente: "Indisponível (Modo Básico não possui Pacientes)."
+          };
         });
         setDicasSalvas(prev => ({ ...prev, ...dicasEstaticas }));
-        setDica('Prontuários carregados! Clique num número para começar.');
+        setMensagemGeral('Prontuários carregados! Selecione um número para começar.');
         setJogoIniciado(true);
         return; 
       }
       
-      setDica(`Consultando a IA (Nível ${nivelAtual})...`);
+      setMensagemGeral(`A IA está a estruturar as dicas (Nível ${nivelAtual})...`);
       const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-      const prompt = `Você é um gerador de dicas de palavras cruzadas para estudantes de medicina. Crie uma dica para CADA palavra da lista abaixo. REGRAS OBRIGATÓRIAS: 1. MÁXIMO de 15 palavras por dica. 2. É ESTRITAMENTE PROIBIDO usar a própria palavra ou seus radicais na dica. 3. Foque em correlação clínica, função ou sintoma. Retorne APENAS um objeto JSON válido, onde a chave é a palavra exata e o valor é a dica. Lista: ${palavrasDoTabuleiro.join(', ')}`;
+      
+      const prompt = `Você é um gerador de dicas de palavras cruzadas médicas. Para CADA palavra da lista, crie 3 níveis de dicas (máx 15 palavras cada).
+      Nível 1 (laudo): Termos técnicos anatômicos/patológicos formais.
+      Nível 2 (residente): Correlação clínica, sintomas ou prática de hospital.
+      Nível 3 (paciente): Linguagem extremamente simples e leiga, quase infantil.
+      REGRAS ABSOLUTAS: É PROIBIDO usar a palavra solicitada ou os seus radicais nas dicas.
+      Retorne APENAS um objeto JSON válido. Exemplo:
+      {
+        "FEMUR": { "laudo": "...", "residente": "...", "paciente": "..." },
+        "TIBIA": { "laudo": "...", "residente": "...", "paciente": "..." }
+      }
+      Lista: ${palavrasDoTabuleiro.join(', ')}`;
 
       try {
         const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
@@ -139,11 +158,13 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         let textoResposta = dados.candidates[0].content.parts[0].text;
         textoResposta = textoResposta.replace(/```json/gi, '').replace(/```/g, '').trim();
         const dicasGeradas = JSON.parse(textoResposta);
+        
         setDicasSalvas(prev => ({ ...prev, ...dicasGeradas }));
-        setDica('Dicas clínicas prontas! Clique num número para começar.');
+        setMensagemGeral('Fichas clínicas prontas! Selecione um número para começar.');
         setJogoIniciado(true); 
       } catch (erro) {
-        setDica("Clique no número de uma palavra para ver a dica.");
+        console.error(erro);
+        setMensagemGeral("Clique no número de uma palavra para gerar a dica.");
         setJogoIniciado(true); 
       }
     };
@@ -151,30 +172,25 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   }, [palavrasDoTabuleiro, nivelAtual, jogoIniciado, mapaDicasBasicas]);
 
   const gerarDica = async (termo) => {
-    if (dicasSalvas[termo]) {
-      setDica(dicasSalvas[termo]); return; 
-    }
-    if (nivelAtual <= 2) {
-       let dicaOriginal = mapaDicasBasicas[termo] || "Encontre esta estrutura.";
-       dicaOriginal = aplicarCensura(dicaOriginal, termo);
-       const dicaFormatada = `${dicaOriginal} (Dica: Começa com a letra ${termo[0]})`;
-       setDica(dicaFormatada);
-       setDicasSalvas(prev => ({ ...prev, [termo]: dicaFormatada }));
-       return;
-    }
-    setDica(`Consultando a IA (Nível ${nivelAtual})...`);
+    setPalavraSelecionada(termo);
+    if (dicasSalvas[termo]) return; 
+
+    setMensagemGeral(`Consultando a IA para o termo...`);
     const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;; 
-    const prompt = `Você é um gerador de dicas para estudantes de medicina. O termo é [${termo}]. Escreva uma dica clínica objetiva com NO MÁXIMO 15 palavras. É ESTRITAMENTE PROIBIDO usar a palavra '${termo}' ou seus radicais.`;
+    const prompt = `Gere dicas para estudantes de medicina. O termo é [${termo}]. Retorne UM JSON estrito com 3 níveis curtos (máx 15 palavras). Formato: {"laudo": "termo técnico...", "residente": "prática clínica...", "paciente": "termo leigo..."}. PROIBIDO usar a palavra '${termo}'.`;
+    
     try {
         const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         });
         const dados = await resposta.json();
-        const novaDica = dados.candidates[0].content.parts[0].text;
-        setDica(novaDica);
-        setDicasSalvas(prev => ({ ...prev, [termo]: novaDica }));
+        let textoResposta = dados.candidates[0].content.parts[0].text;
+        textoResposta = textoResposta.replace(/```json/gi, '').replace(/```/g, '').trim();
+        const novaDicaObj = JSON.parse(textoResposta);
+        setDicasSalvas(prev => ({ ...prev, [termo]: novaDicaObj }));
     } catch (erro) {
-        setDica("Ops! Ocorreu um erro de ligação com a IA.");
+        const fallback = { laudo: "Erro de ligação. Tente deduzir!", residente: "Indisponível", paciente: "Indisponível" };
+        setDicasSalvas(prev => ({ ...prev, [termo]: fallback }));
     }
   };
 
@@ -199,7 +215,8 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     if (temPalavra && todasCertas && !vitoria && !cadeadoRecompensa.current) {
       cadeadoRecompensa.current = true; setVitoria(true); setCelulasDestacadas([]); 
 
-      const calcularE_SalvarXP = async () => {
+      // 🔥 FASE DA SALA DE ESPERA: Em vez de atualizar o perfil, apenas calcula e guarda!
+      const prepararXPPendente = () => {
         if (meuUid && dadosUsuario) {
           let numLetras = 0; let numPalavras = 0; let tamanhoMaiorPalavra = 0;
           gradePronta.forEach(linha => linha.forEach(c => {
@@ -220,42 +237,25 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
             if (tempoDecorrido <= tempoIdeal * 0.25) multTempo = 2.0; 
             else if (tempoDecorrido <= tempoIdeal * 0.5) multTempo = 1.5; 
             else if (tempoDecorrido <= tempoIdeal) multTempo = 1.2; 
-            xpFinalDaFase = Math.floor(xpBase * multNivel * multTempo);
-            setRelatorioXP({ ganho: xpFinalDaFase, base: xpBase, multNivel: multNivel.toFixed(1), multTempo: multTempo.toFixed(1) });
+            let calculado = Math.floor(xpBase * multNivel * multTempo) - penalidadeXP;
+            xpFinalDaFase = calculado < 10 ? 10 : calculado;
+            setRelatorioXP({ ganho: xpFinalDaFase, base: xpBase, multNivel: multNivel.toFixed(1), multTempo: multTempo.toFixed(1), penalidade: penalidadeXP });
           }
 
-          // 🔥 LÓGICA DO CARTÃO FIDELIDADE (1 Ticket a cada 2 Cruzadinhas)
           const medidorAntigo = dadosUsuario.medidorTicketsCruzadinha || 0;
           let novoMedidor = medidorAntigo + 1;
           let ticketGanhoPartida = 0;
+          if (novoMedidor >= 2) { novoMedidor = 0; ticketGanhoPartida = 1; }
+          setProgressoTicket({ atual: ticketGanhoPartida > 0 ? 2 : novoMedidor, ganhou: ticketGanhoPartida > 0 });
 
-          if (novoMedidor >= 2) {
-            novoMedidor = 0;
-            ticketGanhoPartida = 1;
-          }
-
-          setProgressoTicket({
-            atual: ticketGanhoPartida > 0 ? 2 : novoMedidor, // Se ganhou, mostra o cartão cheio (2/2)
-            ganhou: ticketGanhoPartida > 0
-          });
-
-          // LÓGICA DE MISSÕES DIÁRIAS
           const missoesAtuais = Array.isArray(dadosUsuario.missoesDiarias) ? dadosUsuario.missoesDiarias : (dadosUsuario.missoesDiarias?.missoes || []);
-          let xpMissaoBonus = 0;
-          let ticketMissaoBonus = 0;
-
+          let xpMissaoBonus = 0; let ticketMissaoBonus = 0;
           const missoesAtualizadas = missoesAtuais.map(missao => {
             if (missao.concluida) return missao;
-            
             let novoProgresso = missao.progresso || 0;
             if (missao.id === 'jogar_cruzadinha') novoProgresso += 1;
             if (missao.id === 'acertar_palavras') novoProgresso += numPalavras;
-            
-            if (novoProgresso >= missao.meta) {
-               novoProgresso = missao.meta;
-               xpMissaoBonus += missao.recompensaXP || 0;
-               ticketMissaoBonus += missao.recompensaTicket || 0;
-            }
+            if (novoProgresso >= missao.meta) { novoProgresso = missao.meta; xpMissaoBonus += missao.recompensaXP || 0; ticketMissaoBonus += missao.recompensaTicket || 0; }
             return { ...missao, progresso: novoProgresso, concluida: novoProgresso >= missao.meta };
           });
 
@@ -268,8 +268,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           let novosDiasSeguidos = statsGerais.diasSeguidos;
           if (statsGerais.ultimoDia !== hoje) {
             const ontem = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-            if (statsGerais.ultimoDia === ontem) novosDiasSeguidos += 1;
-            else novosDiasSeguidos = 1; 
+            if (statsGerais.ultimoDia === ontem) novosDiasSeguidos += 1; else novosDiasSeguidos = 1; 
           }
 
           const novaStreak = statsGerais.streakAtual + 1;
@@ -279,70 +278,54 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           const novoHistorico = [...(statsGerais.historico || []), { data: hoje, materia: subMateria, tempo: tempoDecorrido, erros: errosNaPartida, letrasCorretas: numLetras }].slice(-30);
           const novasStatsGerais = { streakAtual: novaStreak, maiorStreak: novaMaiorStreak, ultimoDia: hoje, diasSeguidos: novosDiasSeguidos, errosTotais: novosErrosTotais, maiorPalavra: novaMaiorPalavra, historico: novoHistorico };
 
-          let oldSomaNiveis = 0;
-          Object.keys(dadosUsuario.xpTopicos || {}).forEach(k => {
-            const xpM = dadosUsuario.xpTopicos[k];
-            if (xpM > 0) oldSomaNiveis += Math.floor(Math.sqrt(xpM / 1000)) + 1;
-          });
-          
           const newSubXP = xpAtualSubtopico + xpFinalDaFase;
           const newSubLevel = Math.floor(Math.sqrt(newSubXP / 1000)) + 1;
           const oldSubLevel = xpAtualSubtopico === 0 ? 0 : Math.floor(Math.sqrt(xpAtualSubtopico / 1000)) + 1;
           
-          let newSomaNiveis = 0;
-          const novosTopicosSimulados = { ...(dadosUsuario.xpTopicos || {}), [chaveXP]: newSubXP };
-          Object.keys(novosTopicosSimulados).forEach(k => {
-            const xpM = novosTopicosSimulados[k];
-            if (xpM > 0) newSomaNiveis += Math.floor(Math.sqrt(xpM / 1000)) + 1;
-          });
+          let oldSomaNiveis = 0; Object.keys(dadosUsuario.xpTopicos || {}).forEach(k => { if (dadosUsuario.xpTopicos[k] > 0) oldSomaNiveis += Math.floor(Math.sqrt(dadosUsuario.xpTopicos[k] / 1000)) + 1; });
+          let newSomaNiveis = 0; const novosTopicosSimulados = { ...(dadosUsuario.xpTopicos || {}), [chaveXP]: newSubXP };
+          Object.keys(novosTopicosSimulados).forEach(k => { if (novosTopicosSimulados[k] > 0) newSomaNiveis += Math.floor(Math.sqrt(novosTopicosSimulados[k] / 1000)) + 1; });
 
-          const oldPatente = getPatente(oldSomaNiveis);
-          const newPatente = getPatente(newSomaNiveis);
-
+          const oldPatente = getPatente(oldSomaNiveis); const newPatente = getPatente(newSomaNiveis);
           let alertasNivel = [];
           if (newPatente.titulo !== oldPatente.titulo && oldSomaNiveis > 0) alertasNivel.push({ isPromocao: true, nome: 'PROMOÇÃO DE CARREIRA', antigo: oldPatente.titulo, novo: newPatente.titulo, icone: '🌟', cor: newPatente.cor });
           else if (newSomaNiveis > oldSomaNiveis && oldSomaNiveis > 0) alertasNivel.push({ nome: 'Nível Global', antigo: oldSomaNiveis, novo: newSomaNiveis, icone: '🌍' });
           if (newSubLevel > oldSubLevel && oldSubLevel > 0) alertasNivel.push({ nome: subMateria, antigo: oldSubLevel, novo: newSubLevel, icone: '⭐' });
           
-          if (alertasNivel.length > 0) {
-            setLevelUps(alertasNivel);
-            setTimeout(() => setLevelUps([]), 8000); 
+          if (alertasNivel.length > 0) { setLevelUps(alertasNivel); setTimeout(() => setLevelUps([]), 8000); }
+
+          if (newSubLevel > oldSubLevel) {
+            if (newSubLevel === 5) {
+               setNovaMateriaDesbloqueada({ nome: "Departamento de Anatomia", descricao: "Acesso concedido. Prepare-se para casos de traumas complexos e reconstrução óssea." });
+            } else if (newSubLevel === 10) {
+               setNovaMateriaDesbloqueada({ nome: "Unidade de Cardiologia", descricao: "Atenção: Os pacientes desta ala perdem satisfação rapidamente. Foco no monitor vital!" });
+            } else if (newSubLevel === 15) {
+               setNovaMateriaDesbloqueada({ nome: "Ala Neurológica", descricao: "O tempo de reação é crucial aqui. Sintomas podem ser mascarados. Boa sorte." });
+            }
           }
 
           const xpGlobalAntigo = dadosUsuario.pontuacaoTotal || 0;
           const novoXPGlobal = xpGlobalAntigo + xpFinalDaFase + xpMissaoBonus; 
-          
-          // 🔥 Soma os tickets das missões + 1 ticket (se o cartão fidelidade encheu)
           const novosTickets = (dadosUsuario.tickets || 0) + ticketMissaoBonus + ticketGanhoPartida; 
 
-          try {
-            await updateDoc(doc(db, "usuarios", meuUid), { 
-              pontuacaoTotal: novoXPGlobal, 
-              tickets: novosTickets,
-              medidorTicketsCruzadinha: novoMedidor, // Guarda o progresso do cartão fidelidade
-              [`xpTopicos.${chaveXP}`]: newSubXP,
-              [`estatisticas.${chaveXP}`]: novasStatsLocal,
-              estatisticasGerais: novasStatsGerais,
-              missoesDiarias: missoesAtualizadas
-            });
-            setDadosUsuario(prev => ({ 
-              ...prev, 
-              pontuacaoTotal: novoXPGlobal, 
-              tickets: novosTickets,
-              medidorTicketsCruzadinha: novoMedidor,
-              xpTopicos: { ...prev.xpTopicos, [chaveXP]: newSubXP },
-              estatisticas: { ...prev.estatisticas, [chaveXP]: novasStatsLocal },
-              estatisticasGerais: novasStatsGerais, 
-              missoesDiarias: missoesAtualizadas
-            }));
-          } catch (error) { console.error("Erro ao guardar os dados:", error); }
+          // A MAGIA: Em vez de fazer updateDoc aqui, guardamos o pacote pronto!
+          const payloadFirebase = {
+             pontuacaoTotal: novoXPGlobal, tickets: novosTickets, medidorTicketsCruzadinha: novoMedidor,
+             [`xpTopicos.${chaveXP}`]: newSubXP, [`estatisticas.${chaveXP}`]: novasStatsLocal, estatisticasGerais: novasStatsGerais, missoesDiarias: missoesAtualizadas
+          };
+          const payloadLocal = {
+             pontuacaoTotal: novoXPGlobal, tickets: novosTickets, medidorTicketsCruzadinha: novoMedidor,
+             xpTopicos: { ...dadosUsuario.xpTopicos, [chaveXP]: newSubXP }, estatisticas: { ...dadosUsuario.estatisticas, [chaveXP]: novasStatsLocal }, estatisticasGerais: novasStatsGerais, missoesDiarias: missoesAtualizadas
+          };
+
+          setXpPendente({ firebase: payloadFirebase, local: payloadLocal });
         }
       };
-      calcularE_SalvarXP();
+      prepararXPPendente();
     } else if (!todasCertas && vitoria) {
       setVitoria(false); cadeadoRecompensa.current = false; 
     }
-  }, [valores, gradePronta, vitoria, usuario, dadosUsuario, setDadosUsuario, nivelAtual, tempoDecorrido, chaveXP, xpAtualSubtopico, materia, subMateria, materiaBlindada, errosNaPartida, meuUid]);
+  }, [valores, gradePronta, vitoria, usuario, dadosUsuario, nivelAtual, tempoDecorrido, chaveXP, xpAtualSubtopico, materia, subMateria, materiaBlindada, errosNaPartida, meuUid, penalidadeXP]);
 
   const atualizarDestaqueVisual = (linha, coluna, direcao) => {
     const celulaAtual = gradePronta[linha][coluna];
@@ -443,21 +426,44 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     }
   };
 
-  const avancarParaProximoNivel = () => {
+  // 🔥 O GATILHO: Apenas quando ele clica em "Próximo" o cofre é despejado!
+  const avancarParaProximoNivel = async () => {
+    if (xpPendente && meuUid) {
+      try {
+        await updateDoc(doc(db, "usuarios", meuUid), xpPendente.firebase);
+        setDadosUsuario(prev => ({ ...prev, ...xpPendente.local }));
+      } catch (error) { 
+        console.error("Erro ao guardar pendente:", error); 
+      }
+    }
+
     setValores({}); setVitoria(false); setJogoIniciado(false); setCelulasDestacadas([]); 
     cadeadoRecompensa.current = false; setLevelUps([]); 
     setDicasSalvas({}); setTempoDecorrido(0); setErrosNaPartida(0); setRelatorioXP(null);
-    setProgressoTicket(null);
-    setDica('A IA está a preparar o seu plantão... 🧠');
+    setProgressoTicket(null); setPalavraSelecionada(null); setNiveisDesbloqueados({}); setPenalidadeXP(0);
+    setNovaMateriaDesbloqueada(null); setProntuarioAberto(false);
+    setXpPendente(null); // Limpa o cofre
+    setMensagemGeral('A IA está a preparar o seu plantão... 🧠');
     setChaveRecarregamento(prev => prev + 1); 
+  };
+
+  const handleDesbloquearDica = (nivelDesejado) => {
+    if (!palavraSelecionada) return;
+    if (nivelAtual <= 2) return; 
+    setNiveisDesbloqueados(prev => ({ ...prev, [palavraSelecionada]: nivelDesejado }));
+    if (nivelDesejado === 2) setPenalidadeXP(prev => prev + 5);
+    if (nivelDesejado === 3) setPenalidadeXP(prev => prev + 10);
   };
 
   return (
     <div className="h-screen bg-[#0B1120] text-white font-sans relative overflow-hidden flex flex-col selection:bg-cyan-500/30">
-      <style>{`@keyframes slideInUpLeft { 0% { transform: translateX(-100%) scale(0.8); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }`}</style>
+      <style>{`
+        @keyframes slideInUpLeft { 0% { transform: translateX(-100%) scale(0.8); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }
+        @keyframes carimboBang { 0% { transform: scale(5) rotate(-30deg); opacity: 0; } 50% { transform: scale(0.8) rotate(5deg); opacity: 1; } 100% { transform: scale(1) rotate(-15deg); opacity: 1; } }
+      `}</style>
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.03)_0%,#0B1120_100%)]" />
 
-      {levelUps.length > 0 && (
+      {levelUps.length > 0 && !novaMateriaDesbloqueada && (
         <div style={{ position: 'fixed', bottom: '40px', left: '40px', display: 'flex', flexDirection: 'column', gap: '20px', zIndex: 99999 }}>
           {levelUps.map((lu, idx) => {
             if (lu.isPromocao) {
@@ -484,7 +490,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         </div>
       )}
 
-      {/* HEADER 100% FIEL AO FIGMA (E ANABOLIZADO) */}
       <header className="h-20 bg-[#1e293b]/50 border-b border-white/[0.05] backdrop-blur-md flex items-center justify-between px-8 relative z-10 shrink-0 shadow-sm">
         <button onClick={() => setTelaAtual('topicos')} className="flex items-center gap-2.5 text-slate-400 hover:text-rose-400 transition-colors text-sm font-bold">
           <LogOut className="w-5 h-5" />
@@ -512,31 +517,88 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
       <main className="flex-1 flex flex-row min-h-0 relative z-10">
         
-        <div className="w-[340px] shrink-0 border-r border-white/[0.05] flex flex-col p-5 bg-[#0f172a]/50">
-          <motion.div initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }} className="bg-[#1e293b]/80 border border-cyan-500/20 rounded-2xl p-5 flex-1 flex flex-col relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[40px] rounded-full pointer-events-none" />
+        <div className="w-[340px] lg:w-[400px] shrink-0 border-r border-white/[0.05] flex flex-col p-5 bg-[#0f172a]/50 overflow-y-auto">
+          
+          <div className="flex items-center justify-between mb-4">
+             <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                  <Stethoscope className="w-4 h-4 text-cyan-400" />
+                </div>
+                <h2 className="text-cyan-400 text-sm font-bold tracking-wide">Prontuário Médico</h2>
+             </div>
+             {penalidadeXP > 0 && (
+                <span className="text-rose-400 text-[10px] font-bold px-2 py-1 bg-rose-500/10 rounded border border-rose-500/20 shadow-inner">
+                   Punição: -{penalidadeXP} XP
+                </span>
+             )}
+          </div>
 
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center">
-                <Stethoscope className="w-4 h-4 text-cyan-400" />
-              </div>
-              <h2 className="text-cyan-400 text-sm tracking-wide">🩺 Dica do Caso Clínico</h2>
-            </div>
+          <AnimatePresence mode="wait">
+            {!palavraSelecionada || !dicasSalvas[palavraSelecionada] ? (
+              <motion.div key="mensagem-geral" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex-1 flex flex-col justify-center items-center text-center p-6 border border-dashed border-white/[0.1] rounded-2xl">
+                <p className="text-slate-400 text-sm leading-relaxed">{mensagemGeral}</p>
+              </motion.div>
+            ) : (
+              <motion.div key="sanfona-dicas" initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-3">
+                
+                <div className="bg-[#1e293b]/80 border border-cyan-500/30 rounded-xl p-4 shadow-lg">
+                  <span className="text-[10px] uppercase font-bold text-cyan-400 tracking-widest flex items-center gap-2 mb-2">
+                     <Activity className="w-3 h-3" /> Laudo Especialista
+                  </span>
+                  <p className="text-white text-sm leading-relaxed">{dicasSalvas[palavraSelecionada].laudo}</p>
+                </div>
 
-            <div className="flex-1 flex flex-col justify-center">
-              <p className="text-white text-sm leading-relaxed mb-4">"{dica}"</p>
-              <div className="pt-3 border-t border-white/[0.05]">
-                <p className="text-slate-400 text-xs leading-relaxed">{materia} • {subMateria}</p>
-              </div>
-            </div>
+                <div className="rounded-xl overflow-hidden border border-white/[0.05] bg-[#151F32]">
+                   {(niveisDesbloqueados[palavraSelecionada] || 1) >= 2 ? (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="p-4 border-l-4 border-amber-500">
+                         <span className="text-[10px] uppercase font-bold text-amber-400 tracking-widest flex items-center gap-2 mb-2">
+                           <User className="w-3 h-3" /> Observação do Residente
+                         </span>
+                         <p className="text-slate-300 text-sm leading-relaxed">{dicasSalvas[palavraSelecionada].residente}</p>
+                      </motion.div>
+                   ) : (
+                      <button onClick={() => handleDesbloquearDica(2)} disabled={nivelAtual <= 2} className="w-full p-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed group">
+                         <div className="flex items-center gap-3">
+                            <Lock className="w-4 h-4 text-amber-500/50 group-hover:text-amber-400 transition-colors" />
+                            <span className="text-xs font-bold text-slate-400 group-hover:text-white transition-colors">Revelar Opinião do Residente</span>
+                         </div>
+                         <ChevronDown className="w-4 h-4 text-slate-600 group-hover:text-slate-400" />
+                      </button>
+                   )}
+                </div>
 
-            <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/[0.05]">
-              <span className="text-[9px] uppercase tracking-widest text-slate-600">Gerado por IA</span>
+                {((niveisDesbloqueados[palavraSelecionada] || 1) >= 2) && (
+                   <div className="rounded-xl overflow-hidden border border-white/[0.05] bg-[#151F32]">
+                      {(niveisDesbloqueados[palavraSelecionada] || 1) >= 3 ? (
+                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="p-4 border-l-4 border-emerald-500">
+                            <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-widest flex items-center gap-2 mb-2">
+                              <User className="w-3 h-3" /> Relato para o Paciente
+                            </span>
+                            <p className="text-slate-300 text-sm leading-relaxed italic">"{dicasSalvas[palavraSelecionada].paciente}"</p>
+                         </motion.div>
+                      ) : (
+                         <button onClick={() => handleDesbloquearDica(3)} disabled={nivelAtual <= 2} className="w-full p-3 flex items-center justify-between hover:bg-white/[0.02] transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed group">
+                            <div className="flex items-center gap-3">
+                               <Lock className="w-4 h-4 text-emerald-500/50 group-hover:text-emerald-400 transition-colors" />
+                               <span className="text-xs font-bold text-slate-400 group-hover:text-white transition-colors">Revelar Relato Leigo</span>
+                            </div>
+                            <ChevronDown className="w-4 h-4 text-slate-600 group-hover:text-slate-400" />
+                         </button>
+                      )}
+                   </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="mt-auto pt-6">
+            <div className="flex items-center justify-between pt-3 border-t border-white/[0.05]">
+              <span className="text-[9px] uppercase tracking-widest text-slate-600">{materia} • {subMateria}</span>
               <span className="bg-[#0F172A] border border-white/[0.05] text-cyan-400 text-[10px] px-2 py-0.5 rounded-full">
-                {celulasDestacadas.length > 0 ? `${celulasDestacadas.length} Letras` : 'Selecione'}
+                {celulasDestacadas.length > 0 ? `${celulasDestacadas.length} Letras` : 'Aguardando'}
               </span>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         <div className="flex-1 flex items-center justify-center p-4">
@@ -547,7 +609,74 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       </main>
 
       <AnimatePresence>
-        {vitoria && (
+        {vitoria && novaMateriaDesbloqueada && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#0B1120]/95 backdrop-blur-md">
+            
+            <motion.div 
+               initial={{ y: 200, rotate: -5, opacity: 0 }} 
+               animate={{ y: 0, rotate: 0, opacity: 1 }}
+               transition={{ type: "spring", damping: 15, stiffness: 60 }}
+               className={`w-[450px] bg-[#d9c4a9] rounded-sm shadow-[0_30px_60px_rgba(0,0,0,0.5)] relative flex flex-col transition-all duration-700 ${prontuarioAberto ? 'min-h-[500px]' : 'h-[300px]'}`}
+            >
+              {!prontuarioAberto && (
+                 <div 
+                    onClick={() => setProntuarioAberto(true)}
+                    className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer group"
+                 >
+                    <div className="text-rose-700/80 font-black text-5xl uppercase tracking-tighter border-[6px] border-rose-700/80 p-4 rounded-xl group-hover:scale-110 group-hover:text-rose-600 group-hover:border-rose-600 transition-all" style={{ animation: 'carimboBang 0.5s ease-out forwards' }}>
+                       CONFIDENCIAL
+                    </div>
+                    <span className="absolute bottom-10 text-[#5c4f3c] text-sm font-bold uppercase tracking-widest animate-pulse">
+                       Clique para Romper o Selo
+                    </span>
+                 </div>
+              )}
+
+              <div className="absolute -top-8 right-10 bg-[#c4b096] w-40 h-8 rounded-t-lg border-t border-l border-r border-[#b09e86] shadow-inner" />
+
+              <AnimatePresence>
+                 {prontuarioAberto && (
+                    <motion.div 
+                       initial={{ height: 0, opacity: 0 }} 
+                       animate={{ height: 'auto', opacity: 1 }}
+                       transition={{ duration: 0.6, ease: "easeInOut" }}
+                       className="p-8 flex-1 bg-[#fdfbf7] m-4 rounded shadow-inner flex flex-col items-center text-center relative overflow-hidden"
+                    >
+                       <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `repeating-linear-gradient(transparent, transparent 27px, #94a3b8 28px)` }} />
+                       
+                       <FileText className="w-12 h-12 text-[#334155] mb-4 relative z-10" />
+                       
+                       <h2 className="text-2xl font-black text-[#1e293b] mb-2 uppercase tracking-tight relative z-10">
+                          Acesso Concedido
+                       </h2>
+                       
+                       <div className="w-16 h-1 bg-cyan-600 mb-6 relative z-10" />
+
+                       <h3 className="text-lg font-bold text-[#334155] mb-4 relative z-10">
+                          {novaMateriaDesbloqueada.nome}
+                       </h3>
+
+                       <p className="text-[#475569] text-sm leading-relaxed mb-8 relative z-10 font-medium">
+                          {novaMateriaDesbloqueada.descricao}
+                       </p>
+
+                       <button 
+                          onClick={avancarParaProximoNivel} 
+                          className="mt-auto bg-[#1e293b] hover:bg-[#0f172a] text-white px-8 py-3 rounded-md font-bold uppercase tracking-wider text-xs transition-colors shadow-lg relative z-10"
+                       >
+                          Assinar Termo e Continuar
+                       </button>
+                    </motion.div>
+                 )}
+              </AnimatePresence>
+            </motion.div>
+
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {vitoria && !novaMateriaDesbloqueada && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1120]/90 backdrop-blur-lg">
             {relatorioXP?.isTutorial ? (
               <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="w-full max-w-md rounded-3xl p-8 text-center relative overflow-hidden bg-[#1e293b] border border-amber-500/30 shadow-[0_0_60px_rgba(245,158,11,0.15)]">
@@ -578,8 +707,13 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                     <span className="text-emerald-400 font-mono text-lg font-bold">+{relatorioXP?.ganho || 0} XP</span>
                   </div>
                 </div>
+                
+                {relatorioXP?.penalidade > 0 && (
+                   <div className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl mb-6 relative z-10">
+                     <p className="text-rose-400 text-xs font-bold uppercase tracking-wider">Punição de Dicas Aplicada: -{relatorioXP.penalidade} XP</p>
+                   </div>
+                )}
 
-                {/* 🔥 CARTÃO FIDELIDADE ADICIONADO AQUI 🔥 */}
                 {progressoTicket && (
                   <div className="bg-[#0B1120] border border-orange-500/20 p-4 rounded-xl mb-6 relative overflow-hidden shadow-inner">
                     {progressoTicket.ganhou && (

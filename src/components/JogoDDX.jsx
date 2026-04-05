@@ -6,38 +6,55 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/ge
 // --- Monitor de ECG Animado Realista ---
 function MonitorVital({ bpm }) {
   const controls = useAnimation();
+
   let corSinal = "#22c55e"; 
   let statusTexto = "ESTÁVEL";
 
   if (bpm > 100 || bpm < 60) { corSinal = "#eab308"; statusTexto = "ALERTA"; }
   if (bpm > 140 || bpm < 40) { corSinal = "#ef4444"; statusTexto = "CRÍTICO"; }
-  if (bpm === 0) { corSinal = "#ef4444"; statusTexto = "FLATLINE"; }
+  if (bpm === 0 || isNaN(bpm)) { corSinal = "#ef4444"; statusTexto = "FLATLINE"; }
 
   useEffect(() => {
     let isMounted = true;
-    const animateEcg = async () => {
-      while (isMounted) {
-        if (bpm <= 0) {
-          await controls.start({ d: "M 0 12 L 40 12", transition: { duration: 1, ease: "linear" } });
-          await new Promise(r => setTimeout(r, 100));
-          continue;
-        }
-        const tempoCiclo = 60 / bpm; 
-        const tempoBatimento = Math.min(0.2, tempoCiclo * 0.4); 
-        const tempoDescanso = tempoCiclo - tempoBatimento;
-        const topY = Math.random() * -10 + 2; 
-        const botY = Math.random() * 5 + 18;  
-        const beatPath = `M 0 12 L 8 12 L 10 10 L 12 12 L 15 ${topY} L 18 ${botY} L 21 12 L 25 10 L 28 12 L 40 12`;
-        const flatPath = `M 0 12 L 40 12`;
+    
+    // O segredo anti-torção: A linha reta agora também tem 10 pontos exatos!
+    const flatPath = `M 0 12 L 8 12 L 10 12 L 12 12 L 15 12 L 18 12 L 21 12 L 25 12 L 28 12 L 40 12`;
 
-        if (!isMounted) break;
-        await controls.start({ d: beatPath, transition: { duration: tempoBatimento, ease: "easeOut" } });
-        if (!isMounted) break;
-        await controls.start({ d: flatPath, transition: { duration: tempoDescanso, ease: "linear" } });
+    const animateEcg = async () => {
+      try {
+        while (isMounted) {
+          if (bpm <= 0 || isNaN(bpm)) {
+            await controls.start({ d: flatPath, transition: { duration: 1, ease: "linear" } });
+            await new Promise(r => setTimeout(r, 100));
+            continue;
+          }
+          
+          const tempoCiclo = 60 / bpm; 
+          const tempoBatimento = Math.min(0.2, tempoCiclo * 0.4); 
+          const tempoDescanso = Math.max(0.1, tempoCiclo - tempoBatimento); // Evita números negativos
+          
+          const topY = Math.random() * -10 + 2; 
+          const botY = Math.random() * 5 + 18;  
+          
+          const beatPath = `M 0 12 L 8 12 L 10 10 L 12 12 L 15 ${topY} L 18 ${botY} L 21 12 L 25 10 L 28 12 L 40 12`;
+
+          if (!isMounted) break;
+          await controls.start({ d: beatPath, transition: { duration: tempoBatimento, ease: "easeOut" } });
+          
+          if (!isMounted) break;
+          await controls.start({ d: flatPath, transition: { duration: tempoDescanso, ease: "linear" } });
+        }
+      } catch (error) {
+        // Framer Motion lança um erro inofensivo quando forçamos a parada, nós o ignoramos aqui.
       }
     };
+    
     animateEcg();
-    return () => { isMounted = false; };
+    
+    return () => { 
+      isMounted = false; 
+      controls.stop(); // MATADOR DE BUGS: Para a animação "velha" na mesma hora que o batimento muda!
+    };
   }, [bpm, controls]);
 
   return (

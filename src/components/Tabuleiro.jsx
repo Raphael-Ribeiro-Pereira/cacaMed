@@ -18,12 +18,10 @@ export default function Tabuleiro({ gradePronta, limites, valores, celulasDestac
       >
         <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
           
-          {/* Usamos padding fixo em px para não sofrer mutação com o zoom de 150% */}
           <div style={{ width: 'max-content', height: 'max-content', padding: '80px', margin: 'auto' }}>
             
             <div style={{
               display: 'grid',
-              /* A CURA: Voltamos a usar 45px fixos. Imune ao index.css! */
               gridTemplateColumns: `repeat(${colunasRender}, 45px)`, 
               gridTemplateRows: `repeat(${linhasRender}, 45px)`,    
               gap: '4px', 
@@ -46,15 +44,54 @@ export default function Tabuleiro({ gradePronta, limites, valores, celulasDestac
                   }
 
                   const valorAtual = valores[`${celula.linha}-${celula.coluna}`] || '';
-                  const estaCorreta = valorAtual.toUpperCase() === celula.letraCerta.toUpperCase();
+                  const valUpper = valorAtual.toUpperCase();
+                  const letraCertaUpper = celula.letraCerta.toUpperCase();
+                  
+                  const estaPreenchida = valUpper !== '';
+                  const estaCorreta = estaPreenchida && valUpper === letraCertaUpper;
                   const ehDestacada = celulasDestacadas.includes(`${celula.linha}-${celula.coluna}`);
 
+                  // 🔥 O NOVO RADAR DO AMARELO
+                  let lugarErrado = false;
+                  if (estaPreenchida && !estaCorreta) {
+                    
+                    // Varre a linha inteira procurando se a letra pertence à palavra Horizontal
+                    if (celula.pertenceHorizontal && celula.idHorizontal) {
+                      const linhaCompleta = gradePronta[celula.linha];
+                      for (let col = 0; col < linhaCompleta.length; col++) {
+                        const celBusca = linhaCompleta[col];
+                        if (celBusca && celBusca.idHorizontal === celula.idHorizontal && celBusca.letraCerta.toUpperCase() === valUpper) {
+                          lugarErrado = true;
+                          break;
+                        }
+                      }
+                    }
+
+                    // Se não achou na horizontal, varre a coluna inteira procurando na Vertical
+                    if (!lugarErrado && celula.pertenceVertical && celula.idVertical) {
+                      for (let row = 0; row < gradePronta.length; row++) {
+                        const celBusca = gradePronta[row][celula.coluna];
+                        if (celBusca && celBusca.idVertical === celula.idVertical && celBusca.letraCerta.toUpperCase() === valUpper) {
+                          lugarErrado = true;
+                          break;
+                        }
+                      }
+                    }
+                  }
+
+                  // 1. Cor padrão (Azul/Cinza escuro)
                   let estiloCores = "bg-[#151F32] border-[#1e293b] text-white"; 
+                  
+                  // 2. Se estiver destacada pelo jogador (Azul Ciano brilhante)
                   if (ehDestacada) {
                     estiloCores = "bg-[#1e293b] border-cyan-500/40 text-white shadow-[0_0_8px_rgba(56,189,248,0.1)]"; 
                   }
-                  if (estaCorreta && bloqueado) {
-                     estiloCores = "bg-emerald-900/40 border-emerald-500/50 text-emerald-400"; 
+
+                  // 3. Feedback visual (Verde e Amarelo!)
+                  if (estaCorreta) {
+                     estiloCores = "bg-emerald-900/40 border-emerald-500/50 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]"; 
+                  } else if (lugarErrado) {
+                     estiloCores = "bg-amber-900/40 border-amber-500/50 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.2)]";
                   }
 
                   return (
@@ -82,10 +119,9 @@ export default function Tabuleiro({ gradePronta, limites, valores, celulasDestac
                         disabled={bloqueado} 
                         autoComplete="off" 
                         spellCheck="false" 
-                        /* Fonte fixada em 22px para evitar distorção do index.css */
                         style={{ fontSize: '22px' }}
-                        className={`w-full h-full text-center uppercase m-0 p-0 rounded-md outline-none transition-all cursor-text border-2 font-bold
-                          focus:bg-cyan-900/40 focus:border-cyan-400 focus:text-white focus:shadow-[0_0_12px_rgba(0,229,255,0.3)] focus:ring-1 focus:ring-cyan-400 
+                        className={`w-full h-full text-center uppercase m-0 p-0 rounded-md outline-none transition-all duration-300 cursor-text border-2 font-bold
+                          focus:bg-cyan-900/40 focus:border-cyan-400 focus:text-white focus:shadow-[0_0_12px_rgba(0,229,255,0.4)] focus:ring-1 focus:ring-cyan-400 
                           ${estiloCores}`} 
                       />
                     </div>
