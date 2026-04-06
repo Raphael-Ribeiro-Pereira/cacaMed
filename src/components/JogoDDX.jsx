@@ -133,23 +133,27 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chat, isAiThinking, menuAtivo]);
 
-  // 🔥 FASE 4: O MOTOR DE TELEMETRIA
+  // 🔥 FASE 4: O MOTOR DE TELEMETRIA (VACINADO CONTRA NaN)
   const registrarFimDeJogo = (resultado, motivoDerrota = null, teveProcesso = false) => {
     if (!dadosUsuario || estatisticasSalvas) return;
     setEstatisticasSalvas(true);
 
     const tempoGastoSegundos = Math.floor((Date.now() - startTime.current) / 1000);
-    const stats = dadosUsuario.estatisticas || {
-      partidas_ganhas: 0,
-      partidas_perdidas: 0,
-      mortes_por_erro: 0,
-      mortes_por_tempo: 0,
-      processos_judiciais: 0,
-      especialidades: {},
-      medicos_recrutados: {},
-      tempo_total_jogado: 0, 
-    };
+    
+    // Clona as estatísticas que já existem (para não apagar as Cruzadinhas)
+    const stats = { ...(dadosUsuario.estatisticas || {}) };
 
+    // VACINA: Garante que os campos do DDX existem e são números reais!
+    stats.partidas_ganhas = Number(stats.partidas_ganhas) || 0;
+    stats.partidas_perdidas = Number(stats.partidas_perdidas) || 0;
+    stats.mortes_por_erro = Number(stats.mortes_por_erro) || 0;
+    stats.mortes_por_tempo = Number(stats.mortes_por_tempo) || 0;
+    stats.processos_judiciais = Number(stats.processos_judiciais) || 0;
+    stats.tempo_total_jogado = Number(stats.tempo_total_jogado) || 0;
+    stats.especialidades = stats.especialidades || {};
+    stats.medicos_recrutados = stats.medicos_recrutados || {};
+
+    // A Matemática Segura
     if (resultado === 'vitoria') stats.partidas_ganhas += 1;
     else if (resultado === 'derrota') {
       stats.partidas_perdidas += 1;
@@ -168,7 +172,7 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
 
     stats.tempo_total_jogado += tempoGastoSegundos;
 
-    // Injeta os dados consolidados no Firebase através da sua função prop!
+    // Injeta os dados consolidados no Firebase
     salvarDadosUsuario({
       ...dadosUsuario,
       pontuacaoTotal: (dadosUsuario.pontuacaoTotal || 0) + (resultado === 'vitoria' ? 1000 : 100),

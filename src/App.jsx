@@ -12,7 +12,7 @@ import SelecaoTopicos from './components/SelecaoTopicos';
 import Jogo from './components/Jogo';
 import Ranking from './components/Ranking';
 import Estatisticas from './components/Estatisticas';
-
+import Hardcore from './components/Hardcore'
 // 🔥 IMPORTANDO A NOVA TELA DO HOUSE
 import SelecaoDDX from './components/SelecaoDDX'; 
 import JogoDDX from './components/JogoDDX';
@@ -180,7 +180,7 @@ function App() {
       {telaAtual === 'cadastro' && <Cadastro setTelaAtual={setTelaAtual} />}
       {telaAtual === 'menu' && usuario && <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'perfil' && usuario && <PerfilUsuario usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
-      
+      {telaAtual === 'hardcore' && <Hardcore setTelaAtual={setTelaAtual} dadosUsuario={dadosUsuario} salvarDadosUsuario={salvarDadosUsuario} />}
       {/* CRUZADINHAS */}
       {telaAtual === 'topicos' && usuario && <SelecaoTopicos setTelaAtual={setTelaAtual} iniciarJogo={iniciarJogo} dadosUsuario={dadosUsuario} />}
       {telaAtual === 'jogo' && usuario && (
