@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { auth, db } from './firebase'; 
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore'; // 🔥 Adicionado updateDoc
+import { doc, getDoc, updateDoc } from 'firebase/firestore'; 
 import './index.css';
 
 import Login from './components/Login';
@@ -12,10 +12,11 @@ import SelecaoTopicos from './components/SelecaoTopicos';
 import Jogo from './components/Jogo';
 import Ranking from './components/Ranking';
 import Estatisticas from './components/Estatisticas';
-import Hardcore from './components/Hardcore'
-// 🔥 IMPORTANDO A NOVA TELA DO HOUSE
+
+// 🔥 TELAS DO SIMULADOR CLÍNICO
 import SelecaoDDX from './components/SelecaoDDX'; 
 import JogoDDX from './components/JogoDDX';
+import Hardcore from './components/Hardcore'; // ⬅️ AQUI! Faltava importar o ficheiro Hardcore.jsx!
 
 // 🔥 BANCO DE MISSÕES POSSÍVEIS
 const BANCO_DE_MISSOES = {
@@ -48,17 +49,15 @@ function App() {
 
  // 🔥 FUNÇÃO: GERENCIAR MISSÕES DIÁRIAS BLINDADA
   const verificarEResetarMissoes = async (uid, dadosAtuais) => {
-    const hoje = new Date().toLocaleDateString('pt-BR'); // Ex: "30/03/2026"
+    const hoje = new Date().toLocaleDateString('pt-BR'); 
     const ultimoLogin = dadosAtuais.dataUltimoLogin || '';
 
-    // Tenta ler o que tem lá (Array direto ou o formato antigo corrompido)
     const missoesSalvas = Array.isArray(dadosAtuais.missoesDiarias) 
       ? dadosAtuais.missoesDiarias 
       : (dadosAtuais.missoesDiarias?.missoes || []);
 
     if (hoje !== ultimoLogin || missoesSalvas.length !== 3) {
       
-      // Sorteia novas missões
       const missaoFacil = { ...BANCO_DE_MISSOES.faceis[0], progresso: 1, concluida: true };
       const missaoMedia = { ...BANCO_DE_MISSOES.medias[Math.floor(Math.random() * BANCO_DE_MISSOES.medias.length)], progresso: 0, concluida: false };
       const missaoDificil = { ...BANCO_DE_MISSOES.dificeis[Math.floor(Math.random() * BANCO_DE_MISSOES.dificeis.length)], progresso: 0, concluida: false };
@@ -66,7 +65,6 @@ function App() {
       const novasMissoes = [missaoFacil, missaoMedia, missaoDificil];
       const novoXP = (dadosAtuais.pontuacaoTotal || 0) + missaoFacil.recompensaXP;
 
-      // 🛡️ BISTURI: Bloco Try/Catch! O código não morre mais aqui.
       try {
         const docRef = doc(db, "usuarios", uid);
         await updateDoc(docRef, {
@@ -74,12 +72,10 @@ function App() {
           missoesDiarias: novasMissoes, 
           pontuacaoTotal: novoXP
         });
-        // Se salvar com sucesso no Firebase, devolve os dados atualizados
         return { ...dadosAtuais, dataUltimoLogin: hoje, missoesDiarias: novasMissoes, pontuacaoTotal: novoXP };
         
       } catch (erroFirebase) {
         console.error("🚨 Firebase rejeitou o transplante das missões:", erroFirebase);
-        // Mesmo com erro no Firebase, devolvemos os dados para o jogador NÃO ficar com a tela travada!
         return { ...dadosAtuais, dataUltimoLogin: hoje, missoesDiarias: novasMissoes, pontuacaoTotal: novoXP };
       }
     }
@@ -96,7 +92,6 @@ function App() {
         
         if (docSnap.exists()) {
           let dados = docSnap.data();
-          // 🔥 Verifica se precisa resetar as missões antes de jogar para a tela
           dados = await verificarEResetarMissoes(user.uid, dados);
           setDadosUsuario(dados);
         }
@@ -170,6 +165,18 @@ function App() {
     setTelaAtual('jogoDDX');
   };
 
+  const salvarDadosUsuario = async (novosDados) => {
+    try {
+      if (usuario && usuario.uid) {
+        const docRef = doc(db, "usuarios", usuario.uid);
+        await updateDoc(docRef, novosDados);
+        setDadosUsuario(novosDados);
+      }
+    } catch (e) {
+      console.error("Erro ao salvar dados do usuário", e);
+    }
+  };
+
   if (carregandoAuth || (!bancoDePalavras && telaAtual !== 'login' && telaAtual !== 'cadastro')) {
     return <div className="tela-container"><h2 style={{color: '#2c3e50'}}>Acessando Prontuários... 🩺</h2></div>;
   }
@@ -180,7 +187,7 @@ function App() {
       {telaAtual === 'cadastro' && <Cadastro setTelaAtual={setTelaAtual} />}
       {telaAtual === 'menu' && usuario && <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'perfil' && usuario && <PerfilUsuario usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
-      {telaAtual === 'hardcore' && <Hardcore setTelaAtual={setTelaAtual} dadosUsuario={dadosUsuario} salvarDadosUsuario={salvarDadosUsuario} />}
+      
       {/* CRUZADINHAS */}
       {telaAtual === 'topicos' && usuario && <SelecaoTopicos setTelaAtual={setTelaAtual} iniciarJogo={iniciarJogo} dadosUsuario={dadosUsuario} />}
       {telaAtual === 'jogo' && usuario && (
@@ -191,9 +198,12 @@ function App() {
       {telaAtual === 'ranking' && usuario && <Ranking dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'estatisticas' && usuario && <Estatisticas dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       
-      {/* 🔥 MODO HOUSE (DDX) */}
+      {/* 🔥 MODO HOUSE (DDX) E MODO HARDCORE */}
       {telaAtual === 'selecaoDDX' && usuario && <SelecaoDDX setTelaAtual={setTelaAtual} iniciarDDX={iniciarDDX} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />}
-      {telaAtual === 'jogoDDX' && usuario && <JogoDDX setTelaAtual={setTelaAtual} configDDX={configDDX} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />}
+      {telaAtual === 'jogoDDX' && usuario && <JogoDDX setTelaAtual={setTelaAtual} configDDX={configDDX} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} salvarDadosUsuario={salvarDadosUsuario} />}
+      
+      {/* ⬅️ AQUI! O React agora sabe que tem de desenhar a sala de emergência! */}
+      {telaAtual === 'hardcore' && usuario && <Hardcore setTelaAtual={setTelaAtual} dadosUsuario={dadosUsuario} salvarDadosUsuario={salvarDadosUsuario} />} 
 
     </>
   );

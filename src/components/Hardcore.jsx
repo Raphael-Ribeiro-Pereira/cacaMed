@@ -3,7 +3,7 @@ import { AlertTriangle, Activity, Thermometer, Droplets, Send, Zap, Target, Skul
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
-// --- Monitor de ECG Animado Realista (Reutilizado do DDX) ---
+// --- Monitor de ECG Animado Realista ---
 function MonitorVital({ bpm }) {
   const controls = useAnimation();
 
@@ -99,6 +99,7 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chat, isAiThinking]);
 
+  // 🔥 MOTOR DE TELEMETRIA (VACINADO CONTRA NaN)
   const registrarFimDeJogo = (resultado, motivoDerrota = null, teveProcesso = false) => {
     if (!dadosUsuario || estatisticasSalvas) return;
     setEstatisticasSalvas(true);
@@ -114,7 +115,6 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
     stats.tempo_total_jogado = Number(stats.tempo_total_jogado) || 0;
     stats.especialidades = stats.especialidades || {};
 
-    // Hardcore mode always counts as "Trauma/Emergência" for stats
     stats.especialidades['Emergência Hardcore'] = (stats.especialidades['Emergência Hardcore'] || 0) + 1;
 
     if (resultado === 'vitoria') stats.partidas_ganhas += 1;
@@ -127,7 +127,6 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
     if (teveProcesso) stats.processos_judiciais += 1;
     stats.tempo_total_jogado += tempoGastoSegundos;
 
-    // Hardcore gives double XP
     const xpGanho = resultado === 'vitoria' ? 2000 : 200;
 
     salvarDadosUsuario({
@@ -141,7 +140,14 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
     try {
       const genAI = new GoogleGenerativeAI(API_KEY);
       const generationConfig = { temperature: 0.7, responseMimeType: "application/json" };
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", generationConfig });
+      const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE }
+      ];
+
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", generationConfig, safetySettings });
       const result = await model.generateContent(prompt);
       return result.response.text();
     } catch (e) { 
@@ -150,31 +156,34 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
     }
   };
 
-  // 🔥 FASE 2: Geração do Caso Herança Maldita
+  // 🔥 FASE 2: GERAÇÃO DO CASO HERANÇA MALDITA (PROMPT INICIAL)
   useEffect(() => {
     const gerarCasoHardcore = async () => {
       setGameState('loading');
-      const promptInicial = `Você é o motor de um simulador médico Hardcore focado em Iatrogenia.
-      Crie um caso onde um paciente está à beira da morte PORQUE O MÉDICO ANTERIOR ERROU O TRATAMENTO.
+      const promptInicial = `Você é o mestre de jogo de um simulador médico de emergência (Modo Hardcore: Iatrogenia).
+      Sua missão é criar um caso crítico onde um paciente está à beira da morte EXCLUSIVAMENTE PORQUE O MÉDICO ANTERIOR ERROU A CONDUTA.
+
+      PASSO A PASSO PARA A CRIAÇÃO:
+      1. Escolha uma destas doenças base ocultas: Hemorragia Subaracnoide, Infarto Agudo do Miocárdio, Crise de Asma Grave, Choque Hipovolêmico, Choque Cardiogênico ou Cetoacidose Diabética.
+      2. Crie um ERRO MÉDICO (Iatrogenia) crasso feito pelo turno anterior que piorou o quadro (Ex: Baixou a PA na HSA, deu Soro Fisiológico no Choque Cardiogênico, deu Adrenalina em paciente usando IMAO, etc.).
+      3. Defina quem fala no chat: O próprio Paciente (se conseguir falar) ou um Familiar em pânico (esposa, filho, etc.).
+
+      REGRAS ABSOLUTAS DO RETORNO:
+      - O "resumo_prontuario" NÃO PODE revelar a doença base real. Deve mostrar o diagnóstico ERRADO do médico anterior e a conduta ERRADA que ele prescreveu.
+      - A "queixa_principal_atual" deve ser a fala dramática do ator (paciente/familiar) descrevendo o efeito colateral letal acontecendo AGORA.
       
-      Regras:
-      1. Escolha uma Doença Real (ex: Asma, Choque Cardiogênico, Hemorragia Subaracnoide, Intoxicação).
-      2. Escolha o Erro Médico (Iatrogenia) que piorou tudo (ex: deu Adrenalina pra quem usava IMAO, deu Soro pra choque cardiogênico, baixou a pressão na HSA).
-      3. O paciente entra na UTI sofrendo os efeitos graves desse erro.
-      4. Quem fala no chat é o Paciente em agonia OU um Familiar em pânico.
-      
-      Retorne um JSON:
+      Retorne APENAS um JSON válido neste formato exato:
       {
         "nome": "João Silva",
         "idade": "55",
         "sexo": "M",
         "ator": "Esposa (Maria)", 
-        "resumo_prontuario": "Recebido do turno anterior. Médico prescreveu [Tratamento Errado] para suspeita de [Doença Errada]. Paciente evoluiu mal subitamente.",
-        "queixa_principal_atual": "Ele tomou o remédio e começou a espumar pela boca!",
+        "resumo_prontuario": "Paciente admitido por [Sintoma]. O Dr. Anterior diagnosticou [Doença Errada] e prescreveu [Tratamento Errado]. Logo após a administração, paciente evoluiu com [Sintoma Letal].",
+        "queixa_principal_atual": "Pelo amor de Deus! Ele tomou aquele líquido na veia e agora está espumando e não consegue respirar!",
         "tags": ["Emergência", "Iatrogenia", "Risco Imediato"],
-        "vitais_iniciais": {"fc": 160, "pa": "70x40", "spo2": 82, "temp": 36.5, "fr": 35},
-        "gabarito_doenca_real": "Nome exato da doença de base",
-        "gabarito_erro_medico": "O que o médico anterior fez de errado"
+        "vitais_iniciais": {"fc": 145, "pa": "70x40", "spo2": 82, "temp": 36.5, "fr": 35},
+        "gabarito_doenca_real": "Choque Cardiogênico",
+        "gabarito_erro_medico": "Administração de 2L de Soro Fisiológico (Sobrecarga hídrica)"
       }`;
 
       const res = await chamarIA(promptInicial);
@@ -191,18 +200,19 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
           setAtor(dados.ator);
           
           setChat([
-             { id: 1, sender: 'system', text: `⚠️ CÓDIGO VERMELHO: Iatrogenia Suspeita.` },
+             { id: 1, sender: 'system', text: `⚠️ CÓDIGO VERMELHO: Iatrogenia Suspeita. Reverter erro imediatamente.` },
              { id: 2, sender: 'ai', text: `[${dados.ator}]: ${dados.queixa_principal_atual}` }
           ]);
           setGameState('playing');
           startTime.current = Date.now();
         } catch (e) {
           console.error("Erro no Parse Inicial", e);
+          setChat([{ id: 1, sender: 'system', text: `Erro de conexão com a UTI. Recarregue a página.` }]);
         }
       }
     };
     gerarCasoHardcore();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const formatTime = (seconds) => {
     if (seconds === null) return "--:--";
@@ -223,6 +233,7 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
     return () => clearInterval(timer);
   }, [timeLeft, gameState, showBriefing, estatisticasSalvas]);
 
+  // 🔥 FASE 2: A REAÇÃO DA IA (PROMPT DE TURNO)
   const handleAcao = async (e) => {
     e.preventDefault();
     const textoAcao = inputText.trim();
@@ -234,24 +245,35 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
 
     const historico = chat.map(m => `${m.sender}: ${m.text}`).join('\n');
 
-    const promptTurno = `Você é o motor Hardcore do Caça-Med. 
-    GABARITO: Doença real: [${diagnosticoReal}]. Erro do médico anterior: [${erroMedico}].
-    Vitais atuais: FC ${vitais.fc}, PA ${vitais.pa}, SpO2 ${vitais.spo2}, FR ${vitais.fr}.
+    const promptTurno = `Você é o motor Hardcore de simulação médica.
     
-    O jogador (médico) disse/fez: "${textoAcao}".
-    Histórico: ${historico}
+    CENÁRIO OCULTO: 
+    - Doença Real do Paciente: [${diagnosticoReal}]
+    - Erro do Médico Anterior (Causando a crise AGORA): [${erroMedico}]
+    
+    ESTADO ATUAL:
+    - Vitais: FC ${vitais.fc}, PA ${vitais.pa}, SpO2 ${vitais.spo2}, FR ${vitais.fr}.
+    - Ator atual no chat: [${ator}].
+    
+    AÇÃO DO JOGADOR AGORA: "${textoAcao}"
+    Histórico da conversa: ${historico}
 
-    REGRAS DO MODO HARDCORE (PBL - Herança Maldita):
-    1. Você atua como os Monitores Vitais E como o Ator [${ator}].
-    2. Se o jogador pedir exames antes de estabilizar (reverter o erro), o paciente piora pelo tempo perdido.
-    3. Se o jogador reverter o erro médico (Iatrogenia), estabilize os vitais levemente e defina "estabilizou_iatrogenia": true. Dê uma dica extra via Ator.
-    4. Se o jogador tratar a Doença Real corretamente (após estabilizar), defina "estado_jogo": "vitoria".
-    5. Se o jogador der medicação letal, defina "estado_jogo": "derrota".
+    REGRAS DE CONDUTA (PBL):
+    1. OBJETIVO 1 (ESTABILIZAR): O jogador DEVE primeiro reverter o erro médico (ex: dar antídoto, parar infusão, suporte de vida).
+       - Se o jogador pedir exames de imagem ou laboratório demorados ANTES de estabilizar a via aérea/hemodinâmica, o paciente PIORA gravemente e o ator entra em desespero.
+       - Se a ação do jogador for exatamente a conduta para reverter a Iatrogenia, defina "estabilizou_iatrogenia": true.
+    
+    2. OBJETIVO 2 (CURAR): Só DEPOIS de estabilizar a iatrogenia é que o jogador pode focar na Doença Real.
+       - Se o jogador propuser o tratamento final correto para a Doença Real, defina "estado_jogo": "vitoria".
+    
+    3. PENALIDADE LETAL: Se o jogador der uma medicação que piora a doença real OU a iatrogenia atual, defina "estado_jogo": "derrota".
 
-    JSON OBRIGATÓRIO:
+    4. INTERPRETAÇÃO DO ATOR: A "fala_ator" deve ser realista. Se o jogador faz perguntas simples ("tem alergias?"), responda como o familiar/paciente. Não use jargões médicos se for um leigo.
+
+    Retorne APENAS um JSON válido neste formato:
     {
-      "fala_ator": "Reação desesperada ou aliviada do ator",
-      "novos_vitais": { "fc": 140, "pa": "80x50", "spo2": 85, "temp": 36.5, "fr": 30 },
+      "fala_ator": "A resposta do paciente ou familiar ao que o médico acabou de fazer ou perguntar.",
+      "novos_vitais": { "fc": 130, "pa": "80x50", "spo2": 88, "temp": 36.5, "fr": 28 },
       "estabilizou_iatrogenia": false,
       "estado_jogo": "jogando" 
     }`;
@@ -270,22 +292,24 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
       setVitais(dadosIA.novos_vitais);
       setChat(prev => [...prev, { id: Date.now(), sender: 'ai', text: `[${ator}]: ${dadosIA.fala_ator}` }]);
 
+      // A mecânica de tempo extra
       if (dadosIA.estabilizou_iatrogenia) {
-         setChat(prev => [...prev, { id: Date.now()+1, sender: 'system', text: '⚡ O erro médico anterior foi revertido. Bônus de +60 segundos.' }]);
+         setChat(prev => [...prev, { id: Date.now()+1, sender: 'system', text: '⚡ Conduta correta! O erro médico foi revertido e os vitais estão a estabilizar. Bônus de +60 segundos.' }]);
          setTimeLeft(prev => prev + 60);
       }
 
       if (dadosIA.estado_jogo === 'vitoria') {
-        setShowRelatorioForense(true); // Abre o desafio final!
+        setShowRelatorioForense(true); 
       } else if (dadosIA.estado_jogo === 'derrota') {
         registrarFimDeJogo('derrota', 'erro');
-        setChat(prev => [...prev, { id: Date.now()+2, sender: 'system', text: 'Conduta letal. Óbito registrado.' }]);
+        setChat(prev => [...prev, { id: Date.now()+2, sender: 'system', text: 'Conduta letal. O paciente não resistiu à intervenção.' }]);
         setGameState('lost');
         setVitais(prev => ({ ...prev, fc: 0, pa: '0x0', spo2: 0 })); 
       }
 
     } catch (err) {
       console.error("Erro no JSON da IA:", err);
+      setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: '⚠️ O paciente não reagiu como esperado. Tente outra conduta.' }]);
     }
   };
 
@@ -306,16 +330,21 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
      setIsAiThinking(false);
      
      if(res) {
-        const dados = JSON.parse(res.replace(/```json/gi, '').replace(/```/g, '').trim());
-        setShowRelatorioForense(false);
-        if (dados.aprovado) {
-           registrarFimDeJogo('vitoria');
-           setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: `🏆 RELATÓRIO APROVADO: ${dados.feedback}` }]);
-           setGameState('won');
-        } else {
-           registrarFimDeJogo('derrota', 'erro', true); // Processo por relatar errado!
-           setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: `❌ PROCESSO ÉTICO ABERTO: ${dados.feedback}` }]);
-           setGameState('lost');
+        try {
+          const dados = JSON.parse(res.replace(/```json/gi, '').replace(/```/g, '').trim());
+          setShowRelatorioForense(false);
+          if (dados.aprovado) {
+             registrarFimDeJogo('vitoria');
+             setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: `🏆 RELATÓRIO APROVADO: ${dados.feedback}` }]);
+             setGameState('won');
+          } else {
+             registrarFimDeJogo('derrota', 'erro', true); 
+             setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: `❌ PROCESSO ÉTICO ABERTO: ${dados.feedback}` }]);
+             setGameState('lost');
+          }
+        } catch (e) {
+          console.error("Erro ao ler o relatório forense", e);
+          setShowRelatorioForense(false);
         }
      }
   };
