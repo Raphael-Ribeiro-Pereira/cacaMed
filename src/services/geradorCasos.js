@@ -1,12 +1,13 @@
 import HOUSE_PROMPT from '../../.cursor/skills/skill-gerar-caso-house.md?raw';
+import IATROGENIA_PROMPT from '../../.cursor/skills/skill-gerar-caso-iatrogenia.md?raw';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-// Usando Gemini 2.0 Flash Experimental conforme solicitado pelo usuário
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${API_KEY}`;
+// Usando Gemini 2.5 Flash conforme solicitado pelo usuário para estabilidade
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
 /**
  * Gera um novo caso clínico complexo utilizando a lógica da Skill "Dr. House"
- * e a API do Gemini 2.0.
+ * e a API do Gemini 2.5.
  * 
  * @returns {Promise<Object>} O objeto do caso clínico pronto para ser usado no estado React.
  */
@@ -67,6 +68,61 @@ export const gerarNovoPacienteHouse = async () => {
 
     } catch (error) {
         console.error("Erro em gerarNovoPacienteHouse:", error);
+        throw error;
+    }
+};
+
+/**
+ * Gera um novo caso clínico de Iatrogenia (Modo Hardcore)
+ * utilizando a Skill específica e a API do Gemini 2.5.
+ */
+export const gerarCasoIatrogeniaHardcore = async () => {
+    try {
+        if (!API_KEY) {
+            throw new Error("Chave de API do Gemini não configurada.");
+        }
+
+        const payload = {
+            contents: [{
+                parts: [{
+                    text: `${IATROGENIA_PROMPT}\n\nGere um novo caso de iatrogenia crítica agora, seguindo estritamente o formato JSON solicitado.`
+                }]
+            }],
+            generationConfig: {
+                temperature: 1.0, // Aumentando um pouco a variação para o modo hardcore
+                topP: 0.95,
+                topK: 40,
+                maxOutputTokens: 2048,
+                responseMimeType: "application/json"
+            }
+        };
+
+        const response = await fetch(GEMINI_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Falha na comunicação com a UTI (IA). Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        let contentText = data.candidates[0].content.parts[0].text;
+        contentText = contentText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+        try {
+            const casoHardcore = JSON.parse(contentText);
+            console.log("Caso Hardcore gerado:", casoHardcore.paciente.nome);
+            return casoHardcore;
+        } catch (parseError) {
+            console.error("Erro ao processar JSON Hardcore:", contentText);
+            throw new Error("Falha ao decifrar o prontuário de emergência.");
+        }
+    } catch (error) {
+        console.error("Erro em gerarCasoIatrogeniaHardcore:", error);
         throw error;
     }
 };

@@ -465,6 +465,35 @@ FORMATO JSON OBRIGATÓRIO:
     return { bloqueado, bloqueador, corBloqueador };
   };
 
+  if (gameState === 'loading') {
+    return (
+      <div className="min-h-screen bg-[#0B1120] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#151F32] border border-cyan-500/30 p-8 rounded-2xl shadow-[0_0_30px_rgba(0,229,255,0.1)] text-center relative overflow-hidden">
+          {/* Efeito de grade no fundo do card */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,229,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,229,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
+          
+          <h2 className="text-xl font-bold text-white mb-6 relative z-10">Acessando Sistema Central</h2>
+          
+          <div className="relative w-full h-14 bg-[#0F1A2A] border border-cyan-500/30 rounded-xl overflow-hidden shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] z-10">
+            {/* Barra de Progresso (Simula o tempo de raciocínio da IA) */}
+            <motion.div 
+              initial={{ width: "0%" }} 
+              animate={{ width: "90%" }} 
+              transition={{ duration: 5, ease: "easeOut" }} 
+              className="absolute top-0 left-0 h-full bg-cyan-600/40"
+            />
+            <div className="absolute inset-0 flex items-center justify-center gap-2 text-cyan-300 font-bold uppercase tracking-widest text-sm z-10">
+              <Activity className="w-5 h-5 animate-pulse text-cyan-400" />
+              Sincronizando Prontuário...
+            </div>
+          </div>
+          
+          <p className="text-slate-400 text-xs mt-4 relative z-10">A IA Preceptora está estruturando o caso clínico...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans flex flex-col md:flex-row overflow-x-hidden relative">
       
@@ -643,14 +672,8 @@ FORMATO JSON OBRIGATÓRIO:
           <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">Abandonar Plantão</span>
         </button>
 
-        {gameState === 'loading' ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-cyan-500">
-            <Loader2 className="w-10 h-10 animate-spin mb-4" />
-            <span className="text-xs font-bold uppercase tracking-widest">Acessando Prontuários Reais...</span>
-          </div>
-        ) : (
-          <>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-40">
+        <>
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 pb-40">
               <AnimatePresence initial={false}>
                 {chat.map(msg => (
                   <motion.div key={msg.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex ${msg.sender === 'player' ? 'justify-end' : 'justify-start'}`}>
@@ -747,7 +770,6 @@ FORMATO JSON OBRIGATÓRIO:
               )}
             </div>
           </>
-        )}
       </main>
 
       <AnimatePresence>

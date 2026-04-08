@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { AlertTriangle, Activity, Thermometer, Droplets, Send, Zap, Target, Skull, Loader2, LogOut, FileWarning, Scale } from "lucide-react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { gerarCasoIatrogeniaHardcore } from '../services/geradorCasos';
 
 // --- Monitor de ECG Animado Realista ---
 function MonitorVital({ bpm }) {
@@ -91,6 +92,7 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
   // Segredos do Caso Hardcore
   const [diagnosticoReal, setDiagnosticoReal] = useState('');
   const [erroMedico, setErroMedico] = useState('');
+  const [condutaSalvadora, setCondutaSalvadora] = useState('');
   const [ator, setAtor] = useState('Paciente'); // Quem está falando (Paciente ou Familiar)
 
   // Respostas do Relatório Forense
@@ -160,55 +162,37 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
   useEffect(() => {
     const gerarCasoHardcore = async () => {
       setGameState('loading');
-      const promptInicial = `Você é o mestre de jogo de um simulador médico de emergência (Modo Hardcore: Iatrogenia).
-      Sua missão é criar um caso crítico onde um paciente está à beira da morte EXCLUSIVAMENTE PORQUE O MÉDICO ANTERIOR ERROU A CONDUTA.
+      console.log("[MOTOR HARDCORE] ⚡ Solicitando caso de iatrogenia...");
+      try {
+        const dados = await gerarCasoIatrogeniaHardcore();
+        console.log("[MOTOR HARDCORE] 📥 JSON recebido com sucesso:", dados);
+        
+        setPatientInfo({ 
+          nome: dados.paciente.nome, 
+          idade: dados.paciente.idade, 
+          sexo: dados.paciente.sexo, 
+          resumo: dados.relato_emergencia, 
+          qp: "Colapso iminente", 
+          tags: ["Iatrogenia", "Risco Imediato"] 
+        });
+        
+        setVitais(dados.vitais_iniciais);
+        setAtor(dados.ator_cena);
+        setDiagnosticoReal(dados.gabarito_hardcore.doenca_base);
+        setErroMedico(dados.gabarito_hardcore.erro_cometido);
+        setCondutaSalvadora(dados.gabarito_hardcore.conduta_salvadora);
 
-      PASSO A PASSO PARA A CRIAÇÃO:
-      1. Escolha uma destas doenças base ocultas: Hemorragia Subaracnoide, Infarto Agudo do Miocárdio, Crise de Asma Grave, Choque Hipovolêmico, Choque Cardiogênico ou Cetoacidose Diabética.
-      2. Crie um ERRO MÉDICO (Iatrogenia) crasso feito pelo turno anterior que piorou o quadro (Ex: Baixou a PA na HSA, deu Soro Fisiológico no Choque Cardiogênico, deu Adrenalina em paciente usando IMAO, etc.).
-      3. Defina quem fala no chat: O próprio Paciente (se conseguir falar) ou um Familiar em pânico (esposa, filho, etc.).
+        setChat([
+          { id: 1, sender: 'system', text: '⚠️ CÓDIGO VERMELHO: Iatrogenia Suspeita. Reverter erro imediatamente.' }, 
+          { id: 2, sender: 'ai', text: `[${dados.ator_cena}]: ${dados.relato_emergencia}` }
+        ]);
 
-      REGRAS ABSOLUTAS DO RETORNO:
-      - O "resumo_prontuario" NÃO PODE revelar a doença base real. Deve mostrar o diagnóstico ERRADO do médico anterior e a conduta ERRADA que ele prescreveu.
-      - A "queixa_principal_atual" deve ser a fala dramática do ator (paciente/familiar) descrevendo o efeito colateral letal acontecendo AGORA.
-      
-      Retorne APENAS um JSON válido neste formato exato:
-      {
-        "nome": "João Silva",
-        "idade": "55",
-        "sexo": "M",
-        "ator": "Esposa (Maria)", 
-        "resumo_prontuario": "Paciente admitido por [Sintoma]. O Dr. Anterior diagnosticou [Doença Errada] e prescreveu [Tratamento Errado]. Logo após a administração, paciente evoluiu com [Sintoma Letal].",
-        "queixa_principal_atual": "Pelo amor de Deus! Ele tomou aquele líquido na veia e agora está espumando e não consegue respirar!",
-        "tags": ["Emergência", "Iatrogenia", "Risco Imediato"],
-        "vitais_iniciais": {"fc": 145, "pa": "70x40", "spo2": 82, "temp": 36.5, "fr": 35},
-        "gabarito_doenca_real": "Choque Cardiogênico",
-        "gabarito_erro_medico": "Administração de 2L de Soro Fisiológico (Sobrecarga hídrica)"
-      }`;
-
-      const res = await chamarIA(promptInicial);
-      if (res) {
-        try {
-          const dados = JSON.parse(res.replace(/```json/gi, '').replace(/```/g, '').trim());
-          setPatientInfo({
-            nome: dados.nome, idade: dados.idade, sexo: dados.sexo,
-            resumo: dados.resumo_prontuario, qp: dados.queixa_principal_atual, tags: dados.tags
-          });
-          setVitais(dados.vitais_iniciais);
-          setDiagnosticoReal(dados.gabarito_doenca_real);
-          setErroMedico(dados.gabarito_erro_medico);
-          setAtor(dados.ator);
-
-          setChat([
-            { id: 1, sender: 'system', text: `⚠️ CÓDIGO VERMELHO: Iatrogenia Suspeita. Reverter erro imediatamente.` },
-            { id: 2, sender: 'ai', text: `[${dados.ator}]: ${dados.queixa_principal_atual}` }
-          ]);
-          setGameState('playing');
-          startTime.current = Date.now();
-        } catch (e) {
-          console.error("Erro no Parse Inicial", e);
-          setChat([{ id: 1, sender: 'system', text: `Erro de conexão com a UTI. Recarregue a página.` }]);
-        }
+        setGameState('playing');
+        startTime.current = Date.now();
+      } catch (error) {
+        console.error("[MOTOR HARDCORE] ❌ Falha Crítica na Geração:", error);
+        setGameState('error');
+        setChat([{ id: 1, sender: 'system', text: `Erro de conexão com a UTI. Recarregue a página.` }]);
       }
     };
     gerarCasoHardcore();
@@ -251,6 +235,8 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
     - Doença Real do Paciente: [${diagnosticoReal}]
     - Erro do Médico Anterior (Causando a crise AGORA): [${erroMedico}]
     
+    O jogador DEVE aplicar esta conduta exata para salvar o paciente: [ ${condutaSalvadora} ]. Se o jogador pedir exames, imagem ou fizer perguntas demoradas, defina 'estado_jogo': 'derrota' e o paciente morre por falta de tempo. Se ele aplicar a conduta salvadora, defina 'estado_jogo': 'vitoria'.
+
     ESTADO ATUAL:
     - Vitais: FC ${vitais.fc}, PA ${vitais.pa}, SpO2 ${vitais.spo2}, FR ${vitais.fr}.
     - Ator atual no chat: [${ator}].
@@ -377,9 +363,35 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
                   <li>Você tem 3 minutos antes da falência múltipla de órgãos.</li>
                 </ul>
               </div>
-              <button onClick={() => setShowBriefing(false)} disabled={gameState === 'loading'} className="mt-8 w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-4 rounded-xl uppercase tracking-widest transition-all disabled:opacity-50">
-                {gameState === 'loading' ? 'Analisando Prontuário...' : 'Assumir Caso'}
-              </button>
+              {gameState === 'loading' ? (
+                <div className="mt-8 relative w-full h-14 bg-rose-950/50 border border-rose-500/30 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(244,63,94,0.2)]">
+                  {/* Barra de Progresso Falsa (Simula 4 segundos de pensamento) */}
+                  <motion.div 
+                    initial={{ width: "0%" }} 
+                    animate={{ width: "90%" }} 
+                    transition={{ duration: 4, ease: "easeOut" }} 
+                    className="absolute top-0 left-0 h-full bg-rose-600/40"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center gap-2 z-10 text-rose-300 font-bold uppercase tracking-widest text-sm">
+                    <Zap className="w-5 h-5 animate-pulse text-rose-400" />
+                    Sincronizando Prontuário...
+                  </div>
+                </div>
+              ) : gameState === 'error' ? (
+                <button 
+                  onClick={() => setTelaAtual('menu')} 
+                  className="mt-8 w-full bg-slate-800 hover:bg-slate-700 text-white font-bold h-14 rounded-xl uppercase tracking-widest transition-all"
+                >
+                  Falha de Conexão. Voltar.
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setShowBriefing(false)} 
+                  className="mt-8 w-full bg-rose-600 hover:bg-rose-500 text-white font-bold h-14 rounded-xl uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(244,63,94,0.4)]"
+                >
+                  Assumir Caso
+                </button>
+              )}
             </motion.div>
           </motion.div>
         )}
