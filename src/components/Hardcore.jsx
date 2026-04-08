@@ -7,7 +7,7 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/ge
 function MonitorVital({ bpm }) {
   const controls = useAnimation();
 
-  let corSinal = "#22c55e"; 
+  let corSinal = "#22c55e";
   let statusTexto = "ESTÁVEL";
 
   if (bpm > 100 || bpm < 60) { corSinal = "#eab308"; statusTexto = "ALERTA"; }
@@ -26,25 +26,25 @@ function MonitorVital({ bpm }) {
             await new Promise(r => setTimeout(r, 100));
             continue;
           }
-          
-          const tempoCiclo = 60 / bpm; 
-          const tempoBatimento = Math.min(0.2, tempoCiclo * 0.4); 
-          const tempoDescanso = Math.max(0.1, tempoCiclo - tempoBatimento); 
-          
-          const topY = Math.random() * -10 + 2; 
-          const botY = Math.random() * 5 + 18;  
-          
+
+          const tempoCiclo = 60 / bpm;
+          const tempoBatimento = Math.min(0.2, tempoCiclo * 0.4);
+          const tempoDescanso = Math.max(0.1, tempoCiclo - tempoBatimento);
+
+          const topY = Math.random() * -10 + 2;
+          const botY = Math.random() * 5 + 18;
+
           const beatPath = `M 0 12 L 8 12 L 10 10 L 12 12 L 15 ${topY} L 18 ${botY} L 21 12 L 25 10 L 28 12 L 40 12`;
 
           if (!isMounted) break;
           await controls.start({ d: beatPath, transition: { duration: tempoBatimento, ease: "easeOut" } });
-          
+
           if (!isMounted) break;
           await controls.start({ d: flatPath, transition: { duration: tempoDescanso, ease: "linear" } });
         }
       } catch (error) { }
     };
-    
+
     animateEcg();
     return () => { isMounted = false; controls.stop(); };
   }, [bpm, controls]);
@@ -73,21 +73,21 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
   const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
   const chatEndRef = useRef(null);
   const startTime = useRef(Date.now());
-  
+
   const [chat, setChat] = useState([]);
   const [inputText, setInputText] = useState("");
   const [gameState, setGameState] = useState('loading'); // 'loading', 'playing', 'won', 'lost'
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [timeLeft, setTimeLeft] = useState(180); // 3 MINUTOS CRAVADOS
-  
+
   const [showExitModal, setShowExitModal] = useState(false);
   const [showBriefing, setShowBriefing] = useState(true);
   const [showRelatorioForense, setShowRelatorioForense] = useState(false);
   const [estatisticasSalvas, setEstatisticasSalvas] = useState(false);
-  
+
   const [patientInfo, setPatientInfo] = useState({ nome: 'Gerando...', idade: '--', sexo: 'N/I', resumo: 'Aguardando ambulância...', qp: 'Aguardando queixa...', tags: [] });
   const [vitais, setVitais] = useState({ fc: '--', pa: '--', spo2: '--', temp: '--', fr: '--' });
-  
+
   // Segredos do Caso Hardcore
   const [diagnosticoReal, setDiagnosticoReal] = useState('');
   const [erroMedico, setErroMedico] = useState('');
@@ -150,9 +150,9 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", generationConfig, safetySettings });
       const result = await model.generateContent(prompt);
       return result.response.text();
-    } catch (e) { 
+    } catch (e) {
       console.error("Erro na API do Gemini:", e);
-      return null; 
+      return null;
     }
   };
 
@@ -191,17 +191,17 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
         try {
           const dados = JSON.parse(res.replace(/```json/gi, '').replace(/```/g, '').trim());
           setPatientInfo({
-            nome: dados.nome, idade: dados.idade, sexo: dados.sexo, 
+            nome: dados.nome, idade: dados.idade, sexo: dados.sexo,
             resumo: dados.resumo_prontuario, qp: dados.queixa_principal_atual, tags: dados.tags
           });
           setVitais(dados.vitais_iniciais);
           setDiagnosticoReal(dados.gabarito_doenca_real);
           setErroMedico(dados.gabarito_erro_medico);
           setAtor(dados.ator);
-          
+
           setChat([
-             { id: 1, sender: 'system', text: `⚠️ CÓDIGO VERMELHO: Iatrogenia Suspeita. Reverter erro imediatamente.` },
-             { id: 2, sender: 'ai', text: `[${dados.ator}]: ${dados.queixa_principal_atual}` }
+            { id: 1, sender: 'system', text: `⚠️ CÓDIGO VERMELHO: Iatrogenia Suspeita. Reverter erro imediatamente.` },
+            { id: 2, sender: 'ai', text: `[${dados.ator}]: ${dados.queixa_principal_atual}` }
           ]);
           setGameState('playing');
           startTime.current = Date.now();
@@ -238,7 +238,7 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
     e.preventDefault();
     const textoAcao = inputText.trim();
     if (!textoAcao || gameState !== 'playing' || isAiThinking || showBriefing) return;
-    
+
     setInputText("");
     setChat(prev => [...prev, { id: Date.now(), sender: 'player', text: textoAcao }]);
     setIsAiThinking(true);
@@ -288,23 +288,23 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
 
     try {
       const dadosIA = JSON.parse(res.replace(/```json/gi, '').replace(/```/g, '').trim());
-      
+
       setVitais(dadosIA.novos_vitais);
       setChat(prev => [...prev, { id: Date.now(), sender: 'ai', text: `[${ator}]: ${dadosIA.fala_ator}` }]);
 
       // A mecânica de tempo extra
       if (dadosIA.estabilizou_iatrogenia) {
-         setChat(prev => [...prev, { id: Date.now()+1, sender: 'system', text: '⚡ Conduta correta! O erro médico foi revertido e os vitais estão a estabilizar. Bônus de +60 segundos.' }]);
-         setTimeLeft(prev => prev + 60);
+        setChat(prev => [...prev, { id: Date.now() + 1, sender: 'system', text: '⚡ Conduta correta! O erro médico foi revertido e os vitais estão a estabilizar. Bônus de +60 segundos.' }]);
+        setTimeLeft(prev => prev + 60);
       }
 
       if (dadosIA.estado_jogo === 'vitoria') {
-        setShowRelatorioForense(true); 
+        setShowRelatorioForense(true);
       } else if (dadosIA.estado_jogo === 'derrota') {
         registrarFimDeJogo('derrota', 'erro');
-        setChat(prev => [...prev, { id: Date.now()+2, sender: 'system', text: 'Conduta letal. O paciente não resistiu à intervenção.' }]);
+        setChat(prev => [...prev, { id: Date.now() + 2, sender: 'system', text: 'Conduta letal. O paciente não resistiu à intervenção.' }]);
         setGameState('lost');
-        setVitais(prev => ({ ...prev, fc: 0, pa: '0x0', spo2: 0 })); 
+        setVitais(prev => ({ ...prev, fc: 0, pa: '0x0', spo2: 0 }));
       }
 
     } catch (err) {
@@ -314,8 +314,8 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
   };
 
   const avaliarRelatorioForense = async () => {
-     setIsAiThinking(true);
-     const promptAvaliacao = `GABARITO: 
+    setIsAiThinking(true);
+    const promptAvaliacao = `GABARITO: 
      Doença: ${diagnosticoReal}
      Erro Iatrogênico: ${erroMedico}
      
@@ -326,32 +326,32 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
      Avalie rigorosamente. O jogador não precisa acertar as palavras exatas, mas o CONCEITO CLÍNICO deve estar correto.
      Retorne JSON: { "aprovado": true/false, "feedback": "Explicação do porquê acertou ou errou" }`;
 
-     const res = await chamarIA(promptAvaliacao);
-     setIsAiThinking(false);
-     
-     if(res) {
-        try {
-          const dados = JSON.parse(res.replace(/```json/gi, '').replace(/```/g, '').trim());
-          setShowRelatorioForense(false);
-          if (dados.aprovado) {
-             registrarFimDeJogo('vitoria');
-             setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: `🏆 RELATÓRIO APROVADO: ${dados.feedback}` }]);
-             setGameState('won');
-          } else {
-             registrarFimDeJogo('derrota', 'erro', true); 
-             setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: `❌ PROCESSO ÉTICO ABERTO: ${dados.feedback}` }]);
-             setGameState('lost');
-          }
-        } catch (e) {
-          console.error("Erro ao ler o relatório forense", e);
-          setShowRelatorioForense(false);
+    const res = await chamarIA(promptAvaliacao);
+    setIsAiThinking(false);
+
+    if (res) {
+      try {
+        const dados = JSON.parse(res.replace(/```json/gi, '').replace(/```/g, '').trim());
+        setShowRelatorioForense(false);
+        if (dados.aprovado) {
+          registrarFimDeJogo('vitoria');
+          setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: `🏆 RELATÓRIO APROVADO: ${dados.feedback}` }]);
+          setGameState('won');
+        } else {
+          registrarFimDeJogo('derrota', 'erro', true);
+          setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: `❌ PROCESSO ÉTICO ABERTO: ${dados.feedback}` }]);
+          setGameState('lost');
         }
-     }
+      } catch (e) {
+        console.error("Erro ao ler o relatório forense", e);
+        setShowRelatorioForense(false);
+      }
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#050505] text-slate-300 font-sans flex flex-col md:flex-row overflow-x-hidden relative selection:bg-rose-500/30">
-      
+
       {/* Efeito de Sirene Vermelha */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,rgba(244,63,94,0.15)_0%,#050505_80%)] animate-pulse" style={{ animationDuration: '2s' }} />
 
@@ -389,9 +389,9 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
         {showRelatorioForense && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/95 backdrop-blur-lg">
             <div className="max-w-lg w-full p-8 rounded-3xl bg-[#1a1a1a] border border-cyan-500/30 shadow-[0_0_50px_rgba(0,229,255,0.1)]">
-              <h2 className="text-2xl font-black text-white mb-2 flex items-center gap-2"><Scale className="w-6 h-6 text-cyan-400"/> Relatório Forense</h2>
+              <h2 className="text-2xl font-black text-white mb-2 flex items-center gap-2"><Scale className="w-6 h-6 text-cyan-400" /> Relatório Forense</h2>
               <p className="text-slate-400 text-xs mb-6">O paciente estabilizou. Agora, para fechar o caso sem sofrer um processo ético, aponte as causas da quase-tragédia.</p>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-[10px] uppercase tracking-widest text-rose-400 font-bold mb-1">Qual foi o Erro do Médico Anterior?</label>
@@ -414,14 +414,14 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
       <aside className={`w-full md:w-[320px] bg-[#0a0505] border-r border-rose-900/30 flex flex-col md:h-screen sticky top-0 z-20 shadow-2xl transition-all duration-700 ${showBriefing ? 'blur-sm opacity-20' : ''}`}>
         <div className="p-5 border-b border-rose-900/30 bg-[#050202] relative">
           <div className="flex items-center justify-between mb-4">
-             <span className="text-rose-500 text-[10px] uppercase font-black tracking-widest flex items-center gap-2 animate-pulse"><AlertTriangle className="w-3 h-3" /> CÓDIGO VERMELHO</span>
-             <div className={`px-3 py-1 rounded-full font-mono text-xs font-bold border ${timeLeft <= 60 ? 'bg-red-500/20 text-red-500 border-red-500/50 animate-pulse' : 'bg-rose-950 text-rose-400 border-rose-800'}`}>
-                {formatTime(timeLeft)}
-             </div>
+            <span className="text-rose-500 text-[10px] uppercase font-black tracking-widest flex items-center gap-2 animate-pulse"><AlertTriangle className="w-3 h-3" /> CÓDIGO VERMELHO</span>
+            <div className={`px-3 py-1 rounded-full font-mono text-xs font-bold border ${timeLeft <= 60 ? 'bg-red-500/20 text-red-500 border-red-500/50 animate-pulse' : 'bg-rose-950 text-rose-400 border-rose-800'}`}>
+              {formatTime(timeLeft)}
+            </div>
           </div>
           <h2 className="text-xl text-white font-bold mb-1">{patientInfo.nome}</h2>
           <div className="inline-flex items-center gap-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">
-             ID: {patientInfo.idade} • {patientInfo.sexo}
+            ID: {patientInfo.idade} • {patientInfo.sexo}
           </div>
         </div>
 
@@ -429,24 +429,24 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
           <MonitorVital bpm={gameState === 'lost' ? 0 : (parseInt(vitais.fc) || 0)} />
           <div className="grid grid-cols-2 gap-2 mt-2">
             {[
-              { label: 'PA (mmHg)', value: gameState==='lost' ? '0x0' : vitais.pa, color: 'cyan', icon: Activity },
-              { label: 'SpO2 (%)', value: gameState==='lost' ? '0' : vitais.spo2, color: 'blue', icon: Droplets },
+              { label: 'PA (mmHg)', value: gameState === 'lost' ? '0x0' : vitais.pa, color: 'cyan', icon: Activity },
+              { label: 'SpO2 (%)', value: gameState === 'lost' ? '0' : vitais.spo2, color: 'blue', icon: Droplets },
             ].map(v => (
               <div key={v.label} className="bg-[#0f0a0a] border border-rose-900/20 p-3 rounded-lg flex flex-col items-center justify-center relative shadow-inner">
                 <span className={`text-slate-500 text-[8px] uppercase font-bold`}>{v.label}</span>
-                <span className={`text-slate-200 text-2xl font-mono tracking-tighter ${gameState==='lost' ? 'text-rose-500' : ''}`}>{v.value}</span>
+                <span className={`text-slate-200 text-2xl font-mono tracking-tighter ${gameState === 'lost' ? 'text-rose-500' : ''}`}>{v.value}</span>
               </div>
             ))}
             <div className="col-span-2 bg-[#0f0a0a] border border-rose-900/20 p-3 rounded-lg flex flex-col items-center justify-center shadow-inner">
-                <span className="text-slate-500 text-[8px] uppercase font-bold">FR (Resp/min)</span>
-                <span className="text-slate-200 text-2xl font-mono tracking-tighter">{gameState==='lost' ? '--' : vitais.fr}</span>
+              <span className="text-slate-500 text-[8px] uppercase font-bold">FR (Resp/min)</span>
+              <span className="text-slate-200 text-2xl font-mono tracking-tighter">{gameState === 'lost' ? '--' : vitais.fr}</span>
             </div>
           </div>
         </div>
       </aside>
 
       <main className={`flex-1 flex flex-col relative transition-all duration-700 ${showBriefing ? 'blur-md opacity-20' : ''}`}>
-        
+
         <button onClick={() => setShowExitModal(true)} disabled={showBriefing} className="absolute top-5 right-6 z-30 flex items-center gap-2 text-slate-500 hover:text-rose-500 transition-colors">
           <LogOut className="w-4 h-4" /> <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Desistir</span>
         </button>
@@ -478,7 +478,7 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
             ))}
             {isAiThinking && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                <div className="bg-[#1a0f0f] border-l-4 border-rose-600/50 p-3 rounded-xl flex gap-2"><div className="w-2 h-2 rounded-full bg-rose-500 animate-bounce" /><div className="w-2 h-2 rounded-full bg-rose-500 animate-bounce" style={{ animationDelay: '150ms' }}/><div className="w-2 h-2 rounded-full bg-rose-500 animate-bounce" style={{ animationDelay: '300ms' }}/></div>
+                <div className="bg-[#1a0f0f] border-l-4 border-rose-600/50 p-3 rounded-xl flex gap-2"><div className="w-2 h-2 rounded-full bg-rose-500 animate-bounce" /><div className="w-2 h-2 rounded-full bg-rose-500 animate-bounce" style={{ animationDelay: '150ms' }} /><div className="w-2 h-2 rounded-full bg-rose-500 animate-bounce" style={{ animationDelay: '300ms' }} /></div>
               </motion.div>
             )}
           </AnimatePresence>

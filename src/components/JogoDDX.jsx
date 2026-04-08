@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { AlertTriangle, Activity, Thermometer, Droplets, HeartPulse, Send, Zap, Target, Skull, Loader2, Bug, Clock, LogOut, ClipboardList, Users, Scale } from "lucide-react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { gerarNovoPacienteHouse } from '../services/geradorCasos';
 
 // --- Monitor de ECG Animado Realista ---
 function MonitorVital({ bpm }) {
@@ -98,6 +99,7 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
 
   const chatEndRef = useRef(null);
   const startTime = useRef(Date.now()); // Para medir o tempo da partida
+  const gabaritoHouseRef = useRef(null); // Armazena a lógica oculta do Dr. House
   
   const [chat, setChat] = useState([]);
   const [inputText, setInputText] = useState("");
@@ -201,32 +203,68 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
   };
 
   useEffect(() => {
-    if (casoPreCarregado && casoPreCarregado.linha1) {
-      setPatientInfo({
-        nome: casoPreCarregado.linha1.split(',')[0],
-        idade: casoPreCarregado.linha1.split(',')[1] || '??',
-        sexo: casoPreCarregado.sexo || 'N/I',
-        resumo: casoPreCarregado.linha3,
-        qp: casoPreCarregado.qp || 'Sintomas agudos inespecíficos',
-        tags: casoPreCarregado.tags || []
-      });
-      const v = casoPreCarregado.vitais || {};
-      const objVitais = Array.isArray(v) ? v[0] : v; 
-      setVitais({
-        fc: objVitais?.fc || objVitais?.FC || objVitais?.Fc || '--',
-        pa: objVitais?.pa || objVitais?.PA || objVitais?.Pa || '--',
-        spo2: objVitais?.spo2 || objVitais?.SPO2 || objVitais?.SpO2 || '--',
-        temp: objVitais?.temp || objVitais?.TEMP || objVitais?.Temp || '--',
-        fr: objVitais?.fr || objVitais?.FR || objVitais?.Fr || '--'
-      });
-      setDiagnosticoCorreto(casoPreCarregado.diagnostico || 'Erro Desconhecido');
-      setChat([
-        { id: 1, sender: 'system', text: `Entrada: ${casoPreCarregado.linha1}` }, 
-        { id: 2, sender: 'system', text: `Queixa: "${casoPreCarregado.qp}"` }
-      ]);
-      setGameState('playing');
-      startTime.current = Date.now(); // Reinicia o cronômetro analítico
-    }
+    const inicializarCaso = async () => {
+      // Prioridade 1: Caso Pré-Carregado (Cruzadinhas/Eventos)
+      if (casoPreCarregado && casoPreCarregado.linha1) {
+        setPatientInfo({
+          nome: casoPreCarregado.linha1.split(',')[0],
+          idade: casoPreCarregado.linha1.split(',')[1] || '??',
+          sexo: casoPreCarregado.sexo || 'N/I',
+          resumo: casoPreCarregado.linha3,
+          qp: casoPreCarregado.qp || 'Sintomas agudos inespecíficos',
+          tags: casoPreCarregado.tags || []
+        });
+        const v = casoPreCarregado.vitais || {};
+        const objVitais = Array.isArray(v) ? v[0] : v; 
+        setVitais({
+          fc: objVitais?.fc || objVitais?.FC || objVitais?.Fc || '--',
+          pa: objVitais?.pa || objVitais?.PA || objVitais?.Pa || '--',
+          spo2: objVitais?.spo2 || objVitais?.SPO2 || objVitais?.SpO2 || '--',
+          temp: objVitais?.temp || objVitais?.TEMP || objVitais?.Temp || '--',
+          fr: objVitais?.fr || objVitais?.FR || objVitais?.Fr || '--'
+        });
+        setDiagnosticoCorreto(casoPreCarregado.diagnostico || 'Erro Desconhecido');
+        setChat([
+          { id: 1, sender: 'system', text: `Entrada: ${casoPreCarregado.linha1}` }, 
+          { id: 2, sender: 'system', text: `Queixa: "${casoPreCarregado.qp}"` }
+        ]);
+        setGameState('playing');
+        startTime.current = Date.now();
+        return;
+      }
+
+      // Prioridade 2: Geração Dinâmica (Cérebro do Dr. House)
+      setGameState('loading');
+      try {
+        const dados = await gerarNovoPacienteHouse();
+        gabaritoHouseRef.current = dados.gabarito_vitoria;
+        
+        setPatientInfo({
+          nome: dados.paciente.nome,
+          idade: dados.paciente.idade,
+          sexo: dados.paciente.sexo,
+          resumo: dados.hma_inicial,
+          qp: "Paciente admitido via emergência. Inicie investigação.",
+          tags: ["Dr. House", "Mistério", "DDX"]
+        });
+        
+        setVitais(dados.vitais_iniciais);
+        setDiagnosticoCorreto(dados.gabarito_vitoria.diagnostico_real);
+        
+        setChat([
+          { id: 1, sender: 'system', text: `⚠️ CÓDIGO BRANCO: Investigação diagnóstica iniciada.` },
+          { id: 2, sender: 'system', text: `Relato Triagem: "${dados.hma_inicial.substring(0, 100)}..."` }
+        ]);
+        
+        setGameState('playing');
+        startTime.current = Date.now();
+      } catch (error) {
+        console.error("Erro ao invocar o Dr. House:", error);
+        setChat([{ id: 1, sender: 'system', text: '⚠️ [FALHA DE COMUNICAÇÃO]: Servidor de diagnósticos offline.' }]);
+      }
+    };
+
+    inicializarCaso();
   }, [casoPreCarregado]);
 
   useEffect(() => {
@@ -296,8 +334,8 @@ Sua missão é gerar um PACOTÃO DE DADOS (JSON) contendo a narrativa implícita
 
 GABARITO OCULTO:
 - Doença Real: ${diagnosticoCorreto}
-- Exame Ouro: ${casoPreCarregado?.gabarito?.exame_ouro || 'Indisponível'}
-- Tratamento Salvador: ${casoPreCarregado?.gabarito?.tratamento_salvador?.join(', ') || 'N/A'}
+- Exame Ouro: ${gabaritoHouseRef.current?.pergunta_chave_anamnese || casoPreCarregado?.gabarito?.exame_ouro || 'Investigação Clínica'}
+- Tratamento Salvador: ${gabaritoHouseRef.current?.tratamento_exigido || casoPreCarregado?.gabarito?.tratamento_salvador?.join(', ') || 'N/A'}
 - Tratamentos Letais: ${casoPreCarregado?.gabarito?.tratamento_letal?.join(', ') || 'N/A'}
 
 ESTADO ATUAL DO PACIENTE:
