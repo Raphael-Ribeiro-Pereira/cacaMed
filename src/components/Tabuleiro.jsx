@@ -22,8 +22,8 @@ export default function Tabuleiro({ gradePronta, limites, valores, celulasDestac
             
             <div style={{
               display: 'grid',
-              gridTemplateColumns: `repeat(${colunasRender}, 45px)`, 
-              gridTemplateRows: `repeat(${linhasRender}, 45px)`,    
+              gridTemplateColumns: `repeat(${colunasRender}, max-content)`, 
+              gridTemplateRows: `repeat(${linhasRender}, max-content)`,    
               gap: '4px', 
               opacity: bloqueado ? 0.6 : 1, 
               transition: 'opacity 0.3s ease-in-out'
@@ -32,12 +32,12 @@ export default function Tabuleiro({ gradePronta, limites, valores, celulasDestac
                 linha.slice(limites.minCol, limites.maxCol + 1).map((celula) => {
                   
                   if (celula.vazia) {
-                    return <div key={`vazia-${celula.linha}-${celula.coluna}`} style={{ width: '100%', height: '100%' }} />;
+                    return <div key={`vazia-${celula.linha}-${celula.coluna}`} className="w-10 h-10 sm:w-12 sm:h-12 aspect-square flex-shrink-0" />;
                   }
 
                   if (celula.letraCerta === ' ') {
                     return (
-                      <div key={`celula-${celula.linha}-${celula.coluna}`} style={{ width: '100%', height: '100%', padding: '2px' }}>
+                      <div key={`celula-${celula.linha}-${celula.coluna}`} className="w-10 h-10 sm:w-12 sm:h-12 aspect-square flex-shrink-0 p-[2px]">
                         <div style={{ width: '100%', height: '100%', backgroundColor: 'rgba(30, 41, 59, 0.3)', borderRadius: '6px' }} />
                       </div>
                     );
@@ -120,7 +120,7 @@ export default function Tabuleiro({ gradePronta, limites, valores, celulasDestac
                         autoComplete="off" 
                         spellCheck="false" 
                         style={{ fontSize: '22px' }}
-                        className={`w-full h-full text-center uppercase m-0 p-0 rounded-md outline-none transition-all duration-300 cursor-text border-2 font-bold
+                        className={`w-10 h-10 sm:w-12 sm:h-12 aspect-square flex-shrink-0 flex items-center justify-center text-center uppercase m-0 p-0 rounded-md outline-none transition-all duration-300 cursor-text border-2 font-bold
                           focus:bg-cyan-900/40 focus:border-cyan-400 focus:text-white focus:shadow-[0_0_12px_rgba(0,229,255,0.4)] focus:ring-1 focus:ring-cyan-400 
                           ${estiloCores}`} 
                       />

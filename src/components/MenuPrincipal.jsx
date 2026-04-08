@@ -7,6 +7,10 @@ import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 
+import ModalManualResidente from './ui/ModalManualResidente';
+import AnimatedOrganicECG from './ui/AnimatedOrganicECG';
+import CircularProgress from './ui/CircularProgress';
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
@@ -27,7 +31,7 @@ const getPatente = (nivel) => {
   return 'Chefe de Plantão';
 };
 
-export default function MenuPrincipal ({ usuario, dadosUsuario, setTelaAtual, top3Semana = [] }) {
+export default function MenuPrincipal({ usuario, dadosUsuario, setTelaAtual, top3Semana = [] }) {
   const [isHardcore, setIsHardcore] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
 
@@ -42,6 +46,15 @@ export default function MenuPrincipal ({ usuario, dadosUsuario, setTelaAtual, to
 
   const toggleHardcore = () => {
     setIsHardcore(!isHardcore);
+  };
+
+  const coresPatente = {
+    'Estudante Básico': 'text-slate-400 drop-shadow-[0_0_8px_rgba(148,163,184,0.3)]',
+    'Estudante Clínico': 'text-slate-300 drop-shadow-[0_0_8px_rgba(203,213,225,0.3)]',
+    'Interno': 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]',
+    'Residente R1': 'text-rose-400 drop-shadow-[0_0_8px_rgba(251,113,133,0.5)]',
+    'Médico Especialista': 'text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]',
+    'Chefe de Plantão': 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]'
   };
 
   // --- LÓGICA DO JOGADOR REAL ---
@@ -126,7 +139,96 @@ export default function MenuPrincipal ({ usuario, dadosUsuario, setTelaAtual, to
         </motion.svg>
       </div>
 
-      <div className={`fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_10%,#0B1120_100%)] transition-colors duration-1000 ${isHardcore ? 'bg-rose-950/10' : ''}`} />
+      <div className={`fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_10%,#0B1120_100%)] transition-colors duration-1000 shadow-[inset_0_0_120px_rgba(0,0,0,0.8)] ${isHardcore ? 'bg-rose-950/5 shadow-[inset_0_0_150px_rgba(244,63,94,0.2)]' : ''}`} />
+
+      <AnimatePresence>
+        {isHardcore && (
+          <motion.div
+            key="hardcore-fx"
+            className="fixed inset-0 pointer-events-none z-50 overflow-hidden"
+            exit={{ opacity: 0 }}
+          >
+            {/* Flash de Impacto Original (Mantido para punch) */}
+            <motion.div
+              initial={{ opacity: 0.8 }}
+              animate={{ opacity: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="absolute inset-0 bg-rose-600"
+            />
+
+            {/* O Halo Radial Central (Original) */}
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{
+                scale: [0.5, 1.5, 1.2],
+                opacity: [0, 0.7, 0]
+              }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[radial-gradient(circle,_#f43f5e_0%,_transparent_70%)]"
+            />
+
+            {/* Novo: Halo de Energia Pulsante (Operação Fornalha) */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ 
+                opacity: [0.4, 0.8, 0.4], 
+                scale: [1, 1.05, 1] 
+              }}
+              transition={{ 
+                duration: 3, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
+              className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(244,63,94,0.15)_0%,_transparent_60%)]"
+            />
+
+            {/* Nevoeiro de Cinzas (Infinite Embers) */}
+            {[...Array(80)].map((_, i) => {
+              const duration = 4 + Math.random() * 6;
+              const delay = Math.random() * 5;
+              const size = Math.random() * 8 + 2;
+              const startX = Math.random() * 100;
+
+              return (
+                <motion.div
+                  key={i}
+                  initial={{
+                    y: "110vh",
+                    x: `${startX}vw`,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    y: "-10vh",
+                    x: [
+                      `${startX}vw`,
+                      `${startX + (Math.random() * 10 - 5)}vw`,
+                      `${startX + (Math.random() * 15 - 7.5)}vw`,
+                      `${startX}vw`
+                    ],
+                    opacity: [0, 0.8, 0.8, 0]
+                  }}
+                  transition={{
+                    duration: duration,
+                    delay: delay,
+                    repeat: Infinity,
+                    ease: "linear",
+                    x: {
+                      duration: duration / 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }
+                  }}
+                  className={`absolute rounded-full blur-[1px] ${i % 2 === 0 ? 'bg-rose-500/40' : 'bg-orange-600/30'}`}
+                  style={{
+                    width: size,
+                    height: size,
+                  }}
+                />
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="max-w-[1400px] mx-auto px-6 py-6 md:px-8 md:py-8 flex flex-col min-h-screen relative z-10">
 
@@ -160,11 +262,10 @@ export default function MenuPrincipal ({ usuario, dadosUsuario, setTelaAtual, to
             <div className="flex flex-col items-end">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-white font-semibold text-sm">{primeiroNome}</span>
-                <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider">{patente}</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                {materiaEspecialista}
+              <div className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider mb-2 transition-colors duration-500 justify-end ${coresPatente[patente] || 'text-slate-400'}`}>
+                <Star className="w-3.5 h-3.5" />
+                {patente}
               </div>
               <div className="w-32 h-1.5 bg-[#1E293B] rounded-full overflow-hidden">
                 <motion.div
@@ -209,11 +310,11 @@ export default function MenuPrincipal ({ usuario, dadosUsuario, setTelaAtual, to
           {/* Top Row - Substituído se for Hardcore */}
           {isHardcore ? (
             <motion.div
-              variants={itemVariants} 
-              whileHover={{ scale: 1.01 }} 
+              variants={itemVariants}
+              whileHover={{ scale: 1.01 }}
               // 🔥 ROTEAMENTO DA FASE 1: Enviamos para o Hardcore em vez do SelecaoDDX normal
-              onClick={() => setTelaAtual('hardcore')} 
-              className="lg:col-span-12 bg-gradient-to-br from-rose-950/40 to-[#151F32] rounded-3xl px-6 py-5 relative overflow-hidden group hover:from-rose-900/50 transition-all cursor-pointer border border-rose-500/20 shadow-[0_4px_30px_rgba(244,63,94,0.1)] hover:shadow-[0_8px_40px_rgba(244,63,94,0.3)] flex flex-row items-center justify-between gap-6"
+              onClick={() => setTelaAtual('hardcore')}
+              className="lg:col-span-12 w-full bg-gradient-to-br from-rose-950/40 to-[#151F32] rounded-3xl px-6 py-5 md:py-6 relative overflow-hidden group hover:from-rose-900/50 transition-all cursor-pointer border border-rose-500/40 shadow-[0_4px_30px_rgba(244,63,94,0.2)] hover:shadow-[0_8px_40px_rgba(244,63,94,0.4)] flex flex-col md:flex-row items-center justify-between gap-6"
             >
               <motion.div className="absolute inset-0 bg-rose-500/10" animate={{ opacity: [0, 0.5, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} />
               <div className="flex items-center gap-5 relative z-10">
@@ -286,10 +387,10 @@ export default function MenuPrincipal ({ usuario, dadosUsuario, setTelaAtual, to
           )}
 
           {/* Bottom Row */}
-          <motion.div variants={itemVariants} className={`lg:col-span-4 bg-[#151F32] rounded-3xl p-6 border ${isHardcore ? 'border-rose-500/10' : 'border-white/[0.02]'} shadow-[0_4px_20px_rgba(0,0,0,0.2)]`}>
+          <motion.div variants={itemVariants} className={`lg:col-span-4 bg-[#151F32] rounded-3xl p-6 border transition-all duration-500 ${isHardcore ? 'border-rose-500/20 shadow-[inset_0_0_20px_rgba(244,63,94,0.1),0_4px_20px_rgba(0,0,0,0.4)]' : 'border-white/[0.02] shadow-[0_4px_20px_rgba(0,0,0,0.2)]'}`}>
             <div className="flex items-center gap-2 mb-4">
-              <Target className={`w-5 h-5 transition-colors ${themeClass}`} />
-              <h3 className="text-white font-bold text-sm">Missões Diárias</h3>
+              <Target className={`w-5 h-5 transition-all duration-500 ${themeClass} ${isHardcore ? 'drop-shadow-[0_0_12px_rgba(244,63,94,0.8)] scale-110' : ''}`} />
+              <h3 className={`text-white font-bold text-sm ${isHardcore ? 'drop-shadow-[0_0_8px_rgba(244,63,94,0.5)] text-rose-100' : ''}`}>Missões Diárias</h3>
             </div>
             <div className="space-y-4">
               {missoesParaExibir.map((missao, index) => {
@@ -317,10 +418,10 @@ export default function MenuPrincipal ({ usuario, dadosUsuario, setTelaAtual, to
             </div>
           </motion.div>
 
-          <motion.div variants={itemVariants} onClick={() => setTelaAtual('ranking')} className={`lg:col-span-4 bg-[#151F32] rounded-3xl p-6 border ${isHardcore ? 'border-rose-500/10' : 'border-white/[0.02]'} shadow-[0_4px_20px_rgba(0,0,0,0.2)] hover:border-white/[0.05] transition-colors flex flex-col group cursor-pointer`}>
+          <motion.div variants={itemVariants} onClick={() => setTelaAtual('ranking')} className={`lg:col-span-4 bg-[#151F32] rounded-3xl p-6 border transition-all duration-500 hover:border-white/[0.05] flex flex-col group cursor-pointer ${isHardcore ? 'border-rose-500/20 shadow-[inset_0_0_20px_rgba(244,63,94,0.1),0_4px_20px_rgba(0,0,0,0.4)]' : 'border-white/[0.02] shadow-[0_4px_20px_rgba(0,0,0,0.2)]'}`}>
             <div className="flex items-center gap-2 mb-4 justify-center">
-              <Trophy className={`w-5 h-5 ${isHardcore ? 'text-rose-400' : 'text-orange-400'}`} />
-              <h3 className="text-white font-bold text-sm">Devoradores de Plantões</h3>
+              <Trophy className={`w-5 h-5 transition-all duration-500 ${isHardcore ? 'text-rose-400 drop-shadow-[0_0_12px_rgba(244,63,94,0.8)] scale-110' : 'text-orange-400'}`} />
+              <h3 className={`text-white font-bold text-sm ${isHardcore ? 'drop-shadow-[0_0_8px_rgba(244,63,94,0.5)] text-rose-100' : ''}`}>Devoradores de Plantões</h3>
             </div>
             <div className="flex-1 flex items-end justify-center gap-4 pb-2">
               <div className="flex flex-col items-center">
@@ -342,15 +443,15 @@ export default function MenuPrincipal ({ usuario, dadosUsuario, setTelaAtual, to
           </motion.div>
 
           <div className="lg:col-span-4 flex flex-col gap-3">
-            <motion.div variants={itemVariants} whileHover={{ scale: 1.02, x: -2 }} onClick={toggleHardcore} className={`bg-[#151F32] rounded-2xl px-5 py-4 flex items-center justify-between border cursor-pointer hover:bg-[#1a263d] transition-colors shadow-md flex-1 ${isHardcore ? 'border-rose-500/30' : 'border-white/[0.02]'}`}>
+            <motion.div variants={itemVariants} whileHover={{ scale: 1.02, x: -2 }} onClick={toggleHardcore} className={`bg-[#151F32] rounded-2xl px-5 py-4 flex items-center justify-between border cursor-pointer hover:bg-[#1a263d] transition-all duration-500 flex-1 ${isHardcore ? 'border-rose-500/40 shadow-[inset_0_0_15px_rgba(244,63,94,0.1),0_4px_15px_rgba(244,63,94,0.15)]' : 'border-white/[0.02] shadow-md'}`}>
               <div className="flex items-center gap-3">
-                <AlertTriangle className={isHardcore ? "text-rose-500 w-5 h-5" : "text-slate-500 w-5 h-5"} />
-                <div><span className={`${isHardcore ? 'text-rose-400 font-bold' : 'text-slate-300 font-medium'} text-sm block`}>Modo Hardcore</span><span className="text-slate-600 text-[10px]">{isHardcore ? 'Alerta vermelho ativo' : 'Casos raros e cronômetro'}</span></div>
+                <AlertTriangle className={`w-5 h-5 transition-all duration-500 ${isHardcore ? "text-rose-500 drop-shadow-[0_0_12px_rgba(244,63,94,0.8)] scale-110" : "text-slate-500"}`} />
+                <div><span className={`text-sm block transition-all ${isHardcore ? 'text-rose-400 font-bold drop-shadow-[0_0_5px_rgba(244,63,94,0.5)]' : 'text-slate-300 font-medium'}`}>Modo Hardcore</span><span className={`text-[10px] transition-colors ${isHardcore ? 'text-rose-300/70' : 'text-slate-600'}`}>{isHardcore ? 'Alerta vermelho ativo' : 'Casos raros e cronômetro'}</span></div>
               </div>
-              <div className={`w-10 h-5 rounded-full relative shadow-inner transition-colors ${isHardcore ? 'bg-rose-500/30' : 'bg-[#0F172A]'}`}><div className={`w-4 h-4 rounded-full absolute top-[2px] left-[2px] transition-transform ${isHardcore ? 'bg-rose-500 translate-x-[20px]' : 'bg-slate-500 translate-x-0'}`} /></div>
+              <div className={`w-10 h-5 rounded-full relative shadow-inner transition-all duration-500 ${isHardcore ? 'bg-rose-500/40 shadow-[inset_0_0_8px_rgba(0,0,0,0.5)]' : 'bg-[#0F172A]'}`}><div className={`w-4 h-4 rounded-full absolute top-[2px] left-[2px] transition-transform duration-300 ${isHardcore ? 'bg-rose-400 translate-x-[20px] shadow-[0_0_10px_rgba(244,63,94,1)]' : 'bg-slate-500 translate-x-0'}`} /></div>
             </motion.div>
-            <motion.div variants={itemVariants} whileHover={{ scale: 1.02, x: -2 }} onClick={() => setTelaAtual('estatisticas')} className={`bg-[#151F32] rounded-2xl px-5 py-4 flex items-center gap-3 border cursor-pointer hover:bg-[#1a263d] transition-colors flex-1 shadow-md group ${isHardcore ? 'border-rose-500/10' : 'border-white/[0.02]'}`}>
-              <BarChart2 className={`w-5 h-5 transition-colors ${isHardcore ? 'text-rose-500 group-hover:text-rose-400' : 'text-blue-500 group-hover:text-blue-400'}`} />
+            <motion.div variants={itemVariants} whileHover={{ scale: 1.02, x: -2 }} onClick={() => setTelaAtual('estatisticas')} className={`bg-[#151F32] rounded-2xl px-5 py-4 flex items-center gap-3 border cursor-pointer hover:bg-[#1a263d] transition-all duration-500 flex-1 group ${isHardcore ? 'border-rose-500/20 shadow-[inset_0_0_15px_rgba(244,63,94,0.1),0_4px_15px_rgba(0,0,0,0.2)]' : 'border-white/[0.02] shadow-md'}`}>
+              <BarChart2 className={`w-5 h-5 transition-all duration-500 ${isHardcore ? 'text-rose-500 group-hover:text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.6)]' : 'text-blue-500 group-hover:text-blue-400'}`} />
               <div><span className="text-slate-300 font-medium text-sm group-hover:text-white block">Estatísticas</span><span className="text-slate-600 text-[10px]">Seu histórico de plantões</span></div>
             </motion.div>
           </div>
@@ -360,11 +461,11 @@ export default function MenuPrincipal ({ usuario, dadosUsuario, setTelaAtual, to
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`flex items-center gap-2 border px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider ${isHardcore ? 'border-rose-500/50 text-rose-500 hover:bg-rose-500/10' : 'border-rose-500/30 text-rose-400 hover:bg-rose-500/10'}`} onClick={handleLogout}>
             <LogOut className="w-4 h-4" /> Sair do Plantão
           </motion.button>
-          
+
           {/* 🔥 BOTÃO DE AJUDA LIGADO AO MODAL */}
-          <motion.button 
-            whileHover={{ scale: 1.1, rotate: 15 }} 
-            whileTap={{ scale: 0.9 }} 
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 15 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => setShowHelp(true)}
             className={`w-12 h-12 rounded-full bg-[#151F32] border flex items-center justify-center transition-colors shadow-lg ${isHardcore ? 'border-rose-500/20 text-rose-400 hover:text-white hover:bg-rose-500/20' : 'border-white/[0.05] text-slate-400 hover:text-white hover:bg-[#1a263d]'}`}
           >
@@ -375,166 +476,9 @@ export default function MenuPrincipal ({ usuario, dadosUsuario, setTelaAtual, to
       </div>
 
       {/* 🔥 MODAL DO MANUAL DO RESIDENTE (AJUDA) */}
-      <AnimatePresence>
-        {showHelp && (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }} 
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8"
-          >
-            <motion.div 
-              initial={{ scale: 0.95, y: 20 }} 
-              animate={{ scale: 1, y: 0 }} 
-              exit={{ scale: 0.95, y: 20 }}
-              className="w-full max-w-2xl bg-[#151F32] border border-cyan-500/20 rounded-3xl shadow-[0_30px_100px_rgba(0,0,0,0.8)] flex flex-col max-h-[90vh] overflow-hidden"
-            >
-              {/* Header do Modal */}
-              <div className="p-6 border-b border-white/[0.05] bg-[#0F172A] flex justify-between items-center shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 text-cyan-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white tracking-tight">Manual do Residente</h2>
-                    <p className="text-xs text-cyan-500 uppercase tracking-widest font-bold mt-0.5">Como sobreviver no Caça-Med</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowHelp(false)} className="text-slate-400 hover:text-white bg-[#1e293b] hover:bg-rose-500/20 hover:border-rose-500/50 border border-white/[0.05] p-2 rounded-full transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Corpo do Modal (Scrollable) */}
-              <div className="p-6 md:p-8 overflow-y-auto space-y-8 custom-scrollbar">
-                
-                {/* Secção: Sistema de Progressão */}
-                <section>
-                  <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <Star className="w-4 h-4 text-cyan-400" /> O Sistema de XP e Patentes
-                  </h3>
-                  <div className="bg-[#0B1120] p-5 rounded-2xl border border-white/[0.02]">
-                    <p className="text-sm text-slate-400 leading-relaxed mb-3">
-                      A sua evolução no hospital mede-se em <strong className="text-cyan-400">Pontos de Experiência (XP)</strong>. 
-                      Ganhe pontos acertando termos médicos ou salvando vidas. O seu XP define o seu Nível e, consequentemente, a sua <strong className="text-white">Patente Médica</strong>.
-                    </p>
-                    <ul className="text-xs text-slate-500 space-y-2 mt-4 font-medium">
-                      <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-slate-500" /> Estudante Básico (Níveis Iniciais)</li>
-                      <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-cyan-500" /> Interno & Residente (Níveis Médios)</li>
-                      <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Chefe de Plantão (Elite)</li>
-                    </ul>
-                  </div>
-                </section>
-
-                {/* Secção: Cruzadinhas vs DDX */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <section className="bg-[#0B1120] p-5 rounded-2xl border border-white/[0.02]">
-                    <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2">
-                      <LayoutGrid className="w-4 h-4 text-blue-400" /> Estudos Teóricos
-                    </h3>
-                    <p className="text-xs text-slate-400 leading-relaxed">
-                      As <strong className="text-blue-400">Cruzadinhas Médicas</strong> são o seu campo de treino. Não há risco de vida. 
-                      Jogue para memorizar anatomia e farmacologia. Cada partida gera XP base, bónus por tempo, e preenche o seu <strong className="text-orange-400">Cartão Fidelidade</strong> para ganhar Tickets.
-                    </p>
-                  </section>
-
-                  <section className="bg-[#0B1120] p-5 rounded-2xl border border-white/[0.02]">
-                    <h3 className="text-sm font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2">
-                      <HeartPulse className="w-4 h-4 text-rose-400" /> UTI (Simulador DDX)
-                    </h3>
-                    <p className="text-xs text-slate-400 leading-relaxed">
-                      Onde as coisas ficam sérias. Analise o Prontuário, peça exames e dê o diagnóstico correto antes que o paciente venha a óbito. 
-                      <strong className="text-rose-400"> Custa 1 Ticket por caso.</strong> Erros médicos podem resultar em processos judiciais!
-                    </p>
-                  </section>
-                </div>
-
-                {/* Secção: Modo Hardcore & Tickets */}
-                <section className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1 bg-rose-950/20 p-5 rounded-2xl border border-rose-500/20">
-                    <h3 className="text-sm font-bold text-rose-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4" /> Modo Hardcore
-                    </h3>
-                    <p className="text-xs text-rose-200/70 leading-relaxed">
-                      Ative a alavanca no menu principal para enfrentar casos complexos e raros no DDX, com um <strong className="text-rose-400">cronómetro implacável</strong>. Exclusivo para quem já domina a UTI.
-                    </p>
-                  </div>
-                  <div className="flex-1 bg-orange-950/20 p-5 rounded-2xl border border-orange-500/20">
-                    <h3 className="text-sm font-bold text-orange-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                      <Ticket className="w-4 h-4" /> Gestão de Tickets
-                    </h3>
-                    <p className="text-xs text-orange-200/70 leading-relaxed">
-                      Os Tickets de UTI são o seu passe para o Simulador DDX. Pode ganhá-los completando <strong className="text-orange-400">Missões Diárias</strong> ou jogando várias Cruzadinhas.
-                    </p>
-                  </div>
-                </section>
-
-              </div>
-              
-              {/* Footer do Modal */}
-              <div className="p-4 border-t border-white/[0.05] bg-[#0F172A] text-center">
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">O conhecimento é a sua melhor ferramenta.</p>
-              </div>
-
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ModalManualResidente showHelp={showHelp} setShowHelp={setShowHelp} />
 
     </div>
   );
 }
 
-function AnimatedOrganicECG ({ isHardcore }) {
-  const controls = useAnimation();
-  useEffect(() => {
-    let isMounted = true;
-    const animate = async () => {
-      while (isMounted) {
-        const topY = Math.random() * 5 + 1;
-        const botY = Math.random() * 5 + 18;
-        const waitTime = isHardcore ? Math.random() * 300 + 200 : Math.random() * 800 + 400;
-        const beatDuration = isHardcore ? Math.random() * 0.1 + 0.1 : Math.random() * 0.15 + 0.15;
-        const beatPath = `M 2 12 L 6 12 L 9 ${topY} L 15 ${botY} L 18 12 L 22 12`;
-        const restPath = `M 2 12 L 6 12 L 9 11 L 15 13 L 18 12 L 22 12`;
-
-        if (!isMounted) break;
-        await controls.start({ d: beatPath, transition: { duration: beatDuration, ease: "easeOut" } });
-        if (!isMounted) break;
-        await controls.start({ d: restPath, transition: { duration: beatDuration * 1.5, ease: "easeInOut" } });
-        await new Promise(r => setTimeout(r, waitTime));
-      }
-    };
-    animate();
-    return () => { isMounted = false; };
-  }, [controls, isHardcore]);
-
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-full h-full transition-colors duration-500 ${isHardcore ? 'text-rose-500' : 'text-cyan-400'}`}>
-      <motion.path initial={{ d: "M 2 12 L 6 12 L 9 11 L 15 13 L 18 12 L 22 12" }} animate={controls} />
-    </svg>
-  );
-}
-
-function CircularProgress ({ progress, label, delay = 0, themeHex }) {
-  const [currentProgress, setCurrentProgress] = useState(0);
-  const radius = 16;
-  const circumference = 2 * Math.PI * radius;
-
-  useEffect(() => {
-    const timer = setTimeout(() => setCurrentProgress(progress), delay * 1000);
-    return () => clearTimeout(timer);
-  }, [progress, delay]);
-
-  const strokeDashoffset = circumference - (currentProgress / 100) * circumference;
-
-  return (
-    <div className="relative w-10 h-10 flex items-center justify-center shrink-0">
-      <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 transform -rotate-90">
-        <circle cx="24" cy="24" r={radius} stroke="#1E293B" strokeWidth="2.5" fill="transparent" />
-        <circle cx="24" cy="24" r={radius} stroke={themeHex} strokeWidth="2.5" fill="transparent" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className="transition-all duration-[1500ms] ease-out" />
-      </svg>
-      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: delay + 0.5 }} className="absolute text-[10px] text-white font-bold">{label}</motion.span>
-    </div>
-  );
-}

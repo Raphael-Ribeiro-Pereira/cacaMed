@@ -443,8 +443,12 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   };
 
   return (
-    <div className="h-screen bg-[#0B1120] text-white font-sans relative overflow-hidden flex flex-col selection:bg-cyan-500/30">
-      <style>{`@keyframes slideInUpLeft { 0% { transform: translateX(-100%) scale(0.8); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }`}</style>
+    <div className="h-screen bg-[#0B1120] text-white font-sans relative overflow-x-hidden flex flex-col selection:bg-cyan-500/30 w-full">
+      <style>{`
+        @keyframes slideInUpLeft { 0% { transform: translateX(-100%) scale(0.8); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.03)_0%,#0B1120_100%)]" />
 
       {levelUps.length > 0 && (
@@ -499,9 +503,9 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         </button>
       </header>
 
-      <main className="flex-1 flex flex-row min-h-0 relative z-10">
+      <main className="flex-1 flex flex-col md:flex-row min-h-0 relative z-10 w-full overflow-hidden">
         
-        <div className="w-[340px] lg:w-[400px] shrink-0 border-r border-white/[0.05] flex flex-col p-5 bg-[#0f172a]/50 overflow-y-auto">
+        <div className="w-full md:w-[340px] lg:w-[400px] shrink-0 border-b md:border-b-0 md:border-r border-white/[0.05] flex flex-col p-4 md:p-5 bg-[#0f172a]/50 overflow-y-auto max-h-[35vh] md:max-h-full">
           
           <div className="flex items-center justify-between mb-4">
              <div className="flex items-center gap-2">
@@ -585,8 +589,8 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="p-5 rounded-2xl bg-[#1e293b]/20 border border-white/[0.02] shadow-[0_10px_40px_rgba(0,0,0,0.3)] w-full h-full relative overflow-hidden">
+        <div className="flex-1 flex items-center justify-center p-0 md:p-4 overflow-hidden w-full h-full relative">
+          <div className="p-2 md:p-5 rounded-none md:rounded-2xl bg-transparent md:bg-[#1e293b]/20 border-none md:border md:border-white/[0.02] shadow-none md:shadow-[0_10px_40px_rgba(0,0,0,0.3)] w-full h-full relative overflow-x-auto overflow-y-auto touch-pan-x touch-pan-y scrollbar-hide whitespace-nowrap">
             <Tabuleiro gradePronta={gradePronta} limites={limites} valores={valores} celulasDestacadas={celulasDestacadas} bloqueado={vitoria || !jogoIniciado} handleInput={handleInput} handleKeyDown={handleKeyDown} handleFocus={handleFocus} handleClick={handleClick} />
           </div>
         </div>
