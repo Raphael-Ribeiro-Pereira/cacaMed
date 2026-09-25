@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Mail, Lock, Eye, EyeOff, Stethoscope } from "lucide-react";
 import { motion, useAnimation } from "framer-motion";
 import { auth } from '../firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 
 function EcgPulse() {
   const controls = useAnimation();
@@ -42,6 +42,30 @@ export default function Login({ setTelaAtual }) {
   const [showForgot, setShowForgot] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState("");
+
+  const handlePasswordReset = async () => {
+    const address = forgotEmail.trim();
+    if (!address || forgotLoading) return;
+
+    setForgotError("");
+    setForgotLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, address);
+      setForgotSent(true);
+    } catch (error) {
+      if (error.code === 'auth/invalid-email') {
+        setForgotError('Digite um e-mail válido.');
+      } else if (error.code === 'auth/too-many-requests') {
+        setForgotError('Muitas tentativas. Aguarde alguns minutos e tente novamente.');
+      } else {
+        setForgotError('Não foi possível enviar o link. Tente novamente mais tarde.');
+      }
+    } finally {
+      setForgotLoading(false);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -57,16 +81,16 @@ export default function Login({ setTelaAtual }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-hidden flex items-center justify-center selection:bg-cyan-500/30">
+    <div className="stitch-integrated stitch-auth min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-hidden flex items-center justify-center selection:bg-cyan-500/30">
       
       <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)`, backgroundSize: '28px 28px' }} />
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.06)_0%,#0B1120_70%)]" />
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_30%,#0B1120_100%)]" />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(0,245,212,0.06)_0%,#0c1322_70%)]" />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_30%,#0c1322_100%)]" />
 
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] flex items-center overflow-hidden">
         <motion.svg width="200%" height="100%" xmlns="http://www.w3.org/2000/svg" initial={{ x: 0 }} animate={{ x: "-50%" }} transition={{ repeat: Infinity, ease: "linear", duration: 20 }}>
           <pattern id="ekg-login" x="0" y="0" width="500" height="200" patternUnits="userSpaceOnUse">
-            <path d="M0 100 H 150 L 160 90 L 170 100 H 180 L 195 70 L 210 140 L 225 40 L 240 110 L 255 100 H 290 L 310 85 L 330 100 H 500" fill="none" stroke="#06b6d4" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+            <path d="M0 100 H 150 L 160 90 L 170 100 H 180 L 195 70 L 210 140 L 225 40 L 240 110 L 255 100 H 290 L 310 85 L 330 100 H 500" fill="none" stroke="#00f5d4" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
           </pattern>
           <rect x="0" y="0" width="100%" height="100%" fill="url(#ekg-login)" />
         </motion.svg>
@@ -90,7 +114,7 @@ export default function Login({ setTelaAtual }) {
             </motion.div>
             <h1 className="text-white text-4xl md:text-5xl font-black tracking-wide">
               {/* 5. Subimos de text-2xl para text-4xl/5xl e deixamos a fonte mais grossa (font-black) */}
-              CAÇA-MED<motion.span animate={{ opacity: [1, 0, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>_</motion.span>
+              cacoMed<motion.span animate={{ opacity: [1, 0, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>_</motion.span>
             </h1>
           </div>
           <p className="text-cyan-400 text-xs md:text-sm uppercase font-bold tracking-[0.25em]">
@@ -222,8 +246,8 @@ export default function Login({ setTelaAtual }) {
                   <div className="w-12 h-12 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(16,185,129,0.25)]">
                     <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }} className="text-xl">✅</motion.span>
                   </div>
-                  <p className="text-emerald-400 text-base font-bold mb-1">Código enviado!</p>
-                  <p className="text-slate-400 text-xs">Verifique a caixa de entrada de <br/><span className="text-white font-bold">{forgotEmail}</span></p>
+                  <p className="text-emerald-400 text-base font-bold mb-1">Solicitação enviada</p>
+                  <p className="text-slate-400 text-xs">Se houver uma conta para esse e-mail, você receberá um link em <br/><span className="text-white font-bold">{forgotEmail}</span></p>
                 </motion.div>
               ) : (
                 <div className="space-y-4">
@@ -245,17 +269,18 @@ export default function Login({ setTelaAtual }) {
                   <motion.button
                     whileHover={{ y: -1, boxShadow: '0 0 20px rgba(245,158,11,0.3)' }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setForgotSent(true)}
-                    disabled={!forgotEmail.includes('@')}
+                    onClick={handlePasswordReset}
+                    disabled={forgotLoading || !forgotEmail.includes('@')}
                     className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#0B1120] font-bold transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Enviar Instruções
+                    {forgotLoading ? 'Enviando...' : 'Enviar link de recuperação'}
                   </motion.button>
+                  {forgotError && <p role="alert" className="text-rose-400 text-xs text-center">{forgotError}</p>}
                 </div>
               )}
 
               <button
-                onClick={() => { setShowForgot(false); setForgotSent(false); setForgotEmail(""); }}
+                onClick={() => { setShowForgot(false); setForgotSent(false); setForgotEmail(""); setForgotError(""); }}
                 className="w-full mt-3 py-2.5 rounded-xl bg-[#0B1120] border border-white/[0.05] text-slate-400 hover:text-white font-bold transition-all text-xs"
               >
                 Voltar ao Login

@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Clock, Zap, Target, BookOpen, Stethoscope, Ticket, Settings, Check, Loader2, Lock } from "lucide-react";
+import { ArrowLeft, Clock, Zap, Target, BookOpen, Stethoscope, Ticket, Settings, Check, Loader2, Lock, Shield, Brain, Scissors, Dna, Ribbon, Eye, ClipboardList } from "lucide-react";
 import { motion } from "framer-motion";
-import { doc, updateDoc } from 'firebase/firestore'; 
-import { db, auth } from '../firebase';
+import { auth } from '../firebase';
+import { consumirTicketDDX } from '../services/ticketsDDX';
+import StitchBrand from './ui/StitchBrand';
 
 // 🔥 IMPORTANDO O NOSSO BANCO DE CASOS REAIS
 import casosBase from '../data/casos.json';
 
 const ELENCO_HOUSE = [
-  { id: 'house', name: 'Dr. House', emoji: '🦯', specialty: 'Infectologia / Nefro', passive: 'Especialista Master. Custo alto de XP, mas resolve quase tudo.', color: '#38bdf8' },
-  { id: 'cameron', name: 'Dra. Cameron', emoji: '🛡️', specialty: 'Imunologia', passive: 'Protege contra doenças autoimunes e reações alérgicas graves.', color: '#ec4899' },
-  { id: 'foreman', name: 'Dr. Foreman', emoji: '🧠', specialty: 'Neurologia', passive: 'Intervém em convulsões e danos cerebrais.', color: '#f59e0b' },
-  { id: 'chase', name: 'Dr. Chase', emoji: '🔪', specialty: 'Cirurgia / UTI', passive: 'Te salva quando o paciente precisa ser entubado ou operado às pressas.', color: '#f43f5e' },
-  { id: 'treze', name: 'Treze', emoji: '🧬', specialty: 'Med. Interna / Genética', passive: 'Essencial para desvendar doenças hereditárias raras.', color: '#10b981' },
-  { id: 'wilson', name: 'Dr. Wilson', emoji: '🎗️', specialty: 'Oncologia', passive: 'Especialista em tumores. Evita tratamentos errados para câncer.', color: '#fbbf24' },
-  { id: 'taub', name: 'Dr. Taub', emoji: '👁️', specialty: 'Cirurgia Plástica', passive: 'Identifica sintomas escondidos na pele ou reações cutâneas.', color: '#60a5fa' },
-  { id: 'kutner', name: 'Dr. Kutner', emoji: '⚡', specialty: 'Trauma / Esporte', passive: 'Age rápido em envenenamentos e traumas físicos ocultos.', color: '#eab308' },
-  { id: 'cuddy', name: 'Dra. Cuddy', emoji: '📋', specialty: 'Administração / Ética', passive: 'Protege sua XP bloqueando exames caríssimos e desnecessários.', color: '#a78bfa' },
+  { id: 'house', name: 'Dr. House', Icon: Stethoscope, specialty: 'Infectologia / Nefro', color: '#00f5d4' },
+  { id: 'cameron', name: 'Dra. Cameron', Icon: Shield, specialty: 'Imunologia', color: '#8b5cf6' },
+  { id: 'foreman', name: 'Dr. Foreman', Icon: Brain, specialty: 'Neurologia', color: '#ffb95f' },
+  { id: 'chase', name: 'Dr. Chase', Icon: Scissors, specialty: 'Cirurgia / UTI', color: '#d4004b' },
+  { id: 'treze', name: 'Treze', Icon: Dna, specialty: 'Med. Interna / Genética', color: '#00f5d4' },
+  { id: 'wilson', name: 'Dr. Wilson', Icon: Ribbon, specialty: 'Oncologia', color: '#ffb95f' },
+  { id: 'taub', name: 'Dr. Taub', Icon: Eye, specialty: 'Cirurgia Plástica', color: '#8b5cf6' },
+  { id: 'kutner', name: 'Dr. Kutner', Icon: Zap, specialty: 'Trauma / Esporte', color: '#d4004b' },
+  { id: 'cuddy', name: 'Dra. Cuddy', Icon: ClipboardList, specialty: 'Administração / Ética', color: '#00f5d4' },
 ];
 
 export default function SelecaoDDX({ setTelaAtual, iniciarDDX, dadosUsuario, setDadosUsuario }) {
@@ -39,6 +40,7 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX, dadosUsuario, set
   };
 
   const handleIniciar = async () => {
+    if (isGenerating) return;
     if (semTickets) {
       alert("Você não tem Tickets suficientes! Jogue algumas Cruzadinhas para ganhar mais.");
       return;
@@ -52,47 +54,29 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX, dadosUsuario, set
     setIsGenerating(true);
 
     try {
-      // 🎟️ COBRANÇA NA ENTRADA: Desconta o ticket no Firebase e na tela
       const meuUid = auth.currentUser?.uid || dadosUsuario?.uid;
-      if (meuUid) {
-        const novosTickets = ticketsAtuais - 1;
-        await updateDoc(doc(db, "usuarios", meuUid), { tickets: novosTickets });
-        setDadosUsuario(prev => ({ ...prev, tickets: novosTickets }));
-      }
-
-      // 🔥 O NOVO MOTOR: Sorteio Instantâneo do Json local
-      // Sorteia um número de 0 até o tamanho do array de casos
+      if (!meuUid) throw new Error('Usuário não autenticado.');
+      if (!casosBase.length) throw new Error('Nenhum caso disponível.');
       const indiceSorteado = Math.floor(Math.random() * casosBase.length);
       const casoSorteado = casosBase[indiceSorteado];
-
-      // Simulamos 1.5 segundos de "Loading" apenas para criar tensão e imersão
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      setIsGenerating(false);
-      
-      // Envia o caso sorteado perfeitamente estruturado para a tela da UTI
-      iniciarDDX({ equipe, tempo, dificuldade, casoPreCarregado: casoSorteado }); 
-      
+      const entradaId = crypto.randomUUID();
+      const novosTickets = await consumirTicketDDX(meuUid, entradaId);
+      setDadosUsuario(prev => ({ ...prev, tickets: novosTickets }));
+      iniciarDDX({ equipe, tempo, dificuldade, casoPreCarregado: casoSorteado, entradaId });
     } catch (error) {
       console.error("Erro ao carregar o prontuário:", error);
+      alert(error.message || 'Não foi possível iniciar o caso. Tente novamente.');
+    } finally {
       setIsGenerating(false);
-      
-      // Devolve o ticket em caso de falha catastrófica
-      const meuUid = auth.currentUser?.uid || dadosUsuario?.uid;
-      if (meuUid) {
-        await updateDoc(doc(db, "usuarios", meuUid), { tickets: ticketsAtuais });
-        setDadosUsuario(prev => ({ ...prev, tickets: ticketsAtuais }));
-      }
-
-      alert("O bipe da UTI falhou na conexão. O seu Ticket foi devolvido.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-x-hidden flex flex-col selection:bg-cyan-500/30 pb-10">
+    <div className="stitch-integrated stitch-ddx-select min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-x-hidden flex flex-col selection:bg-cyan-500/30 pb-10">
+      <StitchBrand secao="DIAGNÓSTICOS DDX" tickets={ticketsAtuais} />
       
-      <div className="fixed inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px)`, backgroundSize: '32px 32px' }} />
-      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,rgba(0,229,255,0.05)_0%,#0B1120_80%)]" />
+      <div className="fixed inset-0 pointer-events-none opacity-20" style={{ backgroundImage: 'radial-gradient(#3a4a46 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+      <div className="fixed inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(ellipse at top, #141b2b 0%, #070e1d 80%)' }} />
 
       <div className="max-w-[1200px] mx-auto px-6 py-6 md:py-8 relative z-10 flex flex-col h-full w-full">
 
@@ -167,11 +151,11 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX, dadosUsuario, set
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 shrink-0">
           <div>
             <h2 className="text-white text-lg font-bold">Recrutar Especialistas</h2>
-            <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">Eles intervirão caso você cometa erros graves.</p>
+            <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">Selecione até três profissionais para acompanhar o caso.</p>
           </div>
           <div className="bg-[#151F32] border border-white/[0.08] px-4 py-2 rounded-full flex items-center gap-3 shadow-inner">
             <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Capacidade:</span>
-            <span className={`text-base font-black ${equipe.length === 3 ? 'text-emerald-400' : 'text-cyan-400'}`}>{equipe.length}/3</span>
+            <motion.span key={equipe.length} initial={{ scale: 1.25 }} animate={{ scale: 1 }} transition={{ duration: 0.22 }} className={`text-base font-black ${equipe.length === 3 ? 'text-emerald-400' : 'text-cyan-400'}`}>{equipe.length}/3</motion.span>
           </div>
         </div>
 
@@ -208,7 +192,7 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX, dadosUsuario, set
                 )}
 
                 <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-[#0B1120] border flex items-center justify-center text-2xl md:text-3xl shrink-0 relative z-10" style={{ borderColor: isSelected ? `${medico.cor}50` : 'rgba(255,255,255,0.05)', backgroundColor: isSelected ? `${medico.cor}10` : '#0B1120' }}>
-                  {medico.emoji}
+                  <medico.Icon className="w-6 h-6 md:w-7 md:h-7" aria-hidden="true" style={{ color: medico.cor }} />
                 </div>
                 
                 <div className="min-w-0 flex-1 relative z-10 pr-4">
@@ -216,9 +200,6 @@ export default function SelecaoDDX({ setTelaAtual, iniciarDDX, dadosUsuario, set
                   <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest block truncate mt-1" style={{ color: medico.cor }}>
                     {medico.specialty}
                   </span>
-                  <p className="text-slate-400 text-xs leading-relaxed mt-2 line-clamp-2 md:line-clamp-3">
-                    {medico.passive}
-                  </p>
                 </div>
               </motion.button>
             );

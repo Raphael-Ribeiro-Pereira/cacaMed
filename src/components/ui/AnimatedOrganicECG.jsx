@@ -1,10 +1,16 @@
 import React, { useEffect } from 'react';
-import { motion, useAnimation } from 'framer-motion';
+import { motion, useAnimation, useReducedMotion } from 'framer-motion';
 
 export default function AnimatedOrganicECG({ isHardcore }) {
   const controls = useAnimation();
+  const reduceMotion = useReducedMotion();
   
   useEffect(() => {
+    if (reduceMotion) {
+      controls.stop();
+      controls.set({ d: "M 2 12 L 6 12 L 9 11 L 15 13 L 18 12 L 22 12" });
+      return;
+    }
     let isMounted = true;
     const animate = async () => {
       while (isMounted) {
@@ -23,8 +29,8 @@ export default function AnimatedOrganicECG({ isHardcore }) {
       }
     };
     animate();
-    return () => { isMounted = false; };
-  }, [controls, isHardcore]);
+    return () => { isMounted = false; controls.stop(); };
+  }, [controls, isHardcore, reduceMotion]);
 
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-full h-full transition-colors duration-500 ${isHardcore ? 'text-rose-500' : 'text-cyan-400'}`}>

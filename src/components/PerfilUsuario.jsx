@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Camera, Check, KeyRound, LogOut, Pencil, Save, Shield, Stethoscope, Trophy, X, Zap, User, Mail, Calendar, MapPin, Award } from "lucide-react";
-import { motion, AnimatePresence, useAnimation } from "framer-motion";
+import { ArrowLeft, Check, KeyRound, LogOut, Pencil, Save, Shield, Stethoscope, Trophy, X, Zap, User, Mail, Calendar, Award } from "lucide-react";
+import { motion, AnimatePresence, useAnimation, useReducedMotion } from "framer-motion";
 import { auth, db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import StitchBrand from './ui/StitchBrand';
 
 // --- COMPONENTES VISUAIS ---
 function AvatarRing({ level }) {
@@ -15,8 +16,8 @@ function AvatarRing({ level }) {
     <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 128 128">
       <defs>
         <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#38bdf8" />
-          <stop offset="50%" stopColor="#3b82f6" />
+          <stop offset="0%" stopColor="#00f5d4" />
+          <stop offset="50%" stopColor="#00dfc1" />
           <stop offset="100%" stopColor="#8b5cf6" />
         </linearGradient>
         <filter id="ring-glow">
@@ -27,7 +28,7 @@ function AvatarRing({ level }) {
           </feMerge>
         </filter>
       </defs>
-      <circle cx="64" cy="64" r="58" stroke="#1e293b" strokeWidth="3" fill="none" />
+      <circle cx="64" cy="64" r="58" stroke="#3a4a46" strokeWidth="3" fill="none" />
       <motion.circle
         cx="64" cy="64" r="58"
         stroke="url(#ring-grad)"
@@ -48,7 +49,7 @@ function AvatarRing({ level }) {
         const x2 = 64 + 55 * Math.cos(rad);
         const y2 = 64 + 55 * Math.sin(rad);
         return (
-          <line key={`tick-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={i % 6 === 0 ? "#38bdf8" : "#1e293b"} strokeWidth="1" opacity={i % 6 === 0 ? 0.8 : 0.3} />
+          <line key={`tick-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={i % 6 === 0 ? "#00f5d4" : "#3a4a46"} strokeWidth="1" opacity={i % 6 === 0 ? 0.8 : 0.3} />
         );
       })}
     </svg>
@@ -57,7 +58,13 @@ function AvatarRing({ level }) {
 
 function MiniEcg() {
   const controls = useAnimation();
+  const reduceMotion = useReducedMotion();
   useEffect(() => {
+    if (reduceMotion) {
+      controls.stop();
+      controls.set({ d: "M 0 10 L 20 10" });
+      return;
+    }
     let m = true;
     const run = async () => {
       while (m) {
@@ -69,8 +76,8 @@ function MiniEcg() {
       }
     };
     run();
-    return () => { m = false; };
-  }, [controls]);
+    return () => { m = false; controls.stop(); };
+  }, [controls, reduceMotion]);
 
   return (
     <svg viewBox="0 0 20 20" className="w-5 h-3 text-cyan-500 drop-shadow-[0_0_4px_rgba(56,189,248,0.6)]">
@@ -81,15 +88,15 @@ function MiniEcg() {
 
 const obterTituloEpico = (materia) => {
   const mat = (materia || '').toUpperCase();
-  if (mat.includes('NEURO')) return { titulo: 'Devorador de Cérebros', emoji: '🧠', cor: '#d946ef' };
-  if (mat.includes('OSSO') || mat.includes('ESQUELETICO')) return { titulo: 'Devorador de Ossos', emoji: '🦴', cor: '#f8fafc' };
-  if (mat.includes('MUSCUL') || mat.includes('ANATOMIA')) return { titulo: 'Escultor de Corpos', emoji: '💪', cor: '#ef4444' };
-  if (mat.includes('FARMACO')) return { titulo: 'O Alquimista Químico', emoji: '💊', cor: '#10b981' };
-  if (mat.includes('MICRO') || mat.includes('VIRUS') || mat.includes('BACTERIA')) return { titulo: 'Caçador de Vírus', emoji: '🦠', cor: '#84cc16' };
-  if (mat.includes('IMUNO')) return { titulo: 'Lorde dos Anticorpos', emoji: '🛡️', cor: '#3b82f6' };
-  if (mat.includes('PATO') || mat.includes('DOENCA')) return { titulo: 'Detetive de Lâminas', emoji: '🔬', cor: '#6366f1' };
-  if (mat.includes('HISTO') || mat.includes('CELULA')) return { titulo: 'Mestre Celular', emoji: '🧬', cor: '#ec4899' };
-  return { titulo: 'Bisturi de Ouro', emoji: '🛡️', cor: '#fbbf24' };
+  if (mat.includes('NEURO')) return { titulo: 'Devorador de Cérebros', emoji: '🧠', cor: '#8b5cf6' };
+  if (mat.includes('OSSO') || mat.includes('ESQUELETICO')) return { titulo: 'Devorador de Ossos', emoji: '🦴', cor: '#dce2f7' };
+  if (mat.includes('MUSCUL') || mat.includes('ANATOMIA')) return { titulo: 'Escultor de Corpos', emoji: '💪', cor: '#d4004b' };
+  if (mat.includes('FARMACO')) return { titulo: 'O Alquimista Químico', emoji: '💊', cor: '#00f5d4' };
+  if (mat.includes('MICRO') || mat.includes('VIRUS') || mat.includes('BACTERIA')) return { titulo: 'Caçador de Vírus', emoji: '🦠', cor: '#00dfc1' };
+  if (mat.includes('IMUNO')) return { titulo: 'Lorde dos Anticorpos', emoji: '🛡️', cor: '#8b5cf6' };
+  if (mat.includes('PATO') || mat.includes('DOENCA')) return { titulo: 'Detetive de Lâminas', emoji: '🔬', cor: '#8b5cf6' };
+  if (mat.includes('HISTO') || mat.includes('CELULA')) return { titulo: 'Mestre Celular', emoji: '🧬', cor: '#d4004b' };
+  return { titulo: 'Bisturi de Ouro', emoji: '🛡️', cor: '#ffb95f' };
 };
 
 const getPatente = (nivel) => {
@@ -107,7 +114,7 @@ const getPatente = (nivel) => {
 export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual }) {
   const [username, setUsername] = useState(dadosUsuario?.username || "");
   const [fullName, setFullName] = useState(dadosUsuario?.nome || dadosUsuario?.username || "");
-  const email = usuario?.email || "email_indisponivel@cacamed.com";
+  const email = usuario?.email || "email_indisponivel@cacoMed.com";
   
   const [focusedField, setFocusedField] = useState(null);
   const [saved, setSaved] = useState(false);
@@ -142,14 +149,16 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   // Agora a porcentagem é baseada apenas no que falta para os próximos 1000 (ex: 795/1000 = 79.5%)
   const xpPercent = Math.max(0, Math.min(100, Math.round((progressoNesteMilestone / 1000) * 100)));
 
-  const totalPlantoes = dadosUsuario?.estatisticasGerais?.historico?.length || 0;
-  const streak = dadosUsuario?.missoesDiarias?.streak || 0;
+  const totalCruzadinhas = dadosUsuario?.estatisticasGerais?.historico?.length || 0;
+  const dataCadastro = usuario?.metadata?.creationTime
+    ? new Date(usuario.metadata.creationTime).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+    : '—';
 
   const stats = [
-    { label: "Plantões", value: totalPlantoes.toString(), icon: Stethoscope, color: "#38bdf8" },
-    { label: "Vitórias DDX", value: "0", icon: Trophy, color: "#fbbf24" },
-    { label: "Streak", value: `${streak}🔥`, icon: Zap, color: "#f97316" },
-    { label: "XP Total", value: xpCurrent > 1000 ? `${(xpCurrent/1000).toFixed(1)}k` : xpCurrent, icon: Award, color: "#a855f7" },
+    { label: "Cruzadinhas", value: totalCruzadinhas.toString(), icon: Stethoscope, color: "#00f5d4" },
+    { label: "Vitórias DDX", value: String(dadosUsuario?.estatisticas?.ddx?.partidas_ganhas || 0), icon: Trophy, color: "#ffb95f" },
+    { label: "Vitórias Hardcore", value: String(dadosUsuario?.estatisticas?.hardcore?.partidas_ganhas || 0), icon: Zap, color: "#d4004b" },
+    { label: "XP Total", value: xpCurrent > 1000 ? `${(xpCurrent/1000).toFixed(1)}k` : xpCurrent, icon: Award, color: "#8b5cf6" },
   ];
 
   const tituloData = obterTituloEpico(materiaEspecialista);
@@ -196,7 +205,8 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-hidden flex items-center justify-center selection:bg-cyan-500/30">
+    <div className="stitch-integrated stitch-profile min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-x-hidden flex flex-col items-center selection:bg-cyan-500/30">
+      <StitchBrand secao="PERFIL DO PLANTONISTA" />
       
       <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)`, backgroundSize: '28px 28px' }} />
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,rgba(56,189,248,0.05)_0%,#0B1120_70%)]" />
@@ -237,7 +247,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
 
             {/* ESQUERDA: Medida de 280px fiel ao Figma */}
             <div className="w-full md:w-[400px] shrink-0 border-b md:border-b-0 md:border-r border-white/[0.04] p-6 flex flex-col items-center justify-center bg-gradient-to-b from-[#0f172a]/50 to-transparent">
-              <div className="relative w-[128px] h-[128px] mb-4">
+              <div className="stitch-avatar-glow relative w-[128px] h-[128px] mb-4 rounded-full">
                 <AvatarRing level={level} />
                 <img src={imagemPerfil} alt="Avatar" className="absolute inset-[8px] rounded-full object-cover border-2 border-[#0f172a]" />
                 
@@ -246,9 +256,6 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
                   <span className="text-white text-xs font-mono">{level}</span>
                 </motion.div>
                 
-                <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} className="absolute top-1 right-1 w-8 h-8 rounded-full bg-[#0B1120] border border-white/[0.1] flex items-center justify-center hover:border-cyan-500/50 transition-colors shadow-[0_4px_12px_rgba(0,0,0,0.4)]">
-                  <Camera className="w-3.5 h-3.5 text-cyan-400" />
-                </motion.button>
               </div>
 
               <h2 className="text-white text-base text-center mb-1">{fullName}</h2>
@@ -299,12 +306,12 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="text-[8px] text-slate-600 uppercase tracking-widest block">Matrícula</span>
-                  <span className="text-slate-400 text-[10px] font-mono">CM-2024-00472</span>
+                  <span className="text-slate-400 text-[10px] font-mono">{usuario?.uid?.slice(0, 12) || '—'}</span>
                 </div>
                 <div className="flex flex-col items-end">
                   <span className="text-[8px] text-slate-600 uppercase tracking-widest">Desde</span>
                   <span className="text-slate-400 text-[10px] font-mono flex items-center gap-0.5">
-                    <Calendar className="w-2.5 h-2.5" /> Jan 2024
+                    <Calendar className="w-2.5 h-2.5" /> {dataCadastro}
                   </span>
                 </div>
               </div>
@@ -355,20 +362,12 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   <div>
                     <label className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">Especialização</label>
                     <div className="bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 border-white/[0.05] flex items-center gap-2">
                       <span className="text-sm">🩺</span>
                       <span className="text-white text-sm">{materiaEspecialista}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block flex items-center gap-1">
-                      <MapPin className="w-2.5 h-2.5" /> Hospital Base
-                    </label>
-                    <div className="bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 border-white/[0.05] flex items-center gap-2">
-                      <span className="text-white text-sm">CaçaMed Global</span>
                     </div>
                   </div>
                 </div>
@@ -402,7 +401,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
           <div className="flex items-center gap-1.5">
             <div className="w-10 h-[1px] bg-gradient-to-r from-transparent to-cyan-500/20" />
             <MiniEcg />
-            <span className="text-[8px] text-slate-600 uppercase tracking-widest">CaçaMed v2.4</span>
+            <span className="text-[8px] text-slate-600 uppercase tracking-widest">cacoMed · Terminal de Plantão</span>
             <MiniEcg />
             <div className="w-10 h-[1px] bg-gradient-to-l from-transparent to-cyan-500/20" />
           </div>

@@ -3,6 +3,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { ArrowLeft, Crown, Trophy, Flame, TrendingUp, Medal } from "lucide-react";
 import { motion } from "framer-motion";
+import StitchBrand from './ui/StitchBrand';
 
 // ==========================================
 // 🌻 SISTEMA DE PARTÍCULAS DO EASTER EGG (INTOCADO)
@@ -21,7 +22,7 @@ const ParticulaRomantica = ({ id, texto, posicaoInicial, onFinalizar }) => {
     <div
       style={{
         position: 'fixed', bottom: '80px', left: `${posicaoInicial}px`, 
-        fontSize: `${tamanho}rem`, fontWeight: 'bold', color: '#ff4757', 
+        fontSize: `${tamanho}rem`, fontWeight: 'bold', color: '#d4004b',
         opacity: 0.9, pointerEvents: 'none', zIndex: 10000,
         animation: `flutuarRomantico ${duracao}s cubic-bezier(0.25, 1, 0.5, 1) forwards`,
         '--deriva-horizontal': `${derivaH}px` 
@@ -33,12 +34,12 @@ const ParticulaRomantica = ({ id, texto, posicaoInicial, onFinalizar }) => {
 };
 
 const PODIUM_CONFIG = [
-  { idx: 1, order: "order-1", height: "h-20", avatarSize: "w-12 h-12", borderColor: "border-slate-400", glowColor: "rgba(148,163,184,0.4)", labelBg: "bg-slate-400", labelText: "2º", medalColor: "text-slate-300" },
-  { idx: 0, order: "order-2", height: "h-28", avatarSize: "w-16 h-16", borderColor: "border-amber-400", glowColor: "rgba(251,191,36,0.5)", labelBg: "bg-amber-400", labelText: "1º", medalColor: "text-amber-400" },
-  { idx: 2, order: "order-3", height: "h-16", avatarSize: "w-11 h-11", borderColor: "border-orange-500", glowColor: "rgba(249,115,22,0.4)", labelBg: "bg-orange-500", labelText: "3º", medalColor: "text-orange-400" },
+  { idx: 1, order: "order-1", height: "h-20", avatarSize: "w-12 h-12", borderColor: "border-slate-400", glowColor: "rgba(185,202,196,0.4)", labelBg: "bg-slate-400", labelText: "2º", medalColor: "text-slate-300" },
+  { idx: 0, order: "order-2", height: "h-28", avatarSize: "w-16 h-16", borderColor: "border-amber-400", glowColor: "rgba(255,185,95,0.5)", labelBg: "bg-amber-400", labelText: "1º", medalColor: "text-amber-400" },
+  { idx: 2, order: "order-3", height: "h-16", avatarSize: "w-11 h-11", borderColor: "border-violet-500", glowColor: "rgba(139,92,246,0.4)", labelBg: "bg-violet-500", labelText: "3º", medalColor: "text-violet-400" },
 ];
 
-export default function Ranking({ dadosUsuario, setTelaAtual }) {
+export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
   const [abaAtual, setAbaAtual] = useState('global');
   const [criterioOrdenacao, setCriterioOrdenacao] = useState('nivel');
   
@@ -70,12 +71,12 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
   };
 
   function getPatenteInfo(nivel) {
-    if (nivel <= 5) return { titulo: 'Estudante (Básico)', cor: '#64748b' };
-    if (nivel <= 15) return { titulo: 'Estudante (Clínico)', cor: '#0ea5e9' };
+    if (nivel <= 5) return { titulo: 'Estudante (Básico)', cor: '#b9cac4' };
+    if (nivel <= 15) return { titulo: 'Estudante (Clínico)', cor: '#00f5d4' };
     if (nivel <= 30) return { titulo: 'Interno', cor: '#8b5cf6' };
-    if (nivel <= 50) return { titulo: 'Residente (R1)', cor: '#f59e0b' };
-    if (nivel <= 80) return { titulo: 'Médico Especialista', cor: '#ef4444' };
-    return { titulo: 'Chefe de Plantão', cor: '#10b981' };
+    if (nivel <= 50) return { titulo: 'Residente (R1)', cor: '#ffb95f' };
+    if (nivel <= 80) return { titulo: 'Médico Especialista', cor: '#d4004b' };
+    return { titulo: 'Chefe de Plantão', cor: '#00f5d4' };
   }
 
   const somaNiveisPessoal = useMemo(() => {
@@ -170,7 +171,7 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
   // ==========================================
   // 🎯 MATEMÁTICA DE RIVALIDADE (RADAR)
   // ==========================================
-  const meuIndex = rankingProcessado.findIndex(m => m.uid === dadosUsuario?.uid);
+  const meuIndex = rankingProcessado.findIndex(m => m.uid === usuario?.uid);
   const eu = meuIndex >= 0 ? rankingProcessado[meuIndex] : null;
   
   let textoRadar = "Continue jogando para subir posições!";
@@ -200,7 +201,8 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-hidden flex flex-col selection:bg-cyan-500/30">
+    <div className="stitch-integrated stitch-ranking min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-x-hidden flex flex-col selection:bg-cyan-500/30">
+      <StitchBrand secao="RANKING" />
       
       <style>
         {`
@@ -235,7 +237,7 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
                 <Trophy className="w-5 h-5 text-amber-400" style={{ filter: 'drop-shadow(0 0 8px rgba(251,191,36,0.6))' }} />
                 Devoradores de Plantão
               </h1>
-              <p className="text-slate-500 text-xs uppercase tracking-wider mt-1">Ranking Hospitalar Oficial</p>
+              <p className="text-slate-500 text-xs uppercase tracking-wider mt-1">Ranking de plantonistas</p>
             </div>
           </div>
 
@@ -271,11 +273,12 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
                       const player = top3[cfg.idx];
                       if (!player) return <div key={cfg.idx} className={`w-20 md:w-28 ${cfg.order}`} />; 
                       
-                      const isEu = player.uid === dadosUsuario?.uid;
+                      const isEu = player.uid === usuario?.uid;
 
                       return (
                         <motion.div
                           key={player.uid}
+                          layout="position"
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.5, delay: cfg.idx * 0.15 }}
@@ -295,7 +298,7 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
                           <span className={`text-xs font-bold mb-1 text-center truncate w-24 ${isEu ? 'text-cyan-300' : 'text-white'}`}>{player.nome}</span>
                           <span className="text-slate-500 text-[10px] mb-1.5 hidden md:block">{player.patente}</span>
                           
-                          <span className="font-mono text-xl font-bold" style={{ color: cfg.idx === 0 ? '#fbbf24' : (cfg.idx === 1 ? '#cbd5e1' : '#fb923c'), filter: `drop-shadow(0 0 6px ${cfg.glowColor})` }}>
+                          <span className="font-mono text-xl font-bold" style={{ color: cfg.idx === 0 ? '#ffb95f' : (cfg.idx === 1 ? '#b9cac4' : '#8b5cf6'), filter: `drop-shadow(0 0 6px ${cfg.glowColor})` }}>
                             {criterioOrdenacao === 'nivel' ? player.nivel : (criterioOrdenacao === 'letras' ? player.letras : formatarTempo(player.tempoMedio))}
                           </span>
                           <span className="text-slate-600 text-[9px] uppercase tracking-wider font-bold">
@@ -306,8 +309,8 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
                             initial={{ height: 0 }} animate={{ height: 'auto' }} transition={{ duration: 0.6, delay: 0.3 + cfg.idx * 0.1 }}
                             className={`${cfg.height} w-20 md:w-24 mt-3 rounded-t-xl flex items-start justify-center pt-3 relative overflow-hidden`}
                             style={{
-                              background: cfg.idx === 0 ? 'linear-gradient(to top, rgba(251,191,36,0.15), rgba(251,191,36,0.03))' : cfg.idx === 1 ? 'linear-gradient(to top, rgba(148,163,184,0.12), rgba(148,163,184,0.02))' : 'linear-gradient(to top, rgba(249,115,22,0.12), rgba(249,115,22,0.02))',
-                              borderTop: cfg.idx === 0 ? '2px solid rgba(251,191,36,0.4)' : cfg.idx === 1 ? '2px solid rgba(148,163,184,0.3)' : '2px solid rgba(249,115,22,0.3)',
+                              background: cfg.idx === 0 ? 'linear-gradient(to top, rgba(255,185,95,0.15), rgba(255,185,95,0.03))' : cfg.idx === 1 ? 'linear-gradient(to top, rgba(185,202,196,0.12), rgba(185,202,196,0.02))' : 'linear-gradient(to top, rgba(139,92,246,0.12), rgba(139,92,246,0.02))',
+                              borderTop: cfg.idx === 0 ? '2px solid rgba(255,185,95,0.4)' : cfg.idx === 1 ? '2px solid rgba(185,202,196,0.3)' : '2px solid rgba(139,92,246,0.3)',
                               borderLeft: '1px solid rgba(255,255,255,0.03)', borderRight: '1px solid rgba(255,255,255,0.03)',
                             }}
                           >
@@ -352,12 +355,12 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
               </div>
 
               {/* Column headers */}
-              <div className="grid grid-cols-[50px_1fr_90px_90px_120px] gap-4 px-6 py-3 border-b border-white/[0.03] text-[9px] uppercase font-bold tracking-widest text-slate-500 shrink-0">
+              <div className="grid grid-cols-[36px_minmax(0,1fr)_64px] sm:grid-cols-[40px_minmax(0,1fr)_90px_80px_75px] gap-2 sm:gap-4 px-4 sm:px-6 py-3 border-b border-white/[0.03] text-[9px] uppercase font-bold tracking-widest text-slate-500 shrink-0">
                 <span>#</span>
                 <span>Plantonista</span>
                 <span className="text-center hidden sm:block">Patente</span>
                 <span className="text-center">Estatística</span>
-                <span className="text-center">Info Extra</span>
+                <span className="text-center hidden sm:block">Partidas</span>
               </div>
 
               {/* Rows */}
@@ -368,13 +371,14 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
                   </div>
                 ) : (
                   rest.map((player, i) => {
-                    const isEu = player.uid === dadosUsuario?.uid;
+                    const isEu = player.uid === usuario?.uid;
 
                     return (
                       <motion.div
                         key={player.uid}
+                        layout="position"
                         initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: i * 0.03 }}
-                        className={`grid grid-cols-[50px_1fr_90px_90px_120px] gap-4 items-center px-6 py-3.5 border-b border-white/[0.02] transition-colors group relative ${
+                        className={`grid grid-cols-[36px_minmax(0,1fr)_64px] sm:grid-cols-[40px_minmax(0,1fr)_90px_80px_75px] gap-2 sm:gap-4 items-center px-4 sm:px-6 py-3.5 border-b border-white/[0.02] transition-colors group relative ${
                           isEu ? 'bg-cyan-500/[0.06] hover:bg-cyan-500/[0.1]' : 'hover:bg-white/[0.02]'
                         }`}
                       >
@@ -404,7 +408,7 @@ export default function Ranking({ dadosUsuario, setTelaAtual }) {
                           </span>
                         </div>
 
-                        <div className="flex flex-col items-center justify-center gap-0.5">
+                        <div className="hidden sm:flex flex-col items-center justify-center gap-0.5">
                           <span className="text-xs font-bold text-slate-400">{player.partidas}</span>
                           <span className="text-[8px] text-slate-600 uppercase tracking-widest">Partidas</span>
                         </div>

@@ -1,0 +1,1084 @@
+<!DOCTYPE html><html class="dark" lang="pt-BR" style=""><head></head><body class="bg-background font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen"><svg aria-hidden="true" class="inline-defs-container" style="position:absolute;width:0;height:0;overflow:hidden"></svg><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_standard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+@layer base {
+  html, body { margin: 0; padding: 0; }
+  body { overscroll-behavior: none; }
+  main > :first-child { margin-top: 0 !important; }
+  main > :last-child { margin-bottom: 0 !important; }
+}
+::-webkit-scrollbar { display: none; }
+
+/* Custom HUD Animations */
+@keyframes bg-ekg {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes bg-scan {
+  0% { transform: translateY(-100%); opacity: 0; }
+  15% { opacity: 0.6; }
+  85% { opacity: 0.6; }
+  100% { transform: translateY(1100%); opacity: 0; }
+}
+
+@keyframes bg-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.22; }
+  50% { transform: scale(1.18); opacity: 0.38; }
+}
+
+@keyframes bg-breathe-subtle {
+  0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.15; }
+  50% { transform: scale(1.12) translate(-20px, 15px); opacity: 0.3; }
+}
+
+@keyframes bg-drift {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-18px) rotate(180deg); }
+  100% { transform: translateY(0px) rotate(360deg); }
+}
+
+@keyframes bg-drift2 {
+  0% { transform: translateY(0px) rotate(0deg) scale(0.95); }
+  50% { transform: translateY(22px) rotate(-180deg) scale(1.05); }
+  100% { transform: translateY(0px) rotate(-360deg) scale(0.95); }
+}
+
+@keyframes bar-shimmer {
+  0% { transform: translateX(-150%); }
+  100% { transform: translateX(250%); }
+}
+
+@keyframes avatar-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 245, 212, 0.3), 0 0 45px rgba(0, 245, 212, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(0, 245, 212, 0.65), 0 0 70px rgba(0, 245, 212, 0.35);
+  }
+}
+
+@keyframes button-neon-pulse {
+  0%, 100% {
+    box-shadow: 0 4px 0 #00dfc1, 0 8px 24px rgba(0, 245, 212, 0.35);
+  }
+  50% {
+    box-shadow: 0 4px 0 #00dfc1, 0 10px 34px rgba(0, 245, 212, 0.65);
+  }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 0.3; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+@keyframes card-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-fade-up-1 {
+  animation: card-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-fade-up-2 {
+  animation: card-fade-up 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+  opacity: 0;
+}
+
+.anim-fade-up-3 {
+  animation: card-fade-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+  opacity: 0;
+}
+
+.anim-fade-up-4 {
+  animation: card-fade-up 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
+  opacity: 0;
+}
+
+.view-container {
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+}
+
+.view-container.view-hidden {
+  display: none !important;
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.avatar-pulse-glow {
+  animation: avatar-glow-pulse 3.5s ease-in-out infinite;
+}
+
+.btn-neon-glow {
+  animation: button-neon-pulse 3s ease-in-out infinite;
+}
+
+.pulse-ring-glow {
+  animation: pulse-ring 4s ease-in-out infinite;
+}
+
+.ekg-track {
+  animation: bg-ekg 18s linear infinite;
+}
+
+.radar-scan-line {
+  animation: bg-scan 9s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.orb-breathe-cyan {
+  animation: bg-breathe 7s ease-in-out infinite;
+}
+
+.orb-breathe-emerald {
+  animation: bg-breathe-subtle 9s ease-in-out infinite;
+}
+
+.orb-breathe-amber {
+  animation: bg-breathe 8s ease-in-out infinite reverse;
+}
+
+.glyph-drift-1 {
+  animation: bg-drift 24s ease-in-out infinite;
+}
+
+.glyph-drift-2 {
+  animation: bg-drift2 28s ease-in-out infinite;
+}
+
+.xp-shimmer-effect {
+  animation: bar-shimmer 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Hexagon HUD Grid */
+.bg-hex-grid {
+  background-image: radial-gradient(circle at center, rgba(0, 245, 212, 0.08) 1.5px, transparent 1.5px),
+                    radial-gradient(circle at center, rgba(34, 211, 238, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px, 16px 16px;
+  background-position: 0 0, 16px 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade-up-1, .anim-fade-up-2, .anim-fade-up-3, .anim-fade-up-4 {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .ekg-track, .radar-scan-line, .orb-breathe-cyan, .orb-breathe-emerald,
+  .orb-breathe-amber, .glyph-drift-1, .glyph-drift-2, .xp-shimmer-effect,
+  .avatar-pulse-glow, .btn-neon-glow, .pulse-ring-glow {
+    animation: none !important;
+  }
+}
+</style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"secondary-container":"#d4004b","on-primary-fixed":"#00201a","surface-tint":"#00dfc1","on-tertiary-fixed":"#2a1700","inverse-primary":"#006b5b","on-secondary":"#670020","surface-container-high":"#232a3a","surface-container-highest":"#2e3545","on-primary-fixed-variant":"#005144","on-surface":"#dce2f7","background":"#0c1322","on-error":"#690005","surface-variant":"#2e3545","on-error-container":"#ffdad6","primary-fixed-dim":"#00dfc1","surface-bright":"#323949","primary-container":"#00f5d4","surface-container-low":"#141b2b","outline-variant":"#3a4a46","on-secondary-container":"#ffe6e8","surface-container-lowest":"#070e1d","primary-fixed":"#26fedc","on-secondary-fixed-variant":"#910030","secondary":"#ffb2ba","primary":"#d7fff3","surface-dim":"#0c1322","tertiary-fixed-dim":"#ffb95f","inverse-surface":"#dce2f7","on-secondary-fixed":"#400011","tertiary-fixed":"#ffddb8","on-surface-variant":"#b9cac4","on-tertiary":"#472a00","secondary-fixed-dim":"#ffb2ba","secondary-fixed":"#ffd9dc","tertiary":"#fff4ec","surface-container":"#191f2f","outline":"#83948f","on-background":"#dce2f7","on-primary":"#00382f","on-primary-container":"#006c5c","surface":"#0c1322","on-tertiary-fixed-variant":"#653e00","on-tertiary-container":"#865400","inverse-on-surface":"#293040","error-container":"#93000a","tertiary-container":"#ffd29f","error":"#ffb4ab"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"gutter-desktop":"1.5rem","gutter":"1rem","margin-tablet":"2rem","margin":"1rem","space-xl":"2.5rem","space-md":"1rem","space-lg":"1.5rem","space-xs":"0.25rem","space-sm":"0.5rem","margin-desktop":"3rem"},"fontFamily":{"label-sm":["JetBrains Mono"],"body-md":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"headline-xl":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"telemetry-lg":["JetBrains Mono"],"label-md":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"telemetry-md":["JetBrains Mono"],"headline-lg-mobile":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"headline-xl-mobile":["Plus Jakarta Sans"]},"fontSize":{"label-sm":["10px",{"lineHeight":"14px","letterSpacing":"0.08em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"headline-md":["24px",{"lineHeight":"32px","fontWeight":"700"}],"headline-xl":["40px",{"lineHeight":"48px","fontWeight":"800"}],"headline-sm":["20px",{"lineHeight":"28px","fontWeight":"700"}],"telemetry-lg":["20px",{"lineHeight":"26px","letterSpacing":"0.05em","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.04em","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"500"}],"telemetry-md":["14px",{"lineHeight":"20px","letterSpacing":"0.02em","fontWeight":"600"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","fontWeight":"700"}],"headline-lg":["32px",{"lineHeight":"40px","fontWeight":"800"}],"body-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"headline-xl-mobile":["30px",{"lineHeight":"38px","fontWeight":"800"}]}}}};</script><header class="fixed top-0 left-0 right-0 z-40 bg-surface-container-lowest/85 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.55)]">
+<div class="h-20 w-full px-6 flex items-center justify-between gap-4 mx-auto">
+<div class="flex items-center gap-6 shrink-0">
+<div class="flex items-center gap-3">
+<div class="relative flex items-center justify-center w-11 h-11 rounded-xl bg-surface-container-high shadow-[0_0_16px_rgba(0,245,212,0.25)]">
+<span class="material-symbols-outlined text-primary-fixed-dim text-2xl animate-pulse">stethoscope</span>
+<div class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-primary-container shadow-[0_0_8px_#00f5d4]"></div>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm tracking-wider text-primary">CAÇA-MED</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-primary-fixed-dim font-label-sm text-label-sm tracking-widest uppercase">HUD v2.4</span>
+</div>
+<span class="font-label-sm text-label-sm tracking-widest text-on-surface-variant uppercase">Terminal de Plantão</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 shrink-0">
+<div class="flex items-center gap-3 bg-surface-container-low px-4 py-1.5 rounded-xl hover:border-primary-container/30 border border-transparent transition-all">
+<div class="relative">
+<div class="w-9 h-9 rounded-lg bg-surface-container-highest flex items-center justify-center ring-1 ring-primary-container/40">
+<span class="material-symbols-outlined text-primary-fixed-dim text-xl">stethoscope</span>
+</div>
+<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary-container ring-2 ring-surface-container-low animate-ping"></span>
+<span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary-container ring-2 ring-surface-container-low"></span>
+</div>
+<div class="flex flex-col justify-center min-w-[130px]">
+<div class="flex items-center justify-between gap-2">
+<span class="font-label-md text-label-md text-on-surface font-bold truncate">Dr. Raphael</span>
+<span class="px-1 rounded bg-surface-container-highest text-primary-fixed-dim font-label-sm text-label-sm">R1</span>
+</div>
+<div class="w-full bg-surface-container-lowest h-1.5 rounded-full mt-1 overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 68%"></div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant mt-0.5">
+<span class="font-label-sm text-label-sm text-primary-fixed-dim">Plantão Ativo</span>
+<span class="font-label-sm text-label-sm">68% R2</span>
+</div>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-primary hover:ring-2 ring-primary-container transition-all cursor-pointer flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+</div>
+</div>
+</div>
+</header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full relative pb-16 overflow-hidden">
+<!-- Dynamic ECG Ambient Background Grid & Multilayer Atmospheric FX -->
+<div class="absolute inset-0 pointer-events-none overflow-hidden select-none">
+<!-- Hexagonal HUD Grid Depth -->
+<div class="absolute inset-0 bg-hex-grid opacity-30"></div>
+<!-- Glowing Bioluminescent Breathing Orbs -->
+<div class="absolute -top-36 -left-36 w-[32rem] h-[32rem] rounded-full bg-primary-container/15 blur-[110px] orb-breathe-cyan"></div>
+<div class="absolute top-1/4 -right-40 w-[36rem] h-[36rem] rounded-full bg-[#22D3EE]/15 blur-[130px] orb-breathe-emerald"></div>
+<div class="absolute bottom-10 left-1/3 w-[28rem] h-[28rem] rounded-full bg-[#4ADE80]/10 blur-[120px] orb-breathe-emerald"></div>
+<div class="absolute top-2/3 -right-20 w-80 h-80 rounded-full bg-tertiary-container/15 blur-[100px] orb-breathe-amber"></div>
+<!-- Floating Vector Medical Glyphs & Telemetry Nodes (Slow Parallax Drift) -->
+<div class="absolute top-28 left-[12%] text-primary-container/20 glyph-drift-1">
+<span class="material-symbols-outlined text-5xl">cardiology</span>
+</div>
+<div class="absolute top-72 right-[10%] text-primary-container/15 glyph-drift-2">
+<span class="material-symbols-outlined text-6xl">vital_signs</span>
+</div>
+<div class="absolute top-[520px] left-[6%] text-[#4ADE80]/15 glyph-drift-2">
+<span class="material-symbols-outlined text-4xl">ecg_heart</span>
+</div>
+<div class="absolute bottom-40 right-[15%] text-tertiary-container/20 glyph-drift-1">
+<span class="material-symbols-outlined text-5xl">monitor_heart</span>
+</div>
+<div class="absolute top-96 right-[32%] text-primary-container/10 glyph-drift-1">
+<span class="material-symbols-outlined text-3xl">medical_services</span>
+</div>
+<!-- Continuous Telemetry ECG Runner Wave (Duplicated SVG seamless loop) -->
+<div class="absolute w-[200%] top-48 left-0 flex ekg-track opacity-30">
+<svg class="w-1/2 text-primary-container stroke-current shrink-0" fill="none" height="120" preserveAspectRatio="none" viewBox="0 0 1200 120">
+<path d="M0,60 L280,60 L300,20 L315,100 L330,40 L345,75 L360,60 L700,60 L720,15 L735,105 L750,45 L765,80 L780,60 L1200,60" filter="drop-shadow(0 0 6px rgba(0, 245, 212, 0.8))" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+<svg class="w-1/2 text-primary-container stroke-current shrink-0" fill="none" height="120" preserveAspectRatio="none" viewBox="0 0 1200 120">
+<path d="M0,60 L280,60 L300,20 L315,100 L330,40 L345,75 L360,60 L700,60 L720,15 L735,105 L750,45 L765,80 L780,60 L1200,60" filter="drop-shadow(0 0 6px rgba(0, 245, 212, 0.8))" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+</div>
+<!-- ICU Vertical Radar Scanning Sweep -->
+<div class="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-transparent via-primary-container/10 to-transparent pointer-events-none radar-scan-line"></div>
+</div>
+<div class="mx-auto w-full px-4 sm:px-6 lg:px-8 pt-4 flex flex-col gap-6 relative z-10">
+<!-- 1. Barra Secundária Superior (Navegação, Seletor de Período & Ações Rápidas) -->
+<div class="w-full flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-4 rounded-xl bg-surface-container-low shadow-md anim-fade-up-1 border border-outline-variant/20">
+<!-- Botão Voltar -->
+<div class="flex items-center gap-3">
+<a class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high hover:border-primary-container/50 border border-outline-variant/30 text-primary hover:text-primary-container active:scale-95 shadow-sm hover:shadow-[0_0_12px_rgba(0,245,212,0.25)] transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined text-[18px] transition-transform duration-200 group-hover:-translate-x-1.5">arrow_back</span>
+<span class="font-label-md text-label-md">Voltar ao Perfil / Centro de Comando</span>
+</a>
+</div>
+<!-- Abas de Alternância de Período (Centralizadas) - Segmented Control Interativo -->
+<div class="flex items-center justify-center bg-surface-container-lowest p-1 rounded-xl border border-outline-variant/30 shadow-inner gap-1" id="gameModeTabs">
+<button class="nav-segment-btn px-4 py-1.5 rounded-lg font-label-md text-label-md font-bold transition-all duration-200 bg-primary-container text-on-primary-container shadow-[0_0_14px_rgba(0,245,212,0.4)] flex items-center gap-1.5" data-tab-target="geral" id="btnTabGeral" type="button">
+<span class="material-symbols-outlined text-[16px]">apps</span>
+<span class="">GERAL</span>
+</button>
+<button class="nav-segment-btn px-4 py-1.5 rounded-lg font-label-md text-label-md text-on-surface-variant hover:text-primary font-medium hover:bg-surface-container-high transition-all duration-200 flex items-center gap-1.5" data-tab-target="ddx" id="btnTabDDX" type="button">
+<span class="material-symbols-outlined text-[16px]">stethoscope</span>
+<span class="">DDX</span>
+</button>
+<button class="nav-segment-btn px-4 py-1.5 rounded-lg font-label-md text-label-md text-on-surface-variant hover:text-primary font-medium hover:bg-surface-container-high transition-all duration-200 flex items-center gap-1.5" data-tab-target="cruzadinhas" id="btnTabCruzadinhas" type="button">
+<span class="material-symbols-outlined text-[16px]">grid_view</span>
+<span class="">CRUZADINHAS</span>
+</button>
+</div>
+<!-- Ação Exportar Prontuário Analítico -->
+<div class="flex items-center gap-2 justify-end">
+<button class="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-primary hover:text-primary-container border border-outline-variant/40 hover:border-primary-container/60 shadow-sm hover:shadow-[0_0_14px_rgba(0,245,212,0.3)] transition-all active:scale-95" id="exportBtn" title="Exportar Prontuário Clínico">
+<span class="material-symbols-outlined text-[18px] text-primary-container">ios_share</span>
+<span class="font-label-md text-label-md font-semibold">Exportar Relatório Analítico</span>
+</button>
+</div>
+</div>
+<!-- ========================================================================= -->
+<!-- VIEW 1: 'GERAL' (Cockpit Clínico Executivo Completo)                      -->
+<!-- ========================================================================= -->
+<div class="view-container flex flex-col gap-6" id="viewGeral">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- ================= COLUNA DA ESQUERDA (38% -> lg:col-span-5) ================= -->
+<div class="lg:col-span-5 flex flex-col gap-6 w-full">
+<!-- Card 1: Foco do Plantonista (Modalidade Preferida & Especialidade) -->
+<div class="rounded-2xl bg-surface-container-low p-6 shadow-xl relative overflow-hidden anim-fade-up-2 border border-outline-variant/25 backdrop-blur-sm group hover:border-primary-container/40 transition-all duration-300">
+<div class="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-primary-container/10 blur-2xl pointer-events-none group-hover:bg-primary-container/20 transition-all duration-500"></div>
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-xl animate-pulse">local_hospital</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-bold">Foco &amp; Especialidade de Plantão</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-primary-container/20 text-primary-container font-label-sm text-label-sm font-bold border border-primary-container/30">NÍVEL 47</span>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-16 h-16 rounded-2xl bg-surface-container-highest border border-primary-container/40 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(0,245,212,0.25)] relative">
+<span class="material-symbols-outlined text-primary-container text-3xl">emergency</span>
+<span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-primary-container border-2 border-surface-container-low flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-on-primary-container"></span>
+</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="inline-flex items-center gap-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary-fixed-dim font-bold">Modalidade Preferencial</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-primary font-extrabold leading-tight">Emergência &amp; UTI Adulto</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Especialidade em Choque Circulatório, Manejo de Vias Aéreas e Sepse Severa.</p>
+</div>
+</div>
+<div class="mt-5 grid grid-cols-2 gap-3 pt-4 border-t border-outline-variant/20">
+<div class="p-3 rounded-xl bg-surface-container border border-outline-variant/30 flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Casos Atendidos</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-telemetry-lg text-2xl font-black text-primary">214</span>
+<span class="font-label-sm text-label-sm text-primary-container font-semibold">+18 este mês</span>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-surface-container border border-outline-variant/30 flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Índice Resolutivo</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-telemetry-lg text-2xl font-black text-primary-container">98.1%</span>
+<span class="font-label-sm text-label-sm text-primary-fixed-dim font-semibold">Alto Padrão</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2: Resumo de Sobrevivência (482 Pacientes Salvos + Gráfico Radial) -->
+<div class="rounded-2xl bg-surface-container-low p-6 shadow-xl relative overflow-hidden anim-fade-up-3 border border-outline-variant/25 backdrop-blur-sm">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-xl">favorite</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-bold">Índice de Sobrevida Hospitalar</span>
+</div>
+<div class="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-container-highest font-label-sm text-label-sm text-primary">
+<span class="material-symbols-outlined text-[14px] text-primary-container">verified_user</span>
+<span class="">Protocolo ACLS/ATLS</span>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row items-center gap-6">
+<!-- SVG Gauge Radial de Sobrevivência 94.2% -->
+<div class="relative w-36 h-36 shrink-0 flex items-center justify-center">
+<svg class="w-full h-full -rotate-90 transform" viewBox="0 0 120 120">
+<!-- Fundo do Círculo -->
+<circle cx="60" cy="60" fill="none" r="50" stroke="#191f2f" stroke-width="10"></circle>
+<!-- Círculo de Progresso Neon 94.2% -> Circumference = 2 * PI * 50 ≈ 314.16. Offset = 314.16 * (1 - 0.942) = 18.22 -->
+<circle class="transition-all duration-1000 ease-out" cx="60" cy="60" fill="none" filter="drop-shadow(0 0 8px rgba(0,245,212,0.85))" r="50" stroke="#00f5d4" stroke-dasharray="314.16" stroke-dashoffset="18.2" stroke-linecap="round" stroke-width="10"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+<span class="font-telemetry-lg text-2xl font-black text-primary-container leading-none">94.2%</span>
+<span class="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-widest mt-1">SOBREVIDA</span>
+</div>
+</div>
+<div class="flex flex-col gap-2 w-full">
+<div class="flex flex-col">
+<span class="font-headline-lg text-3xl font-extrabold text-primary tracking-tight">482 Pacientes Salvos</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Desfechos clínicos com reversão de quadro crítico e estabilização hemodinâmica.</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full mt-2 overflow-hidden relative">
+<div class="bg-primary-container h-full rounded-full" style="width: 94.2%"></div>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary-container"></span> Reversões em UTI (454)</span>
+<span class="text-primary font-bold">Taxa Geral 94.2%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3: Telemetria de Urgência (138 Visitas Sala Vermelha + Tempo de Resposta) -->
+<div class="rounded-2xl bg-surface-container-low p-6 shadow-xl relative overflow-hidden anim-fade-up-4 border border-outline-variant/25 backdrop-blur-sm">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-xl animate-pulse">crisis_alert</span>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider font-bold">Telemetria de Urgência &amp; Choque</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-secondary-container/20 text-secondary font-label-sm text-label-sm font-bold border border-secondary/30">CÓDIGO VERMELHO</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="p-4 rounded-xl bg-surface-container border border-outline-variant/30 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Sala Vermelha</span>
+<span class="material-symbols-outlined text-secondary text-[20px]">door_open</span>
+</div>
+<span class="font-telemetry-lg text-3xl font-black text-primary mt-2 block">138</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-2">Visitas Críticas Registradas</span>
+</div>
+<div class="p-4 rounded-xl bg-surface-container border border-primary-container/30 flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 w-16 h-16 rounded-full bg-primary-container/10 blur-lg"></div>
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary-fixed-dim uppercase">Tempo de Resposta</span>
+<span class="material-symbols-outlined text-primary-container text-[20px]">timer</span>
+</div>
+<div class="flex items-baseline gap-1 mt-2">
+<span class="font-telemetry-lg text-3xl font-black text-primary-container">01:42</span>
+<span class="font-label-sm text-label-sm text-primary-fixed font-bold">min</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-2">No Choque Cardiogênico &amp; PCR</span>
+</div>
+</div>
+<div class="mt-4 p-3 rounded-lg bg-surface-container-highest/40 border border-outline-variant/30 flex items-center justify-between">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-primary-container text-[16px]">speed</span>
+<span class="">Meta preconizada pelo protocolo institucional: &lt; 02:30 min</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary-container font-bold uppercase tracking-wider">SUPERADO (-48s)</span>
+</div>
+</div>
+</div>
+<!-- ================= COLUNA DA DIREITA (62% -> lg:col-span-7) ================= -->
+<div class="lg:col-span-7 flex flex-col gap-6 w-full">
+<!-- Gráfico Amplo e Elegante de Acertos Médicos (Curvas Cumulativas + Metas) -->
+<div class="rounded-2xl bg-surface-container-low p-6 lg:p-7 shadow-xl relative overflow-hidden anim-fade-up-2 border border-outline-variant/25 backdrop-blur-sm"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-outline-variant/20"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-primary-container/15 flex items-center justify-center border border-primary-container/30"><span class="material-symbols-outlined text-primary-container text-2xl animate-pulse">ecg_heart</span></div><div><div class="flex items-center gap-2"><h2 class="font-headline-md text-headline-md text-primary font-bold">Telemetria de Assertividade Diagnóstica</h2><span class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-container/20 text-primary-container font-label-sm text-[10px] font-bold border border-primary-container/30"><span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-ping"></span>ONLINE</span></div><p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mt-0.5">MONITORAMENTO CONTÍNUO DE CONDUTAS CLÍNICAS &amp; PRESCRIÇÕES</p></div></div><div class="flex items-center bg-surface-container-lowest p-1 rounded-xl border border-outline-variant/30 shrink-0"><button class="px-3 py-1.5 rounded-lg font-label-sm text-label-sm font-bold bg-primary-container text-on-primary-container shadow-[0_0_12px_rgba(0,245,212,0.35)] transition-all period-toggle-btn" type="button">VISÃO MENSAL (30D)</button><button class="px-3 py-1.5 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-all period-toggle-btn" type="button">HISTÓRICO GERAL (SEMPRE)</button></div></div><div class="grid grid-cols-2 md:grid-cols-4 gap-3 py-4 border-b border-outline-variant/15"><div class="p-2.5 rounded-xl bg-surface-container border border-outline-variant/20 flex flex-col"><span class="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider">MÉDIA DIÁRIA DE ACERTOS</span><div class="flex items-baseline gap-1 mt-1"><span class="font-telemetry-lg text-xl font-black text-primary">16.4</span><span class="font-label-sm text-[11px] text-on-surface-variant">casos/dia</span></div></div><div class="p-2.5 rounded-xl bg-surface-container border border-outline-variant/20 flex flex-col"><span class="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider">PICO EM PLANTÃO NOTURNO</span><div class="flex items-baseline gap-1 mt-1"><span class="font-telemetry-lg text-xl font-black text-primary-container">34</span><span class="font-label-sm text-[11px] text-primary-fixed-dim">acertos (14 Mar)</span></div></div><div class="p-2.5 rounded-xl bg-surface-container border border-outline-variant/20 flex flex-col"><span class="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider">SEQUÊNCIA MÁXIMA (STREAK)</span><div class="flex items-baseline gap-1 mt-1"><span class="font-telemetry-lg text-xl font-black text-tertiary-fixed">28</span><span class="font-label-sm text-[11px] text-on-surface-variant">sem errar conduta</span></div></div><div class="p-2.5 rounded-xl bg-surface-container border border-outline-variant/20 flex flex-col"><span class="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider">PRECISÃO EM EMERGÊNCIA</span><div class="flex items-baseline gap-1 mt-1"><span class="font-telemetry-lg text-xl font-black text-primary-container">96.8%</span><span class="font-label-sm text-[11px] text-primary-fixed">no mês</span></div></div></div><div class="w-full relative mt-4 pt-2"><div class="w-full h-64 relative"><div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20 text-[10px] font-mono text-on-surface-variant"><div class="w-full border-b border-outline-variant flex justify-between"><span class="">100%</span><span class="">40 casos</span></div><div class="w-full border-b border-outline-variant flex justify-between"><span class="">80%</span><span class="">30 casos</span></div><div class="w-full border-b border-outline-variant flex justify-between"><span class="">60%</span><span class="">20 casos</span></div><div class="w-full border-b border-outline-variant flex justify-between"><span class="">40%</span><span class="">10 casos</span></div><div class="w-full border-b border-outline-variant flex justify-between"><span class="">20%</span><span class="">0 casos</span></div></div><svg class="w-full h-full overflow-visible relative z-10" preserveAspectRatio="none" viewBox="0 0 700 240"><defs><linearGradient id="telemetryCyanGradient" x1="0%" x2="0%" y1="0%" y2="100%"><stop offset="0%" stop-color="#00f5d4" stop-opacity="0.45"></stop><stop offset="65%" stop-color="#00dfc1" stop-opacity="0.12"></stop><stop offset="100%" stop-color="#00f5d4" stop-opacity="0"></stop></linearGradient><filter height="200%" id="sineGlow" width="200%" x="-50%" y="-50%"><feGaussianBlur result="coloredBlur" stdDeviation="4"></feGaussianBlur><feMerge><feMergeNode in="coloredBlur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter></defs><g opacity="0.22"><rect fill="#00f5d4" height="80" rx="2" width="8" x="45" y="160"></rect><rect fill="#00f5d4" height="110" rx="2" width="8" x="105" y="130"></rect><rect fill="#00f5d4" height="95" rx="2" width="8" x="165" y="145"></rect><rect fill="#00f5d4" height="140" rx="2" width="8" x="225" y="100"></rect><rect fill="#00f5d4" height="125" rx="2" width="8" x="285" y="115"></rect><rect fill="#00f5d4" height="165" rx="2" width="8" x="345" y="75"></rect><rect fill="#00f5d4" height="190" rx="2" width="8" x="405" y="50"></rect><rect fill="#00f5d4" height="155" rx="2" width="8" x="465" y="85"></rect><rect fill="#00f5d4" height="175" rx="2" width="8" x="525" y="65"></rect><rect fill="#00f5d4" height="200" rx="2" width="8" x="585" y="40"></rect><rect fill="#00f5d4" height="215" rx="2" width="8" x="645" y="25"></rect></g><line stroke="#ffb2ba" stroke-dasharray="6,4" stroke-opacity="0.55" stroke-width="1.8" x1="0" x2="700" y1="105" y2="105"></line><path d="M0,135 C50,110 80,155 130,120 C180,85 210,130 260,95 C310,60 340,110 390,70 C440,30 470,80 520,45 C570,10 610,50 700,18 L700,240 L0,240 Z" fill="url(#telemetryCyanGradient)"></path><path d="M0,135 C50,110 80,155 130,120 C180,85 210,130 260,95 C310,60 340,110 390,70 C440,30 470,80 520,45 C570,10 610,50 700,18" fill="none" filter="url(#sineGlow)" stroke="#00f5d4" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5"></path><circle cx="130" cy="120" fill="#0c1322" r="4.5" stroke="#00f5d4" stroke-width="2.5"></circle><circle cx="260" cy="95" fill="#0c1322" r="4.5" stroke="#00f5d4" stroke-width="2.5"></circle><circle cx="390" cy="70" fill="#0c1322" r="4.5" stroke="#00f5d4" stroke-width="2.5"></circle><circle cx="520" cy="45" fill="#0c1322" r="4.5" stroke="#00f5d4" stroke-width="2.5"></circle><g class="cursor-pointer group" transform="translate(520, 45)"><circle class="animate-ping" fill="#00f5d4" opacity="0.75" r="9"></circle><circle fill="#0c1322" r="6" stroke="#00f5d4" stroke-width="3"></circle><rect fill="#070e1d" height="26" rx="6" stroke="#00f5d4" stroke-width="1.5" width="130" x="-65" y="-36"></rect><text fill="#00f5d4" font-family="monospace" font-size="10" font-weight="bold" text-anchor="middle" x="0" y="-19">PICO: 98.4% ACERTO</text></g><g transform="translate(700, 18)"><circle class="pulse-ring-glow" fill="#00dfc1" opacity="0.6" r="10"></circle><circle fill="#ffffff" r="5" stroke="#00f5d4" stroke-width="2.5"></circle></g></svg></div><div class="flex items-center justify-between text-[11px] font-mono text-on-surface-variant pt-2 border-t border-outline-variant/30"><span class="">01/Set</span><span class="">06/Set</span><span class="">11/Set</span><span class="">16/Set</span><span class="">21/Set</span><span class="">26/Set</span><span class="text-primary-container font-bold">Hoje (29/Set)</span></div></div><div class="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-outline-variant/20"><div class="flex items-center gap-5 flex-wrap font-label-sm text-label-sm"><div class="flex items-center gap-1.5 text-primary"><span class="w-3 h-1 bg-primary-container rounded-full shadow-[0_0_8px_#00f5d4]"></span><span class="">Acurácia Dr. Raphael (94.2%)</span></div><div class="flex items-center gap-1.5 text-secondary"><span class="w-3 h-1 bg-secondary rounded-full"></span><span class="">Média R1 Geral Hospital (78.1%)</span></div><div class="flex items-center gap-1.5 text-on-surface-variant"><span class="w-2.5 h-2.5 rounded bg-primary-container/30 border border-primary-container/40"></span><span class="">Volume de Casos Realizados</span></div></div><div class="flex items-center gap-2"><button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-on-surface-variant hover:text-primary font-label-sm text-label-sm transition-all" type="button"><span class="material-symbols-outlined text-[16px] text-primary-container">download</span><span class="">Exportar Relatório PDF/CSV</span></button></div></div></div>
+<!-- Grid de Mini KPIs de Desempenho Clínico (4 Métricas Críticas) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+<!-- KPI 1: Taxa de Acerto Geral -->
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/25 shadow-lg flex flex-col justify-between hover:border-primary-container/40 transition-all group">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Taxa de Acerto Geral</span>
+<span class="material-symbols-outlined text-primary-container text-[20px] group-hover:scale-110 transition-transform">checklist_rtl</span>
+</div>
+<div class="mt-3">
+<div class="flex items-baseline gap-1">
+<span class="font-telemetry-lg text-2xl font-black text-primary group-hover:text-primary-container transition-colors">94.2%</span>
+<span class="material-symbols-outlined text-primary-container text-[16px]">north_east</span>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant">Validação por Preceptores</span>
+</div>
+</div>
+<!-- KPI 2: Raciocínio Farmacológico -->
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/25 shadow-lg flex flex-col justify-between hover:border-primary-container/40 transition-all group">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Raciocínio Farmacológico</span>
+<span class="material-symbols-outlined text-primary-fixed text-[20px] group-hover:scale-110 transition-transform">prescriptions</span>
+</div>
+<div class="mt-3">
+<div class="flex items-baseline gap-1">
+<span class="font-telemetry-lg text-2xl font-black text-primary-fixed group-hover:text-primary-container transition-colors">96.8%</span>
+<span class="material-symbols-outlined text-primary-container text-[16px]">north_east</span>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant">Dosagem, Interações e Vias</span>
+</div>
+</div>
+<!-- KPI 3: Decisões Urgência Hardcore -->
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/25 shadow-lg flex flex-col justify-between hover:border-primary-container/40 transition-all group">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Decisões Urgência</span>
+<span class="material-symbols-outlined text-tertiary-fixed text-[20px] group-hover:scale-110 transition-transform">bolt</span>
+</div>
+<div class="mt-3">
+<div class="flex items-baseline gap-1">
+<span class="font-telemetry-lg text-2xl font-black text-tertiary-fixed group-hover:text-primary-container transition-colors">89.4%</span>
+<span class="material-symbols-outlined text-tertiary-fixed text-[16px]">trending_up</span>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant">Cenários de Risco Iminente</span>
+</div>
+</div>
+<!-- KPI 4: Média de Pontos XP por Plantão -->
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/25 shadow-lg flex flex-col justify-between hover:border-primary-container/40 transition-all group">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">XP por Plantão</span>
+<span class="material-symbols-outlined text-primary-container text-[20px] group-hover:scale-110 transition-transform">stars</span>
+</div>
+<div class="mt-3">
+<div class="flex items-baseline gap-1">
+<span class="font-telemetry-lg text-2xl font-black text-primary group-hover:text-primary-container transition-colors">1.250</span>
+<span class="font-label-sm text-label-sm text-primary-container font-bold">XP</span>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant">Média em 12h de Turno</span>
+</div>
+</div>
+</div>
+<!-- Card de Análise Comparativa ("28% Mais Veloz que a Média R1") -->
+<div class="rounded-2xl bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-low p-6 shadow-xl relative overflow-hidden border border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-6 anim-fade-up-3">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-xl bg-primary-container/20 border border-primary-container/40 flex items-center justify-center shrink-0 shadow-[0_0_16px_rgba(0,245,212,0.3)]">
+<span class="material-symbols-outlined text-primary-container text-3xl">electric_bolt</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded bg-primary-container/20 text-primary-container font-label-sm text-label-sm font-bold uppercase">BENCHMARK COMPARATIVO</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Base: 1.420 Residentes do Sistema</span>
+</div>
+<p class="font-headline-sm text-headline-sm text-primary font-bold mt-1">
+Seu tempo médio é <span class="text-primary-container font-black underline decoration-primary-container/40 underline-offset-4">28% mais veloz</span> que a média dos Residentes R1.
+</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+Precisão mantida em patamar de excelência (&gt;90%) mesmo com conduta acelerada.
+</p>
+</div>
+</div>
+<div class="flex items-center gap-3 shrink-0">
+<a class="px-4 py-2 rounded-lg bg-surface-container-high hover:bg-surface-bright text-primary hover:text-primary-container border border-outline-variant/40 hover:border-primary-container/60 font-label-md text-label-md font-semibold transition-all active:scale-95 flex items-center gap-2 shadow-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">leaderboard</span>
+<span class="">Ver Ranking Global</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ========================================================================= -->
+<!-- VIEW 2: 'DDX' (Diagnósticos Diferenciais & Simulação Clínica UTI)          -->
+<!-- ========================================================================= -->
+<div class="view-container view-hidden flex flex-col gap-6" id="viewDDX">
+<!-- 4 Mini Summary Cards Topo DDX -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/25 shadow-lg flex flex-col justify-between hover:border-primary-container/40 transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Casos DDX Resolvidos</span>
+<span class="material-symbols-outlined text-primary-container text-[20px]">manage_search</span>
+</div>
+<div class="mt-3 flex items-baseline gap-2">
+<span class="font-telemetry-lg text-3xl font-black text-primary">314</span>
+<span class="font-label-sm text-label-sm text-primary-container font-bold">+28 este mês</span>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant mt-1">Validação diagnóstica completa</span>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/25 shadow-lg flex flex-col justify-between hover:border-primary-container/40 transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Precisão Diagnóstica Inicial</span>
+<span class="material-symbols-outlined text-primary-fixed text-[20px]">target</span>
+</div>
+<div class="mt-3 flex items-baseline gap-2">
+<span class="font-telemetry-lg text-3xl font-black text-primary-container">91.8%</span>
+<span class="font-label-sm text-label-sm text-primary-fixed font-bold">1ª Hipótese</span>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant mt-1">Concordância com padrão-ouro</span>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/25 shadow-lg flex flex-col justify-between hover:border-primary-container/40 transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Taxa de Iatrogenia</span>
+<span class="material-symbols-outlined text-[#4ADE80] text-[20px]">shield</span>
+</div>
+<div class="mt-3 flex items-baseline gap-2">
+<span class="font-telemetry-lg text-3xl font-black text-[#4ADE80]">0.0%</span>
+<span class="font-label-sm text-label-sm text-[#4ADE80] font-bold">Impecável</span>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant mt-1">Zero condutas incompatíveis</span>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/25 shadow-lg flex flex-col justify-between hover:border-primary-container/40 transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Tempo Médio / Hipótese</span>
+<span class="material-symbols-outlined text-tertiary-fixed text-[20px]">timer_fast</span>
+</div>
+<div class="mt-3 flex items-baseline gap-2">
+<span class="font-telemetry-lg text-3xl font-black text-tertiary-fixed">01m 15s</span>
+<span class="px-1.5 py-0.5 rounded bg-tertiary-container/20 text-tertiary-fixed font-label-sm text-[10px] font-bold">Recorde R1</span>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant mt-1">Análise clínica rápida e segura</span>
+</div>
+</div>
+<!-- Split View DDX: Coluna Esquerda (Painel Especialidades & Interconsultas) + Coluna Direita (Gráficos & Casos Desafiadores) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- Left Panel DDX (lg:col-span-5) -->
+<div class="lg:col-span-5 flex flex-col gap-6 w-full">
+<!-- Card Especialidades Investigadas -->
+<div class="rounded-2xl bg-surface-container-low p-6 shadow-xl relative overflow-hidden border border-outline-variant/25">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-xl">insights</span>
+<h3 class="font-headline-sm text-lg font-bold text-primary">Top Especialidades Investigadas</h3>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest text-primary font-label-sm text-[11px]">Matriz DDX</span>
+</div>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-on-surface font-semibold flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">cardiology</span> Cardiologia Intervencionista</span>
+<span class="text-primary font-bold">42% (132 casos)</span>
+</div>
+<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full shadow-[0_0_10px_#00f5d4]" style="width: 42%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-on-surface font-semibold flex items-center gap-1.5"><span class="material-symbols-outlined text-primary-fixed-dim text-[16px]">coronavirus</span> Infectologia &amp; Sepse</span>
+<span class="text-primary font-bold">26% (82 casos)</span>
+</div>
+<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+<div class="bg-[#22D3EE] h-full rounded-full shadow-[0_0_10px_#22D3EE]" style="width: 26%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-on-surface font-semibold flex items-center gap-1.5"><span class="material-symbols-outlined text-tertiary-fixed text-[16px]">nephrology</span> Nefrologia &amp; Distúrbios</span>
+<span class="text-primary font-bold">18% (56 casos)</span>
+</div>
+<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+<div class="bg-[#FFB95F] h-full rounded-full shadow-[0_0_10px_#FFB95F]" style="width: 18%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-on-surface font-semibold flex items-center gap-1.5"><span class="material-symbols-outlined text-[#4ADE80] text-[16px]">neurology</span> Neurologia Clínica &amp; AVC</span>
+<span class="text-primary font-bold">14% (44 casos)</span>
+</div>
+<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+<div class="bg-[#4ADE80] h-full rounded-full shadow-[0_0_10px_#4ADE80]" style="width: 14%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card Especialistas Mais Convocados (Interconsulta R1) -->
+<div class="rounded-2xl bg-surface-container-low p-6 shadow-xl relative overflow-hidden border border-outline-variant/25">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-xl">group_work</span>
+<h3 class="font-headline-sm text-lg font-bold text-primary">Especialistas Mais Convocados</h3>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Interconsultas</span>
+</div>
+<div class="space-y-3">
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface-container border border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary-container font-bold border border-primary-container/30">DH</div>
+<div>
+<div class="font-label-md text-label-md font-bold text-primary">Dr. House</div>
+<div class="font-label-sm text-[11px] text-on-surface-variant">Infectologia &amp; Nefro</div>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-lg bg-primary-container/20 text-primary-container font-telemetry-md text-xs font-bold border border-primary-container/40">48 convocações</span>
+</div>
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface-container border border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-[#22D3EE] font-bold border border-[#22D3EE]/30">DC</div>
+<div>
+<div class="font-label-md text-label-md font-bold text-primary">Dra. Cameron</div>
+<div class="font-label-sm text-[11px] text-on-surface-variant">Imunologia &amp; Reumatologia</div>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-lg bg-[#22D3EE]/20 text-[#22D3EE] font-telemetry-md text-xs font-bold border border-[#22D3EE]/40">34 convocações</span>
+</div>
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface-container border border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-tertiary-fixed font-bold border border-tertiary-fixed/30">DF</div>
+<div>
+<div class="font-label-md text-label-md font-bold text-primary">Dr. Foreman</div>
+<div class="font-label-sm text-[11px] text-on-surface-variant">Neurologia de Precisão</div>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-lg bg-tertiary-container/20 text-tertiary-fixed font-telemetry-md text-xs font-bold border border-tertiary-fixed/40">22 convocações</span>
+</div>
+</div>
+<!-- Banner Status de Vidas DDX -->
+<div class="mt-4 p-3.5 rounded-xl bg-gradient-to-r from-surface-container to-surface-container-high border border-primary-container/30 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[#4ADE80] text-2xl">transfer_within_a_station</span>
+<div>
+<div class="font-label-md text-label-md font-bold text-primary">Status de Vidas em UTI DDX</div>
+<div class="font-label-sm text-[11px] text-on-surface-variant">189 pacientes revertidos com alta para enfermaria</div>
+</div>
+</div>
+<span class="font-telemetry-lg text-xl font-black text-[#4ADE80]">100%</span>
+</div>
+</div>
+</div>
+<!-- Right Panel DDX (lg:col-span-7) -->
+<div class="lg:col-span-7 flex flex-col gap-6 w-full">
+<!-- Gráfico Comparativo de Assertividade por Complexidade -->
+<div class="rounded-2xl bg-surface-container-low p-6 shadow-xl relative overflow-hidden border border-outline-variant/25">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-outline-variant/20">
+<div>
+<h3 class="font-headline-md text-xl font-bold text-primary">Assertividade por Nível de Complexidade DDX</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase mt-0.5">Casos Raros vs. Casos Típicos de Pronto-Socorro</p>
+</div>
+<div class="flex items-center bg-surface-container-lowest p-1 rounded-xl border border-outline-variant/30 shrink-0">
+<button class="px-3 py-1 rounded-lg font-label-sm text-label-sm font-bold bg-primary-container text-on-primary-container shadow-[0_0_12px_rgba(0,245,212,0.35)] transition-all period-toggle-btn" type="button">MÊS</button>
+<button class="px-3 py-1 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-all period-toggle-btn" type="button">SEMPRE</button>
+</div>
+</div>
+<div class="mt-6 space-y-5">
+<div>
+<div class="flex items-center justify-between text-sm mb-1.5">
+<span class="text-primary font-semibold flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-primary-container"></span> Casos Frequentes de Pronto-Socorro</span>
+<span class="font-telemetry-md font-bold text-primary-container">98.2% de acerto</span>
+</div>
+<div class="w-full bg-surface-container h-3.5 rounded-full overflow-hidden relative">
+<div class="bg-primary-container h-full rounded-full shadow-[0_0_12px_#00f5d4]" style="width: 98.2%"></div>
+</div>
+<div class="flex justify-between font-label-sm text-[11px] text-on-surface-variant mt-1">
+<span>Infarto IAM, Apendicite, Pneumonia Típica, Trombose</span>
+<span>248/252 casos</span>
+</div>
+</div>
+<div>
+<div class="flex items-center justify-between text-sm mb-1.5">
+<span class="text-primary font-semibold flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#22D3EE]"></span> Casos de Média Complexidade UTI</span>
+<span class="font-telemetry-md font-bold text-[#22D3EE]">93.5% de acerto</span>
+</div>
+<div class="w-full bg-surface-container h-3.5 rounded-full overflow-hidden relative">
+<div class="bg-[#22D3EE] h-full rounded-full shadow-[0_0_12px_#22D3EE]" style="width: 93.5%"></div>
+</div>
+<div class="flex justify-between font-label-sm text-[11px] text-on-surface-variant mt-1">
+<span>Insuficiência Renal Aguda, Síndrome Coronariana Aguda sem supra</span>
+<span>102/109 casos</span>
+</div>
+</div>
+<div>
+<div class="flex items-center justify-between text-sm mb-1.5">
+<span class="text-primary font-semibold flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#FFB95F]"></span> Casos Raros &amp; Zébras Diagnósticas</span>
+<span class="font-telemetry-md font-bold text-tertiary-fixed">87.4% de acerto</span>
+</div>
+<div class="w-full bg-surface-container h-3.5 rounded-full overflow-hidden relative">
+<div class="bg-[#FFB95F] h-full rounded-full shadow-[0_0_12px_#FFB95F]" style="width: 87.4%"></div>
+</div>
+<div class="flex justify-between font-label-sm text-[11px] text-on-surface-variant mt-1">
+<span>Feocromocitoma, Guillain-Barré, Púrpura Trombocitopênica</span>
+<span>34/39 casos</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Log de Casos Desafiadores Concluídos + Bônus XP -->
+<div class="rounded-2xl bg-surface-container-low p-6 shadow-xl relative overflow-hidden border border-outline-variant/25">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#4ADE80] text-xl">verified</span>
+<h3 class="font-headline-sm text-lg font-bold text-primary">Log de Casos Desafiadores Concluídos</h3>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-primary-container/20 text-primary-container font-label-sm text-xs font-bold border border-primary-container/30">
+<span class="material-symbols-outlined text-[16px]">stars</span>
+<span>+3.450 XP BÔNUS</span>
+</div>
+</div>
+<div class="space-y-3">
+<div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 flex items-center justify-between hover:border-primary-container/40 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-container text-2xl">pulmonology</span>
+<div>
+<div class="font-label-md text-label-md font-bold text-primary">Choque Séptico de Foco Pulmonar</div>
+<div class="font-label-sm text-[11px] text-on-surface-variant">Ressuscitação volêmica + Noradrenalina precoce</div>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-md bg-[#4ADE80]/20 text-[#4ADE80] font-label-sm text-xs font-bold border border-[#4ADE80]/30">Conduta 100% Correta</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 flex items-center justify-between hover:border-primary-container/40 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-2xl">cardiology</span>
+<div>
+<div class="font-label-md text-label-md font-bold text-primary">Tromboembolismo Pulmonar Maciço</div>
+<div class="font-label-sm text-[11px] text-on-surface-variant">Estratificação PESI + Alteplase infundida</div>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-md bg-primary-container/20 text-primary-container font-label-sm text-xs font-bold border border-primary-container/30">Trombólise em 18min</span>
+</div>
+<div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 flex items-center justify-between hover:border-primary-container/40 transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary-fixed text-2xl">medication_liquid</span>
+<div>
+<div class="font-label-md text-label-md font-bold text-primary">Cetoacidose Diabética Grave</div>
+<div class="font-label-sm text-[11px] text-on-surface-variant">Correção de Potássio antes da Bomba de Insulina</div>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-md bg-[#4ADE80]/20 text-[#4ADE80] font-label-sm text-xs font-bold border border-[#4ADE80]/30">Manejo Hidroeletrolítico Perfeito</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ========================================================================= -->
+<!-- VIEW 3: 'CRUZADINHAS' (Cruzadinhas Médicas, Anatomia & Farmacologia)       -->
+<!-- ========================================================================= -->
+<div class="view-container view-hidden flex flex-col gap-6" id="viewCruzadinhas">
+<!-- 4 Mini Summary Cards Topo Cruzadinhas -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/25 shadow-lg flex flex-col justify-between hover:border-primary-container/40 transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Tabuleiros Completos</span>
+<span class="material-symbols-outlined text-primary-container text-[20px]">grid_on</span>
+</div>
+<div class="mt-3 flex items-baseline gap-2">
+<span class="font-telemetry-lg text-3xl font-black text-primary">58</span>
+<span class="font-label-sm text-label-sm text-primary-container font-bold">Fechados 100%</span>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant mt-1">Total de 1.160 palavras resolvidas</span>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/25 shadow-lg flex flex-col justify-between hover:border-primary-container/40 transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Vocabulário Médico</span>
+<span class="material-symbols-outlined text-primary-fixed text-[20px]">spellcheck</span>
+</div>
+<div class="mt-3 flex items-baseline gap-2">
+<span class="font-telemetry-lg text-3xl font-black text-primary-container">96.4%</span>
+<span class="font-label-sm text-label-sm text-primary-fixed font-bold">Acurácia</span>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant mt-1">Sinônimos, raízes latinas e termos</span>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/25 shadow-lg flex flex-col justify-between hover:border-primary-container/40 transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Streak de Palavras</span>
+<span class="material-symbols-outlined text-[#FFB95F] text-[20px]">local_fire_department</span>
+</div>
+<div class="mt-3 flex items-baseline gap-2">
+<span class="font-telemetry-lg text-3xl font-black text-tertiary-fixed">42</span>
+<span class="font-label-sm text-label-sm text-tertiary-fixed font-bold">Acertos Diretos</span>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant mt-1">Sem consultar dica ou pista</span>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/25 shadow-lg flex flex-col justify-between hover:border-primary-container/40 transition-all">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase font-semibold">Tempo de Fechamento</span>
+<span class="material-symbols-outlined text-[#4ADE80] text-[20px]">pace</span>
+</div>
+<div class="mt-3 flex items-baseline gap-2">
+<span class="font-telemetry-lg text-3xl font-black text-[#4ADE80]">03m 20s</span>
+<span class="px-1.5 py-0.5 rounded bg-[#4ADE80]/20 text-[#4ADE80] font-label-sm text-[10px] font-bold">Top 1% Geral</span>
+</div>
+<span class="font-label-sm text-[11px] text-on-surface-variant mt-1">Velocidade analítica arcade</span>
+</div>
+</div>
+<!-- Split View Cruzadinhas: Coluna Esquerda (Alas Dominadas) + Coluna Direita (Gráfico de Domínio & Desafios) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- Left Panel Cruzadinhas (lg:col-span-5) -->
+<div class="lg:col-span-5 flex flex-col gap-6 w-full">
+<!-- Card Alas & Especialidades Dominadas -->
+<div class="rounded-2xl bg-surface-container-low p-6 shadow-xl relative overflow-hidden border border-outline-variant/25">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20 mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-xl">school</span>
+<h3 class="font-headline-sm text-lg font-bold text-primary">Alas &amp; Especialidades Dominadas</h3>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-bold">NÍVEIS DE MAESTRIA</span>
+</div>
+<div class="space-y-4">
+<!-- Anatomia -->
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-on-surface font-semibold flex items-center gap-1.5"><span class="material-symbols-outlined text-primary-container text-[16px]">accessibility_new</span> Anatomia Humana</span>
+<span class="text-primary-container font-bold">Nível 5 (76% XP)</span>
+</div>
+<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full shadow-[0_0_8px_#00f5d4]" style="width: 76%"></div>
+</div>
+</div>
+<!-- Farmacologia -->
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-on-surface font-semibold flex items-center gap-1.5"><span class="material-symbols-outlined text-[#22D3EE] text-[16px]">prescriptions</span> Farmacologia Aplicada</span>
+<span class="text-[#22D3EE] font-bold">Nível 4 (79% XP)</span>
+</div>
+<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+<div class="bg-[#22D3EE] h-full rounded-full shadow-[0_0_8px_#22D3EE]" style="width: 79%"></div>
+</div>
+</div>
+<!-- Microbiologia -->
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-on-surface font-semibold flex items-center gap-1.5"><span class="material-symbols-outlined text-tertiary-fixed text-[16px]">biotech</span> Microbiologia</span>
+<span class="text-tertiary-fixed font-bold">Nível 3 (25% XP)</span>
+</div>
+<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+<div class="bg-[#FFB95F] h-full rounded-full shadow-[0_0_8px_#FFB95F]" style="width: 25%"></div>
+</div>
+</div>
+<!-- Histologia -->
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-on-surface font-semibold flex items-center gap-1.5"><span class="material-symbols-outlined text-[#4ADE80] text-[16px]">microbiology</span> Histologia</span>
+<span class="text-[#4ADE80] font-bold">Nível 2 (98% XP)</span>
+</div>
+<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+<div class="bg-[#4ADE80] h-full rounded-full shadow-[0_0_8px_#4ADE80]" style="width: 98%"></div>
+</div>
+</div>
+<!-- Patologia -->
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1.5">
+<span class="text-on-surface font-semibold flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">coronavirus</span> Patologia Geral</span>
+<span class="text-secondary font-bold">Nível 10 (48% XP)</span>
+</div>
+<div class="w-full bg-surface-container h-2.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full shadow-[0_0_8px_#ffb2ba]" style="width: 48%"></div>
+</div>
+</div>
+</div>
+<!-- Destaque Ala Favorita -->
+<div class="mt-5 p-4 rounded-xl bg-surface-container-highest/50 border border-primary-container/30 flex items-center gap-3">
+<div class="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center text-primary-container shrink-0 border border-primary-container/40">
+<span class="material-symbols-outlined text-2xl">star_rate</span>
+</div>
+<div>
+<div class="font-label-sm text-[10px] uppercase tracking-wider text-primary-fixed-dim font-bold">Ala de Maior Desempenho</div>
+<div class="font-headline-sm text-base font-bold text-primary">Farmacologia &amp; Vias de Administração</div>
+<div class="font-label-sm text-xs text-on-surface-variant">Taxa de assertividade em 99.2% de precisão direta</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Panel Cruzadinhas (lg:col-span-7) -->
+<div class="lg:col-span-7 flex flex-col gap-6 w-full">
+<!-- Gráfico de Desempenho e Velocidade por Rodada -->
+<div class="rounded-2xl bg-surface-container-low p-6 shadow-xl relative overflow-hidden border border-outline-variant/25">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-outline-variant/20">
+<div>
+<h3 class="font-headline-md text-xl font-bold text-primary">Radar de Fluência &amp; Vocabulário Médico</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase mt-0.5">Assertividade nas rodadas de tabuleiro</p>
+</div>
+<div class="flex items-center bg-surface-container-lowest p-1 rounded-xl border border-outline-variant/30 shrink-0">
+<button class="px-3 py-1 rounded-lg font-label-sm text-label-sm font-bold bg-primary-container text-on-primary-container shadow-[0_0_12px_rgba(0,245,212,0.35)] transition-all period-toggle-btn" type="button">MÊS</button>
+<button class="px-3 py-1 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-all period-toggle-btn" type="button">SEMPRE</button>
+</div>
+</div>
+<div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+<div class="p-3 rounded-xl bg-surface-container border border-outline-variant/25 flex flex-col">
+<span class="font-label-sm text-[11px] text-on-surface-variant uppercase">Vocabulário Anatômico</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-telemetry-lg text-2xl font-bold text-primary">98.1%</span>
+<span class="font-label-sm text-xs text-primary-container">Excepcional</span>
+</div>
+<div class="w-full bg-surface-container-lowest h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-primary-container h-full" style="width: 98%"></div>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-surface-container border border-outline-variant/25 flex flex-col">
+<span class="font-label-sm text-[11px] text-on-surface-variant uppercase">Posologias &amp; Drogas</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-telemetry-lg text-2xl font-bold text-[#22D3EE]">94.8%</span>
+<span class="font-label-sm text-xs text-[#22D3EE]">Avançado</span>
+</div>
+<div class="w-full bg-surface-container-lowest h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-[#22D3EE] h-full" style="width: 95%"></div>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-surface-container border border-outline-variant/25 flex flex-col">
+<span class="font-label-sm text-[11px] text-on-surface-variant uppercase">Patógenos &amp; Fungos</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="font-telemetry-lg text-2xl font-bold text-tertiary-fixed">91.2%</span>
+<span class="font-label-sm text-xs text-tertiary-fixed">Consistente</span>
+</div>
+<div class="w-full bg-surface-container-lowest h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-tertiary-fixed h-full" style="width: 91%"></div>
+</div>
+</div>
+</div>
+<!-- Lista de Desafios do Tabuleiro -->
+<div class="mt-5 pt-4 border-t border-outline-variant/20">
+<h4 class="font-label-sm text-label-sm text-on-surface-variant uppercase font-bold tracking-wider mb-3">Desafios Ativos de Cruzadinha</h4>
+<div class="space-y-2.5">
+<div class="p-3 rounded-xl bg-surface-container border border-outline-variant/30 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#4ADE80] text-xl">task_alt</span>
+<div>
+<div class="font-label-md text-label-md font-bold text-primary">Desafio Blitz Farmaco 45s</div>
+<div class="font-label-sm text-xs text-on-surface-variant">Concluído em 38 segundos sem falhas</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-[#4ADE80]/20 text-[#4ADE80] font-label-sm text-xs font-bold">100% Acerto</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container border border-outline-variant/30 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-container text-xl">task_alt</span>
+<div>
+<div class="font-label-md text-label-md font-bold text-primary">Anatomia Craniana e Pares Cranianos</div>
+<div class="font-label-sm text-xs text-on-surface-variant">12 pares mapeados de Forame Jugular a Órbita</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-primary-container/20 text-primary-container font-label-sm text-xs font-bold">100% Acerto</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container border border-outline-variant/30 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary-fixed text-xl">task_alt</span>
+<div>
+<div class="font-label-md text-label-md font-bold text-primary">Antibioticoterapia Empírica</div>
+<div class="font-label-sm text-xs text-on-surface-variant">Espectros de Piperacilina-Tazobactam a Meropenem</div>
+</div>
+</div>
+<span class="px-2 py-0.5 rounded bg-tertiary-container/20 text-tertiary-fixed font-label-sm text-xs font-bold">Perfeito</span>
+</div>
+</div>
+</div>
+<!-- Badges de Conquistas em Cruzadinhas -->
+<div class="mt-5 pt-4 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="px-3 py-1 rounded-lg bg-surface-container-highest border border-primary-container/30 text-primary-container font-label-sm text-xs font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">menu_book</span> Dicionário Vivo
+</span>
+<span class="px-3 py-1 rounded-lg bg-surface-container-highest border border-[#22D3EE]/30 text-[#22D3EE] font-label-sm text-xs font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">neurology</span> Mestre das Sinapses
+</span>
+<span class="px-3 py-1 rounded-lg bg-surface-container-highest border border-tertiary-fixed/30 text-tertiary-fixed font-label-sm text-xs font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">bolt</span> Velocidade Relâmpago
+</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">3/3 Conquistadas</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+    (function() {
+      // Alternância de Abas de Período & Mês/Sempre
+      document.querySelectorAll('.period-toggle-btn').forEach(button => {
+        button.addEventListener('click', function() {
+          const parent = button.parentElement;
+          if(!parent) return;
+          parent.querySelectorAll('.period-toggle-btn').forEach(b => {
+            b.classList.remove('bg-primary-container', 'text-on-primary-container', 'shadow-[0_0_12px_rgba(0,245,212,0.35)]', 'font-bold');
+            b.classList.add('text-on-surface-variant');
+          });
+          button.classList.add('bg-primary-container', 'text-on-primary-container', 'shadow-[0_0_12px_rgba(0,245,212,0.35)]', 'font-bold');
+          button.classList.remove('text-on-surface-variant');
+        });
+      });
+
+      // Segmented Control Interativo: GERAL, DDX, CRUZADINHAS
+      const tabButtons = document.querySelectorAll('.nav-segment-btn');
+      const views = {
+        geral: document.getElementById('viewGeral'),
+        ddx: document.getElementById('viewDDX'),
+        cruzadinhas: document.getElementById('viewCruzadinhas')
+      };
+
+      tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.getAttribute('data-tab-target');
+          if(!target || !views[target]) return;
+
+          // Atualizar estilo visual dos botões
+          tabButtons.forEach(b => {
+            b.classList.remove('bg-primary-container', 'text-on-primary-container', 'shadow-[0_0_14px_rgba(0,245,212,0.4)]', 'font-bold');
+            b.classList.add('text-on-surface-variant', 'font-medium', 'hover:bg-surface-container-high');
+          });
+
+          btn.classList.add('bg-primary-container', 'text-on-primary-container', 'shadow-[0_0_14px_rgba(0,245,212,0.4)]', 'font-bold');
+          btn.classList.remove('text-on-surface-variant', 'font-medium', 'hover:bg-surface-container-high');
+
+          // Ocultar todas as views e exibir a view selecionada
+          Object.keys(views).forEach(key => {
+            if(key === target) {
+              views[key].classList.remove('view-hidden');
+            } else {
+              views[key].classList.add('view-hidden');
+            }
+          });
+        });
+      });
+
+      // Feedback no Botão de Exportar Prontuário
+      const exportBtn = document.getElementById('exportBtn');
+      if(exportBtn) {
+        exportBtn.addEventListener('click', function() {
+          const originalContent = exportBtn.innerHTML;
+          exportBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span><span class="font-label-md text-label-md">Gerando PDF Analítico...</span>';
+          exportBtn.classList.add('opacity-80', 'cursor-not-allowed');
+
+          setTimeout(() => {
+            exportBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] text-primary-container">check_circle</span><span class="font-label-md text-label-md text-primary">Relatório Baixado!</span>';
+            setTimeout(() => {
+              exportBtn.innerHTML = originalContent;
+              exportBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+            }, 2000);
+          }, 900);
+        });
+      }
+    })();
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest py-8 shadow-[0_-1px_12px_rgba(0,0,0,0.5)] border-t border-outline-variant/15"><div class="mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 w-full"><div class="flex items-center gap-3 text-on-surface-variant font-label-sm text-label-sm"><span class="w-2 h-2 rounded-full bg-primary-container animate-pulse shadow-[0_0_6px_#00f5d4]"></span><span class="">SERVIDOR HC-PRONTO-SOCORRO ONLINE | DIRETRIZES SBC &amp; CFM 2024</span></div><div class="font-label-sm text-label-sm text-on-surface-variant tracking-wide">Caça-Med Arcade Clínico © 2026</div></div></footer>
+</body></html>

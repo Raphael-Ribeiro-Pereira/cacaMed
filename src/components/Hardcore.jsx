@@ -1,19 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
 import { AlertTriangle, Activity, Thermometer, Droplets, Send, Zap, Target, Skull, Loader2, LogOut, FileWarning, Scale } from "lucide-react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { gerarCasoIatrogeniaHardcore } from '../services/geradorCasos';
+import { chamarOpenRouter } from '../services/openrouter';
+import { registrarPartidaClinica } from '../services/registrarPartidaClinica';
+import { auth } from '../firebase';
 
 // --- Monitor de ECG Animado Realista ---
 function MonitorVital({ bpm }) {
   const controls = useAnimation();
 
-  let corSinal = "#22c55e";
+  let corSinal = "#00f5d4";
   let statusTexto = "ESTÁVEL";
 
-  if (bpm > 100 || bpm < 60) { corSinal = "#eab308"; statusTexto = "ALERTA"; }
-  if (bpm > 140 || bpm < 40) { corSinal = "#ef4444"; statusTexto = "CRÍTICO"; }
-  if (bpm === 0 || isNaN(bpm)) { corSinal = "#ef4444"; statusTexto = "FLATLINE"; }
+  if (bpm > 100 || bpm < 60) { corSinal = "#ffb95f"; statusTexto = "ALERTA"; }
+  if (bpm > 140 || bpm < 40) { corSinal = "#d4004b"; statusTexto = "CRÍTICO"; }
+  if (bpm === 0 || isNaN(bpm)) { corSinal = "#d4004b"; statusTexto = "FLATLINE"; }
 
   useEffect(() => {
     let isMounted = true;
@@ -70,10 +72,10 @@ function MonitorVital({ bpm }) {
   );
 }
 
-export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuario }) {
-  const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+export default function Hardcore({ setTelaAtual, dadosUsuario, setDadosUsuario }) {
   const chatEndRef = useRef(null);
   const startTime = useRef(Date.now());
+  const partidaIdRef = useRef(null);
 
   const [chat, setChat] = useState([]);
   const [inputText, setInputText] = useState("");
@@ -105,55 +107,23 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
   const registrarFimDeJogo = (resultado, motivoDerrota = null, teveProcesso = false) => {
     if (!dadosUsuario || estatisticasSalvas) return;
     setEstatisticasSalvas(true);
-
-    const tempoGastoSegundos = Math.floor((Date.now() - startTime.current) / 1000);
-    const stats = { ...(dadosUsuario.estatisticas || {}) };
-
-    stats.partidas_ganhas = Number(stats.partidas_ganhas) || 0;
-    stats.partidas_perdidas = Number(stats.partidas_perdidas) || 0;
-    stats.mortes_por_erro = Number(stats.mortes_por_erro) || 0;
-    stats.mortes_por_tempo = Number(stats.mortes_por_tempo) || 0;
-    stats.processos_judiciais = Number(stats.processos_judiciais) || 0;
-    stats.tempo_total_jogado = Number(stats.tempo_total_jogado) || 0;
-    stats.especialidades = stats.especialidades || {};
-
-    stats.especialidades['Emergência Hardcore'] = (stats.especialidades['Emergência Hardcore'] || 0) + 1;
-
-    if (resultado === 'vitoria') stats.partidas_ganhas += 1;
-    else if (resultado === 'derrota') {
-      stats.partidas_perdidas += 1;
-      if (motivoDerrota === 'tempo') stats.mortes_por_tempo += 1;
-      if (motivoDerrota === 'erro') stats.mortes_por_erro += 1;
-    }
-
-    if (teveProcesso) stats.processos_judiciais += 1;
-    stats.tempo_total_jogado += tempoGastoSegundos;
-
-    const xpGanho = resultado === 'vitoria' ? 2000 : 200;
-
-    salvarDadosUsuario({
-      ...dadosUsuario,
-      pontuacaoTotal: (dadosUsuario.pontuacaoTotal || 0) + xpGanho,
-      estatisticas: stats
+    if (!partidaIdRef.current) partidaIdRef.current = crypto.randomUUID();
+    registrarPartidaClinica(auth.currentUser.uid, {
+      id: partidaIdRef.current,
+      modo: 'hardcore', resultado, motivoDerrota, teveProcesso,
+      tempoSegundos: Math.floor((Date.now() - startTime.current) / 1000),
+      especialidade: 'Emergência Hardcore', equipe: []
+    }).then(setDadosUsuario).catch(error => {
+      console.error('Falha ao registrar partida Hardcore:', error);
+      setEstatisticasSalvas(false);
     });
   };
 
   const chamarIA = async (prompt) => {
     try {
-      const genAI = new GoogleGenerativeAI(API_KEY);
-      const generationConfig = { temperature: 0.7, responseMimeType: "application/json" };
-      const safetySettings = [
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE }
-      ];
-
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", generationConfig, safetySettings });
-      const result = await model.generateContent(prompt);
-      return result.response.text();
+      return await chamarOpenRouter(prompt, { temperature: 0.7 });
     } catch (e) {
-      console.error("Erro na API do Gemini:", e);
+      console.error("Erro na API de IA:", e);
       return null;
     }
   };
@@ -162,10 +132,8 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
   useEffect(() => {
     const gerarCasoHardcore = async () => {
       setGameState('loading');
-      console.log("[MOTOR HARDCORE] ⚡ Solicitando caso de iatrogenia...");
       try {
         const dados = await gerarCasoIatrogeniaHardcore();
-        console.log("[MOTOR HARDCORE] 📥 JSON recebido com sucesso:", dados);
         
         setPatientInfo({ 
           nome: dados.paciente.nome, 
@@ -190,9 +158,9 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
         setGameState('playing');
         startTime.current = Date.now();
       } catch (error) {
-        console.error("[MOTOR HARDCORE] ❌ Falha Crítica na Geração:", error);
+        console.error("[MOTOR HARDCORE] Falha na geração do caso.");
         setGameState('error');
-        setChat([{ id: 1, sender: 'system', text: `Erro de conexão com a UTI. Recarregue a página.` }]);
+        setChat([{ id: 1, sender: 'system', text: 'Erro de conexão com a UTI. Volte ao centro de comando e tente novamente.' }]);
       }
     };
     gerarCasoHardcore();
@@ -336,7 +304,7 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-slate-300 font-sans flex flex-col md:flex-row overflow-x-hidden relative selection:bg-rose-500/30">
+    <div className={`stitch-integrated stitch-clinical stitch-hardcore min-h-screen bg-[#050505] text-slate-300 font-sans flex flex-col md:flex-row overflow-x-hidden relative selection:bg-rose-500/30 ${showBriefing ? 'is-briefing' : 'is-admitted'} ${isAiThinking ? 'is-thinking' : ''} state-${gameState} ${timeLeft <= 60 ? 'is-urgent' : ''}`}>
 
       {/* Efeito de Sirene Vermelha */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,rgba(244,63,94,0.15)_0%,#050505_80%)] animate-pulse" style={{ animationDuration: '2s' }} />
@@ -446,12 +414,12 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, salvarDadosUsuari
             ].map(v => (
               <div key={v.label} className="bg-[#0f0a0a] border border-rose-900/20 p-3 rounded-lg flex flex-col items-center justify-center relative shadow-inner">
                 <span className={`text-slate-500 text-[8px] uppercase font-bold`}>{v.label}</span>
-                <span className={`text-slate-200 text-2xl font-mono tracking-tighter ${gameState === 'lost' ? 'text-rose-500' : ''}`}>{v.value}</span>
+                <span key={String(v.value)} className={`stitch-vital-value text-slate-200 text-2xl font-mono tracking-tighter ${gameState === 'lost' ? 'text-rose-500' : ''}`}>{v.value}</span>
               </div>
             ))}
             <div className="col-span-2 bg-[#0f0a0a] border border-rose-900/20 p-3 rounded-lg flex flex-col items-center justify-center shadow-inner">
               <span className="text-slate-500 text-[8px] uppercase font-bold">FR (Resp/min)</span>
-              <span className="text-slate-200 text-2xl font-mono tracking-tighter">{gameState === 'lost' ? '--' : vitais.fr}</span>
+              <span key={String(gameState === 'lost' ? '--' : vitais.fr)} className="stitch-vital-value text-slate-200 text-2xl font-mono tracking-tighter">{gameState === 'lost' ? '--' : vitais.fr}</span>
             </div>
           </div>
         </div>

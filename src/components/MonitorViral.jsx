@@ -1,27 +1,33 @@
 import React, { useEffect } from 'react';
-import { motion, useAnimation } from 'framer-motion';
+import { motion, useAnimation, useReducedMotion } from 'framer-motion';
 
 export default function MonitorVital({ bpm }) {
   const controls = useAnimation();
+  const reduceMotion = useReducedMotion();
 
   // Define a cor baseada na gravidade do BPM
-  let corSinal = "#22c55e"; // Verde (Normal: 60 - 100)
+  let corSinal = "#00f5d4"; // Menta da paleta (normal: 60–100)
   let statusTexto = "ESTÁVEL";
 
   if (bpm > 100 || bpm < 60) {
-    corSinal = "#eab308"; // Amarelo (Alerta)
+    corSinal = "#ffb95f"; // Âmbar da paleta
     statusTexto = "ALERTA";
   }
   if (bpm > 140 || bpm < 40) {
-    corSinal = "#ef4444"; // Vermelho (Crítico)
+    corSinal = "#d4004b"; // Vermelho da paleta
     statusTexto = "CRÍTICO";
   }
   if (bpm === 0) {
-    corSinal = "#ef4444"; 
+    corSinal = "#d4004b";
     statusTexto = "FLATLINE";
   }
 
   useEffect(() => {
+    if (reduceMotion) {
+      controls.stop();
+      controls.set({ d: "M 0 12 L 40 12" });
+      return;
+    }
     let isMounted = true;
 
     const animateEcg = async () => {
@@ -71,8 +77,8 @@ export default function MonitorVital({ bpm }) {
 
     animateEcg();
 
-    return () => { isMounted = false; };
-  }, [bpm, controls]);
+    return () => { isMounted = false; controls.stop(); };
+  }, [bpm, controls, reduceMotion]);
 
   return (
     <div className="bg-[#0B1120] border border-white/[0.05] p-5 rounded-2xl flex flex-col justify-center shadow-inner relative overflow-hidden h-32 w-full max-w-sm">
@@ -93,7 +99,7 @@ export default function MonitorVital({ bpm }) {
         {/* Número do BPM que "pula" quando o valor muda */}
         <motion.span
           key={bpm} 
-          initial={{ scale: 1.2, color: '#fff' }}
+          initial={reduceMotion ? false : { scale: 1.2, color: '#dce2f7' }}
           animate={{ scale: 1, color: corSinal }}
           className="text-5xl md:text-6xl font-black font-mono leading-none tracking-tighter w-24"
         >

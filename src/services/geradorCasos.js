@@ -1,68 +1,25 @@
 import HOUSE_PROMPT from '../../.cursor/skills/skill-gerar-caso-house.md?raw';
 import IATROGENIA_PROMPT from '../../.cursor/skills/skill-gerar-caso-iatrogenia.md?raw';
-
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-// Usando Gemini 2.5 Flash conforme solicitado pelo usuário para estabilidade
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+import { chamarOpenRouter } from './openrouter';
 
 /**
  * Gera um novo caso clínico complexo utilizando a lógica da Skill "Dr. House"
- * e a API do Gemini 2.5.
+ * e a API de IA configurada no servidor.
  * 
  * @returns {Promise<Object>} O objeto do caso clínico pronto para ser usado no estado React.
  */
 export const gerarNovoPacienteHouse = async () => {
     try {
-        if (!API_KEY) {
-            throw new Error("Chave de API do Gemini não configurada.");
-        }
-
-        const payload = {
-            contents: [{
-                parts: [{
-                    text: `${HOUSE_PROMPT}\n\nGere um novo caso clínico agora, seguindo estritamente o formato JSON e as regras de mecânicas ocultas.`
-                }]
-            }],
-            generationConfig: {
-                temperature: 0.9,
-                topP: 0.95,
-                topK: 40,
-                maxOutputTokens: 2048,
-                responseMimeType: "application/json" // Força o retorno em JSON se o modelo suportar
-            }
-        };
-
-        const response = await fetch(GEMINI_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            const errorBody = await response.json();
-            console.error("Erro na API do Gemini:", errorBody);
-            throw new Error(`Falha na comunicação com o laboratório central (IA). Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        if (!data.candidates || data.candidates.length === 0) {
-            throw new Error("A IA não retornou nenhum diagnóstico. Tente novamente.");
-        }
-
-        let contentText = data.candidates[0].content.parts[0].text;
+        let contentText = await chamarOpenRouter(`${HOUSE_PROMPT}\n\nGere um novo caso clínico agora, seguindo estritamente o formato JSON e as regras de mecânicas ocultas.`, { temperature: 0.9 });
 
         // Limpeza de redundâncias de markdown (mesmo com responseMimeType, é seguro manter)
         contentText = contentText.replace(/```json/gi, '').replace(/```/g, '').trim();
 
         try {
             const casoClinico = JSON.parse(contentText);
-            console.log("Caso House gerado com sucesso:", casoClinico.paciente.nome);
             return casoClinico;
-        } catch (parseError) {
-            console.error("Erro ao processar JSON da IA:", contentText);
+        } catch {
+            console.error("Erro ao processar JSON da IA.");
             throw new Error("O prontuário da IA veio com erros de formatação. O Dr. House está ilegível.");
         }
 
@@ -74,51 +31,18 @@ export const gerarNovoPacienteHouse = async () => {
 
 /**
  * Gera um novo caso clínico de Iatrogenia (Modo Hardcore)
- * utilizando a Skill específica e a API do Gemini 2.5.
+ * utilizando a Skill específica e a API de IA configurada no servidor.
  */
 export const gerarCasoIatrogeniaHardcore = async () => {
     try {
-        if (!API_KEY) {
-            throw new Error("Chave de API do Gemini não configurada.");
-        }
-
-        const payload = {
-            contents: [{
-                parts: [{
-                    text: `${IATROGENIA_PROMPT}\n\nGere um novo caso de iatrogenia crítica agora, seguindo estritamente o formato JSON solicitado.`
-                }]
-            }],
-            generationConfig: {
-                temperature: 1.0, // Aumentando um pouco a variação para o modo hardcore
-                topP: 0.95,
-                topK: 40,
-                maxOutputTokens: 2048,
-                responseMimeType: "application/json"
-            }
-        };
-
-        const response = await fetch(GEMINI_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            throw new Error(`Falha na comunicação com a UTI (IA). Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        let contentText = data.candidates[0].content.parts[0].text;
+        let contentText = await chamarOpenRouter(`${IATROGENIA_PROMPT}\n\nGere um novo caso de iatrogenia crítica agora, seguindo estritamente o formato JSON solicitado.`, { temperature: 1.0 });
         contentText = contentText.replace(/```json/gi, '').replace(/```/g, '').trim();
 
         try {
             const casoHardcore = JSON.parse(contentText);
-            console.log("Caso Hardcore gerado:", casoHardcore.paciente.nome);
             return casoHardcore;
-        } catch (parseError) {
-            console.error("Erro ao processar JSON Hardcore:", contentText);
+        } catch {
+            console.error("Erro ao processar JSON Hardcore.");
             throw new Error("Falha ao decifrar o prontuário de emergência.");
         }
     } catch (error) {

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
+import { criarMissoesDiarias, dataLocalHoje } from '../utils/missoes';
 
 const SPECIALTIES = [
   { value: "anatomia", label: "Anatomia", emoji: "🦴" },
@@ -53,9 +54,10 @@ export default function Cadastro({ setTelaAtual }) {
         username: name.split(" ")[0].toLowerCase() + Math.floor(Math.random() * 1000),
         titulo: gender === 'doutora' ? 'Doutora' : 'Doutor',
         especialidade: specialty,
-        pontuacaoTotal: 50, // Bônus de cadastro
+        pontuacaoTotal: 100, // Cadastro + missão de login do primeiro dia
         xpTopicos: {},
-        missoesDiarias: { data: new Date().toISOString().split('T')[0], streak: 1 },
+        dataUltimoLogin: dataLocalHoje(),
+        missoesDiarias: criarMissoesDiarias(),
         criadoEm: new Date().toISOString()
       });
 
@@ -80,22 +82,22 @@ export default function Cadastro({ setTelaAtual }) {
   };
 
   return (
-    <div className="h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-hidden flex items-center justify-center selection:bg-emerald-500/30">
+    <div className="stitch-integrated stitch-auth min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-x-hidden flex items-center justify-center selection:bg-emerald-500/30">
       {/* BG */}
       <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)`, backgroundSize: '28px 28px' }} />
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.05)_0%,#0B1120_70%)]" />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(0,245,212,0.05)_0%,#0c1322_70%)]" />
 
       {/* EKG BG */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.025] flex items-center overflow-hidden">
         <motion.svg width="200%" height="100%" xmlns="http://www.w3.org/2000/svg" initial={{ x: 0 }} animate={{ x: "-50%" }} transition={{ repeat: Infinity, ease: "linear", duration: 25 }}>
           <pattern id="ekg-reg" x="0" y="0" width="500" height="200" patternUnits="userSpaceOnUse">
-            <path d="M0 100 H 150 L 160 90 L 170 100 H 180 L 195 70 L 210 140 L 225 40 L 240 110 L 255 100 H 290 L 310 85 L 330 100 H 500" fill="none" stroke="#10b981" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+            <path d="M0 100 H 150 L 160 90 L 170 100 H 180 L 195 70 L 210 140 L 225 40 L 240 110 L 255 100 H 290 L 310 85 L 330 100 H 500" fill="none" stroke="#00f5d4" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
           </pattern>
           <rect x="0" y="0" width="100%" height="100%" fill="url(#ekg-reg)" />
         </motion.svg>
       </div>
 
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_30%,#0B1120_100%)]" />
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_30%,#0c1322_100%)]" />
 
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.97 }}
@@ -114,7 +116,7 @@ export default function Cadastro({ setTelaAtual }) {
               <Stethoscope className="w-5 h-5 text-emerald-500" style={{ filter: 'drop-shadow(0 0 6px rgba(16,185,129,0.6))' }} />
             </motion.div>
             <h1 className="text-white text-xl tracking-wide">
-              CAÇA-MED<motion.span animate={{ opacity: [1, 0, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>_</motion.span>
+              cacoMed<motion.span animate={{ opacity: [1, 0, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>_</motion.span>
             </h1>
           </div>
           <p className="text-emerald-400 text-xs uppercase tracking-[0.2em]">🩺 Novo Plantonista — Cadastre-se</p>
@@ -154,7 +156,7 @@ export default function Cadastro({ setTelaAtual }) {
             </div>
 
             {/* Gender Toggle + Specialty Row */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Gender */}
               <div>
                 <label className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">Título</label>
@@ -206,7 +208,7 @@ export default function Cadastro({ setTelaAtual }) {
             </div>
 
             {/* Password Row */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">Criar Senha</label>
                 <div className={`flex items-center gap-2 bg-[#0B1120] rounded-xl px-3 py-2.5 border-2 transition-all duration-300 ${getBorderClass('password', passwordValid)}`}>

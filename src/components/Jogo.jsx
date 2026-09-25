@@ -1,19 +1,21 @@
 import { useState, useEffect, useMemo, useRef } from 'react'; 
-import { auth, db } from '../firebase'; 
-import { doc, updateDoc } from 'firebase/firestore';
+import { auth } from '../firebase';
 import { gerarTabuleiro } from '../utils/motorTabuleiro'; 
 import Tabuleiro from './Tabuleiro';
+import { chamarOpenRouter } from '../services/openrouter';
+import { registrarCruzadinha } from '../services/registrarCruzadinha';
+import { dataLocalHoje } from '../utils/missoes';
 
-import { Clock, FastForward, LogOut, Stethoscope, Trophy, Ticket, Star, Lock, ChevronDown, User, Activity } from "lucide-react";
+import { Clock, LogOut, Stethoscope, Trophy, Ticket, Star, Lock, ChevronDown, User, Activity } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const getPatente = (nivel) => {
-  if (nivel <= 5) return { titulo: 'Estudante (Básico)', cor: '#64748b' };
-  if (nivel <= 15) return { titulo: 'Estudante (Clínico)', cor: '#0ea5e9' };
+  if (nivel <= 5) return { titulo: 'Estudante (Básico)', cor: '#b9cac4' };
+  if (nivel <= 15) return { titulo: 'Estudante (Clínico)', cor: '#00f5d4' };
   if (nivel <= 30) return { titulo: 'Interno', cor: '#8b5cf6' };
-  if (nivel <= 50) return { titulo: 'Residente (R1)', cor: '#f59e0b' };
-  if (nivel <= 80) return { titulo: 'Médico Especialista', cor: '#ef4444' };
-  return { titulo: 'Chefe de Plantão', cor: '#10b981' };
+  if (nivel <= 50) return { titulo: 'Residente (R1)', cor: '#ffb95f' };
+  if (nivel <= 80) return { titulo: 'Médico Especialista', cor: '#d4004b' };
+  return { titulo: 'Chefe de Plantão', cor: '#00f5d4' };
 };
 
 const aplicarCensura = (textoDica, palavraSecreta) => {
@@ -30,11 +32,6 @@ const aplicarCensura = (textoDica, palavraSecreta) => {
 
 export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtual, usuario, dadosUsuario, setDadosUsuario }) {
   const meuUid = auth.currentUser?.uid || usuario?.uid || dadosUsuario?.uid;
-
-  useEffect(() => {
-    document.documentElement.style.fontSize = '16px';
-    return () => { document.documentElement.style.fontSize = '24px'; };
-  }, []);
 
   const [valores, setValores] = useState({}); 
   const [direcaoAtual, setDirecaoAtual] = useState('horizontal');
@@ -57,6 +54,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   const [errosNaPartida, setErrosNaPartida] = useState(0);
   const [levelUps, setLevelUps] = useState([]);
   const cadeadoRecompensa = useRef(false);
+  const partidaIdRef = useRef(null);
 
   // O COFRE DE XP (A Sala de Espera que resolve o bug do tabuleiro)
   const [xpPendente, setXpPendente] = useState(null);
@@ -67,6 +65,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
   const xpAtualSubtopico = Number(dadosUsuario?.xpTopicos?.[chaveXP]) || 0;
   const nivelAtual = xpAtualSubtopico === 0 ? 0 : Math.floor(Math.sqrt(xpAtualSubtopico / 1000)) + 1;
+  const [nivelDaGrade, setNivelDaGrade] = useState(nivelAtual);
   const xpNivelAtualBase = nivelAtual <= 1 ? 0 : Math.pow(nivelAtual - 1, 2) * 1000;
   const xpProximoNivelBase = nivelAtual === 0 ? 1 : Math.pow(nivelAtual, 2) * 1000;
   const xpProgressoNesteNivel = xpAtualSubtopico - xpNivelAtualBase;
@@ -86,8 +85,8 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   };
 
   const { gradePronta, limites } = useMemo(() => {
-    return gerarTabuleiro(bancoDePalavras, chaveXP, nivelAtual);
-  }, [bancoDePalavras, chaveXP, chaveRecarregamento, nivelAtual]); 
+    return gerarTabuleiro(bancoDePalavras, chaveXP, nivelDaGrade);
+  }, [bancoDePalavras, chaveXP, chaveRecarregamento, nivelDaGrade]);
 
   const palavrasDoTabuleiro = useMemo(() => {
     const palavras = new Set();
@@ -133,7 +132,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       }
       
       setMensagemGeral(`A IA está a estruturar as dicas (Nível ${nivelAtual})...`);
-      const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
       
       const prompt = `Você é um gerador de dicas de palavras cruzadas médicas. Para CADA palavra da lista, crie 3 níveis de dicas (máx 15 palavras cada).
       Nível 1 (laudo): Termos técnicos anatômicos/patológicos formais.
@@ -148,11 +146,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       Lista: ${palavrasDoTabuleiro.join(', ')}`;
 
       try {
-        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        });
-        const dados = await resposta.json();
-        let textoResposta = dados.candidates[0].content.parts[0].text;
+        let textoResposta = await chamarOpenRouter(prompt, { temperature: 0.2 });
         textoResposta = textoResposta.replace(/```json/gi, '').replace(/```/g, '').trim();
         const dicasGeradas = JSON.parse(textoResposta);
         
@@ -173,15 +167,10 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     if (dicasSalvas[termo]) return; 
 
     setMensagemGeral(`Consultando a IA para o termo...`);
-    const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;; 
     const prompt = `Gere dicas para estudantes de medicina. O termo é [${termo}]. Retorne UM JSON estrito com 3 níveis curtos (máx 15 palavras). Formato: {"laudo": "termo técnico...", "residente": "prática clínica...", "paciente": "termo leigo..."}. PROIBIDO usar a palavra '${termo}'.`;
     
     try {
-        const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        });
-        const dados = await resposta.json();
-        let textoResposta = dados.candidates[0].content.parts[0].text;
+        let textoResposta = await chamarOpenRouter(prompt, { temperature: 0.2 });
         textoResposta = textoResposta.replace(/```json/gi, '').replace(/```/g, '').trim();
         const novaDicaObj = JSON.parse(textoResposta);
         setDicasSalvas(prev => ({ ...prev, [termo]: novaDicaObj }));
@@ -189,14 +178,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         const fallback = { laudo: "Erro de ligação. Tente deduzir!", residente: "Indisponível", paciente: "Indisponível" };
         setDicasSalvas(prev => ({ ...prev, [termo]: fallback }));
     }
-  };
-
-  const autoCompletarNivel = () => {
-    const todosOsValoresCorretos = {};
-    gradePronta.forEach(linha => linha.forEach(celula => {
-        if (!celula.vazia && celula.letraCerta !== ' ') todosOsValoresCorretos[`${celula.linha}-${celula.coluna}`] = celula.letraCerta;
-    }));
-    setValores(todosOsValoresCorretos);
   };
 
   useEffect(() => {
@@ -307,7 +288,16 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
              xpTopicos: { ...dadosUsuario.xpTopicos, [chaveXP]: newSubXP }, estatisticas: { ...dadosUsuario.estatisticas, [chaveXP]: novasStatsLocal }, estatisticasGerais: novasStatsGerais, missoesDiarias: missoesAtualizadas
           };
 
-          setXpPendente({ firebase: payloadFirebase, local: payloadLocal });
+          if (!partidaIdRef.current) partidaIdRef.current = crypto.randomUUID();
+          setXpPendente({
+            firebase: payloadFirebase, local: payloadLocal, status: 'pendente',
+            partida: {
+              id: partidaIdRef.current, chaveXP, subMateria, dia: dataLocalHoje(),
+              xp: xpFinalDaFase, palavras: palavrasDoTabuleiro.length,
+              letras: numLetras, tempo: tempoDecorrido, erros: errosNaPartida,
+              maiorPalavra: tamanhoMaiorPalavra
+            }
+          });
         }
       };
       prepararXPPendente();
@@ -315,6 +305,20 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       setVitoria(false); cadeadoRecompensa.current = false; 
     }
   }, [valores, gradePronta, vitoria, usuario, dadosUsuario, nivelAtual, tempoDecorrido, chaveXP, xpAtualSubtopico, materia, subMateria, materiaBlindada, errosNaPartida, meuUid, penalidadeXP]);
+
+  useEffect(() => {
+    if (!xpPendente || xpPendente.status !== 'pendente' || !meuUid) return;
+    setXpPendente(prev => ({ ...prev, status: 'salvando' }));
+    registrarCruzadinha(meuUid, xpPendente.partida)
+      .then(dados => {
+        setDadosUsuario(dados);
+        setXpPendente(prev => ({ ...prev, status: 'salvo' }));
+      })
+      .catch(error => {
+        console.error('Falha ao salvar cruzadinha:', error);
+        setXpPendente(prev => ({ ...prev, status: 'erro' }));
+      });
+  }, [xpPendente, meuUid, setDadosUsuario]);
 
   const atualizarDestaqueVisual = (linha, coluna, direcao) => {
     const celulaAtual = gradePronta[linha][coluna];
@@ -415,18 +419,18 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     }
   };
 
-  const avancarParaProximoNivel = async () => {
-    if (xpPendente && meuUid) {
-      try {
-        await updateDoc(doc(db, "usuarios", meuUid), xpPendente.firebase);
-        setDadosUsuario(prev => ({ ...prev, ...xpPendente.local }));
-      } catch (error) { 
-        console.error("Erro ao guardar pendente:", error); 
-      }
+  const avancarParaProximoNivel = () => {
+    if (xpPendente?.status === 'erro') {
+      setXpPendente(prev => ({ ...prev, status: 'pendente' }));
+      return;
     }
+    if (xpPendente?.status !== 'salvo') return;
 
+    const novoXP = Number(dadosUsuario?.xpTopicos?.[chaveXP]) || 0;
+    setNivelDaGrade(novoXP === 0 ? 0 : Math.floor(Math.sqrt(novoXP / 1000)) + 1);
     setValores({}); setVitoria(false); setJogoIniciado(false); setCelulasDestacadas([]); 
     cadeadoRecompensa.current = false; setLevelUps([]); 
+    partidaIdRef.current = null;
     setDicasSalvas({}); setTempoDecorrido(0); setErrosNaPartida(0); setRelatorioXP(null);
     setProgressoTicket(null); setPalavraSelecionada(null); setNiveisDesbloqueados({}); setPenalidadeXP(0);
     setXpPendente(null); 
@@ -443,7 +447,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   };
 
   return (
-    <div className="h-screen bg-[#0B1120] text-white font-sans relative overflow-x-hidden flex flex-col selection:bg-cyan-500/30 w-full">
+    <div className="stitch-integrated stitch-crossword min-h-screen bg-[#0B1120] text-white font-sans relative overflow-x-hidden flex flex-col selection:bg-cyan-500/30 w-full">
       <style>{`
         @keyframes slideInUpLeft { 0% { transform: translateX(-100%) scale(0.8); opacity: 0; } 100% { transform: translateX(0) scale(1); opacity: 1; } }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -456,21 +460,21 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           {levelUps.map((lu, idx) => {
             if (lu.isPromocao) {
               return (
-                <div key={idx} style={{ backgroundColor: '#fffbeb', padding: '25px 35px', borderRadius: '20px', boxShadow: `0 15px 35px ${lu.cor}50`, display: 'flex', alignItems: 'center', gap: '25px', animation: 'slideInUpLeft 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards', borderLeft: `8px solid ${lu.cor}`, borderRight: `8px solid ${lu.cor}` }}>
+                <div key={idx} style={{ backgroundColor: '#141b2b', padding: '25px 35px', borderRadius: '20px', boxShadow: `0 15px 35px ${lu.cor}50`, display: 'flex', alignItems: 'center', gap: '25px', animation: 'slideInUpLeft 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards', borderLeft: `8px solid ${lu.cor}`, borderRight: `8px solid ${lu.cor}` }}>
                   <div style={{ fontSize: '4.5rem' }}>{lu.icone}</div> 
                   <div style={{ paddingRight: '15px' }}>
                     <div style={{ fontWeight: 'bold', fontSize: '1.8rem', color: lu.cor, marginBottom: '8px', textTransform: 'uppercase' }}>Nova Patente Alcançada!</div>
-                    <div style={{ fontSize: '1.4rem', color: '#334155' }}>De <span style={{color: '#94a3b8', textDecoration: 'line-through'}}>{lu.antigo}</span> ➔ <span style={{color: lu.cor, fontWeight: 'bold', fontSize: '1.8rem'}}>{lu.novo}</span></div>
+                    <div style={{ fontSize: '1.4rem', color: '#dce2f7' }}>De <span style={{color: '#b9cac4', textDecoration: 'line-through'}}>{lu.antigo}</span> ➔ <span style={{color: lu.cor, fontWeight: 'bold', fontSize: '1.8rem'}}>{lu.novo}</span></div>
                   </div>
                 </div>
               );
             }
             return (
-              <div key={idx} style={{ backgroundColor: '#1e293b', padding: '25px 35px', borderRadius: '20px', boxShadow: '0 15px 35px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', gap: '25px', animation: 'slideInUpLeft 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards', borderLeft: '8px solid #fbbf24' }}>
+              <div key={idx} style={{ backgroundColor: '#141b2b', padding: '25px 35px', borderRadius: '20px', boxShadow: '0 15px 35px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', gap: '25px', animation: 'slideInUpLeft 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards', borderLeft: '8px solid #ffb95f' }}>
                 <div style={{ fontSize: '3.8rem' }}>{lu.icone}</div> 
                 <div style={{ paddingRight: '15px' }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '1.6rem', color: '#fbbf24', marginBottom: '8px' }}>Nível Aumentado!</div>
-                  <div style={{ fontSize: '1.3rem', color: '#f8fafc' }}>{lu.nome}: <span style={{color: '#94a3b8', textDecoration: 'line-through'}}>{lu.antigo}</span> ➔ <span style={{color: '#2ed573', fontWeight: 'bold', fontSize: '1.6rem'}}>{lu.novo}</span></div>
+                  <div style={{ fontWeight: 'bold', fontSize: '1.6rem', color: '#ffb95f', marginBottom: '8px' }}>Nível Aumentado!</div>
+                  <div style={{ fontSize: '1.3rem', color: '#dce2f7' }}>{lu.nome}: <span style={{color: '#b9cac4', textDecoration: 'line-through'}}>{lu.antigo}</span> ➔ <span style={{color: '#00f5d4', fontWeight: 'bold', fontSize: '1.6rem'}}>{lu.novo}</span></div>
                 </div>
               </div>
             );
@@ -479,7 +483,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       )}
 
       <header className="h-20 bg-[#1e293b]/50 border-b border-white/[0.05] backdrop-blur-md flex items-center justify-between px-8 relative z-10 shrink-0 shadow-sm">
-        <button onClick={() => setTelaAtual('topicos')} className="flex items-center gap-2.5 text-slate-400 hover:text-rose-400 transition-colors text-sm font-bold">
+        <button onClick={() => { if (!vitoria || xpPendente?.status === 'salvo') setTelaAtual('topicos'); }} className="flex items-center gap-2.5 text-slate-400 hover:text-rose-400 transition-colors text-sm font-bold">
           <LogOut className="w-5 h-5" />
           <span className="hidden md:inline">Abandonar Plantão</span>
         </button>
@@ -497,10 +501,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           </div>
         </div>
 
-        <button onClick={autoCompletarNivel} disabled={!jogoIniciado} className="flex items-center gap-2 bg-[#0F172A] hover:bg-[#151F32] border border-white/[0.1] px-5 py-2.5 rounded-xl text-slate-400 hover:text-white transition-all text-sm font-bold disabled:opacity-40 disabled:cursor-not-allowed shadow-md">
-          <span className="hidden md:inline">Pular Caso</span>
-          <FastForward className="w-5 h-5" />
-        </button>
+        <span className="hidden md:inline text-xs font-mono text-cyan-400">CRUZADINHA · {subMateria}</span>
       </header>
 
       <main className="flex-1 flex flex-col md:flex-row min-h-0 relative z-10 w-full overflow-hidden">
@@ -609,7 +610,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                   <p><strong>3. Bónus Nível:</strong> O seu Nível aumenta o multiplicador.</p>
                   <div className="mt-2 p-3 bg-[#0F172A] rounded-xl border-l-4 border-cyan-500 text-cyan-400 text-xs italic">A partir da sua próxima partida, os pontos serão contabilizados!</div>
                 </div>
-                <button onClick={avancarParaProximoNivel} className="w-full bg-cyan-600 hover:bg-cyan-500 text-[#0B1120] py-3 rounded-xl transition-all relative z-10 text-sm font-bold">Entendido, vamos jogar! ➔</button>
+                <button onClick={avancarParaProximoNivel} className="w-full bg-cyan-600 hover:bg-cyan-500 text-[#0B1120] py-3 rounded-xl transition-all relative z-10 text-sm font-bold">{xpPendente?.status === 'erro' ? 'Tentar salvar novamente' : xpPendente?.status === 'salvo' ? 'Entendido, vamos jogar! ➔' : 'Salvando progresso...'}</button>
               </motion.div>
             ) : (
               <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} transition={{ type: 'spring', damping: 20, stiffness: 100 }} className="w-full max-w-md rounded-3xl p-8 text-center relative overflow-hidden bg-[#0f1f18] border border-emerald-500/30 shadow-[0_0_60px_rgba(16,185,129,0.15)]">
@@ -672,9 +673,9 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                 </div>
 
                 <button onClick={avancarParaProximoNivel} className="w-full bg-[#1e293b] hover:bg-[#151F32] border border-white/[0.1] text-white py-3 rounded-xl transition-all relative z-10 text-sm font-bold">
-                  Próximo Plantão
+                  {xpPendente?.status === 'erro' ? 'Tentar salvar novamente' : xpPendente?.status === 'salvo' ? 'Próximo Plantão' : 'Salvando progresso...'}
                 </button>
-                <button onClick={() => setTelaAtual('topicos')} className="w-full mt-2 bg-transparent text-slate-400 hover:text-white py-2 transition-all relative z-10 text-xs font-bold">
+                <button onClick={() => { if (xpPendente?.status === 'salvo') setTelaAtual('topicos'); }} disabled={xpPendente?.status !== 'salvo'} className="w-full mt-2 bg-transparent text-slate-400 hover:text-white py-2 transition-all relative z-10 text-xs font-bold disabled:opacity-40">
                   Sair
                 </button>
               </motion.div>

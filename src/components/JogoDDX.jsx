@@ -1,19 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import { AlertTriangle, Activity, Thermometer, Droplets, HeartPulse, Send, Zap, Target, Skull, Loader2, Bug, Clock, LogOut, ClipboardList, Users, Scale } from "lucide-react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { gerarNovoPacienteHouse } from '../services/geradorCasos';
+import { chamarOpenRouter } from '../services/openrouter';
+import { registrarPartidaClinica } from '../services/registrarPartidaClinica';
+import { reembolsarTicketDDX } from '../services/ticketsDDX';
+import { auth } from '../firebase';
 
 // --- Monitor de ECG Animado Realista ---
 function MonitorVital({ bpm }) {
   const controls = useAnimation();
 
-  let corSinal = "#22c55e"; 
+  let corSinal = "#00f5d4";
   let statusTexto = "ESTÁVEL";
 
-  if (bpm > 100 || bpm < 60) { corSinal = "#eab308"; statusTexto = "ALERTA"; }
-  if (bpm > 140 || bpm < 40) { corSinal = "#ef4444"; statusTexto = "CRÍTICO"; }
-  if (bpm === 0 || isNaN(bpm)) { corSinal = "#ef4444"; statusTexto = "FLATLINE"; }
+  if (bpm > 100 || bpm < 60) { corSinal = "#ffb95f"; statusTexto = "ALERTA"; }
+  if (bpm > 140 || bpm < 40) { corSinal = "#d4004b"; statusTexto = "CRÍTICO"; }
+  if (bpm === 0 || isNaN(bpm)) { corSinal = "#d4004b"; statusTexto = "FLATLINE"; }
 
   useEffect(() => {
     let isMounted = true;
@@ -79,31 +82,35 @@ function MonitorVital({ bpm }) {
 }
 
 const DOCTOR_MAP = {
-  house: { emoji: '🦯', name: 'Dr. House', specialty: 'Diagnóstico Geral / Nefro', color: '#38bdf8' },
-  cameron: { emoji: '🛡️', name: 'Dra. Cameron', specialty: 'Imunologia / Alergia', color: '#ec4899' },
-  foreman: { emoji: '🧠', name: 'Dr. Foreman', specialty: 'Neurologia', color: '#f59e0b' },
-  chase: { emoji: '🔪', name: 'Dr. Chase', specialty: 'Cirurgia / UTI / Cardio', color: '#f43f5e' },
-  treze: { emoji: '🧬', name: 'Treze', specialty: 'Doenças Raras / Genética', color: '#10b981' },
-  wilson: { emoji: '🎗️', name: 'Dr. Wilson', specialty: 'Oncologia', color: '#fbbf24' },
-  taub: { emoji: '👁️', name: 'Dr. Taub', specialty: 'Dermatologia / Cir. Plástica', color: '#60a5fa' },
-  kutner: { emoji: '⚡', name: 'Dr. Kutner', specialty: 'Trauma / Intoxicação', color: '#eab308' },
-  cuddy: { emoji: '📋', name: 'Dra. Cuddy', specialty: 'Administração / Ética', color: '#a78bfa' },
+  house: { emoji: '🦯', name: 'Dr. House', specialty: 'Diagnóstico Geral / Nefro', color: '#00f5d4' },
+  cameron: { emoji: '🛡️', name: 'Dra. Cameron', specialty: 'Imunologia / Alergia', color: '#8b5cf6' },
+  foreman: { emoji: '🧠', name: 'Dr. Foreman', specialty: 'Neurologia', color: '#ffb95f' },
+  chase: { emoji: '🔪', name: 'Dr. Chase', specialty: 'Cirurgia / UTI / Cardio', color: '#d4004b' },
+  treze: { emoji: '🧬', name: 'Treze', specialty: 'Doenças Raras / Genética', color: '#00f5d4' },
+  wilson: { emoji: '🎗️', name: 'Dr. Wilson', specialty: 'Oncologia', color: '#ffb95f' },
+  taub: { emoji: '👁️', name: 'Dr. Taub', specialty: 'Dermatologia / Cir. Plástica', color: '#8b5cf6' },
+  kutner: { emoji: '⚡', name: 'Dr. Kutner', specialty: 'Trauma / Intoxicação', color: '#d4004b' },
+  cuddy: { emoji: '📋', name: 'Dra. Cuddy', specialty: 'Administração / Ética', color: '#00f5d4' },
 };
 
-export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarDadosUsuario }) {
+export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, setDadosUsuario }) {
   const equipe = configDDX?.equipe || ['house'];
   const dificuldade = configDDX?.dificuldade || 'residente';
   const tempoModo = configDDX?.tempo || 'casual';
   const casoPreCarregado = configDDX?.casoPreCarregado || {};
-  const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+  const entradaId = configDDX?.entradaId;
 
   const chatEndRef = useRef(null);
   const startTime = useRef(Date.now()); // Para medir o tempo da partida
   const gabaritoHouseRef = useRef(null); // Armazena a lógica oculta do Dr. House
+  const partidaIdRef = useRef(null);
+  const primeiraRespostaRecebidaRef = useRef(false);
+  const reembolsoEmAndamentoRef = useRef(false);
   
   const [chat, setChat] = useState([]);
   const [inputText, setInputText] = useState("");
   const [gameState, setGameState] = useState('loading'); 
+  const [reembolsoStatus, setReembolsoStatus] = useState('aguardando');
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [timeLeft, setTimeLeft] = useState(tempoModo === 'ranqueado' ? 600 : null);
   
@@ -139,66 +146,41 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
   const registrarFimDeJogo = (resultado, motivoDerrota = null, teveProcesso = false) => {
     if (!dadosUsuario || estatisticasSalvas) return;
     setEstatisticasSalvas(true);
-
-    const tempoGastoSegundos = Math.floor((Date.now() - startTime.current) / 1000);
-    
-    // Clona as estatísticas que já existem (para não apagar as Cruzadinhas)
-    const stats = { ...(dadosUsuario.estatisticas || {}) };
-
-    // VACINA: Garante que os campos do DDX existem e são números reais!
-    stats.partidas_ganhas = Number(stats.partidas_ganhas) || 0;
-    stats.partidas_perdidas = Number(stats.partidas_perdidas) || 0;
-    stats.mortes_por_erro = Number(stats.mortes_por_erro) || 0;
-    stats.mortes_por_tempo = Number(stats.mortes_por_tempo) || 0;
-    stats.processos_judiciais = Number(stats.processos_judiciais) || 0;
-    stats.tempo_total_jogado = Number(stats.tempo_total_jogado) || 0;
-    stats.especialidades = stats.especialidades || {};
-    stats.medicos_recrutados = stats.medicos_recrutados || {};
-
-    // A Matemática Segura
-    if (resultado === 'vitoria') stats.partidas_ganhas += 1;
-    else if (resultado === 'derrota') {
-      stats.partidas_perdidas += 1;
-      if (motivoDerrota === 'tempo') stats.mortes_por_tempo += 1;
-      if (motivoDerrota === 'erro') stats.mortes_por_erro += 1;
-    }
-
-    if (teveProcesso) stats.processos_judiciais += 1;
-
-    const esp = casoPreCarregado.especialidade || 'Geral';
-    stats.especialidades[esp] = (stats.especialidades[esp] || 0) + 1;
-
-    equipe.forEach(docId => {
-      stats.medicos_recrutados[docId] = (stats.medicos_recrutados[docId] || 0) + 1;
-    });
-
-    stats.tempo_total_jogado += tempoGastoSegundos;
-
-    // Injeta os dados consolidados no Firebase
-    salvarDadosUsuario({
-      ...dadosUsuario,
-      pontuacaoTotal: (dadosUsuario.pontuacaoTotal || 0) + (resultado === 'vitoria' ? 1000 : 100),
-      estatisticas: stats
+    if (!partidaIdRef.current) partidaIdRef.current = crypto.randomUUID();
+    registrarPartidaClinica(auth.currentUser.uid, {
+      id: partidaIdRef.current,
+      modo: 'ddx', resultado, motivoDerrota, teveProcesso,
+      tempoSegundos: Math.floor((Date.now() - startTime.current) / 1000),
+      especialidade: casoPreCarregado.especialidade || 'Geral', equipe
+    }).then(setDadosUsuario).catch(error => {
+      console.error('Falha ao registrar partida DDX:', error);
+      setEstatisticasSalvas(false);
     });
   };
 
   const chamarIA = async (prompt) => {
     try {
-      const genAI = new GoogleGenerativeAI(API_KEY);
-      const generationConfig = { temperature: 0.2, responseMimeType: "application/json" };
-      const safetySettings = [
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE }
-      ];
-
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash", generationConfig, safetySettings });
-      const result = await model.generateContent(prompt);
-      return result.response.text();
+      return await chamarOpenRouter(prompt, { temperature: 0.2 });
     } catch (e) { 
-      console.error("Erro na API do Gemini:", e);
+      console.error("Erro na API de IA:", e);
       return null; 
+    }
+  };
+
+  const reembolsarFalhaInicial = async () => {
+    if (reembolsoEmAndamentoRef.current) return;
+    reembolsoEmAndamentoRef.current = true;
+    setGameState('technical_error');
+    setReembolsoStatus('processando');
+    try {
+      const saldo = await reembolsarTicketDDX(auth.currentUser?.uid, entradaId);
+      setDadosUsuario(prev => ({ ...prev, tickets: saldo }));
+      setReembolsoStatus('concluido');
+    } catch (error) {
+      console.error('Falha ao reembolsar entrada DDX:', error);
+      setReembolsoStatus('falhou');
+    } finally {
+      reembolsoEmAndamentoRef.current = false;
     }
   };
 
@@ -261,6 +243,7 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, salvarD
       } catch (error) {
         console.error("Erro ao invocar o Dr. House:", error);
         setChat([{ id: 1, sender: 'system', text: '⚠️ [FALHA DE COMUNICAÇÃO]: Servidor de diagnósticos offline.' }]);
+        reembolsarFalhaInicial();
       }
     };
 
@@ -383,6 +366,10 @@ FORMATO JSON OBRIGATÓRIO:
     setIsAiThinking(false);
 
     if (!res) {
+      if (!primeiraRespostaRecebidaRef.current) {
+        await reembolsarFalhaInicial();
+        return;
+      }
       setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: '⚠️ Falha no Link Neural com a equipe. Tente novamente.' }]);
       return;
     }
@@ -390,6 +377,10 @@ FORMATO JSON OBRIGATÓRIO:
     try {
       let limpo = res.replace(/```json/gi, '').replace(/```/g, '').trim();
       const dadosIA = JSON.parse(limpo);
+      if (dificuldade === 'residente' && !['exames', 'tratamentos', 'diagnosticos'].every(chave => Array.isArray(dadosIA.opcoes_jogador?.[chave]) && dadosIA.opcoes_jogador[chave].length > 0)) {
+        throw new Error('A IA não forneceu opções clínicas utilizáveis.');
+      }
+      primeiraRespostaRecebidaRef.current = true;
 
       if (dadosIA.status_paciente) {
         const { novos_vitais: nv, satisfacao: sat, narrativa_clinica, dica_redencao } = dadosIA.status_paciente;
@@ -436,7 +427,11 @@ FORMATO JSON OBRIGATÓRIO:
       }
 
     } catch (err) {
-      console.error("Erro no JSON da IA:", err, res);
+      console.error("Erro ao interpretar a resposta da IA no DDX.");
+      if (!primeiraRespostaRecebidaRef.current) {
+        await reembolsarFalhaInicial();
+        return;
+      }
       setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: '⚠️ O preceptor ficou confuso com a resposta. Escolha novamente.' }]);
     }
   };
@@ -494,8 +489,23 @@ FORMATO JSON OBRIGATÓRIO:
     );
   }
 
+  if (gameState === 'technical_error') {
+    return (
+      <div className="stitch-page stitch-loading p-4">
+        <div className="stitch-panel max-w-md w-full p-8 text-center">
+          <AlertTriangle className="mx-auto mb-4 text-amber-400" size={34} />
+          <h1 className="text-xl font-bold text-white mb-3">Não foi possível iniciar o plantão</h1>
+          <p className="text-slate-300 mb-5">A equipe não forneceu as opções clínicas. Nenhuma derrota será registrada.</p>
+          <p className="text-sm mb-5">{reembolsoStatus === 'concluido' ? 'Seu ticket foi devolvido.' : reembolsoStatus === 'falhou' ? 'O reembolso não foi confirmado. Tente novamente.' : 'Devolvendo seu ticket...'}</p>
+          {reembolsoStatus === 'falhou' && <button className="stitch-primary" onClick={reembolsarFalhaInicial}>Tentar reembolso</button>}
+          {reembolsoStatus === 'concluido' && <button className="stitch-primary" onClick={() => setTelaAtual('menu')}>Voltar ao centro de comando</button>}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#0B1120] text-slate-300 font-sans flex flex-col md:flex-row overflow-x-hidden relative">
+    <div className={`stitch-integrated stitch-clinical min-h-screen bg-[#0B1120] text-slate-300 font-sans flex flex-col md:flex-row overflow-x-hidden relative ${showBriefing ? 'is-briefing' : 'is-admitted'} ${isAiThinking ? 'is-thinking' : ''} state-${gameState} ${timeLeft !== null && timeLeft <= 60 ? 'is-urgent' : ''}`}>
       
       <AnimatePresence>
         {showProcesso && (
@@ -574,7 +584,7 @@ FORMATO JSON OBRIGATÓRIO:
             <motion.div initial={{ y: 50, scale: 0.95 }} animate={{ y: 0, scale: 1 }} transition={{ type: "spring", damping: 25, stiffness: 120 }} className="relative w-full max-w-lg bg-[#151F32] rounded-xl shadow-[0_30px_100px_rgba(0,0,0,0.8),_0_0_0_1px_rgba(255,255,255,0.05)] pt-10 pb-8 px-8 text-slate-300 font-sans border-t-4 border-cyan-500/40">
               <div className="absolute top-6 right-8 rotate-[15deg] pointer-events-none"><div className="border-[3px] border-rose-500/40 text-rose-500/50 px-3 py-0.5 rounded text-lg font-black tracking-widest uppercase">Urgência</div></div>
               <div className="border-b-[1.5px] border-white/[0.05] pb-4 mb-5 flex items-end justify-between">
-                <div><h2 className="text-xl font-black uppercase tracking-tight text-white leading-none">CAÇA-MED Hospital</h2><p className="text-[9px] font-bold text-cyan-500/70 uppercase tracking-[0.2em] mt-1.5">Ficha de Admissão — Leito 04</p></div>
+                <div><h2 className="text-xl font-black uppercase tracking-tight text-white leading-none">cacoMed Hospital</h2><p className="text-[9px] font-bold text-cyan-500/70 uppercase tracking-[0.2em] mt-1.5">Ficha de Admissão — Leito 04</p></div>
                 <ClipboardList className="w-6 h-6 text-slate-500 mb-1" />
               </div>
               <div className="space-y-5 relative z-10">
@@ -621,9 +631,11 @@ FORMATO JSON OBRIGATÓRIO:
           
           <h2 className="text-xl text-white font-bold mb-3 flex items-center gap-3">
             {patientInfo.nome}
-            <div className={`flex items-center justify-center bg-[#151F32] border border-white/[0.1] rounded-full w-8 h-8 shadow-inner transition-all ${satisfacao <= 20 ? 'animate-pulse border-rose-500 bg-rose-500/20' : ''}`} title={`Satisfação: ${satisfacao}%`}>
-              <span className="text-lg leading-none">{getEmojiSatisfacao(satisfacao)}</span>
-            </div>
+            {Number(vitais.fc) > 0 && (
+              <div className={`flex items-center justify-center bg-[#151F32] border border-white/[0.1] rounded-full w-8 h-8 shadow-inner transition-all ${satisfacao <= 20 ? 'animate-pulse border-rose-500 bg-rose-500/20' : ''}`} title={`Satisfação: ${satisfacao}%`}>
+                <span className="text-lg leading-none">{getEmojiSatisfacao(satisfacao)}</span>
+              </div>
+            )}
           </h2>
           
           <div className="flex flex-wrap gap-2 items-start">
@@ -647,13 +659,13 @@ FORMATO JSON OBRIGATÓRIO:
               <div key={v.label} className="bg-[#0B1120] border border-white/[0.03] p-3 rounded-lg flex flex-col items-center justify-center relative shadow-inner">
                 <v.icon className={`w-3 h-3 text-${v.color}-500 absolute top-2 left-2 opacity-30`} />
                 <span className={`text-${v.color}-500 text-[8px] uppercase font-bold`}>{v.label}</span>
-                <span className={`text-${v.color}-400 text-2xl font-mono tracking-tighter`}>{v.value}</span>
+                <span key={String(v.value)} className={`stitch-vital-value text-${v.color}-400 text-2xl font-mono tracking-tighter`}>{v.value}</span>
               </div>
             ))}
             <div className="col-span-2 bg-[#0B1120] border border-white/[0.03] p-3 rounded-lg flex flex-col items-center justify-center relative shadow-inner">
                 <Thermometer className="w-3 h-3 text-orange-500 absolute top-2 left-2 opacity-30" />
                 <span className="text-orange-500 text-[8px] uppercase font-bold">Temp (°C)</span>
-                <span className="text-orange-400 text-2xl font-mono tracking-tighter">{gameState==='lost' ? '--' : vitais.temp}</span>
+                <span key={String(gameState === 'lost' ? '--' : vitais.temp)} className="stitch-vital-value text-orange-400 text-2xl font-mono tracking-tighter">{gameState==='lost' ? '--' : vitais.temp}</span>
             </div>
           </div>
         </div>
@@ -741,10 +753,15 @@ FORMATO JSON OBRIGATÓRIO:
                   ) : (
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-slate-400 font-bold uppercase text-xs tracking-widest flex items-center gap-2">Selecione um {menuAtivo} <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" /></span>
+                        <span className="text-slate-400 font-bold uppercase text-xs tracking-widest flex items-center gap-2">{menuAtivo === 'exames' ? 'Selecione um exame' : menuAtivo === 'tratamentos' ? 'Selecione um tratamento' : 'Selecione um diagnóstico'} <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" /></span>
                         <button onClick={() => setMenuAtivo(null)} className="text-slate-400 hover:text-white text-xs font-bold px-3 py-1.5 rounded bg-[#151F32] border border-white/[0.05] transition-colors">← Voltar aos Botões</button>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {!opcoesTaticas[menuAtivo]?.length && (
+                          <p className="col-span-full rounded-lg border border-amber-500/30 bg-[#151F32] p-4 text-sm text-slate-300">
+                            Opções indisponíveis porque a equipe não respondeu. Volte ao plantão e tente a reunião clínica novamente.
+                          </p>
+                        )}
                         {opcoesTaticas[menuAtivo]?.map((opcao, idx) => {
                           const { bloqueado, bloqueador, corBloqueador } = isOptionBlocked(menuAtivo, idx);
                           return (

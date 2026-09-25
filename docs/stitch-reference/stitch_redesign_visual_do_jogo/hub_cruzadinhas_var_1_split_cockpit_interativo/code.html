@@ -1,0 +1,1101 @@
+<!DOCTYPE html><html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Caça-Med | Terminal de Plantão - Split Cockpit Cruzadas DDX</title>
+<!-- Tailwind CSS v3 via CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Space Grotesk, Plus Jakarta Sans & IBM Plex Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;0,700;1,400&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
+          },
+          colors: {
+            medical: {
+              bg: '#070b14',
+              surface: '#0d1527',
+              panel: '#111c34',
+              card: '#14203d',
+              border: '#1e2f57',
+              cyan: '#00f5d4',
+              teal: '#08f7af',
+              amber: '#f59e0b',
+              purple: '#a855f7',
+              rose: '#f43f5e',
+              blue: '#38bdf8'
+            }
+          },
+          boxShadow: {
+            'neon-cyan': '0 0 25px -4px rgba(0, 245, 212, 0.45)',
+            'neon-cyan-glow': '0 0 35px 2px rgba(0, 245, 212, 0.35)',
+            'neon-blue': '0 0 20px -3px rgba(56, 189, 248, 0.4)',
+            'inner-glow': 'inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-animations">
+    @keyframes ecgScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .ecg-line {
+      animation: ecgScroll 18s linear infinite;
+    }
+    .scrollbar-cyber::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .scrollbar-cyber::-webkit-scrollbar-track {
+      background: rgba(13, 21, 39, 0.7);
+      border-radius: 9999px;
+    }
+    .scrollbar-cyber::-webkit-scrollbar-thumb {
+      background: #1e2f57;
+      border-radius: 9999px;
+    }
+    .scrollbar-cyber::-webkit-scrollbar-thumb:hover {
+      background: #00f5d4;
+    }
+  </style>
+</head>
+<body class="bg-medical-bg text-slate-100 font-sans min-h-screen relative overflow-x-hidden selection:bg-medical-cyan selection:text-slate-900 flex flex-col">
+<!-- Background Animated Cyber Grid & ECG Pulse Line -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-30">
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_top,#122347_0%,transparent_70%)]"></div>
+<div class="absolute inset-0 bg-[radial-gradient(#1e2f57_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-40"></div>
+<div class="absolute bottom-10 left-0 w-[200%] h-24 overflow-hidden opacity-25">
+<svg class="w-full h-full ecg-line" fill="none" preserveAspectRatio="none" viewBox="0 0 1600 120">
+<path d="M0,60 L200,60 L215,60 L225,25 L235,95 L245,60 L280,60 L310,60 L320,45 L330,75 L340,60 L500,60 L515,60 L525,15 L535,105 L545,60 L580,60 L610,60 L620,40 L630,80 L640,60 L800,60 L815,60 L825,25 L835,95 L845,60 L880,60 L910,60 L920,45 L930,75 L940,60 L1100,60 L1115,60 L1125,15 L1135,105 L1145,60 L1180,60 L1210,60 L1220,40 L1230,80 L1240,60 L1400,60 L1415,60 L1425,25 L1435,95 L1445,60 L1480,60 L1600,60" stroke="#00f5d4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<!-- BEGIN: MainHeader -->
+<header class="relative z-30 w-full border-b border-medical-border/80 bg-medical-bg/90 backdrop-blur-md px-4 sm:px-8 py-3.5 shadow-lg">
+<div class="w-full flex items-center justify-between gap-4">
+<!-- Brand & Title Group -->
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-3 group cursor-pointer">
+<!-- Stethoscope Cyber Icon with Cyan Neon Pulse -->
+<div class="w-11 h-11 rounded-xl bg-medical-panel border border-medical-cyan/40 flex items-center justify-center shadow-neon-cyan/40 shadow-sm transition-transform duration-300 group-hover:scale-105">
+<svg class="w-6 h-6 text-medical-cyan drop-shadow-[0_0_8px_#00f5d4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="font-display font-black text-xl tracking-wider text-white">CAÇA-MED</span>
+<span class="px-2 py-0.5 text-[10px] font-mono font-bold tracking-widest uppercase bg-medical-cyan/15 text-medical-cyan border border-medical-cyan/30 rounded">HUD V2.4</span>
+</div>
+<p class="text-[11px] font-mono tracking-widest text-slate-400 uppercase">Terminal de Plantão</p>
+</div>
+</div>
+</div>
+<!-- Navigation Tabs -->
+<nav class="hidden md:flex items-center gap-1.5 p-1 rounded-xl bg-medical-panel/70 border border-medical-border text-xs font-semibold">
+<a class="px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/40 transition" href="#triagem">TRIAGEM</a>
+<!-- Active Tab: Cruzadas DDX -->
+<a class="px-4 py-2 rounded-lg text-medical-cyan bg-medical-cyan/10 border border-medical-cyan/30 font-bold flex items-center gap-2 shadow-[0_0_12px_rgba(0,245,212,0.15)]" href="#cruzadas">
+<span class="w-2 h-2 rounded-full bg-medical-cyan animate-pulse"></span>
+          CRUZADAS DDX
+        </a>
+<a class="px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/40 transition" href="#sala-vermelha">SALA VERMELHA</a>
+<a class="px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/40 transition" href="#prontuarios">PRONTUÁRIOS</a>
+</nav>
+<!-- Profile & Plantão Telemetry -->
+<div class="flex items-center gap-4">
+<!-- XP Progress Telemetry -->
+<div class="hidden lg:flex flex-col items-end">
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-slate-200">Dr. Raphael Vance</span>
+<span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40">R1</span>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<div class="w-32 h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+<div class="h-full bg-gradient-to-r from-medical-cyan to-blue-500 rounded-full" style="width: 68%;"></div>
+</div>
+<span class="text-[10px] font-mono text-medical-cyan">68% R2</span>
+</div>
+</div>
+<!-- Plantão Active Status Badge -->
+<div class="flex items-center gap-2 bg-emerald-950/40 border border-emerald-500/30 px-3 py-1.5 rounded-xl">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+</span>
+<span class="text-[11px] font-mono font-bold tracking-wider text-emerald-400 uppercase hidden sm:inline">Plantão Ativo</span>
+</div>
+<!-- Doctor Avatar -->
+<div class="relative cursor-pointer">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 p-[1.5px] shadow-sm">
+<div class="w-full h-full bg-medical-panel rounded-[10px] flex items-center justify-center overflow-hidden">
+<span class="font-display font-bold text-xs text-medical-cyan">RV</span>
+</div>
+</div>
+<span class="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-medical-bg rounded-full"></span>
+</div>
+</div>
+</div>
+</header>
+<!-- END: MainHeader -->
+<!-- Top Action Bar (Full width, no artificial max-w restriction) -->
+<div class="relative z-20 w-full px-4 sm:px-8 border-b border-medical-border/60 bg-medical-bg/50 backdrop-blur-sm py-3">
+<div class="w-full flex flex-col md:flex-row md:items-center justify-between gap-4"><div class="flex items-center justify-between w-full"><button aria-label="Voltar ao Centro de Comando" class="px-4 py-2.5 rounded-xl bg-medical-surface hover:bg-medical-panel border border-medical-border hover:border-medical-cyan/50 text-slate-300 hover:text-medical-cyan flex items-center gap-2.5 transition-all duration-200 shadow-sm active:scale-95 group text-xs font-mono font-semibold" title="Voltar ao Centro de Comando" type="button"><svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg><span class="">VOLTAR AO CENTRO DE COMANDO</span></button></div></div>
+</div>
+<!-- BEGIN: Split Cockpit Dual Panel (100% width) -->
+<main class="relative z-10 w-full flex-1 px-4 sm:px-8 py-6">
+<div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- LEFT PANEL: Medical Wing Selector List (lg:col-span-4 xl:col-span-4) -->
+<section class="lg:col-span-4 xl:col-span-4 flex flex-col gap-3">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-medical-cyan animate-pulse"></span>
+<h2 class="font-display font-bold text-sm tracking-wider uppercase text-slate-200">
+              ALAS MÉDICAS (ESPECIALIDADES)
+            </h2>
+</div>
+<span class="text-[11px] font-mono text-slate-400">ESCOLHA UMA ALA</span>
+</div>
+<!-- Vertical Cards Container -->
+<div class="flex flex-col gap-3 scrollbar-cyber max-h-[calc(100vh-250px)] overflow-y-auto pr-1" id="wingsListContainer"><div class="wing-card p-4 rounded-2xl cursor-pointer transition-all duration-300 border relative overflow-hidden group bg-medical-panel border-medical-cyan shadow-neon-cyan-glow ring-1 ring-medical-cyan/60 translate-x-1">
+          <div class="absolute -top-10 -right-10 w-24 h-24 bg-medical-cyan/15 rounded-full blur-xl pointer-events-none"></div>
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl bg-medical-card border border-medical-cyan/70 text-medical-cyan shadow-neon-cyan/40 shadow-sm flex items-center justify-center transition-all">
+                <svg class="w-7 h-7 drop-shadow-[0_0_8px_rgba(0,245,212,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 5.5a2.5 2.5 0 00-4.24-1.76l-1.52 1.52a2.5 2.5 0 00-3.48 0L8.24 3.74A2.5 2.5 0 004 5.5a2.5 2.5 0 001.52 2.3l.22.09a2.5 2.5 0 000 3.48l-1.52 1.52A2.5 2.5 0 005.5 17a2.5 2.5 0 002.3-1.52l.09-.22a2.5 2.5 0 003.48 0l1.52 1.52A2.5 2.5 0 0017 18.5a2.5 2.5 0 00-1.76-4.24l-1.52-1.52a2.5 2.5 0 000-3.48l1.52-1.52A2.5 2.5 0 0019 5.5z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>
+              </div>
+              <div>
+                <h3 class="font-display font-bold text-base text-medical-cyan drop-shadow-[0_0_8px_rgba(0,245,212,0.3)] transition-colors">
+                  Anatomia
+                </h3>
+                <span class="text-[10px] font-mono text-slate-400 block">11 tópicos clínicos</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <span class="px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider uppercase rounded-md bg-medical-cyan/20 text-medical-cyan border border-medical-cyan/40">
+                NÍVEL 5
+              </span>
+              <span class="text-[10px] font-mono font-bold text-amber-400">1.5x XP</span>
+            </div>
+          </div>
+
+          <!-- XP Telemetry Bar -->
+          <div class="pt-2 border-t border-slate-800/80">
+            <div class="flex items-center justify-between text-[10px] font-mono mb-1">
+              <span class="text-slate-400">MAESTRIA DA ALA</span>
+              <span class="font-bold text-medical-cyan">76% XP</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-500" style="width: 76%; background-color: #00f5d4; box-shadow: 0 0 10px #00f5d4;"></div>
+            </div>
+          </div>
+        </div><div class="wing-card p-4 rounded-2xl cursor-pointer transition-all duration-300 border relative overflow-hidden group bg-medical-surface hover:bg-medical-panel/90 border-medical-border hover:border-slate-500">
+          
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl bg-medical-card border border-medical-border text-slate-300 group-hover:text-white flex items-center justify-center transition-all">
+                <svg class="w-7 h-7 drop-shadow-[0_0_8px_rgba(8,247,175,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>
+              </div>
+              <div>
+                <h3 class="font-display font-bold text-base text-white group-hover:text-medical-cyan transition-colors">
+                  Farmacologia
+                </h3>
+                <span class="text-[10px] font-mono text-slate-400 block">7 tópicos clínicos</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <span class="px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider uppercase rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                NÍVEL 4
+              </span>
+              <span class="text-[10px] font-mono font-bold text-amber-400">1.4x XP</span>
+            </div>
+          </div>
+
+          <!-- XP Telemetry Bar -->
+          <div class="pt-2 border-t border-slate-800/80">
+            <div class="flex items-center justify-between text-[10px] font-mono mb-1">
+              <span class="text-slate-400">MAESTRIA DA ALA</span>
+              <span class="font-bold text-slate-200">79% XP</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-500" style="width: 79%; background-color: #08f7af; "></div>
+            </div>
+          </div>
+        </div><div class="wing-card p-4 rounded-2xl cursor-pointer transition-all duration-300 border relative overflow-hidden group bg-medical-surface hover:bg-medical-panel/90 border-medical-border hover:border-slate-500">
+          
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl bg-medical-card border border-medical-border text-slate-300 group-hover:text-white flex items-center justify-center transition-all">
+                <svg class="w-7 h-7 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>
+              </div>
+              <div>
+                <h3 class="font-display font-bold text-base text-white group-hover:text-medical-cyan transition-colors">
+                  Microbiologia
+                </h3>
+                <span class="text-[10px] font-mono text-slate-400 block">5 tópicos clínicos</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <span class="px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider uppercase rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                NÍVEL 3
+              </span>
+              <span class="text-[10px] font-mono font-bold text-amber-400">1.3x XP</span>
+            </div>
+          </div>
+
+          <!-- XP Telemetry Bar -->
+          <div class="pt-2 border-t border-slate-800/80">
+            <div class="flex items-center justify-between text-[10px] font-mono mb-1">
+              <span class="text-slate-400">MAESTRIA DA ALA</span>
+              <span class="font-bold text-slate-200">35% XP</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-500" style="width: 35%; background-color: #f59e0b; "></div>
+            </div>
+          </div>
+        </div><div class="wing-card p-4 rounded-2xl cursor-pointer transition-all duration-300 border relative overflow-hidden group bg-medical-surface hover:bg-medical-panel/90 border-medical-border hover:border-slate-500">
+          
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl bg-medical-card border border-medical-border text-slate-300 group-hover:text-white flex items-center justify-center transition-all">
+                <svg class="w-7 h-7 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>
+              </div>
+              <div>
+                <h3 class="font-display font-bold text-base text-white group-hover:text-medical-cyan transition-colors">
+                  Histologia
+                </h3>
+                <span class="text-[10px] font-mono text-slate-400 block">4 tópicos clínicos</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <span class="px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider uppercase rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                NÍVEL 2
+              </span>
+              <span class="text-[10px] font-mono font-bold text-amber-400">1.2x XP</span>
+            </div>
+          </div>
+
+          <!-- XP Telemetry Bar -->
+          <div class="pt-2 border-t border-slate-800/80">
+            <div class="flex items-center justify-between text-[10px] font-mono mb-1">
+              <span class="text-slate-400">MAESTRIA DA ALA</span>
+              <span class="font-bold text-slate-200">98% XP</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-500" style="width: 98%; background-color: #38bdf8; "></div>
+            </div>
+          </div>
+        </div><div class="wing-card p-4 rounded-2xl cursor-pointer transition-all duration-300 border relative overflow-hidden group bg-medical-surface hover:bg-medical-panel/90 border-medical-border hover:border-slate-500">
+          
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl bg-medical-card border border-medical-border text-slate-300 group-hover:text-white flex items-center justify-center transition-all">
+                <svg class="w-7 h-7 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>
+              </div>
+              <div>
+                <h3 class="font-display font-bold text-base text-white group-hover:text-medical-cyan transition-colors">
+                  Imunologia
+                </h3>
+                <span class="text-[10px] font-mono text-slate-400 block">4 tópicos clínicos</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <span class="px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider uppercase rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                NÍVEL 2
+              </span>
+              <span class="text-[10px] font-mono font-bold text-amber-400">1.3x XP</span>
+            </div>
+          </div>
+
+          <!-- XP Telemetry Bar -->
+          <div class="pt-2 border-t border-slate-800/80">
+            <div class="flex items-center justify-between text-[10px] font-mono mb-1">
+              <span class="text-slate-400">MAESTRIA DA ALA</span>
+              <span class="font-bold text-slate-200">14% XP</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-500" style="width: 14%; background-color: #a855f7; "></div>
+            </div>
+          </div>
+        </div><div class="wing-card p-4 rounded-2xl cursor-pointer transition-all duration-300 border relative overflow-hidden group bg-medical-surface hover:bg-medical-panel/90 border-medical-border hover:border-slate-500">
+          
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl bg-medical-card border border-medical-border text-slate-300 group-hover:text-white flex items-center justify-center transition-all">
+                <svg class="w-7 h-7 drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>
+              </div>
+              <div>
+                <h3 class="font-display font-bold text-base text-white group-hover:text-medical-cyan transition-colors">
+                  Patologia
+                </h3>
+                <span class="text-[10px] font-mono text-slate-400 block">4 tópicos clínicos</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <span class="px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider uppercase rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                NÍVEL 10
+              </span>
+              <span class="text-[10px] font-mono font-bold text-amber-400">2.0x XP</span>
+            </div>
+          </div>
+
+          <!-- XP Telemetry Bar -->
+          <div class="pt-2 border-t border-slate-800/80">
+            <div class="flex items-center justify-between text-[10px] font-mono mb-1">
+              <span class="text-slate-400">MAESTRIA DA ALA</span>
+              <span class="font-bold text-slate-200">48% XP</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-500" style="width: 48%; background-color: #f43f5e; "></div>
+            </div>
+          </div>
+        </div></div>
+</section>
+<!-- RIGHT PANEL: Primary Topics Panel + Shift Summary Card (lg:col-span-8 xl:col-span-8) -->
+<section class="lg:col-span-8 xl:col-span-8 flex flex-col gap-5">
+<!-- Active Wing Detail Banner Header -->
+<div class="w-full bg-medical-surface border border-medical-cyan/50 rounded-2xl p-5 shadow-[0_0_25px_-5px_rgba(0,245,212,0.18)] transition-all flex flex-col md:flex-row md:items-center justify-between gap-4" id="wingHeroHeader" style="border-color: rgb(0, 245, 212);">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-2xl bg-medical-panel border border-medical-cyan/50 flex items-center justify-center text-medical-cyan shadow-neon-cyan shadow-sm flex-shrink-0" id="wingHeroIcon"><svg class="w-7 h-7 drop-shadow-[0_0_8px_rgba(0,245,212,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 5.5a2.5 2.5 0 00-4.24-1.76l-1.52 1.52a2.5 2.5 0 00-3.48 0L8.24 3.74A2.5 2.5 0 004 5.5a2.5 2.5 0 001.52 2.3l.22.09a2.5 2.5 0 000 3.48l-1.52 1.52A2.5 2.5 0 005.5 17a2.5 2.5 0 002.3-1.52l.09-.22a2.5 2.5 0 003.48 0l1.52 1.52A2.5 2.5 0 0017 18.5a2.5 2.5 0 00-1.76-4.24l-1.52-1.52a2.5 2.5 0 000-3.48l1.52-1.52A2.5 2.5 0 0019 5.5z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg></div>
+<div>
+<div class="flex items-center gap-2.5">
+<span class="text-[10px] font-mono tracking-widest uppercase text-medical-cyan font-bold bg-medical-cyan/10 px-2 py-0.5 rounded border border-medical-cyan/30">
+                  FOCO DO PLANTÃO SELECIONADO
+                </span>
+<span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-bold" id="wingHeroLevelBadge">NÍVEL 5</span>
+</div>
+<h2 class="text-2xl font-display font-black text-white tracking-wide mt-1" id="wingHeroTitle">Anatomia</h2>
+<p class="text-xs text-slate-400 font-medium" id="wingHeroSubtitle">Anatomia Humana Sistemática e Topográfica</p>
+</div>
+</div>
+<!-- Wing Quick Telemetry Stats -->
+<div class="flex items-center gap-3 bg-medical-panel/90 border border-medical-border px-4 py-2.5 rounded-xl self-start md:self-auto">
+<div class="text-left">
+<span class="text-[10px] font-mono text-slate-400 uppercase block">XP da Ala</span>
+<span class="text-base font-mono font-bold text-medical-cyan" id="wingHeroXp">76%</span>
+</div>
+<div class="w-px h-8 bg-medical-border"></div>
+<div class="text-left">
+<span class="text-[10px] font-mono text-slate-400 uppercase block">Multiplicador</span>
+<span class="text-base font-mono font-bold text-amber-400" id="wingHeroMultiplier">1.5x XP</span>
+</div>
+<div class="w-px h-8 bg-medical-border"></div>
+<div class="text-left">
+<span class="text-[10px] font-mono text-slate-400 uppercase block">Tópicos</span>
+<span class="text-base font-mono font-bold text-white" id="wingHeroTopicCount">11</span>
+</div>
+</div>
+</div>
+<!-- Topics Systems Direct Interactive Panel -->
+<div class="bg-medical-surface border border-medical-border rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col flex-1">
+<div class="flex items-center justify-between pb-3 mb-4 border-b border-medical-border/70">
+<div>
+<h3 class="font-display font-bold text-base text-white tracking-wide flex items-center gap-2">
+<span class="">SISTEMAS &amp; TÓPICOS DA ALA</span>
+<span class="text-[11px] font-mono text-medical-cyan bg-medical-cyan/10 px-2 py-0.5 rounded border border-medical-cyan/30">ABERTO DIRETAMENTE</span>
+</h3>
+<p class="text-xs text-slate-400 mt-0.5">Selecione o tópico específico de plantão para o cálculo de pontuação clínica.</p>
+</div>
+<div class="text-[11px] font-mono text-slate-400 hidden sm:block">
+              Clique para selecionar o tópico ativo
+            </div>
+</div>
+<!-- Dynamic Topics Systems List (Scrollable direct panel) -->
+<div class="space-y-2.5 max-h-[460px] overflow-y-auto scrollbar-cyber pr-1.5" id="topicsContainer"><div class="topic-item group cursor-pointer p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between border-medical-cyan bg-medical-panel/95 shadow-[0_0_18px_rgba(0,245,212,0.18)] ring-1 ring-medical-cyan/50">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <!-- Custom Medical Radio -->
+              <span class="topic-radio w-4 h-4 rounded-full flex items-center justify-center transition-all border-2 border-medical-cyan bg-medical-cyan">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-950"></span>
+              </span>
+              <div>
+                <span class="topic-name font-display text-sm font-bold text-white drop-shadow-[0_0_6px_rgba(0,245,212,0.3)]">
+                  Sistema esquelético
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
+                  NÍVEL 4 • 5540/7000 XP
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400 bg-slate-900/60 border border-slate-800 px-2 py-0.5 rounded hidden sm:inline-block">
+                84% acertos
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-medical-cyan/20 text-medical-cyan border border-medical-cyan/40">SELECIONADO</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-2.5 pl-7">
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-300 bg-medical-cyan" style="width: 79%;"></div>
+            </div>
+          </div>
+        </div><div class="topic-item group cursor-pointer p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between border-medical-border bg-medical-card/60 hover:bg-medical-card hover:border-slate-500">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <!-- Custom Medical Radio -->
+              <span class="topic-radio w-4 h-4 rounded-full flex items-center justify-center transition-all border border-slate-600 bg-slate-900 group-hover:border-medical-cyan/60">
+                
+              </span>
+              <div>
+                <span class="topic-name font-display text-sm font-bold text-slate-200 group-hover:text-white">
+                  Sistema muscular
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
+                  NÍVEL 2 • 934/3000 XP
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400 bg-slate-900/60 border border-slate-800 px-2 py-0.5 rounded hidden sm:inline-block">
+                62% acertos
+              </span>
+              <span class="text-[11px] font-mono font-bold text-slate-400 group-hover:text-slate-200">31%</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-2.5 pl-7">
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-300 bg-blue-400" style="width: 31%;"></div>
+            </div>
+          </div>
+        </div><div class="topic-item group cursor-pointer p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between border-medical-border bg-medical-card/60 hover:bg-medical-card hover:border-slate-500">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <!-- Custom Medical Radio -->
+              <span class="topic-radio w-4 h-4 rounded-full flex items-center justify-center transition-all border border-slate-600 bg-slate-900 group-hover:border-medical-cyan/60">
+                
+              </span>
+              <div>
+                <span class="topic-name font-display text-sm font-bold text-slate-200 group-hover:text-white">
+                  Sistema nervoso
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
+                  NÍVEL 1 • 931/1000 XP
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400 bg-slate-900/60 border border-slate-800 px-2 py-0.5 rounded hidden sm:inline-block">
+                91% acertos
+              </span>
+              <span class="text-[11px] font-mono font-bold text-slate-400 group-hover:text-slate-200">93%</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-2.5 pl-7">
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-300 bg-amber-400" style="width: 93%;"></div>
+            </div>
+          </div>
+        </div><div class="topic-item group cursor-pointer p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between border-medical-border bg-medical-card/60 hover:bg-medical-card hover:border-slate-500">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <!-- Custom Medical Radio -->
+              <span class="topic-radio w-4 h-4 rounded-full flex items-center justify-center transition-all border border-slate-600 bg-slate-900 group-hover:border-medical-cyan/60">
+                
+              </span>
+              <div>
+                <span class="topic-name font-display text-sm font-bold text-slate-200 group-hover:text-white">
+                  Sistema circulatório
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
+                  NÍVEL 1 • 131/1000 XP
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400 bg-slate-900/60 border border-slate-800 px-2 py-0.5 rounded hidden sm:inline-block">
+                55% acertos
+              </span>
+              <span class="text-[11px] font-mono font-bold text-slate-400 group-hover:text-slate-200">13%</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-2.5 pl-7">
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-300 bg-rose-400" style="width: 13%;"></div>
+            </div>
+          </div>
+        </div><div class="topic-item group cursor-pointer p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between border-medical-border bg-medical-card/60 hover:bg-medical-card hover:border-slate-500">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <!-- Custom Medical Radio -->
+              <span class="topic-radio w-4 h-4 rounded-full flex items-center justify-center transition-all border border-slate-600 bg-slate-900 group-hover:border-medical-cyan/60">
+                
+              </span>
+              <div>
+                <span class="topic-name font-display text-sm font-bold text-slate-200 group-hover:text-white">
+                  Sistema linfático
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
+                  NÍVEL 2 • 77/3000 XP
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400 bg-slate-900/60 border border-slate-800 px-2 py-0.5 rounded hidden sm:inline-block">
+                40% acertos
+              </span>
+              <span class="text-[11px] font-mono font-bold text-slate-400 group-hover:text-slate-200">3%</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-2.5 pl-7">
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-300 bg-purple-400" style="width: 3%;"></div>
+            </div>
+          </div>
+        </div><div class="topic-item group cursor-pointer p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between border-medical-border bg-medical-card/60 hover:bg-medical-card hover:border-slate-500">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <!-- Custom Medical Radio -->
+              <span class="topic-radio w-4 h-4 rounded-full flex items-center justify-center transition-all border border-slate-600 bg-slate-900 group-hover:border-medical-cyan/60">
+                
+              </span>
+              <div>
+                <span class="topic-name font-display text-sm font-bold text-slate-200 group-hover:text-white">
+                  Sistema respiratório
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
+                  NÍVEL 1 • 1/1000 XP
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400 bg-slate-900/60 border border-slate-800 px-2 py-0.5 rounded hidden sm:inline-block">
+                48% acertos
+              </span>
+              <span class="text-[11px] font-mono font-bold text-slate-400 group-hover:text-slate-200">1%</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-2.5 pl-7">
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-300 bg-cyan-400" style="width: 1%;"></div>
+            </div>
+          </div>
+        </div><div class="topic-item group cursor-pointer p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between border-medical-border bg-medical-card/60 hover:bg-medical-card hover:border-slate-500">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <!-- Custom Medical Radio -->
+              <span class="topic-radio w-4 h-4 rounded-full flex items-center justify-center transition-all border border-slate-600 bg-slate-900 group-hover:border-medical-cyan/60">
+                
+              </span>
+              <div>
+                <span class="topic-name font-display text-sm font-bold text-slate-200 group-hover:text-white">
+                  Sistema digestório
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
+                  NÍVEL 0 • 0/1000 XP
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400 bg-slate-900/60 border border-slate-800 px-2 py-0.5 rounded hidden sm:inline-block">
+                Novo
+              </span>
+              <span class="text-[11px] font-mono font-bold text-slate-400 group-hover:text-slate-200">0%</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-2.5 pl-7">
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-300 bg-slate-700" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div><div class="topic-item group cursor-pointer p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between border-medical-border bg-medical-card/60 hover:bg-medical-card hover:border-slate-500">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <!-- Custom Medical Radio -->
+              <span class="topic-radio w-4 h-4 rounded-full flex items-center justify-center transition-all border border-slate-600 bg-slate-900 group-hover:border-medical-cyan/60">
+                
+              </span>
+              <div>
+                <span class="topic-name font-display text-sm font-bold text-slate-200 group-hover:text-white">
+                  Sistema urinário
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
+                  NÍVEL 1 • 1/1000 XP
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400 bg-slate-900/60 border border-slate-800 px-2 py-0.5 rounded hidden sm:inline-block">
+                50% acertos
+              </span>
+              <span class="text-[11px] font-mono font-bold text-slate-400 group-hover:text-slate-200">1%</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-2.5 pl-7">
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-300 bg-amber-400" style="width: 1%;"></div>
+            </div>
+          </div>
+        </div><div class="topic-item group cursor-pointer p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between border-medical-border bg-medical-card/60 hover:bg-medical-card hover:border-slate-500">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <!-- Custom Medical Radio -->
+              <span class="topic-radio w-4 h-4 rounded-full flex items-center justify-center transition-all border border-slate-600 bg-slate-900 group-hover:border-medical-cyan/60">
+                
+              </span>
+              <div>
+                <span class="topic-name font-display text-sm font-bold text-slate-200 group-hover:text-white">
+                  Sistema reprodutor
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
+                  NÍVEL 0 • 0/1000 XP
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400 bg-slate-900/60 border border-slate-800 px-2 py-0.5 rounded hidden sm:inline-block">
+                Novo
+              </span>
+              <span class="text-[11px] font-mono font-bold text-slate-400 group-hover:text-slate-200">0%</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-2.5 pl-7">
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-300 bg-slate-700" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div><div class="topic-item group cursor-pointer p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between border-medical-border bg-medical-card/60 hover:bg-medical-card hover:border-slate-500">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <!-- Custom Medical Radio -->
+              <span class="topic-radio w-4 h-4 rounded-full flex items-center justify-center transition-all border border-slate-600 bg-slate-900 group-hover:border-medical-cyan/60">
+                
+              </span>
+              <div>
+                <span class="topic-name font-display text-sm font-bold text-slate-200 group-hover:text-white">
+                  Sistema endócrino
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
+                  NÍVEL 2 • 201/3000 XP
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400 bg-slate-900/60 border border-slate-800 px-2 py-0.5 rounded hidden sm:inline-block">
+                72% acertos
+              </span>
+              <span class="text-[11px] font-mono font-bold text-slate-400 group-hover:text-slate-200">7%</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-2.5 pl-7">
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-300 bg-indigo-400" style="width: 7%;"></div>
+            </div>
+          </div>
+        </div><div class="topic-item group cursor-pointer p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between border-medical-border bg-medical-card/60 hover:bg-medical-card hover:border-slate-500">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <!-- Custom Medical Radio -->
+              <span class="topic-radio w-4 h-4 rounded-full flex items-center justify-center transition-all border border-slate-600 bg-slate-900 group-hover:border-medical-cyan/60">
+                
+              </span>
+              <div>
+                <span class="topic-name font-display text-sm font-bold text-slate-200 group-hover:text-white">
+                  Sistema tegumentar
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
+                  NÍVEL 0 • 0/1000 XP
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400 bg-slate-900/60 border border-slate-800 px-2 py-0.5 rounded hidden sm:inline-block">
+                Novo
+              </span>
+              <span class="text-[11px] font-mono font-bold text-slate-400 group-hover:text-slate-200">0%</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-2.5 pl-7">
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-300 bg-slate-700" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div></div>
+<!-- Challenge Shift Summary Bottom Action Bar -->
+<div class="mt-5 pt-4 border-t border-medical-border bg-medical-panel/50 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 p-5 sm:p-6 rounded-b-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+<!-- Left Info of Shift -->
+<div class="flex flex-wrap items-center gap-4 text-xs font-mono">
+<div class="flex items-center gap-2 text-slate-200 bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800">
+<span class="text-amber-400 text-base">🎫</span>
+<span class="">CUSTO: <strong class="text-white">1 TICKET DE PLANTÃO</strong></span>
+</div>
+<div class="flex items-center gap-2 text-slate-200 bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800">
+<span class="text-medical-cyan text-base">🎯</span>
+<span class="">TÓPICO SELECIONADO: <strong class="text-medical-cyan font-bold" id="activeTopicLabel">Sistema esquelético</strong></span>
+</div>
+<div class="flex items-center gap-2 text-slate-300">
+<span class="text-emerald-400 font-bold">●</span>
+<span class="">RECOMPENSA: <strong class="text-emerald-300 font-mono">+350 XP DDX</strong></span>
+</div>
+</div>
+<!-- Action Buttons Group -->
+<div class="flex items-center gap-3">
+<!-- Giant Tactile Launch CTA Button -->
+<button class="flex-1 sm:flex-initial py-3.5 px-7 rounded-xl font-display font-extrabold text-sm tracking-wider uppercase text-slate-950 bg-medical-cyan hover:bg-[#26fedc] shadow-neon-cyan active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer" id="btnLaunchShift" type="button">
+<span class="text-base">▶</span>
+<span class="">INICIAR PLANTÃO (GERAR TABULEIRO)</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- END: Split Cockpit Dual Panel -->
+<!-- BEGIN: MainFooter -->
+<footer class="relative z-10 w-full border-t border-medical-border/60 bg-medical-bg/95 py-4 px-4 sm:px-8 text-center text-xs font-mono text-slate-500 mt-auto">
+<div class="w-full flex flex-col sm:flex-row items-center justify-between gap-3">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="text-slate-400 font-semibold">SERVIDOR HC-PRONTO-SOCORRO ONLINE</span>
+<span class="">•</span>
+<span class="">LATÊNCIA: 14ms</span>
+<span class="">•</span>
+<span class="text-medical-cyan font-bold">PROTOCOLO DDX ATIVO</span>
+</div>
+<div class="text-slate-400">
+        DIRETRIZES SBC &amp; CFM 2024 • CAÇA-MED v2.4 ENGINE • MODO COCKPIT
+      </div>
+</div>
+</footer>
+<!-- END: MainFooter -->
+<!-- Interactive State & Scripts -->
+<script data-purpose="split-cockpit-logic">
+    // Dataset for Medical Wings and their respective Topics
+    const wingsData = [
+      {
+        id: "anatomia",
+        name: "Anatomia",
+        subtitle: "Anatomia Humana Sistemática e Topográfica",
+        level: 5,
+        xp: 76,
+        multiplier: "1.5x XP",
+        color: "#00f5d4",
+        svgIcon: `<svg class="w-7 h-7 drop-shadow-[0_0_8px_rgba(0,245,212,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 5.5a2.5 2.5 0 00-4.24-1.76l-1.52 1.52a2.5 2.5 0 00-3.48 0L8.24 3.74A2.5 2.5 0 004 5.5a2.5 2.5 0 001.52 2.3l.22.09a2.5 2.5 0 000 3.48l-1.52 1.52A2.5 2.5 0 005.5 17a2.5 2.5 0 002.3-1.52l.09-.22a2.5 2.5 0 003.48 0l1.52 1.52A2.5 2.5 0 0017 18.5a2.5 2.5 0 00-1.76-4.24l-1.52-1.52a2.5 2.5 0 000-3.48l1.52-1.52A2.5 2.5 0 0019 5.5z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>`,
+        topics: [
+          { name: "Sistema esquelético", level: 4, xpCurrent: 5540, xpMax: 7000, percent: 79, accuracy: "84% acertos", barColor: "bg-medical-cyan" },
+          { name: "Sistema muscular", level: 2, xpCurrent: 934, xpMax: 3000, percent: 31, accuracy: "62% acertos", barColor: "bg-blue-400" },
+          { name: "Sistema nervoso", level: 1, xpCurrent: 931, xpMax: 1000, percent: 93, accuracy: "91% acertos", barColor: "bg-amber-400" },
+          { name: "Sistema circulatório", level: 1, xpCurrent: 131, xpMax: 1000, percent: 13, accuracy: "55% acertos", barColor: "bg-rose-400" },
+          { name: "Sistema linfático", level: 2, xpCurrent: 77, xpMax: 3000, percent: 3, accuracy: "40% acertos", barColor: "bg-purple-400" },
+          { name: "Sistema respiratório", level: 1, xpCurrent: 1, xpMax: 1000, percent: 1, accuracy: "48% acertos", barColor: "bg-cyan-400" },
+          { name: "Sistema digestório", level: 0, xpCurrent: 0, xpMax: 1000, percent: 0, accuracy: "Novo", barColor: "bg-slate-700" },
+          { name: "Sistema urinário", level: 1, xpCurrent: 1, xpMax: 1000, percent: 1, accuracy: "50% acertos", barColor: "bg-amber-400" },
+          { name: "Sistema reprodutor", level: 0, xpCurrent: 0, xpMax: 1000, percent: 0, accuracy: "Novo", barColor: "bg-slate-700" },
+          { name: "Sistema endócrino", level: 2, xpCurrent: 201, xpMax: 3000, percent: 7, accuracy: "72% acertos", barColor: "bg-indigo-400" },
+          { name: "Sistema tegumentar", level: 0, xpCurrent: 0, xpMax: 1000, percent: 0, accuracy: "Novo", barColor: "bg-slate-700" },
+        ]
+      },
+      {
+        id: "farmacologia",
+        name: "Farmacologia",
+        subtitle: "Farmacodinâmica, Antibióticos e Posologia Hospitalar",
+        level: 4,
+        xp: 79,
+        multiplier: "1.4x XP",
+        color: "#08f7af",
+        svgIcon: `<svg class="w-7 h-7 drop-shadow-[0_0_8px_rgba(8,247,175,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>`,
+        topics: [
+          { name: "Antibióticos & Mecanismos", level: 4, xpCurrent: 4800, xpMax: 6000, percent: 80, accuracy: "88% acertos", barColor: "bg-emerald-400" },
+          { name: "Drogas Vasoativas & Choque", level: 3, xpCurrent: 2100, xpMax: 4000, percent: 52, accuracy: "74% acertos", barColor: "bg-teal-400" },
+          { name: "Analgésicos & Opióides", level: 2, xpCurrent: 1450, xpMax: 3000, percent: 48, accuracy: "79% acertos", barColor: "bg-blue-400" },
+          { name: "Cardiovasculares & Anti-hipertensivos", level: 3, xpCurrent: 3100, xpMax: 4000, percent: 77, accuracy: "81% acertos", barColor: "bg-emerald-400" },
+          { name: "Psicofármacos & Ansiolíticos", level: 1, xpCurrent: 450, xpMax: 1000, percent: 45, accuracy: "65% acertos", barColor: "bg-amber-400" },
+          { name: "Toxicologia & Antídotos de Emergência", level: 2, xpCurrent: 980, xpMax: 3000, percent: 32, accuracy: "60% acertos", barColor: "bg-rose-400" },
+          { name: "Anticoagulantes & Trombolíticos", level: 1, xpCurrent: 220, xpMax: 1000, percent: 22, accuracy: "52% acertos", barColor: "bg-purple-400" }
+        ]
+      },
+      {
+        id: "microbiologia",
+        name: "Microbiologia",
+        subtitle: "Bacteriologia, Virologia Clínica e Micoses Invasivas",
+        level: 3,
+        xp: 35,
+        multiplier: "1.3x XP",
+        color: "#f59e0b",
+        svgIcon: `<svg class="w-7 h-7 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>`,
+        topics: [
+          { name: "Bactérias Gram-positivas & Cocos", level: 3, xpCurrent: 1400, xpMax: 4000, percent: 35, accuracy: "71% acertos", barColor: "bg-amber-400" },
+          { name: "Bacilos Gram-negativos & Resistência", level: 2, xpCurrent: 800, xpMax: 3000, percent: 26, accuracy: "64% acertos", barColor: "bg-amber-500" },
+          { name: "Vírus Respiratórios & Painéis Moleculares", level: 2, xpCurrent: 1200, xpMax: 3000, percent: 40, accuracy: "75% acertos", barColor: "bg-blue-400" },
+          { name: "Micobactérias & Tuberculose", level: 1, xpCurrent: 300, xpMax: 1000, percent: 30, accuracy: "58% acertos", barColor: "bg-purple-400" },
+          { name: "Fungos Oportunistas", level: 0, xpCurrent: 0, xpMax: 1000, percent: 0, accuracy: "Novo", barColor: "bg-slate-700" }
+        ]
+      },
+      {
+        id: "histologia",
+        name: "Histologia",
+        subtitle: "Tecidos Fundamentais, Microscopia Óptica e Biópsias",
+        level: 2,
+        xp: 98,
+        multiplier: "1.2x XP",
+        color: "#38bdf8",
+        svgIcon: `<svg class="w-7 h-7 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>`,
+        topics: [
+          { name: "Tecido Epitelial de Revestimento", level: 2, xpCurrent: 2940, xpMax: 3000, percent: 98, accuracy: "94% acertos", barColor: "bg-blue-400" },
+          { name: "Tecido Conjuntivo Propriamente Dito", level: 1, xpCurrent: 600, xpMax: 1000, percent: 60, accuracy: "73% acertos", barColor: "bg-cyan-400" },
+          { name: "Tecidos Ósseo e Cartilaginoso", level: 1, xpCurrent: 450, xpMax: 1000, percent: 45, accuracy: "68% acertos", barColor: "bg-teal-400" },
+          { name: "Tecido Sanguíneo e Hematopoiese", level: 2, xpCurrent: 1500, xpMax: 3000, percent: 50, accuracy: "70% acertos", barColor: "bg-rose-400" }
+        ]
+      },
+      {
+        id: "imunologia",
+        name: "Imunologia",
+        subtitle: "Imunidade Inata, Adquirida e Doenças Autoimunes",
+        level: 2,
+        xp: 14,
+        multiplier: "1.3x XP",
+        color: "#a855f7",
+        svgIcon: `<svg class="w-7 h-7 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>`,
+        topics: [
+          { name: "Resposta Imune Inata & Complemento", level: 2, xpCurrent: 420, xpMax: 3000, percent: 14, accuracy: "52% acertos", barColor: "bg-purple-400" },
+          { name: "Linfócitos T, B e Imunoglobulinas", level: 1, xpCurrent: 500, xpMax: 1000, percent: 50, accuracy: "66% acertos", barColor: "bg-indigo-400" },
+          { name: "Hipersensibilidade & Choque Anafilático", level: 1, xpCurrent: 350, xpMax: 1000, percent: 35, accuracy: "62% acertos", barColor: "bg-rose-400" },
+          { name: "Transplantes & Complexo HLA", level: 0, xpCurrent: 0, xpMax: 1000, percent: 0, accuracy: "Novo", barColor: "bg-slate-700" }
+        ]
+      },
+      {
+        id: "patologia",
+        name: "Patologia",
+        subtitle: "Lesão Celular, Inflamação, Neoplasias e Necrópsia",
+        level: 10,
+        xp: 48,
+        multiplier: "2.0x XP",
+        color: "#f43f5e",
+        svgIcon: `<svg class="w-7 h-7 drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>`,
+        topics: [
+          { name: "Inflamação Aguda e Crônica", level: 10, xpCurrent: 9600, xpMax: 20000, percent: 48, accuracy: "89% acertos", barColor: "bg-rose-500" },
+          { name: "Neoplasias Benignas e Malignas", level: 8, xpCurrent: 11200, xpMax: 16000, percent: 70, accuracy: "85% acertos", barColor: "bg-rose-400" },
+          { name: "Distúrbios Hemodinâmicos & Trombose", level: 6, xpCurrent: 4200, xpMax: 12000, percent: 35, accuracy: "72% acertos", barColor: "bg-amber-500" },
+          { name: "Adaptação Celular & Atrofia/Hipertrofia", level: 5, xpCurrent: 5100, xpMax: 10000, percent: 51, accuracy: "78% acertos", barColor: "bg-purple-400" }
+        ]
+      }
+    ];
+
+    // State
+    let selectedWingId = "anatomia";
+    let selectedTopicName = "Sistema esquelético";
+
+    // Initialize Left Wings List
+    function renderWingsList() {
+      const container = document.getElementById("wingsListContainer");
+      container.innerHTML = "";
+
+      wingsData.forEach(wing => {
+        const isSelected = wing.id === selectedWingId;
+        const card = document.createElement("div");
+        card.className = `wing-card p-4 rounded-2xl cursor-pointer transition-all duration-300 border relative overflow-hidden group ${
+          isSelected 
+            ? "bg-medical-panel border-medical-cyan shadow-neon-cyan-glow ring-1 ring-medical-cyan/60 translate-x-1" 
+            : "bg-medical-surface hover:bg-medical-panel/90 border-medical-border hover:border-slate-500"
+        }`;
+        
+        card.onclick = () => selectWing(wing.id);
+
+        card.innerHTML = `
+          ${isSelected ? '<div class="absolute -top-10 -right-10 w-24 h-24 bg-medical-cyan/15 rounded-full blur-xl pointer-events-none"></div>' : ''}
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl bg-medical-card border ${isSelected ? 'border-medical-cyan/70 text-medical-cyan shadow-neon-cyan/40 shadow-sm' : 'border-medical-border text-slate-300 group-hover:text-white'} flex items-center justify-center transition-all">
+                ${wing.svgIcon}
+              </div>
+              <div>
+                <h3 class="font-display font-bold text-base ${isSelected ? 'text-medical-cyan drop-shadow-[0_0_8px_rgba(0,245,212,0.3)]' : 'text-white group-hover:text-medical-cyan'} transition-colors">
+                  ${wing.name}
+                </h3>
+                <span class="text-[10px] font-mono text-slate-400 block">${wing.topics.length} tópicos clínicos</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <span class="px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider uppercase rounded-md ${
+                isSelected 
+                  ? 'bg-medical-cyan/20 text-medical-cyan border border-medical-cyan/40' 
+                  : 'bg-slate-800 text-slate-300 border border-slate-700'
+              }">
+                NÍVEL ${wing.level}
+              </span>
+              <span class="text-[10px] font-mono font-bold text-amber-400">${wing.multiplier}</span>
+            </div>
+          </div>
+
+          <!-- XP Telemetry Bar -->
+          <div class="pt-2 border-t border-slate-800/80">
+            <div class="flex items-center justify-between text-[10px] font-mono mb-1">
+              <span class="text-slate-400">MAESTRIA DA ALA</span>
+              <span class="font-bold ${isSelected ? 'text-medical-cyan' : 'text-slate-200'}">${wing.xp}% XP</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-500" style="width: ${wing.xp}%; background-color: ${isSelected ? '#00f5d4' : wing.color}; ${isSelected ? 'box-shadow: 0 0 10px #00f5d4;' : ''}"></div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Select a Wing
+    function selectWing(wingId) {
+      selectedWingId = wingId;
+      const wing = wingsData.find(w => w.id === wingId);
+      if (wing && wing.topics.length > 0) {
+        // default select first topic of the wing
+        selectedTopicName = wing.topics[0].name;
+      }
+      renderWingsList();
+      renderRightPanel();
+    }
+
+    // Render Right Panel (Topics & Details)
+    function renderRightPanel() {
+      const wing = wingsData.find(w => w.id === selectedWingId);
+      if (!wing) return;
+
+      // Update Hero Header
+      document.getElementById("wingHeroTitle").innerText = wing.name;
+      document.getElementById("wingHeroSubtitle").innerText = wing.subtitle;
+      document.getElementById("wingHeroLevelBadge").innerText = `NÍVEL ${wing.level}`;
+      document.getElementById("wingHeroXp").innerText = `${wing.xp}%`;
+      document.getElementById("wingHeroMultiplier").innerText = wing.multiplier;
+      document.getElementById("wingHeroTopicCount").innerText = wing.topics.length;
+      document.getElementById("wingHeroIcon").innerHTML = wing.svgIcon;
+
+      // Update Hero Header Border Accent
+      const heroHeader = document.getElementById("wingHeroHeader");
+      heroHeader.style.borderColor = "#00f5d4";
+
+      // Render Topics List Directly
+      const container = document.getElementById("topicsContainer");
+      container.innerHTML = "";
+
+      wing.topics.forEach((topic) => {
+        const isTopicSelected = topic.name === selectedTopicName;
+        const topicCard = document.createElement("div");
+        topicCard.className = `topic-item group cursor-pointer p-3.5 rounded-xl border transition-all duration-200 flex flex-col justify-between ${
+          isTopicSelected 
+            ? "border-medical-cyan bg-medical-panel/95 shadow-[0_0_18px_rgba(0,245,212,0.18)] ring-1 ring-medical-cyan/50" 
+            : "border-medical-border bg-medical-card/60 hover:bg-medical-card hover:border-slate-500"
+        }`;
+
+        topicCard.onclick = () => selectTopicItem(topic.name);
+
+        topicCard.innerHTML = `
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <!-- Custom Medical Radio -->
+              <span class="topic-radio w-4 h-4 rounded-full flex items-center justify-center transition-all ${
+                isTopicSelected 
+                  ? 'border-2 border-medical-cyan bg-medical-cyan' 
+                  : 'border border-slate-600 bg-slate-900 group-hover:border-medical-cyan/60'
+              }">
+                ${isTopicSelected ? '<span class="w-1.5 h-1.5 rounded-full bg-slate-950"></span>' : ''}
+              </span>
+              <div>
+                <span class="topic-name font-display text-sm font-bold ${
+                  isTopicSelected ? 'text-white drop-shadow-[0_0_6px_rgba(0,245,212,0.3)]' : 'text-slate-200 group-hover:text-white'
+                }">
+                  ${topic.name}
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 block mt-0.5">
+                  NÍVEL ${topic.level} • ${topic.xpCurrent}/${topic.xpMax} XP
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-mono text-slate-400 bg-slate-900/60 border border-slate-800 px-2 py-0.5 rounded hidden sm:inline-block">
+                ${topic.accuracy}
+              </span>
+              ${
+                isTopicSelected
+                  ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-medical-cyan/20 text-medical-cyan border border-medical-cyan/40">SELECIONADO</span>'
+                  : `<span class="text-[11px] font-mono font-bold text-slate-400 group-hover:text-slate-200">${topic.percent}%</span>`
+              }
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-2.5 pl-7">
+            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full rounded-full transition-all duration-300 ${topic.barColor}" style="width: ${topic.percent}%;"></div>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(topicCard);
+      });
+
+      // Update shift summary bottom
+      document.getElementById("activeTopicLabel").innerText = selectedTopicName;
+    }
+
+    // Select a Topic
+    function selectTopicItem(topicName) {
+      selectedTopicName = topicName;
+      document.getElementById("activeTopicLabel").innerText = topicName;
+      renderRightPanel();
+    }
+
+    // Launch Shift CTA
+    document.getElementById("btnLaunchShift").addEventListener("click", function() {
+      const wing = wingsData.find(w => w.id === selectedWingId);
+      this.innerHTML = `
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-slate-950 inline" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        GERANDO TABULEIRO CLÍNICO...
+      `;
+      setTimeout(() => {
+        alert(`[PLANTÃO CAÇA-MED INICIADO]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nAla: ${wing.name}\nTópico Foco: ${selectedTopicName}\nCusto: 1 Ticket consumido\nMultiplicador Ativo: ${wing.multiplier}\n\nTabuleiro gerado com sucesso no Cockpit!`);
+        this.innerHTML = `<span>▶</span> <span>INICIAR PLANTÃO (GERAR TABULEIRO)</span>`;
+      }, 750);
+    });
+
+    // Initial load
+    renderWingsList();
+    renderRightPanel();
+  </script>
+
+
+</body></html>

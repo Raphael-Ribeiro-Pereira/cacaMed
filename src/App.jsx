@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { auth, db } from './firebase'; 
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore'; 
+import { doc, getDoc, runTransaction } from 'firebase/firestore';
+import { prepararMissoesDoDia } from './utils/missoes';
+import { Stethoscope } from 'lucide-react';
+import { limparEstatisticasClinicasAntigas, possuiEstatisticasClinicasAntigas } from './utils/estatisticasClinicas';
 import './index.css';
 
 import Login from './components/Login';
@@ -18,21 +21,6 @@ import SelecaoDDX from './components/SelecaoDDX';
 import JogoDDX from './components/JogoDDX';
 import Hardcore from './components/Hardcore'; // ⬅️ AQUI! Faltava importar o ficheiro Hardcore.jsx!
 
-// 🔥 BANCO DE MISSÕES POSSÍVEIS
-const BANCO_DE_MISSOES = {
-  faceis: [
-    { id: 'login_diario', titulo: 'Plantão Iniciado', subtitulo: 'Bater o ponto no hospital', meta: 1, recompensaXP: 50, recompensaTicket: 0 }
-  ],
-  medias: [
-    { id: 'jogar_cruzadinha', titulo: 'Rato de Biblioteca', subtitulo: 'Jogar 1 Cruzadinha', meta: 1, recompensaXP: 100, recompensaTicket: 0 },
-    { id: 'acertar_palavras', titulo: 'Mão Firme', subtitulo: 'Acertar 5 palavras', meta: 5, recompensaXP: 150, recompensaTicket: 0 }
-  ],
-  dificeis: [
-    { id: 'vencer_ddx', titulo: 'Salvador de Vidas', subtitulo: 'Salvar 1 paciente na UTI (DDX)', meta: 1, recompensaXP: 300, recompensaTicket: 1 },
-    { id: 'jogar_hardcore', titulo: 'Adrenalina Pura', subtitulo: 'Jogar 1 caso em Modo Hardcore', meta: 1, recompensaXP: 400, recompensaTicket: 1 }
-  ]
-};
-
 function App() {
   const [usuario, setUsuario] = useState(null); 
   const [dadosUsuario, setDadosUsuario] = useState(null); 
@@ -47,40 +35,33 @@ function App() {
   // 🔥 ESTADO DO MODO DDX (Para guardar a equipe e dificuldade)
   const [configDDX, setConfigDDX] = useState(null);
 
- // 🔥 FUNÇÃO: GERENCIAR MISSÕES DIÁRIAS BLINDADA
   const verificarEResetarMissoes = async (uid, dadosAtuais) => {
-    const hoje = new Date().toLocaleDateString('pt-BR'); 
-    const ultimoLogin = dadosAtuais.dataUltimoLogin || '';
-
-    const missoesSalvas = Array.isArray(dadosAtuais.missoesDiarias) 
-      ? dadosAtuais.missoesDiarias 
-      : (dadosAtuais.missoesDiarias?.missoes || []);
-
-    if (hoje !== ultimoLogin || missoesSalvas.length !== 3) {
-      
-      const missaoFacil = { ...BANCO_DE_MISSOES.faceis[0], progresso: 1, concluida: true };
-      const missaoMedia = { ...BANCO_DE_MISSOES.medias[Math.floor(Math.random() * BANCO_DE_MISSOES.medias.length)], progresso: 0, concluida: false };
-      const missaoDificil = { ...BANCO_DE_MISSOES.dificeis[Math.floor(Math.random() * BANCO_DE_MISSOES.dificeis.length)], progresso: 0, concluida: false };
-
-      const novasMissoes = [missaoFacil, missaoMedia, missaoDificil];
-      const novoXP = (dadosAtuais.pontuacaoTotal || 0) + missaoFacil.recompensaXP;
-
-      try {
-        const docRef = doc(db, "usuarios", uid);
-        await updateDoc(docRef, {
-          dataUltimoLogin: hoje,
-          missoesDiarias: novasMissoes, 
-          pontuacaoTotal: novoXP
+    if (!prepararMissoesDoDia(dadosAtuais) && !possuiEstatisticasClinicasAntigas(dadosAtuais.estatisticas)) return dadosAtuais;
+    try {
+      return await runTransaction(db, async transaction => {
+        const ref = doc(db, 'usuarios', uid);
+        const snapshot = await transaction.get(ref);
+        if (!snapshot.exists()) return dadosAtuais;
+        const dados = snapshot.data();
+        const preparo = prepararMissoesDoDia(dados);
+        const alteracoes = {};
+        if (preparo) Object.assign(alteracoes, {
+          dataUltimoLogin: preparo.dataUltimoLogin,
+          missoesDiarias: preparo.missoesDiarias,
+          pontuacaoTotal: (Number(dados.pontuacaoTotal) || 0) + preparo.xpLogin
         });
-        return { ...dadosAtuais, dataUltimoLogin: hoje, missoesDiarias: novasMissoes, pontuacaoTotal: novoXP };
-        
-      } catch (erroFirebase) {
-        console.error("🚨 Firebase rejeitou o transplante das missões:", erroFirebase);
-        return { ...dadosAtuais, dataUltimoLogin: hoje, missoesDiarias: novasMissoes, pontuacaoTotal: novoXP };
-      }
+        if (possuiEstatisticasClinicasAntigas(dados.estatisticas)) {
+          alteracoes.estatisticas = limparEstatisticasClinicasAntigas(dados.estatisticas);
+        }
+        if (!Object.keys(alteracoes).length) return dados;
+        const atualizado = { ...dados, ...alteracoes };
+        transaction.update(ref, alteracoes);
+        return atualizado;
+      });
+    } catch (error) {
+      console.error('Falha ao atualizar missões diárias:', error);
+      return dadosAtuais;
     }
-    
-    return dadosAtuais; 
   };
 
   useEffect(() => {
@@ -165,20 +146,8 @@ function App() {
     setTelaAtual('jogoDDX');
   };
 
-  const salvarDadosUsuario = async (novosDados) => {
-    try {
-      if (usuario && usuario.uid) {
-        const docRef = doc(db, "usuarios", usuario.uid);
-        await updateDoc(docRef, novosDados);
-        setDadosUsuario(novosDados);
-      }
-    } catch (e) {
-      console.error("Erro ao salvar dados do usuário", e);
-    }
-  };
-
-  if (carregandoAuth || (!bancoDePalavras && telaAtual !== 'login' && telaAtual !== 'cadastro')) {
-    return <div className="tela-container"><h2 style={{color: '#2c3e50'}}>Acessando Prontuários... 🩺</h2></div>;
+  if (carregandoAuth) {
+    return <div className="stitch-page stitch-loading"><Stethoscope aria-hidden="true" /><span>Acessando prontuários...</span></div>;
   }
 
   return (
@@ -189,21 +158,21 @@ function App() {
       {telaAtual === 'perfil' && usuario && <PerfilUsuario usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       
       {/* CRUZADINHAS */}
-      {telaAtual === 'topicos' && usuario && <SelecaoTopicos setTelaAtual={setTelaAtual} iniciarJogo={iniciarJogo} dadosUsuario={dadosUsuario} />}
+      {telaAtual === 'topicos' && usuario && <SelecaoTopicos setTelaAtual={setTelaAtual} iniciarJogo={iniciarJogo} dadosUsuario={dadosUsuario} bancoDePalavras={bancoDePalavras || {}} />}
       {telaAtual === 'jogo' && usuario && (
         <Jogo bancoDePalavras={bancoDePalavras} materia={materia} subMateria={subMateria} setTelaAtual={setTelaAtual} usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />
       )}
       
       {/* PAINÉIS DE DADOS */}
-      {telaAtual === 'ranking' && usuario && <Ranking dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
+      {telaAtual === 'ranking' && usuario && <Ranking usuario={usuario} dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'estatisticas' && usuario && <Estatisticas dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       
       {/* 🔥 MODO HOUSE (DDX) E MODO HARDCORE */}
       {telaAtual === 'selecaoDDX' && usuario && <SelecaoDDX setTelaAtual={setTelaAtual} iniciarDDX={iniciarDDX} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />}
-      {telaAtual === 'jogoDDX' && usuario && <JogoDDX setTelaAtual={setTelaAtual} configDDX={configDDX} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} salvarDadosUsuario={salvarDadosUsuario} />}
+      {telaAtual === 'jogoDDX' && usuario && <JogoDDX setTelaAtual={setTelaAtual} configDDX={configDDX} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />}
       
       {/* ⬅️ AQUI! O React agora sabe que tem de desenhar a sala de emergência! */}
-      {telaAtual === 'hardcore' && usuario && <Hardcore setTelaAtual={setTelaAtual} dadosUsuario={dadosUsuario} salvarDadosUsuario={salvarDadosUsuario} />} 
+      {telaAtual === 'hardcore' && usuario && <Hardcore setTelaAtual={setTelaAtual} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />}
 
     </>
   );

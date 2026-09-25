@@ -26,7 +26,7 @@ export default function ModalManualResidente({ showHelp, setShowHelp }) {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-white tracking-tight">Manual do Residente</h2>
-                  <p className="text-xs text-cyan-500 uppercase tracking-widest font-bold mt-0.5">Como sobreviver no Caça-Med</p>
+                  <p className="text-xs text-cyan-500 uppercase tracking-widest font-bold mt-0.5">Como sobreviver no cacoMed</p>
                 </div>
               </div>
               <button onClick={() => setShowHelp(false)} className="text-slate-400 hover:text-white bg-[#1e293b] hover:bg-rose-500/20 hover:border-rose-500/50 border border-white/[0.05] p-2 rounded-full transition-colors">
