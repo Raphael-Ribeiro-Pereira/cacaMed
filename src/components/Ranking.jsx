@@ -4,14 +4,13 @@ import { db } from '../firebase';
 import { ArrowLeft, Crown, Trophy, Flame, TrendingUp, Medal } from "lucide-react";
 import { motion } from "framer-motion";
 import StitchBrand from './ui/StitchBrand';
+import { resumirCruzadinhas, somarNiveisTopicos } from '../utils/progressoCruzadinha';
+import { obterPatente } from '../utils/patentes';
 
 // ==========================================
 // 🌻 SISTEMA DE PARTÍCULAS DO EASTER EGG (INTOCADO)
 // ==========================================
-const ParticulaRomantica = ({ id, texto, posicaoInicial, onFinalizar }) => {
-  const duracao = useMemo(() => (Math.random() * 2 + 3).toFixed(2), []); 
-  const tamanho = useMemo(() => (Math.random() * 0.5 + 1).toFixed(2), []); 
-  const derivaH = useMemo(() => (Math.random() * 100 - 50).toFixed(0), []); 
+const ParticulaRomantica = ({ id, texto, posicaoInicial, duracao, tamanho, derivaH, onFinalizar }) => {
 
   useEffect(() => {
     const timer = setTimeout(() => onFinalizar(id), duracao * 1000);
@@ -46,6 +45,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
   const [particulas, setParticulas] = useState([]);
   const [dadosDoBanco, setDadosDoBanco] = useState([]);
   const [carregando, setCarregando] = useState(true);
+  const [erroRanking, setErroRanking] = useState(false);
 
   // 🌻 EASTER EGG (MANTIDO)
   const dispararParticulas = () => {
@@ -56,6 +56,9 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
         id: Date.now() + i, 
         texto: opcoesTexto[Math.floor(Math.random() * opcoesTexto.length)], 
         posicao: Math.random() * (window.innerWidth - 60) + 30, 
+        duracao: (Math.random() * 2 + 3).toFixed(2),
+        tamanho: (Math.random() * 0.5 + 1).toFixed(2),
+        derivaH: (Math.random() * 100 - 50).toFixed(0),
       });
     }
     setParticulas(prev => [...prev, ...novosItens]);
@@ -64,32 +67,16 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
   const removerParticula = (id) => setParticulas(prev => prev.filter(p => p.id !== id));
 
   const formatarTempo = (segundos) => {
-    if (segundos === Infinity || isNaN(segundos)) return "--:--";
+    if (segundos === null || segundos === undefined || !Number.isFinite(Number(segundos))) return "--:--";
     const min = Math.floor(segundos / 60).toString().padStart(2, '0');
     const seg = (segundos % 60).toString().padStart(2, '0');
     return `${min}:${seg}`;
   };
 
-  function getPatenteInfo(nivel) {
-    if (nivel <= 5) return { titulo: 'Estudante (Básico)', cor: '#b9cac4' };
-    if (nivel <= 15) return { titulo: 'Estudante (Clínico)', cor: '#00f5d4' };
-    if (nivel <= 30) return { titulo: 'Interno', cor: '#8b5cf6' };
-    if (nivel <= 50) return { titulo: 'Residente (R1)', cor: '#ffb95f' };
-    if (nivel <= 80) return { titulo: 'Médico Especialista', cor: '#d4004b' };
-    return { titulo: 'Chefe de Plantão', cor: '#00f5d4' };
-  }
+  const somaNiveisPessoal = somarNiveisTopicos(dadosUsuario?.xpTopicos);
+  const resumoPessoal = resumirCruzadinhas(dadosUsuario?.estatisticas);
 
-  const somaNiveisPessoal = useMemo(() => {
-    let soma = 0;
-    const xpTopicos = dadosUsuario?.xpTopicos || {};
-    Object.keys(xpTopicos).forEach(chave => {
-      const xp = xpTopicos[chave];
-      if (xp > 0) soma += Math.floor(Math.sqrt(xp / 1000)) + 1;
-    });
-    return soma;
-  }, [dadosUsuario]);
-
-  const patentePessoal = getPatenteInfo(somaNiveisPessoal);
+  const patentePessoal = obterPatente(somaNiveisPessoal);
 
   // ==========================================
   // 🌍 BUSCANDO DADOS E MÉTRICAS
@@ -103,43 +90,27 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
         querySnapshot.forEach((docSnap) => {
           const data = docSnap.data();
           
-          let somaNiv = 0;
-          const xpTopicos = data.xpTopicos || {};
-          Object.keys(xpTopicos).forEach(chave => {
-            const xp = xpTopicos[chave];
-            if (xp > 0) somaNiv += Math.floor(Math.sqrt(xp / 1000)) + 1;
-          });
-
-          let totalLetras = 0;
-          let totalTempo = 0;
-          let totalPartidas = 0;
-          
-          if (data.estatisticas) {
-            Object.values(data.estatisticas).forEach(stat => {
-              if (stat.letras) totalLetras += stat.letras;
-              if (stat.tempo) totalTempo += stat.tempo;
-              if (stat.partidas) totalPartidas += stat.partidas;
-            });
-          }
-
-          const tempoMedio = totalPartidas > 0 ? Math.floor(totalTempo / totalPartidas) : Infinity;
-          const pat = getPatenteInfo(somaNiv);
+          const somaNiv = somarNiveisTopicos(data.xpTopicos);
+          const resumo = resumirCruzadinhas(data.estatisticas);
+          const pat = obterPatente(somaNiv);
 
           listaMedicos.push({
             uid: docSnap.id,
             nome: data.username || data.nome || 'Doutor(a)',
             nivel: somaNiv,
-            letras: totalLetras,
-            tempoMedio: tempoMedio,
+            xpTotal: Number(data.pontuacaoTotal) || 0,
+            letras: resumo.letras,
+            tempoMedio: resumo.tempoMedio,
             patente: pat.titulo,
             cor: pat.cor,
-            partidas: totalPartidas
+            partidas: resumo.partidas
           });
         });
         
         setDadosDoBanco(listaMedicos);
       } catch (error) {
         console.error("Erro ao puxar dados do Firebase:", error);
+        setErroRanking(true);
       } finally {
         setCarregando(false);
       }
@@ -153,9 +124,9 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
   const rankingProcessado = useMemo(() => {
     let lista = [...dadosDoBanco];
 
-    if (criterioOrdenacao === 'nivel') lista.sort((a, b) => b.nivel - a.nivel);
-    else if (criterioOrdenacao === 'letras') lista.sort((a, b) => b.letras - a.letras);
-    else if (criterioOrdenacao === 'tempo') lista.sort((a, b) => a.tempoMedio - b.tempoMedio);
+    if (criterioOrdenacao === 'nivel') lista.sort((a, b) => b.nivel - a.nivel || b.xpTotal - a.xpTotal || a.uid.localeCompare(b.uid));
+    else if (criterioOrdenacao === 'letras') lista.sort((a, b) => b.letras - a.letras || a.uid.localeCompare(b.uid));
+    else if (criterioOrdenacao === 'tempo') lista.sort((a, b) => (a.tempoMedio ?? Infinity) - (b.tempoMedio ?? Infinity) || a.uid.localeCompare(b.uid));
 
     lista = lista.map((m, index) => ({ ...m, posicaoGlobal: index + 1 }));
 
@@ -192,7 +163,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
       const diff = rival.letras - eu.letras + 1;
       textoRadar = `Faltam ${diff} acertos para passar o #${rival.posicaoExibida}.`;
     } else if (criterioOrdenacao === 'tempo') {
-      if (eu.tempoMedio === Infinity) textoRadar = "Jogue uma partida para registrar seu tempo médio!";
+      if (eu.tempoMedio === null) textoRadar = "Jogue uma partida para registrar seu tempo médio!";
       else {
         const diff = eu.tempoMedio - rival.tempoMedio + 1;
         textoRadar = `Corte ${diff}s do seu tempo para passar o #${rival.posicaoExibida}.`;
@@ -217,7 +188,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
 
       {/* Partículas do Easter Egg ficam na raiz absoluta */}
       {particulas.map(p => (
-        <ParticulaRomantica key={p.id} id={p.id} texto={p.texto} posicaoInicial={p.posicao} onFinalizar={removerParticula} />
+        <ParticulaRomantica key={p.id} id={p.id} texto={p.texto} posicaoInicial={p.posicao} duracao={p.duracao} tamanho={p.tamanho} derivaH={p.derivaH} onFinalizar={removerParticula} />
       ))}
 
       {/* Background do Figma */}
@@ -229,7 +200,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
         {/* ─── HEADER ─── */}
         <header className="flex items-center justify-between mb-6 shrink-0">
           <div className="flex items-center gap-4">
-            <button onClick={() => setTelaAtual('menu')} className="w-10 h-10 rounded-xl bg-[#151F32] border border-white/[0.05] flex items-center justify-center text-slate-400 hover:text-white hover:border-amber-500/30 transition-colors shadow-[0_4px_15px_rgba(0,0,0,0.2)]">
+            <button aria-label="Voltar ao centro de comando" onClick={() => setTelaAtual('menu')} className="w-10 h-10 rounded-xl bg-[#151F32] border border-white/[0.05] flex items-center justify-center text-slate-400 hover:text-white hover:border-amber-500/30 transition-colors shadow-[0_4px_15px_rgba(0,0,0,0.2)]">
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
@@ -258,6 +229,8 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
              <div className="text-4xl animate-spin mb-4">⏳</div>
              <p className="text-slate-400 font-bold uppercase tracking-widest">Sincronizando Plantões...</p>
            </div>
+        ) : erroRanking ? (
+          <div role="alert" className="rounded-2xl border border-amber-500/30 bg-[#151F32] p-6 text-amber-400">Não foi possível carregar o ranking global. Tente abrir esta tela novamente.</div>
         ) : (
           <>
             {top3.length > 0 && (
@@ -335,6 +308,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
                   {[['global', '🌍 Global'], ['patente', '🎖️ Mesma Patente'], ['hall', '🏆 Hall da Fama']].map(([key, label]) => (
                     <button
                       key={key} onClick={() => setAbaAtual(key)}
+                      aria-pressed={abaAtual === key}
                       className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${abaAtual === key ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/40 shadow-[0_0_10px_rgba(0,229,255,0.1)]' : 'text-slate-500 hover:text-slate-300'}`}
                     >
                       {label}
@@ -346,6 +320,8 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
                   {[['nivel', 'Nível', '🎓'], ['letras', 'Acertos', '🎯'], ['tempo', 'Média', '⏱️']].map(([key, label, icone]) => (
                     <button
                       key={key} onClick={() => setCriterioOrdenacao(key)}
+                      aria-label={`Ordenar por ${label.toLowerCase()}`}
+                      aria-pressed={criterioOrdenacao === key}
                       className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all ${criterioOrdenacao === key ? 'bg-amber-500/15 text-amber-400 border border-amber-500/40 shadow-[0_0_10px_rgba(251,191,36,0.1)]' : 'text-slate-500 hover:text-slate-300'}`}
                     >
                       <span>{icone}</span> <span className="hidden sm:inline">{label}</span>
@@ -422,7 +398,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
               <div className="shrink-0 border-t border-cyan-500/20 bg-[#0B1120]/80 backdrop-blur-md px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   {/* EASTER EGG INJETADO DISCRETAMENTE AQUI */}
-                  <div onClick={dispararParticulas} className="cursor-pointer text-2xl hover:scale-125 transition-transform" title="R ❤️ C">🌻</div>
+                  <button type="button" onClick={dispararParticulas} className="cursor-pointer text-2xl hover:scale-125 transition-transform" aria-label="Ativar surpresa" title="R ❤️ C">🌻</button>
                   <div>
                     <div className="text-cyan-300 text-sm font-bold uppercase tracking-wide">{tituloRadar}</div>
                     <div className="text-slate-400 text-xs font-medium">{textoRadar}</div>
@@ -432,10 +408,10 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-2 bg-[#151F32] px-3 py-1.5 rounded-lg border border-white/[0.05]">
                     <Flame className="w-4 h-4 text-orange-400" style={{ filter: 'drop-shadow(0 0 6px rgba(249,115,22,0.8))' }} />
-                    <span className="text-orange-400 font-bold text-xs">{dadosUsuario?.estatisticasGerais?.streakAtual || 0} dias</span>
+                    <span className="text-orange-400 font-bold text-xs">{dadosUsuario?.estatisticasGerais?.streakAtual || 0} partidas seguidas</span>
                   </div>
                   <div className="text-amber-400 font-mono text-lg font-bold flex items-center gap-2" style={{ filter: 'drop-shadow(0 0 6px rgba(251,191,36,0.4))' }}>
-                    {criterioOrdenacao === 'nivel' ? somaNiveisPessoal : (criterioOrdenacao === 'letras' ? '??' : '--:--')} 
+                    {criterioOrdenacao === 'nivel' ? somaNiveisPessoal : (criterioOrdenacao === 'letras' ? resumoPessoal.letras : formatarTempo(resumoPessoal.tempoMedio))}
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest">{criterioOrdenacao}</span>
                   </div>
                 </div>
@@ -446,12 +422,12 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
         )}
       </div>
 
-      <style dangerouslySetInlineStyle={{__html: `
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-      `}} />
+      `}</style>
     </div>
   );
 }

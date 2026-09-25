@@ -106,6 +106,8 @@ export default function Tabuleiro({ gradePronta, limites, valores, celulasDestac
                       <input 
                         id={`input-${celula.linha}-${celula.coluna}`} 
                         type="text" 
+                        aria-label={`Letra da linha ${celula.linha + 1}, coluna ${celula.coluna + 1}${celula.numero ? `, início ${celula.numero}` : ''}`}
+                        aria-invalid={estaPreenchida && !estaCorreta}
                         maxLength="1" 
                         value={valorAtual}
                         onChange={(e) => handleInput(e, celula.linha, celula.coluna)}

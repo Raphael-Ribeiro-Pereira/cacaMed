@@ -4,6 +4,18 @@ Data da revisão: 24/09/2026. Base: arquivos locais e histórico até `81cad1e`.
 
 Este documento é o roteiro de trabalho para recuperar o ambiente, corrigir o jogo e implementar o layout parcialmente criado no Google Stitch. As caixas representam trabalho futuro, não correções já executadas.
 
+## Direção atual (24/09/2026)
+
+Atualização da correção C13: gerador compara até 20 ordens da mesma seleção de palavras, pontua encaixes por cruzamentos e área ocupada e escolhe a grade priorizando o número de entradas. Retorna métricas de palavras, cruzamentos, largura, altura, área e densidade. O feedback mais recente do usuário confirmou que não havia palavras isoladas; o problema é a distribuição espalhada e os corredores vazios. Compactação implementada, ainda aguardando avaliação visual de três novas partidas no mesmo tópico.
+
+Validação revisada: letras recebem feedback imediato (menta para correta, âmbar para letra presente em outra posição, vermelho para incorreta). A conclusão continua dependente do preenchimento correto da grade. Uma combinação casa/letra errada é contada uma vez por partida, sem nova penalidade ao apagar e repetir a mesma tentativa e sem somar novamente um erro de palavra. Nove testes e build passaram; lint permanece com zero erros e quatro avisos existentes.
+
+- Prioridade de experiência: tela web padrão em desktop/notebook. Responsividade para outros tamanhos fica após a homologação desse fluxo.
+- Cruzadinhas: partidas interrompidas são descartadas; não haverá retomada automática.
+- Ranking: público e global. A consulta ainda precisa limitar os dados expostos aos campos públicos necessários.
+- DDX, Hardcore e integrações de IA: reformulação posterior; não usar o cronograma antigo desses modos como especificação definitiva.
+- Etapa em execução: corrigir grade, digitação, validação e onboarding da cruzadinha; depois verificar o fluxo completo, lint, acessibilidade e limpeza gradual.
+
 ## Escopo e limites da revisão
 
 Revisão estática dos fluxos de autenticação, dados, cruzadinhas, DDX, Hardcore, perfil, ranking, estilos e configuração. Build e lint tentados na leitura inicial não executaram porque as dependências locais estão ausentes. Não foram acessados Firebase, Gemini, planilha publicada nem Stitch. Não foi feita validação clínica dos casos ou auditoria de dependências instaladas.
@@ -71,6 +83,10 @@ O inventário reúne os problemas identificados nesta revisão; testes em execu�
 | C07 | P2 · C | Se há menos de seis palavras elegíveis, motor usa todas as dificuldades; palavras sem encaixe são descartadas. | Definir mínimo de conteúdo e fallback que respeite a progressão. |
 | C08 | P2 · C | Censura de resposta aplicada às dicas estáticas, mas não às geradas por IA; termo composto não é bem coberto pelo filtro por palavra. | Validar dicas geradas e testar termos compostos/radicais. |
 | C09 | P2 · R | Geração aleatória dentro de `useMemo` e efeitos assíncronos sem cancelamento podem trocar grade/dicas ou duplicar chamadas, especialmente em StrictMode. | Identidade de partida, seed, cancelamento e descarte de respostas antigas. |
+| C10 | P1 · C | Itens 8 e 10 exigem a mesma resposta (`TÁLUS`), mas a grade/layout atual não representa corretamente os dois espaços; a palavra não pode ser preenchida e validada simultaneamente. | Corrigir a construção da grade e os metadados de entradas para permitir respostas iguais em posições distintas, preservando cruzamentos e validação independente. |
+| C11 | P1 · C | Ao digitar em uma palavra que cruza uma letra já preenchida, o foco/cursor trava e exige clique manual no próximo quadrado vazio. | Corrigir a navegação automática entre células, pulando células ocupadas quando necessário e mantendo a direção ativa após interseções. |
+| C12 | P1 · C | Validação acusa falso negativo durante o preenchimento parcial; no item 2, `ATLAS` é marcada como errada assim que a letra inicial `A` é digitada. | Separar estado parcial de resposta incorreta e validar a palavra somente quando completa, sem marcar prefixos válidos como erro. |
+| C13 | P1 · C | As grades geradas têm poucas interseções e muitas palavras ficam isoladas; o tabuleiro ocupa uma área grande, reduz a densidade visual e prejudica a jogabilidade. | Melhorar a seleção e o encaixe para priorizar grades compactas e com mais cruzamentos, sem sobreposição inválida ou perda de entradas. Medir densidade e bounding box. |
 
 ### Simuladores e IA
 
@@ -149,6 +165,10 @@ A revisão clínica pode iniciar na semana 1 em paralelo; não deve ser deixada 
 
 - [ ] Isolar importação de palavras e validar CSV/tópicos vazios.
 - [ ] Corrigir motor, contagem de palavras, dificuldade e autocompletar.
+- [x] Corrigir respostas duplicadas em posições distintas e validar cada entrada de forma independente (C10; teste automatizado; validação visual em conta autenticada pendente).
+- [x] Corrigir avanço de foco/cursor em interseções e células já preenchidas (C11; teste automatizado; validação visual em conta autenticada pendente).
+- [x] Corrigir falso negativo durante o preenchimento parcial das palavras (C12; teste automatizado; validação visual em conta autenticada pendente).
+- [ ] Aumentar a densidade de interseções e compactar o tabuleiro sem quebrar entradas, respostas iguais ou validação (C13).
 - [ ] Validar/censurar dicas e tratar falha de geração.
 - [ ] Definir máquina de estados das partidas e descartar respostas atrasadas.
 - [ ] Corrigir relatório, bônus de tempo e prompts contraditórios do Hardcore.
@@ -196,11 +216,19 @@ O material visual já foi recebido. A homologação final ainda depende da revis
 | Virada de dia e perfil legado | Reset coerente com fuso, sem bônus duplicado nem perda de dados. |
 | CSV inválido, indisponível ou tópico vazio | Erro recuperável local; restante do app utilizável. |
 | Grades com cruzamentos e palavras compostas | Letras/metadados consistentes e número correto de entradas. |
+| Duas entradas distintas com a mesma resposta (`TÁLUS`) | Ambas podem ser preenchidas, mantêm seus próprios números e são validadas sem conflito. |
+| Digitação atravessando uma interseção preenchida | O cursor avança para a próxima célula editável sem exigir clique manual. |
+| Prefixo válido de uma resposta (`A` em `ATLAS`) | O estado permanece parcial/neutro até a palavra ser concluída; não há falso erro. |
+| Grade com 15 entradas | Há cruzamentos suficientes para formar um conjunto compacto; entradas isoladas e grandes vazios são exceção, não o padrão. |
+| Grade compacta | O bounding box das casas ocupadas não cresce por causa de palavras espalhadas sem necessidade; a leitura e a digitação permanecem confortáveis. |
 | IA responde após término | Resultado final e recompensa permanecem inalterados. |
 | Hardcore estabiliza repetidamente | Bônus único; relatório segue a política de tempo definida. |
 | JSON incompleto, quota ou timeout | Estado recuperável, sem débito indevido nem tela travada. |
 | Acesso cruzado entre usuários | Campos privados isolados; ranking só entrega dados públicos. |
 | Layout enviado, teclado, zoom e mobile | Correspondência visual e controles acessíveis sem cortes críticos. |
+| Primeiro acesso à cruzadinha | Tutorial abre antes do jogo, cronômetro permanece parado e a conclusão grava `tutorialCruzadinhasConcluido` no perfil. Ao voltar, não abre automaticamente; botão Tutorial reabre. Perfis antigos com partidas não são tratados como novos. |
+| Abandono da cruzadinha | Aparece confirmação com perda do progresso; cancelar mantém letras e tempo; confirmar volta aos tópicos. Durante salvamento da vitória, saída fica bloqueada. |
+| Relatório pós-partida da cruzadinha | Toda vitória, inclusive a primeira, apresenta XP de letras e palavras, multiplicadores, dedução por dicas, piso de 10 XP, missões e tickets, coerentes com o saldo salvo. |
 
 ## Decisões pendentes
 
@@ -228,5 +256,20 @@ O material visual já foi recebido. A homologação final ainda depende da revis
 | 24/09/2026 | Layout Stitch | Implementação integrada, homologação visual parcial | Referência recebida. Centro de comando, seleção de cruzadinhas e estatísticas refeitos com a paleta documentada. Login/cadastro, menu, seleção de cruzadinhas, estatísticas, perfil e seleção DDX foram inspecionados em desktop/celular; a entrada na cruzadinha também foi conferida. A admissão e os painéis do DDX foram inspecionados com 1 ticket; o erro da IA impediu verificar opções e desfecho. O painel vazio passou a explicar essa situação e o indicador de satisfação não exibe sorriso com FC zero. Ficaram pendentes zoom/teclado, desfecho DDX e execução Hardcore. |
 | 24/09/2026 | Animações Stitch | Implementação parcial | Cards principais entram suavemente, botões respondem a hover/press, barras têm brilho em movimento e o avatar pulsa com a paleta recebida. `prefers-reduced-motion` desativa esses efeitos. Ainda falta comparar microinterações finas e transições completas com o material de referência em todas as telas. |
 | 24/09/2026 | Entrada Hardcore | Bloqueada pela IA | Tela de briefing e erro conferida em navegador autenticado. A geração do paciente falhou antes do início; nenhuma partida foi registrada. A mensagem de erro agora orienta voltar ao centro de comando. Falta teste de caso e desfecho quando o serviço de IA estiver funcional. |
+| 24/09/2026 | Cruzadinhas C10–C12 | Código corrigido; homologação visual pendente | O motor impede sobreposição na mesma direção e conserva duas entradas com resposta igual; cursor pula interseção preenchida; feedback de erro aguarda a palavra completa. Guia rápido incluído. Oito testes e build passaram. |
+| 24/09/2026 | Feedback visual das cruzadinhas | Novo problema registrado | A imagem enviada mostra baixa densidade de interseções e muitas entradas isoladas. C13 entrou como prioridade P1; antes de alterar o algoritmo, será feita validação visual com testes de compactação e cruzamentos. |
+| 24/09/2026 | Lint, acessibilidade e limpeza da cruzadinha | Revisado em 25/09 | ESLint agora termina sem erros nem avisos. As células da grade têm nomes acessíveis; clique e foco compartilham a seleção de palavra/dica. Teclado, foco de diálogos e rótulos foram ampliados na revisão web. |
+| 25/09/2026 | Tutorial, abandono e relatório da cruzadinha | Validado em conta existente | Tutorial de seis etapas reaberto na partida, confirmação de saída validada e relatório conferido com o XP salvo. Ainda falta testar primeira entrada em conta nova e recuperação de falha de rede. |
+| 25/09/2026 | Fluxo web padrão da cruzadinha | Validado em conta autenticada | Partida de Anatomia/Sistema Circulatório concluída via teclado: 7 palavras, 32 letras, cruzamentos preenchidos automaticamente, relatório de 134 XP da grade + 150 XP de missão; saldo global 177.704 → 177.988 e XP do tópico 135 → 269. Tutorial reaberto, foco preso no diálogo; cancelamento preservou letras; abandono confirmado retornou aos tópicos sem recompensa. O teste alterou somente os dados desta conta, conforme autorização anterior do usuário. |
+| 25/09/2026 | Web desktop/notebook e acessibilidade básica | Implementado e conferido | Tabuleiro sem overflow horizontal em viewports de 1024×768 e 1366×768; em 683×384 há rolagem vertical. Saída ganhou nome acessível, setas navegam pela grade, Enter/Espaço alternam interseção, diálogos prendem foco, barra de XP expõe valor, campos de perfil têm rótulos e texto secundário usa a paleta com contraste maior. Teste completo com leitor de tela e zoom real de 200% ainda não executado. |
+| 25/09/2026 | Qualidade do código e dados de progresso | Implementado e conferido | ESLint sem erros/avisos; 11 testes passaram; build passou. Removido payload de recompensa que já não era utilizado. Patentes e contadores de cruzadinhas compartilham utilitários. Histórico recente é limitado a 30; menu, perfil e estatísticas agora exibem 49 partidas acumuladas após a vitória de teste. Ranking global foi aberto (#2 por nível, #1 por letras, #2 por tempo), com ordenação e ausência de tempo verificadas. |
+
+### Pendências para homologação final web
+
+- [ ] Testar primeira entrada do tutorial em conta realmente nova e persistência após novo login; a conta autenticada usada hoje já possuía partidas.
+- [ ] Simular falha de rede no salvamento e confirmar tentativa de novo envio sem duplicar recompensa.
+- [ ] Conferir foco e leitura do relatório em leitor de tela e zoom real de 200%.
+- [ ] Definir e implementar a fonte pública do ranking global e as regras do Firestore: a consulta atual lê a coleção `usuarios` inteira para montar a lista, incluindo documentos que contêm campos privados. A interface só exibe nome e métricas, mas a consulta do cliente ainda recebe o documento completo.
+- [ ] Revisar publicação web e dados de produção após os itens acima. A reformulação de DDX, Hardcore e IA vem depois dessa homologação.
 
 Para cada correção, registrar ID, commit no padrão Conventional Commits, verificação realizada e risco remanescente. Preservar alterações existentes do usuário, inclusive `docs/guia_conventional_commits.md`.

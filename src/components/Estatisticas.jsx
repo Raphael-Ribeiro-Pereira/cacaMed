@@ -1,5 +1,6 @@
 import { createElement, useState } from 'react';
 import { Activity, ArrowLeft, BookOpen, Clock3, HeartPulse, ShieldAlert, Stethoscope, Ticket, Trophy } from 'lucide-react';
+import { resumirCruzadinhas } from '../utils/progressoCruzadinha';
 
 const formatarTempo = segundos => {
   const minutos = Math.floor((Number(segundos) || 0) / 60);
@@ -10,12 +11,9 @@ const Metric = ({ nome, valor, icon: Icon, cor = 'mint' }) => <div className={`s
 export default function Estatisticas({ setTelaAtual, dadosUsuario }) {
   const [aba, setAba] = useState('geral');
   const cruz = dadosUsuario?.estatisticasGerais || {};
-  const historico = Array.isArray(cruz.historico) ? cruz.historico : [];
   const estatisticas = dadosUsuario?.estatisticas || {};
+  const resumoCruzadinhas = resumirCruzadinhas(estatisticas);
   const stats = estatisticas[aba] || {};
-  const topicos = Object.entries(estatisticas).filter(([, valor]) => valor && typeof valor === 'object' && typeof valor.letras === 'number');
-  const totalLetras = topicos.reduce((soma, [, valor]) => soma + valor.letras, 0);
-  const totalTempo = topicos.reduce((soma, [, valor]) => soma + (Number(valor.tempo) || 0), 0);
   const totalClinico = (Number(stats.partidas_ganhas) || 0) + (Number(stats.partidas_perdidas) || 0);
   const taxa = totalClinico ? Math.round((Number(stats.partidas_ganhas) || 0) / totalClinico * 100) : 0;
 
@@ -25,11 +23,11 @@ export default function Estatisticas({ setTelaAtual, dadosUsuario }) {
       <div className="stitch-heading"><div><span className="stitch-kicker">TELEMETRIA DO PLANTÃO</span><h1>Estatísticas</h1><p>Seu progresso registrado em cada modo do jogo.</p></div><Activity size={34} /></div>
       <nav className="stitch-tabs" aria-label="Modos de estatísticas">{[
         ['geral', 'Geral', Trophy], ['ddx', 'DDX', HeartPulse], ['hardcore', 'Hardcore', ShieldAlert], ['cruzadinhas', 'Cruzadinhas', BookOpen]
-      ].map(([id, label, Icon]) => <button key={id} className={aba === id ? 'is-selected' : ''} onClick={() => setAba(id)}>{createElement(Icon, { size: 18 })}{label}</button>)}</nav>
+      ].map(([id, label, Icon]) => <button key={id} aria-pressed={aba === id} className={aba === id ? 'is-selected' : ''} onClick={() => setAba(id)}>{createElement(Icon, { size: 18 })}{label}</button>)}</nav>
       <div key={aba} className="stitch-stat-content">
-      {aba === 'geral' && <div className="stitch-stat-grid"><Metric nome="XP acumulado" valor={(Number(dadosUsuario?.pontuacaoTotal) || 0).toLocaleString('pt-BR')} icon={Trophy} cor="amber" /><Metric nome="Tickets disponíveis" valor={Number(dadosUsuario?.tickets) || 0} icon={Ticket} /><Metric nome="Cruzadinhas concluídas" valor={historico.length} icon={BookOpen} /><Metric nome="Vitórias DDX" valor={estatisticas.ddx?.partidas_ganhas || 0} icon={HeartPulse} cor="violet" /><Metric nome="Vitórias Hardcore" valor={estatisticas.hardcore?.partidas_ganhas || 0} icon={ShieldAlert} cor="red" /></div>}
+      {aba === 'geral' && <div className="stitch-stat-grid"><Metric nome="XP acumulado" valor={(Number(dadosUsuario?.pontuacaoTotal) || 0).toLocaleString('pt-BR')} icon={Trophy} cor="amber" /><Metric nome="Tickets disponíveis" valor={Number(dadosUsuario?.tickets) || 0} icon={Ticket} /><Metric nome="Cruzadinhas concluídas" valor={resumoCruzadinhas.partidas} icon={BookOpen} /><Metric nome="Vitórias DDX" valor={estatisticas.ddx?.partidas_ganhas || 0} icon={HeartPulse} cor="violet" /><Metric nome="Vitórias Hardcore" valor={estatisticas.hardcore?.partidas_ganhas || 0} icon={ShieldAlert} cor="red" /></div>}
       {(aba === 'ddx' || aba === 'hardcore') && <><div className="stitch-summary"><div><span className="stitch-kicker">{aba === 'ddx' ? 'UTI · DDX' : 'SALA VERMELHA · HARDCORE'}</span><h2>{totalClinico ? `${taxa}% de vitórias` : 'Ainda sem plantões registrados'}</h2><p>{totalClinico} {totalClinico === 1 ? 'caso registrado' : 'casos registrados'} neste modo</p></div><HeartPulse size={42} /></div><div className="stitch-stat-grid"><Metric nome="Casos salvos" valor={stats.partidas_ganhas || 0} icon={HeartPulse} /><Metric nome="Derrotas" valor={stats.partidas_perdidas || 0} icon={ShieldAlert} cor="red" /><Metric nome="Mortes por erro" valor={stats.mortes_por_erro || 0} icon={ShieldAlert} cor="red" /><Metric nome="Mortes por tempo" valor={stats.mortes_por_tempo || 0} icon={Clock3} cor="amber" /><Metric nome="Processos" valor={stats.processos_judiciais || 0} icon={ShieldAlert} cor="amber" /><Metric nome="Tempo em plantão" valor={formatarTempo(stats.tempo_total_jogado)} icon={Clock3} /></div></>}
-      {aba === 'cruzadinhas' && <div className="stitch-stat-grid"><Metric nome="Partidas concluídas" valor={historico.length} icon={BookOpen} /><Metric nome="Letras corretas" valor={totalLetras} icon={Trophy} /><Metric nome="Erros" valor={cruz.errosTotais || 0} icon={ShieldAlert} cor="red" /><Metric nome="Maior palavra" valor={`${cruz.maiorPalavra || 0} letras`} icon={BookOpen} cor="amber" /><Metric nome="Tempo total" valor={formatarTempo(totalTempo)} icon={Clock3} /></div>}
+      {aba === 'cruzadinhas' && <div className="stitch-stat-grid"><Metric nome="Partidas concluídas" valor={resumoCruzadinhas.partidas} icon={BookOpen} /><Metric nome="Letras corretas" valor={resumoCruzadinhas.letras} icon={Trophy} /><Metric nome="Erros" valor={cruz.errosTotais || 0} icon={ShieldAlert} cor="red" /><Metric nome="Maior palavra" valor={`${cruz.maiorPalavra || 0} letras`} icon={BookOpen} cor="amber" /><Metric nome="Tempo total" valor={formatarTempo(resumoCruzadinhas.tempo)} icon={Clock3} /></div>}
       </div>
     </main>
   </div>;

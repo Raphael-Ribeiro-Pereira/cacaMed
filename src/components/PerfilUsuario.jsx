@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { resumirCruzadinhas, somarNiveisTopicos } from '../utils/progressoCruzadinha';
+import { obterPatente } from '../utils/patentes';
 import { ArrowLeft, Check, KeyRound, LogOut, Pencil, Save, Shield, Stethoscope, Trophy, X, Zap, User, Mail, Calendar, Award } from "lucide-react";
 import { motion, AnimatePresence, useAnimation, useReducedMotion } from "framer-motion";
 import { auth, db } from '../firebase';
@@ -99,15 +101,6 @@ const obterTituloEpico = (materia) => {
   return { titulo: 'Bisturi de Ouro', emoji: '🛡️', cor: '#ffb95f' };
 };
 
-const getPatente = (nivel) => {
-    if (nivel <= 5) return 'Estudante (Básico)';
-    if (nivel <= 15) return 'Estudante (Clínico)';
-    if (nivel <= 30) return 'Interno';
-    if (nivel <= 50) return 'Residente (R1)';
-    if (nivel <= 80) return 'Médico Especialista';
-    return 'Chefe de Plantão';
-};
-
 // ==========================================
 // COMPONENTE PRINCIPAL DO PERFIL
 // ==========================================
@@ -126,21 +119,19 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   const ehFeminino = infoPerfil.includes('doutora') || infoPerfil.includes('dra') || infoPerfil.includes('fem') || infoPerfil === 'f';
   const imagemPerfil = ehFeminino ? '/fem.png' : '/masc.png';
 
-  let somaNiveis = 0;
   let maxXp = -1;
   let materiaEspecialista = 'Clínico Geral';
   
   const xpTopicos = dadosUsuario?.xpTopicos || {};
   Object.keys(xpTopicos).forEach(chave => {
     const xpDaMateria = xpTopicos[chave];
-    if (xpDaMateria > 0) somaNiveis += Math.floor(Math.sqrt(xpDaMateria / 1000)) + 1;
     if (xpDaMateria > maxXp) {
       maxXp = xpDaMateria;
       materiaEspecialista = chave.split('-')[0];
     }
   });
 
-  const level = somaNiveis || 1;
+  const level = somarNiveisTopicos(xpTopicos) || 1;
   const xpCurrent = dadosUsuario?.pontuacaoTotal || 0;
   // 🔥 CIRURGIA: Calcula a base do nível atual (ex: se tem 167.795, a base é 167.000)
   const xpBaseAtual = Math.floor(xpCurrent / 1000) * 1000;
@@ -149,7 +140,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   // Agora a porcentagem é baseada apenas no que falta para os próximos 1000 (ex: 795/1000 = 79.5%)
   const xpPercent = Math.max(0, Math.min(100, Math.round((progressoNesteMilestone / 1000) * 100)));
 
-  const totalCruzadinhas = dadosUsuario?.estatisticasGerais?.historico?.length || 0;
+  const totalCruzadinhas = resumirCruzadinhas(dadosUsuario?.estatisticas).partidas;
   const dataCadastro = usuario?.metadata?.creationTime
     ? new Date(usuario.metadata.creationTime).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
     : '—';
@@ -162,7 +153,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   ];
 
   const tituloData = obterTituloEpico(materiaEspecialista);
-  const patente = getPatente(level);
+  const patente = obterPatente(level).titulo;
 
   const handleSave = async () => {
     if (!usuario?.uid) return;
@@ -199,7 +190,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
         setShowPasswordModal(false);
         setCurrentPw("");
         setNewPw("");
-    } catch (error) {
+    } catch {
         alert("Acesso negado. A senha atual está incorreta.");
     }
   };
@@ -223,6 +214,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <button
+              aria-label="Voltar ao centro de comando"
               onClick={() => setTelaAtual('menu')}
               className="w-9 h-9 rounded-xl bg-[#151F32] border border-white/[0.05] flex items-center justify-center text-slate-400 hover:text-white hover:border-cyan-500/30 transition-colors"
             >
@@ -276,7 +268,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
 
               <div className="w-full mt-3">
                 <div className="flex justify-between text-[8px] uppercase tracking-widest mb-1">
-                  <span className="text-slate-600">XP Nível {level}</span>
+                  <span className="text-slate-600">Próximos 1.000 XP globais</span>
                   <span className="text-cyan-400 font-mono text-[9px]">{xpCurrent.toLocaleString()}/{xpNext.toLocaleString()}</span>
                 </div>
                 <div className="w-full h-1.5 bg-[#0B1120] rounded-full overflow-hidden border border-white/[0.03]">
@@ -329,12 +321,12 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
 
               <div className="space-y-3 flex-1">
                 <div>
-                  <label className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block flex items-center gap-1">
+                  <label htmlFor="perfil-username" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block flex items-center gap-1">
                     <User className="w-2.5 h-2.5" /> Username
                   </label>
                   <div className={`flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 transition-all duration-300 ${focusedField === 'username' ? 'border-cyan-500/60 shadow-[0_0_15px_rgba(56,189,248,0.12)]' : 'border-white/[0.05] hover:border-white/[0.1]'}`}>
                     <span className="text-slate-600 text-sm">@</span>
-                    <input type="text" value={username} onChange={e => setUsername(e.target.value)} onFocus={() => setFocusedField('username')} onBlur={() => setFocusedField(null)} className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
+                    <input id="perfil-username" type="text" value={username} onChange={e => setUsername(e.target.value)} onFocus={() => setFocusedField('username')} onBlur={() => setFocusedField(null)} className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
                     {username.length >= 3 && (
                       <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/40">
                         <Check className="w-2.5 h-2.5 text-emerald-400" />
@@ -344,20 +336,20 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
                 </div>
 
                 <div>
-                  <label className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block flex items-center gap-1">
+                  <label htmlFor="perfil-nome" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block flex items-center gap-1">
                     <Stethoscope className="w-2.5 h-2.5" /> Nome Completo
                   </label>
                   <div className={`flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 transition-all duration-300 ${focusedField === 'fullname' ? 'border-cyan-500/60 shadow-[0_0_15px_rgba(56,189,248,0.12)]' : 'border-white/[0.05] hover:border-white/[0.1]'}`}>
-                    <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} onFocus={() => setFocusedField('fullname')} onBlur={() => setFocusedField(null)} className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
+                    <input id="perfil-nome" type="text" value={fullName} onChange={e => setFullName(e.target.value)} onFocus={() => setFocusedField('fullname')} onBlur={() => setFocusedField(null)} className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block flex items-center gap-1">
+                  <label htmlFor="perfil-email" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block flex items-center gap-1">
                     <Mail className="w-2.5 h-2.5" /> E-mail (imutável)
                   </label>
                   <div className="flex items-center gap-3 bg-[#0B1120]/60 rounded-xl px-4 py-2.5 border-2 border-white/[0.03]">
-                    <input type="email" value={email} readOnly className="flex-1 bg-transparent text-slate-500 text-sm outline-none cursor-not-allowed" />
+                    <input id="perfil-email" type="email" value={email} readOnly className="flex-1 bg-transparent text-slate-500 text-sm outline-none cursor-not-allowed" />
                     <div className="text-[8px] uppercase tracking-widest text-slate-600 bg-[#151F32] px-2 py-0.5 rounded-full border border-white/[0.04]">Fixo</div>
                   </div>
                 </div>
@@ -414,7 +406,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1120]/90 backdrop-blur-md">
             <motion.div initial={{ opacity: 0, scale: 0.93, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.93, y: 10 }} transition={{ duration: 0.3 }} className="w-full max-w-[400px] bg-[#151F32] rounded-[24px] border border-white/[0.05] shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6 relative overflow-hidden">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-20 bg-blue-500/5 blur-[40px] rounded-full pointer-events-none" />
-              <button onClick={() => setShowPasswordModal(false)} className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
+              <button aria-label="Fechar alteração de senha" onClick={() => setShowPasswordModal(false)} className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
 
               <div className="relative z-10">
                 <div className="text-center mb-5">
@@ -425,17 +417,17 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
 
                 <div className="space-y-3 mb-4">
                   <div>
-                    <label className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">Senha Atual</label>
+                    <label htmlFor="perfil-senha-atual" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">Senha Atual</label>
                     <div className="flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 border-white/[0.05] focus-within:border-blue-500/50 focus-within:shadow-[0_0_12px_rgba(59,130,246,0.1)] transition-all">
                       <KeyRound className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                      <input type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} placeholder="••••••••" className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
+                      <input id="perfil-senha-atual" type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} placeholder="••••••••" className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">Nova Senha</label>
+                    <label htmlFor="perfil-senha-nova" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">Nova Senha</label>
                     <div className="flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 border-white/[0.05] focus-within:border-emerald-500/50 focus-within:shadow-[0_0_12px_rgba(16,185,129,0.1)] transition-all">
                       <KeyRound className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                      <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Mín. 6 caracteres" className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
+                      <input id="perfil-senha-nova" type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Mín. 6 caracteres" className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
                       {newPw.length >= 6 && <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/40"><Check className="w-2.5 h-2.5 text-emerald-400" /></div>}
                     </div>
                   </div>

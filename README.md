@@ -1,16 +1,23 @@
-# React + Vite
+# cacoMed
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Jogo web de treinamento médico com cruzadinhas, progresso por tópico, missões, tickets, perfil, estatísticas e ranking global. DDX, Hardcore e a integração de IA têm uma reformulação planejada separadamente.
 
-Currently, two official plugins are available:
+## Executar localmente
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Requisitos: Node.js compatível com Vite 8 e um projeto Firebase configurado. Instale as dependências com `npm install`, preencha as variáveis de ambiente locais sem versionar chaves e inicie a interface com `npm run dev`. Quando precisar do serviço de IA, inicie também `npm run server` em outro terminal. O endereço do Vite é exibido no terminal, normalmente `http://localhost:5173/`; o servidor de IA responde em `http://localhost:3001/health`.
 
-## React Compiler
+## Verificações
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `npm test`: regras de missões, isolamento das estatísticas, geração/navegação da grade e contadores acumulados.
+- `npm run lint`: análise estática de JavaScript e JSX.
+- `npm run build`: compilação da versão de produção.
 
-## Expanding the ESLint configuration
+## Fluxo da cruzadinha
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+No primeiro acesso, o tutorial é exibido e sua conclusão fica registrada no perfil Firebase. O botão **Tutorial** permite reabri-lo. Durante a partida, clique ou use Tab para selecionar uma casa; as setas movem o foco entre casas vizinhas e Enter/Espaço alternam a direção numa interseção. O cursor pula letras já preenchidas. **Abandonar plantão** pede confirmação e descarta o progresso não concluído.
+
+Ao completar a grade, o resultado mostra XP de letras e palavras, multiplicadores de nível e tempo, desconto de dicas, bônus de missões e tickets. A recompensa é registrada em uma transação identificada; enquanto o salvamento não terminar, a saída permanece bloqueada. O histórico recente contém no máximo 30 partidas; os totais do menu, perfil, estatísticas e ranking vêm dos contadores acumulados por tópico.
+
+## Acompanhamento
+
+O [cronograma de recuperação](docs/cronograma-recuperacao-caca-med.md) contém o inventário de problemas, o andamento e as verificações de aceitação. A referência visual enviada pelo usuário está em `docs/stitch-reference/`.

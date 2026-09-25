@@ -56,6 +56,7 @@ export default function Cadastro({ setTelaAtual }) {
         especialidade: specialty,
         pontuacaoTotal: 100, // Cadastro + missão de login do primeiro dia
         xpTopicos: {},
+        tutorialCruzadinhasConcluido: false,
         dataUltimoLogin: dataLocalHoje(),
         missoesDiarias: criarMissoesDiarias(),
         criadoEm: new Date().toISOString()

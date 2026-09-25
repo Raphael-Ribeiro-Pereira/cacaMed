@@ -1,22 +1,18 @@
 import { useState, useEffect, useMemo, useRef } from 'react'; 
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import { gerarTabuleiro } from '../utils/motorTabuleiro'; 
 import Tabuleiro from './Tabuleiro';
 import { chamarOpenRouter } from '../services/openrouter';
 import { registrarCruzadinha } from '../services/registrarCruzadinha';
 import { dataLocalHoje } from '../utils/missoes';
+import { proximaCelulaDaEntrada } from '../utils/navegacaoCruzadinha';
+import { aplicarProgressoMissoes, lerMissoes } from '../utils/missoes';
+import { somarNiveisTopicos } from '../utils/progressoCruzadinha';
+import { obterPatente } from '../utils/patentes';
 
 import { Clock, LogOut, Stethoscope, Trophy, Ticket, Star, Lock, ChevronDown, User, Activity } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const getPatente = (nivel) => {
-  if (nivel <= 5) return { titulo: 'Estudante (Básico)', cor: '#b9cac4' };
-  if (nivel <= 15) return { titulo: 'Estudante (Clínico)', cor: '#00f5d4' };
-  if (nivel <= 30) return { titulo: 'Interno', cor: '#8b5cf6' };
-  if (nivel <= 50) return { titulo: 'Residente (R1)', cor: '#ffb95f' };
-  if (nivel <= 80) return { titulo: 'Médico Especialista', cor: '#d4004b' };
-  return { titulo: 'Chefe de Plantão', cor: '#00f5d4' };
-};
 
 const aplicarCensura = (textoDica, palavraSecreta) => {
   if (!textoDica || !palavraSecreta) return textoDica;
@@ -29,6 +25,15 @@ const aplicarCensura = (textoDica, palavraSecreta) => {
     return palavra;
   }).join(' ');
 };
+
+const passosTutorial = [
+  { titulo: 'Escolha uma palavra', texto: 'Clique em uma casa numerada para selecionar uma palavra. Em uma interseção, clique novamente para alternar entre horizontal e vertical.' },
+  { titulo: 'Preencha a grade', texto: 'Digite uma letra por casa. O cursor avança automaticamente e pula letras já preenchidas; Backspace volta para a casa anterior.' },
+  { titulo: 'Entenda o feedback', texto: 'A casa mostra feedback enquanto você digita. Uma palavra só é validada quando todas as suas casas estiverem preenchidas. Complete todas as palavras para terminar o plantão.' },
+  { titulo: 'Use as dicas', texto: 'O laudo fica no prontuário. A partir do nível 3, você pode abrir dicas adicionais: a do residente custa 5 XP e a do paciente, mais 10 XP.' },
+  { titulo: 'Receba suas recompensas', texto: 'Letras e palavras formam o XP base. Nível e tempo podem multiplicá-lo; dicas reduzem o resultado, com mínimo de 10 XP por partida. Missões podem dar XP extra, e a cada dois plantões completos você ganha um ticket. O relatório final mostra cada parcela.' },
+  { titulo: 'Antes de sair', texto: 'Se abandonar o plantão antes de completá-lo, as letras e o progresso desta partida serão perdidos. O botão de saída pedirá confirmação.' }
+];
 
 export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtual, usuario, dadosUsuario, setDadosUsuario }) {
   const meuUid = auth.currentUser?.uid || usuario?.uid || dadosUsuario?.uid;
@@ -55,9 +60,75 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   const [levelUps, setLevelUps] = useState([]);
   const cadeadoRecompensa = useRef(false);
   const partidaIdRef = useRef(null);
+  const direcaoFocoRef = useRef(null);
+  const tentativasErradasRef = useRef(new Set());
 
   // O COFRE DE XP (A Sala de Espera que resolve o bug do tabuleiro)
   const [xpPendente, setXpPendente] = useState(null);
+  const [tutorialAberto, setTutorialAberto] = useState(() =>
+    dadosUsuario?.tutorialCruzadinhasConcluido !== true &&
+    !(dadosUsuario?.estatisticasGerais?.historico?.length > 0) &&
+    !Object.values(dadosUsuario?.estatisticas || {}).some(estatistica => Number(estatistica?.partidas) > 0)
+  );
+  const [passoTutorial, setPassoTutorial] = useState(0);
+  const [salvandoTutorial, setSalvandoTutorial] = useState(false);
+  const [erroTutorial, setErroTutorial] = useState('');
+  const [confirmarSaida, setConfirmarSaida] = useState(false);
+
+  useEffect(() => {
+    if (!tutorialAberto && !confirmarSaida && !vitoria) return;
+    const dialogo = document.querySelector('[data-active-crossword-dialog]');
+    if (!dialogo) return;
+    const focoAnterior = document.activeElement;
+    const focoInicial = dialogo.querySelector('h2, h3, button');
+    focoInicial?.focus();
+    const manterFoco = evento => {
+      if (evento.key === 'Escape' && confirmarSaida) {
+        setConfirmarSaida(false);
+        return;
+      }
+      if (evento.key !== 'Tab') return;
+      const elementos = [...dialogo.querySelectorAll('button:not(:disabled), input:not(:disabled), a[href]')];
+      if (!elementos.length) return;
+      const primeiro = elementos[0];
+      const ultimo = elementos[elementos.length - 1];
+      if (evento.shiftKey && (document.activeElement === primeiro || !dialogo.contains(document.activeElement))) {
+        evento.preventDefault();
+        ultimo.focus();
+      } else if (!evento.shiftKey && (document.activeElement === ultimo || !dialogo.contains(document.activeElement))) {
+        evento.preventDefault();
+        primeiro.focus();
+      }
+    };
+    document.addEventListener('keydown', manterFoco);
+    return () => {
+      document.removeEventListener('keydown', manterFoco);
+      if (focoAnterior?.isConnected) focoAnterior.focus();
+    };
+  }, [tutorialAberto, confirmarSaida, vitoria]);
+
+  const concluirTutorial = async () => {
+    if (dadosUsuario?.tutorialCruzadinhasConcluido === true || dadosUsuario?.estatisticasGerais?.historico?.length > 0 || Object.values(dadosUsuario?.estatisticas || {}).some(estatistica => Number(estatistica?.partidas) > 0)) {
+      setTutorialAberto(false);
+      return;
+    }
+    if (!meuUid) {
+      setErroTutorial('Não foi possível identificar seu perfil. Entre novamente e tente de novo.');
+      return;
+    }
+    setSalvandoTutorial(true);
+    setErroTutorial('');
+    try {
+      await updateDoc(doc(db, 'usuarios', meuUid), { tutorialCruzadinhasConcluido: true });
+      setDadosUsuario(prev => ({ ...prev, tutorialCruzadinhasConcluido: true }));
+      setTutorialAberto(false);
+    } catch (error) {
+      console.error('Falha ao registrar tutorial da cruzadinha:', error);
+      setErroTutorial('Não foi possível salvar o tutorial. Tente novamente.');
+    } finally {
+      setSalvandoTutorial(false);
+    }
+  };
 
   const materiaBlindada = materia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
   const subMateriaBlindada = subMateria.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
@@ -74,9 +145,9 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
   useEffect(() => {
     let intervalo;
-    if (jogoIniciado && !vitoria) intervalo = setInterval(() => setTempoDecorrido(prev => prev + 1), 1000);
+    if (jogoIniciado && !vitoria && !tutorialAberto && !confirmarSaida) intervalo = setInterval(() => setTempoDecorrido(prev => prev + 1), 1000);
     return () => clearInterval(intervalo);
-  }, [vitoria, jogoIniciado, chaveRecarregamento]);
+  }, [vitoria, jogoIniciado, chaveRecarregamento, tutorialAberto, confirmarSaida]);
 
   const formatarTempo = (segundos) => {
     const min = Math.floor(segundos / 60).toString().padStart(2, '0');
@@ -86,17 +157,19 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
   const { gradePronta, limites } = useMemo(() => {
     return gerarTabuleiro(bancoDePalavras, chaveXP, nivelDaGrade);
+  // A chave força uma nova grade aleatória ao avançar, mesmo no mesmo nível.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bancoDePalavras, chaveXP, chaveRecarregamento, nivelDaGrade]);
 
   const palavrasDoTabuleiro = useMemo(() => {
-    const palavras = new Set();
+    const palavras = [];
     gradePronta.forEach(linha => {
       linha.forEach(c => {
-        if (c.palavraInicialHorizontal) palavras.add(c.palavraInicialHorizontal);
-        if (c.palavraInicialVertical) palavras.add(c.palavraInicialVertical);
+        if (c.palavraInicialHorizontal) palavras.push(c.palavraInicialHorizontal);
+        if (c.palavraInicialVertical) palavras.push(c.palavraInicialVertical);
       });
     });
-    return Array.from(palavras);
+    return palavras;
   }, [gradePronta]);
 
   const mapaDicasBasicas = useMemo(() => {
@@ -174,7 +247,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         textoResposta = textoResposta.replace(/```json/gi, '').replace(/```/g, '').trim();
         const novaDicaObj = JSON.parse(textoResposta);
         setDicasSalvas(prev => ({ ...prev, [termo]: novaDicaObj }));
-    } catch (erro) {
+    } catch {
         const fallback = { laudo: "Erro de ligação. Tente deduzir!", residente: "Indisponível", paciente: "Indisponível" };
         setDicasSalvas(prev => ({ ...prev, [termo]: fallback }));
     }
@@ -201,26 +274,23 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           let numLetras = 0; let numPalavras = 0; let tamanhoMaiorPalavra = 0;
           gradePronta.forEach(linha => linha.forEach(c => {
               if (!c.vazia && c.letraCerta !== ' ') numLetras++;
-              if (c.numero) numPalavras++;
+              if (c.inicioHorizontal) numPalavras++;
+              if (c.inicioVertical) numPalavras++;
               if (c.palavraInicialHorizontal && c.palavraInicialHorizontal.length > tamanhoMaiorPalavra) tamanhoMaiorPalavra = c.palavraInicialHorizontal.length;
               if (c.palavraInicialVertical && c.palavraInicialVertical.length > tamanhoMaiorPalavra) tamanhoMaiorPalavra = c.palavraInicialVertical.length;
           }));
 
-          let xpFinalDaFase = 0;
-          if (xpAtualSubtopico === 0) {
-            setRelatorioXP({ isTutorial: true }); xpFinalDaFase = 1;
-          } else {
-            const xpBase = (numLetras * 2) + (numPalavras * 10);
-            const multNivel = 1 + ((nivelAtual - 1) * 0.1); 
-            const tempoIdeal = numPalavras * 15; 
-            let multTempo = 1.0;
-            if (tempoDecorrido <= tempoIdeal * 0.25) multTempo = 2.0; 
-            else if (tempoDecorrido <= tempoIdeal * 0.5) multTempo = 1.5; 
-            else if (tempoDecorrido <= tempoIdeal) multTempo = 1.2; 
-            let calculado = Math.floor(xpBase * multNivel * multTempo) - penalidadeXP;
-            xpFinalDaFase = calculado < 10 ? 10 : calculado;
-            setRelatorioXP({ ganho: xpFinalDaFase, base: xpBase, multNivel: multNivel.toFixed(1), multTempo: multTempo.toFixed(1), penalidade: penalidadeXP });
-          }
+          const xpLetras = numLetras * 2;
+          const xpPalavras = numPalavras * 10;
+          const xpBase = xpLetras + xpPalavras;
+          const multNivel = 1 + ((Math.max(1, nivelDaGrade) - 1) * 0.1);
+          const tempoIdeal = numPalavras * 15;
+          let multTempo = 1.0;
+          if (tempoDecorrido <= tempoIdeal * 0.25) multTempo = 2.0;
+          else if (tempoDecorrido <= tempoIdeal * 0.5) multTempo = 1.5;
+          else if (tempoDecorrido <= tempoIdeal) multTempo = 1.2;
+          const xpCalculado = Math.floor(xpBase * multNivel * multTempo) - penalidadeXP;
+          const xpFinalDaFase = Math.max(10, xpCalculado);
 
           const medidorAntigo = dadosUsuario.medidorTicketsCruzadinha || 0;
           let novoMedidor = medidorAntigo + 1;
@@ -228,45 +298,20 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           if (novoMedidor >= 2) { novoMedidor = 0; ticketGanhoPartida = 1; }
           setProgressoTicket({ atual: ticketGanhoPartida > 0 ? 2 : novoMedidor, ganhou: ticketGanhoPartida > 0 });
 
-          const missoesAtuais = Array.isArray(dadosUsuario.missoesDiarias) ? dadosUsuario.missoesDiarias : (dadosUsuario.missoesDiarias?.missoes || []);
-          let xpMissaoBonus = 0; let ticketMissaoBonus = 0;
-          const missoesAtualizadas = missoesAtuais.map(missao => {
-            if (missao.concluida) return missao;
-            let novoProgresso = missao.progresso || 0;
-            if (missao.id === 'jogar_cruzadinha') novoProgresso += 1;
-            if (missao.id === 'acertar_palavras') novoProgresso += numPalavras;
-            if (novoProgresso >= missao.meta) { novoProgresso = missao.meta; xpMissaoBonus += missao.recompensaXP || 0; ticketMissaoBonus += missao.recompensaTicket || 0; }
-            return { ...missao, progresso: novoProgresso, concluida: novoProgresso >= missao.meta };
-          });
-
-          const statsAntigas = dadosUsuario.estatisticas?.[chaveXP] || { partidas: 0, tempo: 0, letras: 0 };
-          const recordeTempo = statsAntigas.melhorTempo ? Math.min(statsAntigas.melhorTempo, tempoDecorrido) : tempoDecorrido;
-          const novasStatsLocal = { partidas: statsAntigas.partidas + 1, tempo: statsAntigas.tempo + tempoDecorrido, letras: statsAntigas.letras + numLetras, melhorTempo: recordeTempo };
-          const hoje = new Date().toISOString().split('T')[0];
-          const statsGerais = dadosUsuario.estatisticasGerais || { streakAtual: 0, maiorStreak: 0, ultimoDia: '', diasSeguidos: 0, errosTotais: 0, maiorPalavra: 0, historico: [] };
-
-          let novosDiasSeguidos = statsGerais.diasSeguidos;
-          if (statsGerais.ultimoDia !== hoje) {
-            const ontem = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-            if (statsGerais.ultimoDia === ontem) novosDiasSeguidos += 1; else novosDiasSeguidos = 1; 
-          }
-
-          const novaStreak = statsGerais.streakAtual + 1;
-          const novaMaiorStreak = Math.max(statsGerais.maiorStreak || 0, novaStreak);
-          const novaMaiorPalavra = Math.max(statsGerais.maiorPalavra || 0, tamanhoMaiorPalavra);
-          const novosErrosTotais = (statsGerais.errosTotais || 0) + errosNaPartida;
-          const novoHistorico = [...(statsGerais.historico || []), { data: hoje, materia: subMateria, tempo: tempoDecorrido, erros: errosNaPartida, letrasCorretas: numLetras }].slice(-30);
-          const novasStatsGerais = { streakAtual: novaStreak, maiorStreak: novaMaiorStreak, ultimoDia: hoje, diasSeguidos: novosDiasSeguidos, errosTotais: novosErrosTotais, maiorPalavra: novaMaiorPalavra, historico: novoHistorico };
+          const progressoMissoes = aplicarProgressoMissoes(lerMissoes(dadosUsuario), { jogar_cruzadinha: 1, acertar_palavras: numPalavras });
+          const xpMissaoBonus = progressoMissoes.xp;
+          const ticketMissaoBonus = progressoMissoes.tickets;
+          const missoesConcluidas = progressoMissoes.missoes.filter((missao, index) => !lerMissoes(dadosUsuario)[index]?.concluida && missao.concluida);
+          setRelatorioXP({ ganho: xpFinalDaFase, letras: numLetras, palavras: numPalavras, xpLetras, xpPalavras, base: xpBase, multNivel, multTempo, penalidade: penalidadeXP, xpCalculado, xpMissoes: xpMissaoBonus, ticketsMissoes: ticketMissaoBonus, missoesConcluidas });
 
           const newSubXP = xpAtualSubtopico + xpFinalDaFase;
           const newSubLevel = Math.floor(Math.sqrt(newSubXP / 1000)) + 1;
           const oldSubLevel = xpAtualSubtopico === 0 ? 0 : Math.floor(Math.sqrt(xpAtualSubtopico / 1000)) + 1;
           
-          let oldSomaNiveis = 0; Object.keys(dadosUsuario.xpTopicos || {}).forEach(k => { if (dadosUsuario.xpTopicos[k] > 0) oldSomaNiveis += Math.floor(Math.sqrt(dadosUsuario.xpTopicos[k] / 1000)) + 1; });
-          let newSomaNiveis = 0; const novosTopicosSimulados = { ...(dadosUsuario.xpTopicos || {}), [chaveXP]: newSubXP };
-          Object.keys(novosTopicosSimulados).forEach(k => { if (novosTopicosSimulados[k] > 0) newSomaNiveis += Math.floor(Math.sqrt(novosTopicosSimulados[k] / 1000)) + 1; });
+          const oldSomaNiveis = somarNiveisTopicos(dadosUsuario.xpTopicos);
+          const newSomaNiveis = somarNiveisTopicos({ ...dadosUsuario.xpTopicos, [chaveXP]: newSubXP });
 
-          const oldPatente = getPatente(oldSomaNiveis); const newPatente = getPatente(newSomaNiveis);
+          const oldPatente = obterPatente(oldSomaNiveis); const newPatente = obterPatente(newSomaNiveis);
           let alertasNivel = [];
           if (newPatente.titulo !== oldPatente.titulo && oldSomaNiveis > 0) alertasNivel.push({ isPromocao: true, nome: 'PROMOÇÃO DE CARREIRA', antigo: oldPatente.titulo, novo: newPatente.titulo, icone: '🌟', cor: newPatente.cor });
           else if (newSomaNiveis > oldSomaNiveis && oldSomaNiveis > 0) alertasNivel.push({ nome: 'Nível Global', antigo: oldSomaNiveis, novo: newSomaNiveis, icone: '🌍' });
@@ -274,23 +319,9 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           
           if (alertasNivel.length > 0) { setLevelUps(alertasNivel); setTimeout(() => setLevelUps([]), 8000); }
 
-          const xpGlobalAntigo = dadosUsuario.pontuacaoTotal || 0;
-          const novoXPGlobal = xpGlobalAntigo + xpFinalDaFase + xpMissaoBonus; 
-          const novosTickets = (dadosUsuario.tickets || 0) + ticketMissaoBonus + ticketGanhoPartida; 
-
-          // Guarda as informações na "Sala de Espera" em vez de enviar logo
-          const payloadFirebase = {
-             pontuacaoTotal: novoXPGlobal, tickets: novosTickets, medidorTicketsCruzadinha: novoMedidor,
-             [`xpTopicos.${chaveXP}`]: newSubXP, [`estatisticas.${chaveXP}`]: novasStatsLocal, estatisticasGerais: novasStatsGerais, missoesDiarias: missoesAtualizadas
-          };
-          const payloadLocal = {
-             pontuacaoTotal: novoXPGlobal, tickets: novosTickets, medidorTicketsCruzadinha: novoMedidor,
-             xpTopicos: { ...dadosUsuario.xpTopicos, [chaveXP]: newSubXP }, estatisticas: { ...dadosUsuario.estatisticas, [chaveXP]: novasStatsLocal }, estatisticasGerais: novasStatsGerais, missoesDiarias: missoesAtualizadas
-          };
-
           if (!partidaIdRef.current) partidaIdRef.current = crypto.randomUUID();
           setXpPendente({
-            firebase: payloadFirebase, local: payloadLocal, status: 'pendente',
+            status: 'pendente',
             partida: {
               id: partidaIdRef.current, chaveXP, subMateria, dia: dataLocalHoje(),
               xp: xpFinalDaFase, palavras: palavrasDoTabuleiro.length,
@@ -304,13 +335,18 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     } else if (!todasCertas && vitoria) {
       setVitoria(false); cadeadoRecompensa.current = false; 
     }
-  }, [valores, gradePronta, vitoria, usuario, dadosUsuario, nivelAtual, tempoDecorrido, chaveXP, xpAtualSubtopico, materia, subMateria, materiaBlindada, errosNaPartida, meuUid, penalidadeXP]);
+  }, [valores, gradePronta, vitoria, usuario, dadosUsuario, nivelAtual, nivelDaGrade, tempoDecorrido, chaveXP, xpAtualSubtopico, materia, subMateria, materiaBlindada, errosNaPartida, meuUid, penalidadeXP, palavrasDoTabuleiro.length]);
 
   useEffect(() => {
     if (!xpPendente || xpPendente.status !== 'pendente' || !meuUid) return;
     setXpPendente(prev => ({ ...prev, status: 'salvando' }));
     registrarCruzadinha(meuUid, xpPendente.partida)
       .then(dados => {
+        const xpRecebido = (Number(dados.xpTopicos?.[chaveXP]) || 0) - (Number(dadosUsuario?.xpTopicos?.[chaveXP]) || 0);
+        const xpGlobalRecebido = (Number(dados.pontuacaoTotal) || 0) - (Number(dadosUsuario?.pontuacaoTotal) || 0);
+        const ticketRecebido = (Number(dados.tickets) || 0) - (Number(dadosUsuario?.tickets) || 0);
+        setRelatorioXP(prev => prev ? { ...prev, ganho: xpRecebido, xpMissoes: Math.max(0, xpGlobalRecebido - xpRecebido), ticketsRecebidos: Math.max(0, ticketRecebido) } : prev);
+        setProgressoTicket({ atual: dados.medidorTicketsCruzadinha === 0 ? 2 : dados.medidorTicketsCruzadinha, ganhou: dados.medidorTicketsCruzadinha === 0 });
         setDadosUsuario(dados);
         setXpPendente(prev => ({ ...prev, status: 'salvo' }));
       })
@@ -318,7 +354,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         console.error('Falha ao salvar cruzadinha:', error);
         setXpPendente(prev => ({ ...prev, status: 'erro' }));
       });
-  }, [xpPendente, meuUid, setDadosUsuario]);
+  }, [xpPendente, meuUid, setDadosUsuario, chaveXP, dadosUsuario]);
 
   const atualizarDestaqueVisual = (linha, coluna, direcao) => {
     const celulaAtual = gradePronta[linha][coluna];
@@ -336,86 +372,74 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     setCelulasDestacadas(novasDestacadas);
   };
 
-  const handleFocus = (celula) => {
-    let novaDirecao = direcaoAtual;
-    if (celula.pertenceHorizontal && celula.pertenceVertical) {
-      if (direcaoAtual === 'horizontal' && celula.pertenceHorizontal) novaDirecao = 'horizontal';
-      else if (direcaoAtual === 'vertical' && celula.pertenceVertical) novaDirecao = 'vertical';
-      else novaDirecao = 'horizontal';
-    } else if (celula.pertenceHorizontal) novaDirecao = 'horizontal';
-    else if (celula.pertenceVertical) novaDirecao = 'vertical';
-    
-    setDirecaoAtual(novaDirecao);
-    atualizarDestaqueVisual(celula.linha, celula.coluna, novaDirecao);
-
-    const idDaPalavra = novaDirecao === 'horizontal' ? celula.idHorizontal : celula.idVertical;
+  const selecionarEntrada = (celula, direcao) => {
+    setDirecaoAtual(direcao);
+    atualizarDestaqueVisual(celula.linha, celula.coluna, direcao);
+    const idDaPalavra = direcao === 'horizontal' ? celula.idHorizontal : celula.idVertical;
     let palavraDaDica = null;
     gradePronta.forEach(linha => {
       linha.forEach(c => {
-        if (novaDirecao === 'horizontal' && c.idHorizontal === idDaPalavra && c.inicioHorizontal) palavraDaDica = c.palavraInicialHorizontal;
-        if (novaDirecao === 'vertical' && c.idVertical === idDaPalavra && c.inicioVertical) palavraDaDica = c.palavraInicialVertical;
+        if (direcao === 'horizontal' && c.idHorizontal === idDaPalavra && c.inicioHorizontal) palavraDaDica = c.palavraInicialHorizontal;
+        if (direcao === 'vertical' && c.idVertical === idDaPalavra && c.inicioVertical) palavraDaDica = c.palavraInicialVertical;
       });
     });
     if (palavraDaDica) gerarDica(palavraDaDica);
   };
 
+  const handleFocus = (celula) => {
+    const novaDirecao = direcaoFocoRef.current || (celula.pertenceHorizontal && celula.pertenceVertical
+      ? direcaoAtual
+      : celula.pertenceHorizontal ? 'horizontal' : 'vertical');
+    direcaoFocoRef.current = null;
+    selecionarEntrada(celula, novaDirecao);
+  };
+
   const handleClick = (celula) => {
     if (celula.pertenceHorizontal && celula.pertenceVertical) {
       const direcaoInvertida = direcaoAtual === 'horizontal' ? 'vertical' : 'horizontal';
-      setDirecaoAtual(direcaoInvertida);
-      atualizarDestaqueVisual(celula.linha, celula.coluna, direcaoInvertida);
-      const idDaPalavra = direcaoInvertida === 'horizontal' ? celula.idHorizontal : celula.idVertical;
-      let palavraDaDica = null;
-      gradePronta.forEach(linha => {
-        linha.forEach(c => {
-          if (direcaoInvertida === 'horizontal' && c.idHorizontal === idDaPalavra && c.inicioHorizontal) palavraDaDica = c.palavraInicialHorizontal;
-          if (direcaoInvertida === 'vertical' && c.idVertical === idDaPalavra && c.inicioVertical) palavraDaDica = c.palavraInicialVertical;
-        });
-      });
-      if (palavraDaDica) gerarDica(palavraDaDica);
+      selecionarEntrada(celula, direcaoInvertida);
     }
   };
 
   const handleInput = (e, l, c) => {
-    const val = e.target.value.toUpperCase();
-    const letraCorretaDaCelula = gradePronta[l][c].letraCerta.toUpperCase();
-    if (val !== '' && val !== letraCorretaDaCelula) setErrosNaPartida(prev => prev + 1);
-
-    setValores(prev => ({ ...prev, [`${l}-${c}`]: val })); 
+    const val = e.target.value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+    const novosValores = { ...valores, [`${l}-${c}`]: val };
+    setValores(novosValores);
+    if (val && val !== gradePronta[l][c].letraCerta) {
+      const assinatura = `${l}:${c}:${val}`;
+      if (!tentativasErradasRef.current.has(assinatura)) {
+        tentativasErradasRef.current.add(assinatura);
+        setErrosNaPartida(prev => prev + 1);
+      }
+    }
     
     if (val !== '') {
-      let nextL = l; let nextC = c;
-      while (true) {
-        if (direcaoAtual === 'vertical') nextL++; else nextC++;
-        const linhaDaMatriz = gradePronta[nextL];
-        if (!linhaDaMatriz) break; 
-        const proximaCelula = linhaDaMatriz[nextC];
-        if (!proximaCelula || proximaCelula.vazia) break; 
-        const idDaProxima = direcaoAtual === 'horizontal' ? proximaCelula.idHorizontal : proximaCelula.idVertical;
-        const idDaAtual = direcaoAtual === 'horizontal' ? gradePronta[l][c].idHorizontal : gradePronta[l][c].idVertical;
-        if (idDaProxima !== idDaAtual) break; 
-        if (proximaCelula.letraCerta === ' ') continue;
-        const inputFuturo = document.getElementById(`input-${nextL}-${nextC}`);
-        if (inputFuturo) { inputFuturo.focus(); break; }
-      }
+      const proxima = proximaCelulaDaEntrada(gradePronta, novosValores, l, c, direcaoAtual);
+      if (proxima) document.getElementById(`input-${proxima.linha}-${proxima.coluna}`)?.focus();
     }
   };
 
   const handleKeyDown = (e, l, c) => {
-    if (e.key === 'Backspace' && !valores[`${l}-${c}`]) {
-      let prevL = l; let prevC = c;
-      while (true) {
-        if (direcaoAtual === 'vertical') prevL--; else prevC--;
-        const linhaDaMatriz = gradePronta[prevL];
-        if (!linhaDaMatriz) break;
-        const celulaAnterior = linhaDaMatriz[prevC];
-        if (!celulaAnterior || celulaAnterior.vazia) break;
-        const idDaAnterior = direcaoAtual === 'horizontal' ? celulaAnterior.idHorizontal : celulaAnterior.idVertical;
-        const idDaAtual = direcaoAtual === 'horizontal' ? gradePronta[l][c].idHorizontal : gradePronta[l][c].idVertical;
-        if (idDaAnterior !== idDaAtual) break;
-        if (celulaAnterior.letraCerta === ' ') continue;
-        document.getElementById(`input-${prevL}-${prevC}`)?.focus(); break;
+    const celula = gradePronta[l]?.[c];
+    if ((e.key === ' ' || e.key === 'Enter') && celula?.pertenceHorizontal && celula?.pertenceVertical) {
+      e.preventDefault();
+      handleClick(celula);
+      return;
+    }
+    const seta = { ArrowRight: [0, 1, 'horizontal'], ArrowLeft: [0, -1, 'horizontal'], ArrowDown: [1, 0, 'vertical'], ArrowUp: [-1, 0, 'vertical'] }[e.key];
+    if (seta) {
+      const [passoLinha, passoColuna, direcao] = seta;
+      const destino = gradePronta[l + passoLinha]?.[c + passoColuna];
+      if (destino && !destino.vazia && destino.letraCerta !== ' ') {
+        e.preventDefault();
+        direcaoFocoRef.current = direcao;
+        document.getElementById(`input-${destino.linha}-${destino.coluna}`)?.focus();
       }
+      return;
+    }
+    if (e.key === 'Backspace' && !valores[`${l}-${c}`]) {
+      const anterior = proximaCelulaDaEntrada(gradePronta, valores, l, c, direcaoAtual, -1, false);
+      if (anterior) document.getElementById(`input-${anterior.linha}-${anterior.coluna}`)?.focus();
     }
   };
 
@@ -429,6 +453,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     const novoXP = Number(dadosUsuario?.xpTopicos?.[chaveXP]) || 0;
     setNivelDaGrade(novoXP === 0 ? 0 : Math.floor(Math.sqrt(novoXP / 1000)) + 1);
     setValores({}); setVitoria(false); setJogoIniciado(false); setCelulasDestacadas([]); 
+    tentativasErradasRef.current.clear();
     cadeadoRecompensa.current = false; setLevelUps([]); 
     partidaIdRef.current = null;
     setDicasSalvas({}); setTempoDecorrido(0); setErrosNaPartida(0); setRelatorioXP(null);
@@ -482,29 +507,32 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         </div>
       )}
 
-      <header className="h-20 bg-[#1e293b]/50 border-b border-white/[0.05] backdrop-blur-md flex items-center justify-between px-8 relative z-10 shrink-0 shadow-sm">
-        <button onClick={() => { if (!vitoria || xpPendente?.status === 'salvo') setTelaAtual('topicos'); }} className="flex items-center gap-2.5 text-slate-400 hover:text-rose-400 transition-colors text-sm font-bold">
+      <header inert={tutorialAberto || confirmarSaida || vitoria} className="h-20 bg-[#1e293b]/50 border-b border-white/[0.05] backdrop-blur-md flex items-center justify-between px-4 md:px-8 relative z-10 shrink-0 shadow-sm gap-3">
+        <button aria-label="Abandonar plantão" onClick={() => { if (vitoria && xpPendente?.status === 'salvo') setTelaAtual('topicos'); else if (!vitoria) setConfirmarSaida(true); }} disabled={vitoria && xpPendente?.status !== 'salvo'} className="flex items-center gap-2.5 text-slate-400 hover:text-rose-400 transition-colors text-sm font-bold disabled:opacity-40 shrink-0">
           <LogOut className="w-5 h-5" />
           <span className="hidden md:inline">Abandonar Plantão</span>
         </button>
 
-        <div className="flex items-center gap-10">
+        <div className="flex items-center gap-3 md:gap-10 min-w-0">
           <div className="flex flex-col items-center">
             <span className="text-cyan-400 text-xs uppercase tracking-widest mb-1.5 font-bold">Nível {nivelAtual}</span>
-            <div className="w-36 h-2 bg-[#0F172A] rounded-full overflow-hidden border border-white/[0.05]" title={`${xpProgressoNesteNivel} / ${xpNecessarioParaUpar} XP`}>
+            <div role="progressbar" aria-label={`Progresso do tópico ${subMateria}`} aria-valuemin="0" aria-valuemax={xpNecessarioParaUpar} aria-valuenow={xpProgressoNesteNivel} className="w-20 md:w-36 h-2 bg-[#0F172A] rounded-full overflow-hidden border border-white/[0.05]" title={`${xpProgressoNesteNivel} / ${xpNecessarioParaUpar} XP`}>
               <div className="h-full bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.8)]" style={{ width: `${porcentagemBarra}%` }} />
             </div>
           </div>
-          <div className="flex items-center gap-3 bg-[#0F172A] px-5 py-2 rounded-full border border-white/[0.05] shadow-inner">
+          <div className="flex items-center gap-2 md:gap-3 bg-[#0F172A] px-3 md:px-5 py-2 rounded-full border border-white/[0.05] shadow-inner">
             <Clock className="w-5 h-5 text-cyan-400" />
             <span className="font-mono text-white text-lg tracking-wider font-bold">{formatarTempo(tempoDecorrido)}</span>
           </div>
         </div>
 
-        <span className="hidden md:inline text-xs font-mono text-cyan-400">CRUZADINHA · {subMateria}</span>
+        <div className="flex items-center gap-3 shrink-0">
+          <button onClick={() => { setPassoTutorial(0); setErroTutorial(''); setTutorialAberto(true); }} className="text-xs font-bold text-cyan-400 hover:text-white transition-colors">Tutorial</button>
+          <span className="hidden md:inline text-xs font-mono text-cyan-400">CRUZADINHA · {subMateria}</span>
+        </div>
       </header>
 
-      <main className="flex-1 flex flex-col md:flex-row min-h-0 relative z-10 w-full overflow-hidden">
+      <main inert={tutorialAberto || confirmarSaida || vitoria} className="flex-1 flex flex-col md:flex-row min-h-0 relative z-10 w-full overflow-hidden">
         
         <div className="w-full md:w-[340px] lg:w-[400px] shrink-0 border-b md:border-b-0 md:border-r border-white/[0.05] flex flex-col p-4 md:p-5 bg-[#0f172a]/50 overflow-y-auto max-h-[35vh] md:max-h-full">
           
@@ -592,7 +620,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
         <div className="flex-1 flex items-center justify-center p-0 md:p-4 overflow-hidden w-full h-full relative">
           <div className="p-2 md:p-5 rounded-none md:rounded-2xl bg-transparent md:bg-[#1e293b]/20 border-none md:border md:border-white/[0.02] shadow-none md:shadow-[0_10px_40px_rgba(0,0,0,0.3)] w-full h-full relative overflow-x-auto overflow-y-auto touch-pan-x touch-pan-y scrollbar-hide whitespace-nowrap">
-            <Tabuleiro gradePronta={gradePronta} limites={limites} valores={valores} celulasDestacadas={celulasDestacadas} bloqueado={vitoria || !jogoIniciado} handleInput={handleInput} handleKeyDown={handleKeyDown} handleFocus={handleFocus} handleClick={handleClick} />
+            <Tabuleiro gradePronta={gradePronta} limites={limites} valores={valores} celulasDestacadas={celulasDestacadas} bloqueado={vitoria || !jogoIniciado || tutorialAberto || confirmarSaida} handleInput={handleInput} handleKeyDown={handleKeyDown} handleFocus={handleFocus} handleClick={handleClick} />
           </div>
         </div>
       </main>
@@ -600,27 +628,14 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       <AnimatePresence>
         {vitoria && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1120]/90 backdrop-blur-lg">
-            {relatorioXP?.isTutorial ? (
-              <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="w-full max-w-md rounded-3xl p-8 text-center relative overflow-hidden bg-[#1e293b] border border-amber-500/30 shadow-[0_0_60px_rgba(245,158,11,0.15)]">
-                <div className="absolute -top-20 -left-20 w-48 h-48 rounded-full blur-[80px] pointer-events-none bg-amber-500/20" />
-                <h3 className="text-2xl font-bold text-amber-400 mb-6 relative z-10">🎓 Como Funciona o XP?</h3>
-                <div className="text-slate-300 text-sm text-left flex flex-col gap-3 relative z-10 mb-6">
-                  <p><strong>1. Base:</strong> Letras e palavras desvendadas.</p>
-                  <p><strong>2. Bónus Tempo:</strong> Terminar rápido multiplica até <strong>2x</strong>!</p>
-                  <p><strong>3. Bónus Nível:</strong> O seu Nível aumenta o multiplicador.</p>
-                  <div className="mt-2 p-3 bg-[#0F172A] rounded-xl border-l-4 border-cyan-500 text-cyan-400 text-xs italic">A partir da sua próxima partida, os pontos serão contabilizados!</div>
-                </div>
-                <button onClick={avancarParaProximoNivel} className="w-full bg-cyan-600 hover:bg-cyan-500 text-[#0B1120] py-3 rounded-xl transition-all relative z-10 text-sm font-bold">{xpPendente?.status === 'erro' ? 'Tentar salvar novamente' : xpPendente?.status === 'salvo' ? 'Entendido, vamos jogar! ➔' : 'Salvando progresso...'}</button>
-              </motion.div>
-            ) : (
-              <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} transition={{ type: 'spring', damping: 20, stiffness: 100 }} className="w-full max-w-md rounded-3xl p-8 text-center relative overflow-hidden bg-[#0f1f18] border border-emerald-500/30 shadow-[0_0_60px_rgba(16,185,129,0.15)]">
+              <motion.div data-active-crossword-dialog initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} transition={{ type: 'spring', damping: 20, stiffness: 100 }} role="dialog" aria-modal="true" aria-label="Relatório do plantão" className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl p-8 text-center relative bg-[#0f1f18] border border-emerald-500/30 shadow-[0_0_60px_rgba(16,185,129,0.15)]">
                 <div className="absolute -top-20 -left-20 w-48 h-48 rounded-full blur-[80px] pointer-events-none bg-emerald-500/30" />
 
                 <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 bg-emerald-500/10 border border-emerald-500/50 relative z-10">
                   <Trophy className="w-8 h-8 text-emerald-400" />
                 </div>
 
-                <h2 className="text-2xl text-emerald-400 mb-1 relative z-10 font-bold">Plantão Concluído! 🎉</h2>
+                <h2 tabIndex="-1" className="text-2xl text-emerald-400 mb-1 relative z-10 font-bold">Plantão Concluído! 🎉</h2>
                 <p className="text-slate-400 text-sm mb-6 relative z-10">Todas as palavras foram preenchidas corretamente.</p>
 
                 <div className="flex justify-center gap-3 mb-6 relative z-10">
@@ -630,12 +645,20 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                   </div>
                 </div>
                 
-                {/* AVISO DE PUNIÇÃO SE ELE USOU AS DICAS */}
-                {relatorioXP?.penalidade > 0 && (
-                   <div className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl mb-6 relative z-10">
-                     <p className="text-rose-400 text-xs font-bold uppercase tracking-wider">Punição de Dicas Aplicada: -{relatorioXP.penalidade} XP</p>
-                   </div>
-                )}
+                <div className="bg-[#0B1120] border border-white/[0.1] rounded-xl p-4 mb-5 text-left text-xs text-slate-300 space-y-2 relative z-10" aria-label="Detalhamento do XP">
+                  <h3 className="text-sm font-bold text-cyan-400 mb-2">Relatório de XP</h3>
+                  <div className="flex justify-between"><span>{relatorioXP?.letras} letras × 2 XP</span><span>+{relatorioXP?.xpLetras} XP</span></div>
+                  <div className="flex justify-between"><span>{relatorioXP?.palavras} palavras × 10 XP</span><span>+{relatorioXP?.xpPalavras} XP</span></div>
+                  <div className="flex justify-between border-t border-white/[0.1] pt-2"><span>Base</span><span>{relatorioXP?.base} XP</span></div>
+                  <div className="flex justify-between"><span>Multiplicador do nível</span><span>×{relatorioXP?.multNivel?.toFixed(1)}</span></div>
+                  <div className="flex justify-between"><span>Multiplicador do tempo ({formatarTempo(tempoDecorrido)})</span><span>×{relatorioXP?.multTempo?.toFixed(1)}</span></div>
+                  <div className="flex justify-between"><span>Dicas extras</span><span>−{relatorioXP?.penalidade || 0} XP</span></div>
+                  {relatorioXP?.xpCalculado < 10 && <p className="text-cyan-400">Aplicado o mínimo de 10 XP por partida.</p>}
+                  <div className="flex justify-between border-t border-white/[0.1] pt-2 font-bold text-emerald-400"><span>XP da cruzadinha</span><span>+{relatorioXP?.ganho || 0} XP</span></div>
+                  <div className="flex justify-between"><span>Missões diárias{relatorioXP?.missoesConcluidas?.length ? `: ${relatorioXP.missoesConcluidas.map(m => m.titulo).join(', ')}` : ''}</span><span>+{relatorioXP?.xpMissoes || 0} XP</span></div>
+                  <div className="flex justify-between font-bold text-cyan-400"><span>Total de XP global</span><span>+{(relatorioXP?.ganho || 0) + (relatorioXP?.xpMissoes || 0)} XP</span></div>
+                  <p className="text-slate-400">Tickets: +{relatorioXP?.ticketsRecebidos ?? ((progressoTicket?.ganhou ? 1 : 0) + (relatorioXP?.ticketsMissoes || 0))} (fidelidade e missões).</p>
+                </div>
 
                 {progressoTicket && (
                   <div className="bg-[#0B1120] border border-orange-500/20 p-4 rounded-xl mb-6 relative overflow-hidden shadow-inner">
@@ -672,14 +695,43 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                   </div>
                 </div>
 
-                <button onClick={avancarParaProximoNivel} className="w-full bg-[#1e293b] hover:bg-[#151F32] border border-white/[0.1] text-white py-3 rounded-xl transition-all relative z-10 text-sm font-bold">
+                <button onClick={avancarParaProximoNivel} disabled={xpPendente?.status !== 'salvo' && xpPendente?.status !== 'erro'} className="w-full bg-[#1e293b] hover:bg-[#151F32] border border-white/[0.1] text-white py-3 rounded-xl transition-all relative z-10 text-sm font-bold disabled:opacity-50 disabled:cursor-wait">
                   {xpPendente?.status === 'erro' ? 'Tentar salvar novamente' : xpPendente?.status === 'salvo' ? 'Próximo Plantão' : 'Salvando progresso...'}
                 </button>
                 <button onClick={() => { if (xpPendente?.status === 'salvo') setTelaAtual('topicos'); }} disabled={xpPendente?.status !== 'salvo'} className="w-full mt-2 bg-transparent text-slate-400 hover:text-white py-2 transition-all relative z-10 text-xs font-bold disabled:opacity-40">
                   Sair
                 </button>
               </motion.div>
-            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {tutorialAberto && !vitoria && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[70] bg-[#0B1120]/90 backdrop-blur-lg flex items-center justify-center p-4">
+            <motion.div data-active-crossword-dialog initial={{ scale: 0.96, y: 12 }} animate={{ scale: 1, y: 0 }} role="dialog" aria-modal="true" aria-labelledby="tutorial-cruzadinha-titulo" className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-cyan-500/30 bg-[#1e293b] p-6 md:p-8 shadow-xl">
+              <p className="text-xs uppercase tracking-widest text-cyan-400 font-bold mb-2">Tutorial · {passoTutorial + 1}/{passosTutorial.length}</p>
+              <h2 tabIndex="-1" id="tutorial-cruzadinha-titulo" className="text-2xl font-bold text-white mb-4">{passosTutorial[passoTutorial].titulo}</h2>
+              <p className="text-slate-300 leading-relaxed min-h-24">{passosTutorial[passoTutorial].texto}</p>
+              {erroTutorial && <p role="alert" className="text-rose-400 text-sm mt-3">{erroTutorial}</p>}
+              <div className="flex justify-between gap-3 mt-6">
+                <button type="button" disabled={passoTutorial === 0 || salvandoTutorial} onClick={() => setPassoTutorial(p => p - 1)} className="px-4 py-3 rounded-xl border border-white/[0.1] text-slate-300 disabled:opacity-40">Voltar</button>
+                {passoTutorial < passosTutorial.length - 1
+                  ? <button type="button" onClick={() => setPassoTutorial(p => p + 1)} className="px-5 py-3 rounded-xl bg-cyan-500 text-[#0B1120] font-bold">Próximo</button>
+                  : <button type="button" disabled={salvandoTutorial} onClick={concluirTutorial} className="px-5 py-3 rounded-xl bg-cyan-500 text-[#0B1120] font-bold disabled:opacity-40">{salvandoTutorial ? 'Salvando...' : 'Começar plantão'}</button>}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+        {confirmarSaida && !vitoria && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[80] bg-[#0B1120]/90 backdrop-blur-lg flex items-center justify-center p-4">
+            <div data-active-crossword-dialog role="alertdialog" aria-modal="true" aria-labelledby="confirmar-saida-titulo" className="w-full max-w-md rounded-3xl border border-rose-500/30 bg-[#1e293b] p-7 shadow-xl">
+              <h2 tabIndex="-1" id="confirmar-saida-titulo" className="text-xl font-bold text-white mb-3">Abandonar plantão?</h2>
+              <p className="text-slate-300 text-sm mb-6">Você perderá as letras preenchidas e o progresso desta partida. Tem certeza de que quer sair?</p>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setConfirmarSaida(false)} className="flex-1 rounded-xl border border-white/[0.1] py-3 text-white">Continuar jogando</button>
+                <button type="button" onClick={() => setTelaAtual('topicos')} className="flex-1 rounded-xl bg-rose-500 py-3 font-bold text-white">Abandonar</button>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

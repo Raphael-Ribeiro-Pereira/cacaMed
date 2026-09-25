@@ -191,6 +191,15 @@
 .stitch-clinical aside { border-color: var(--stitch-line) !important; }
 .stitch-clinical main { min-width: 0; }
 .stitch-crossword { height: 100dvh; }
+.stitch-integrated :is([class~="text-slate-600"], [class~="text-slate-500"]),
+.stitch-crossword :is([class~="text-slate-600"], [class~="text-slate-500"]) { color: var(--stitch-muted); }
+.stitch-profile :is([class~="text-[8px]"], [class~="text-[9px]"]),
+.stitch-ranking :is([class~="text-[8px]"], [class~="text-[9px]"]) { font-size: 11px; }
+.stitch-profile [class~="text-[10px]"], .stitch-ranking [class~="text-[10px]"] { font-size: 12px; }
+@media (min-width: 769px) and (max-width: 1100px) {
+  .stitch-crossword > main > div:first-child { width: 280px; padding: 14px; }
+  .stitch-crossword header > div:last-child > span { display: none; }
+}
 
 /* Movimento da interface: os efeitos reagem ao estado real, sem alterar a lógica do jogo. */
 @keyframes stitch-drift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }

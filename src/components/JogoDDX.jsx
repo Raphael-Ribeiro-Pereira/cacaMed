@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useEffectEvent, useRef } from "react";
 import { AlertTriangle, Activity, Thermometer, Droplets, HeartPulse, Send, Zap, Target, Skull, Loader2, Bug, Clock, LogOut, ClipboardList, Users, Scale } from "lucide-react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { gerarNovoPacienteHouse } from '../services/geradorCasos';
@@ -48,7 +48,7 @@ function MonitorVital({ bpm }) {
           if (!isMounted) break;
           await controls.start({ d: flatPath, transition: { duration: tempoDescanso, ease: "linear" } });
         }
-      } catch (error) {
+      } catch {
         // Framer Motion lança um erro inofensivo quando forçamos a parada, nós o ignoramos aqui.
       }
     };
@@ -92,12 +92,13 @@ const DOCTOR_MAP = {
   kutner: { emoji: '⚡', name: 'Dr. Kutner', specialty: 'Trauma / Intoxicação', color: '#d4004b' },
   cuddy: { emoji: '📋', name: 'Dra. Cuddy', specialty: 'Administração / Ética', color: '#00f5d4' },
 };
+const CASO_VAZIO = {};
 
 export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, setDadosUsuario }) {
   const equipe = configDDX?.equipe || ['house'];
   const dificuldade = configDDX?.dificuldade || 'residente';
   const tempoModo = configDDX?.tempo || 'casual';
-  const casoPreCarregado = configDDX?.casoPreCarregado || {};
+  const casoPreCarregado = configDDX?.casoPreCarregado || CASO_VAZIO;
   const entradaId = configDDX?.entradaId;
 
   const chatEndRef = useRef(null);
@@ -183,6 +184,7 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, setDado
       reembolsoEmAndamentoRef.current = false;
     }
   };
+  const reembolsarNaInicializacao = useEffectEvent(reembolsarFalhaInicial);
 
   useEffect(() => {
     const inicializarCaso = async () => {
@@ -243,17 +245,18 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, setDado
       } catch (error) {
         console.error("Erro ao invocar o Dr. House:", error);
         setChat([{ id: 1, sender: 'system', text: '⚠️ [FALHA DE COMUNICAÇÃO]: Servidor de diagnósticos offline.' }]);
-        reembolsarFalhaInicial();
+        reembolsarNaInicializacao();
       }
     };
 
     inicializarCaso();
   }, [casoPreCarregado]);
 
+  const enviarPrimeiroTurno = useEffectEvent((texto) => handleAcao(texto, true));
   useEffect(() => {
     if (!showBriefing && gameState === 'playing' && dificuldade === 'residente' && primeiroTurno) {
       setPrimeiroTurno(false);
-      handleAcao("O jogador acabou de entrar na sala e avaliou o quadro inicial. Gere o primeiro pacote de opções de exames, tratamentos e diagnósticos baseados no quadro atual.", true);
+      enviarPrimeiroTurno("O jogador acabou de entrar na sala e avaliou o quadro inicial. Gere o primeiro pacote de opções de exames, tratamentos e diagnósticos baseados no quadro atual.");
     }
   }, [showBriefing, gameState, dificuldade, primeiroTurno]);
 
@@ -264,10 +267,11 @@ export default function JogoDDX({ setTelaAtual, configDDX, dadosUsuario, setDado
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  const registrarDerrotaPorTempo = useEffectEvent(() => registrarFimDeJogo('derrota', 'tempo'));
   useEffect(() => {
     if (gameState !== 'playing' || timeLeft === null || showBriefing) return;
     if (timeLeft <= 0 && !estatisticasSalvas) {
-      registrarFimDeJogo('derrota', 'tempo');
+      registrarDerrotaPorTempo();
       setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: 'TEMPO ESGOTADO. Parada cardíaca irreversível.' }]);
       setGameState('lost');
       return;
@@ -426,7 +430,7 @@ FORMATO JSON OBRIGATÓRIO:
         setVitais(prev => ({ ...prev, fc: 0, pa: '0x0', spo2: 0 })); 
       }
 
-    } catch (err) {
+    } catch {
       console.error("Erro ao interpretar a resposta da IA no DDX.");
       if (!primeiraRespostaRecebidaRef.current) {
         await reembolsarFalhaInicial();

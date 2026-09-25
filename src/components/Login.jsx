@@ -73,7 +73,7 @@ export default function Login({ setTelaAtual }) {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
+    } catch {
       setErro("Credenciais inválidas ou Doutor não encontrado no sistema.");
     } finally {
       setLoading(false);

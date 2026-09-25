@@ -2,6 +2,7 @@ import { Activity, ArrowRight, BarChart3, BookOpen, Flame, HeartPulse, LogOut, S
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import { lerMissoes } from '../utils/missoes';
+import { resumirCruzadinhas } from '../utils/progressoCruzadinha';
 import { useEffect, useRef, useState } from 'react';
 
 export default function MenuPrincipal({ dadosUsuario, setTelaAtual }) {
@@ -23,7 +24,7 @@ export default function MenuPrincipal({ dadosUsuario, setTelaAtual }) {
   const tickets = Number(dadosUsuario?.tickets) || 0;
   const missoes = lerMissoes(dadosUsuario);
   const feitas = missoes.filter(missao => missao.concluida).length;
-  const cruzadinhas = dadosUsuario?.estatisticasGerais?.historico?.length || 0;
+  const cruzadinhas = resumirCruzadinhas(dadosUsuario?.estatisticas).partidas;
   const ddx = dadosUsuario?.estatisticas?.ddx || {};
   const hardcore = dadosUsuario?.estatisticas?.hardcore || {};
 

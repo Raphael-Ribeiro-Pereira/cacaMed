@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { AlertTriangle, Activity, Thermometer, Droplets, Send, Zap, Target, Skull, Loader2, LogOut, FileWarning, Scale } from "lucide-react";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { gerarCasoIatrogeniaHardcore } from '../services/geradorCasos';
@@ -45,7 +45,7 @@ function MonitorVital({ bpm }) {
           if (!isMounted) break;
           await controls.start({ d: flatPath, transition: { duration: tempoDescanso, ease: "linear" } });
         }
-      } catch (error) { }
+      } catch { /* A animação pode ser interrompida ao sair da tela. */ }
     };
 
     animateEcg();
@@ -74,7 +74,7 @@ function MonitorVital({ bpm }) {
 
 export default function Hardcore({ setTelaAtual, dadosUsuario, setDadosUsuario }) {
   const chatEndRef = useRef(null);
-  const startTime = useRef(Date.now());
+  const startTime = useRef(null);
   const partidaIdRef = useRef(null);
 
   const [chat, setChat] = useState([]);
@@ -104,7 +104,7 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, setDadosUsuario }
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chat, isAiThinking]);
 
   // 🔥 MOTOR DE TELEMETRIA (VACINADO CONTRA NaN)
-  const registrarFimDeJogo = (resultado, motivoDerrota = null, teveProcesso = false) => {
+  const registrarFimDeJogo = useCallback((resultado, motivoDerrota = null, teveProcesso = false) => {
     if (!dadosUsuario || estatisticasSalvas) return;
     setEstatisticasSalvas(true);
     if (!partidaIdRef.current) partidaIdRef.current = crypto.randomUUID();
@@ -117,7 +117,7 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, setDadosUsuario }
       console.error('Falha ao registrar partida Hardcore:', error);
       setEstatisticasSalvas(false);
     });
-  };
+  }, [dadosUsuario, estatisticasSalvas, setDadosUsuario]);
 
   const chamarIA = async (prompt) => {
     try {
@@ -157,14 +157,14 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, setDadosUsuario }
 
         setGameState('playing');
         startTime.current = Date.now();
-      } catch (error) {
+      } catch {
         console.error("[MOTOR HARDCORE] Falha na geração do caso.");
         setGameState('error');
         setChat([{ id: 1, sender: 'system', text: 'Erro de conexão com a UTI. Volte ao centro de comando e tente novamente.' }]);
       }
     };
     gerarCasoHardcore();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const formatTime = (seconds) => {
     if (seconds === null) return "--:--";
@@ -175,15 +175,18 @@ export default function Hardcore({ setTelaAtual, dadosUsuario, setDadosUsuario }
 
   useEffect(() => {
     if (gameState !== 'playing' || showBriefing) return;
-    if (timeLeft <= 0 && !estatisticasSalvas) {
-      registrarFimDeJogo('derrota', 'tempo');
-      setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: 'TEMPO ESGOTADO. Óbito irrecuperável.' }]);
-      setGameState('lost');
-      return;
-    }
-    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    const timer = setInterval(() => {
+      if (timeLeft <= 1 && !estatisticasSalvas) {
+        registrarFimDeJogo('derrota', 'tempo');
+        setChat(prev => [...prev, { id: Date.now(), sender: 'system', text: 'TEMPO ESGOTADO. Óbito irrecuperável.' }]);
+        setGameState('lost');
+        setTimeLeft(0);
+      } else {
+        setTimeLeft(prev => Math.max(0, prev - 1));
+      }
+    }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, gameState, showBriefing, estatisticasSalvas]);
+  }, [timeLeft, gameState, showBriefing, estatisticasSalvas, registrarFimDeJogo]);
 
   // 🔥 FASE 2: A REAÇÃO DA IA (PROMPT DE TURNO)
   const handleAcao = async (e) => {

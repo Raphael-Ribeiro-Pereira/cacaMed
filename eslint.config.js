@@ -23,7 +23,8 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // JSX usa motion.div/motion.span, que no-unused-vars não reconhece como uso do import.
+      'no-unused-vars': ['error', { varsIgnorePattern: '^(motion$|[A-Z_])' }],
     },
   },
 ])
