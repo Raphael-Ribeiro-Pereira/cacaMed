@@ -30,7 +30,7 @@ A tela de ranking lê a implantação pública do Google Apps Script. Ela não c
 
 O Apps Script vinculado à planilha `cacoMed - Ranking Global` está na implantação existente (versão 8), com a mesma URL `/exec`. No modo novo, o cliente envia o token Firebase à API privada do Apps Script por uma ponte HTML, e o script armazena perfis em `PerfisGoogle`, recibos em `Partidas` e o placar em `RankingNovaTemporada`. O Firestore antigo não é usado nesse caminho. A resposta pública inclui nome e métricas, sem e-mail ou perfil privado. A sincronização antiga de ranking é rejeitada. A ponte HTML é reutilizada nas chamadas seguintes da mesma aba para evitar uma nova abertura a cada leitura ou salvamento.
 
-A interface está publicada em `https://caca-med.vercel.app/`. Esse endereço, **sem barra final**, deve permanecer em `ORIGENS_APP` no Apps Script e nos domínios autorizados do Firebase Authentication. Alterações no Apps Script exigem atualizar a implantação web existente; salvar o editor sozinho não atualiza `/exec`. O primeiro acesso pode levar mais tempo por iniciar a ponte e executar a chamada no Apps Script; os acessos seguintes reutilizam a ponte na aba aberta.
+A interface está publicada em `https://caca-med.vercel.app/` e a versão web padrão foi homologada em 27/09/2026. Esse endereço, **sem barra final**, deve permanecer em `ORIGENS_APP` no Apps Script e nos domínios autorizados do Firebase Authentication. Alterações no Apps Script exigem atualizar a implantação web existente; salvar o editor sozinho não atualiza `/exec`. O primeiro acesso pode levar mais tempo por iniciar a ponte e executar a chamada no Apps Script; os acessos seguintes reutilizam a ponte na aba aberta.
 
 ## Segurança do Firestore
 

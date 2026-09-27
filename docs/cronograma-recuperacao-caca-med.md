@@ -1,6 +1,6 @@
 # Caça-Med — diagnóstico e cronograma de recuperação
 
-## Estado atual — 27/09/2026
+## Estado atual — 27/09/2026 — versão web homologada
 
 A versão web padrão é a prioridade. Cruzadinhas, tutorial, missões, perfil, estatísticas e ranking usam a nova temporada na planilha via Apps Script **versão 8** quando `VITE_FONTE_DADOS=planilha`; Firebase Authentication permanece para login. DDX, Hardcore e IA ficam fora desta homologação. Os registros datados de 24–25/09 abaixo são histórico e não substituem este estado.
 
@@ -25,9 +25,15 @@ A versão web padrão é a prioridade. Cruzadinhas, tutorial, missões, perfil, 
 - [x] Importador agora preserva somente a primeira ocorrência de cada resposta normalizada por tópico. As seis duplicatas exatas do CSV público deixam de entrar no jogo, sem editar a planilha de origem; o banco passa a ter 1.931 entradas jogáveis distintas na leitura atual.
 - [ ] Revisão clínica das dicas e respostas pelo usuário. O tópico Histologia–Matriz tem 10 termos; manter a meta limitada ao disponível até que o usuário decida adicionar conteúdo. Auditoria estrutural não confirma correção médica.
 - [x] Incluir domínio de produção em `ORIGENS_APP`, atualizar a implantação do Apps Script e restaurar carregamento do perfil no Vercel; erro de origem fazia a ponte aguardar 60 segundos e mostrar timeout.
-- [ ] Homologar no endereço publicado login a partir de sessão encerrada, salvamento de perfil, conclusão de partida e ranking. A versão local reutiliza a ponte HTML para reduzir as aberturas repetidas; validar após o próximo deploy da interface.
+- [x] Homologar no endereço publicado login a partir de sessão encerrada, salvamento de perfil, conclusão de partida e ranking. O usuário confirmou que todos os fluxos ocorreram como esperado após a correção da ponte HTML.
 - [x] Após confirmação específica, a coleção Firestore `usuarios` foi excluída permanentemente; o console mostrou o banco vazio. As contas no Firebase Authentication foram mantidas. A remoção da aba `Ranking` também é permanente; as três abas atuais foram preservadas.
-- [ ] Publicação web final e revisão clínica do conteúdo. DDX, Hardcore e IA seguem para fase separada.
+- [x] Publicação web final homologada. A revisão clínica de dicas e respostas permanece como manutenção de conteúdo; DDX, Hardcore e IA seguem para fase separada.
+
+### Fechamento da versão web
+
+Em 27/09/2026, o usuário confirmou a homologação dos fluxos web padrão: autenticação, Cadastro 2.0, tutorial, geração e preenchimento de cruzadinhas, interseções, relatório pós-partida, XP, missões, tickets, perfil, estatísticas, ranking global, conta admin, conta comum, responsividade, acessibilidade básica, reenvio após falha e persistência na planilha. A ponte Apps Script/Vercel também foi validada após a correção da origem de produção e da reutilização da conexão.
+
+Próxima fase: reformular DDX, Hardcore e IA.
 
 Data da revisão: 24/09/2026. Base: arquivos locais e histórico até `81cad1e`.
 
