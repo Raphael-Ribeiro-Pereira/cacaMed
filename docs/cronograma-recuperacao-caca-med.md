@@ -2,7 +2,7 @@
 
 ## Estado atual — 27/09/2026
 
-A versão web padrão é a prioridade. Cruzadinhas, tutorial, missões, perfil, estatísticas e ranking usam a nova temporada na planilha via Apps Script **versão 7** quando `VITE_FONTE_DADOS=planilha`; Firebase Authentication permanece para login. DDX, Hardcore e IA ficam fora desta homologação. Os registros datados de 24–25/09 abaixo são histórico e não substituem este estado.
+A versão web padrão é a prioridade. Cruzadinhas, tutorial, missões, perfil, estatísticas e ranking usam a nova temporada na planilha via Apps Script **versão 8** quando `VITE_FONTE_DADOS=planilha`; Firebase Authentication permanece para login. DDX, Hardcore e IA ficam fora desta homologação. Os registros datados de 24–25/09 abaixo são histórico e não substituem este estado.
 
 - [x] Corrigir geração, feedback e relatório das cruzadinhas; criar controles admin no FAB e validar seu funcionamento básico com o usuário.
 - [x] Tratar CSV com campos citados e quebras de linha; exibir carregamento, vazio e falha com nova tentativa.
@@ -17,14 +17,15 @@ A versão web padrão é a prioridade. Cruzadinhas, tutorial, missões, perfil, 
 - [x] O usuário confirmou a revalidação do login comum e da geração das grades de Sistema Respiratório após as correções.
 - [x] Reaberta a falha C11 após o usuário relatar que a letra repetida da interseção caía na próxima casa vazia. O input agora guarda as casas preenchidas puladas, aceita a repetição sem gravá-la de novo e permite substituir a letra de uma casa preenchida selecionada diretamente. Teste automatizado cobre os três casos.
 - [x] Usuário validou em partida real a repetição da letra numa interseção, sem deslocar a próxima letra.
-- [x] Apps Script versão 7 publicado na implantação existente: GET público usa `RankingNovaTemporada` por padrão e a sincronização legada é rejeitada. URL pública respondeu com a temporada nova em 27/09/2026.
+- [x] Apps Script versão 8 publicado na implantação existente: GET público usa `RankingNovaTemporada` por padrão, a sincronização legada é rejeitada e `https://caca-med.vercel.app` está entre as origens permitidas (sem barra final). Após atualizar a implantação, o perfil carregou no Centro de Comando da versão publicada em 27/09/2026.
 - [x] Removida somente a aba legada `Ranking` da planilha autorizada; `PerfisGoogle`, `RankingNovaTemporada` e `Partidas` permanecem.
 - [x] Simulação automatizada de resposta perdida após gravar perfil, ranking ou recibo: o reenvio da mesma partida mantém XP, missões, tickets e contadores sem duplicação (29 testes). A tela agora distingue prévia de recompensa confirmada e orienta a manter o relatório aberto após erro.
 - [x] Usuário validou no Chrome uma falha de rede real no salvamento e o reenvio pelo botão da tela de resultado, sem duplicação relatada.
 - [x] Auditoria estrutural do CSV público em 27/09: HTTP 200, 1.940 linhas contando o cabeçalho, 1.937 entradas jogáveis em 28 tópicos, nenhuma dica vazia ou linha com quantidade de campos incorreta. `T` e `B` (linhas 1423–1424) são ignorados por terem uma letra; Histologia–Matriz tem apenas 10 termos, abaixo da meta de 12. Seis respostas se repetem em Patologia–Doenças: ISQUEMIA (1523/1668), CANDIDIASE (1574/1773), BÓCIO (1588/1837), HIPERPLASIA (1655/1685), ADENOCARCINOMA (1656/1748), RABDOMIÓLISE (1681/1821). Não foi alterada nenhuma outra planilha.
 - [x] Importador agora preserva somente a primeira ocorrência de cada resposta normalizada por tópico. As seis duplicatas exatas do CSV público deixam de entrar no jogo, sem editar a planilha de origem; o banco passa a ter 1.931 entradas jogáveis distintas na leitura atual.
 - [ ] Revisão clínica das dicas e respostas pelo usuário. O tópico Histologia–Matriz tem 10 termos; manter a meta limitada ao disponível até que o usuário decida adicionar conteúdo. Auditoria estrutural não confirma correção médica.
-- [ ] Antes do deploy na Vercel, incluir o domínio de produção em `ORIGENS_APP` no Apps Script e em Domínios autorizados do Firebase Authentication; republicar o script e testar login, partida e ranking no endereço final. Não fazer deploy antes de fechar os portões da versão web.
+- [x] Incluir domínio de produção em `ORIGENS_APP`, atualizar a implantação do Apps Script e restaurar carregamento do perfil no Vercel; erro de origem fazia a ponte aguardar 60 segundos e mostrar timeout.
+- [ ] Homologar no endereço publicado login a partir de sessão encerrada, salvamento de perfil, conclusão de partida e ranking. A versão local reutiliza a ponte HTML para reduzir as aberturas repetidas; validar após o próximo deploy da interface.
 - [x] Após confirmação específica, a coleção Firestore `usuarios` foi excluída permanentemente; o console mostrou o banco vazio. As contas no Firebase Authentication foram mantidas. A remoção da aba `Ranking` também é permanente; as três abas atuais foram preservadas.
 - [ ] Publicação web final e revisão clínica do conteúdo. DDX, Hardcore e IA seguem para fase separada.
 

@@ -3,7 +3,7 @@ const NOME_ABA_PERFIS = 'PerfisGoogle';
 const LIMITE_CORPO_BYTES = 32768;
 const NOME_ABA_TEMPORADA = 'RankingNovaTemporada';
 const NOME_ABA_PARTIDAS = 'Partidas';
-const ORIGENS_APP = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+const ORIGENS_APP = ['http://localhost:5173', 'http://127.0.0.1:5173', 'https://caca-med.vercel.app'];
 const EMAIL_ADMIN_INICIAL = 'raphaelrpereira.rp@gmail.com';
 
 // O HTML fica em iframe do Google. Ele troca mensagens com o jogo e usa
