@@ -48,6 +48,7 @@ function abrirPonte() {
       if (!origemGooglePermitida(evento.origin) || evento.data?.nonce !== nonce) return;
       if (evento.data.cacoMed === 'pronto') {
         ponte.origem = evento.origin;
+        ponte.destino = evento.source;
         finalizar();
       }
     };
@@ -83,7 +84,7 @@ async function enviarPedido(usuario, acao, dados, timeoutMs) {
       finalizar(new Error('A planilha demorou a responder. Tente novamente.'));
     }, timeoutMs);
     window.addEventListener('message', receber);
-    ponte.iframe.contentWindow.postMessage({
+    ponte.destino.postMessage({
       cacoMed: 'pedido', nonce: ponte.nonce,
       pedido: { ...dados, acao, idToken, apiKey: import.meta.env.VITE_FIREBASE_API_KEY },
     }, ponte.origem);
