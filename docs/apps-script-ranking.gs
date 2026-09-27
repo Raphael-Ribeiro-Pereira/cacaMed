@@ -1,4 +1,3 @@
-const NOME_ABA = 'Ranking';
 const FIREBASE_PROJECT_ID = 'caca-med';
 const NOME_ABA_PERFIS = 'PerfisGoogle';
 const LIMITE_CORPO_BYTES = 32768;
@@ -40,11 +39,6 @@ function respostaJson(dados, callback) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-function numero(valor) {
-  const n = Number(valor && (valor.integerValue || valor.doubleValue || valor.stringValue));
-  return Number.isFinite(n) && n > 0 ? n : 0;
-}
-
 function hashUid(uid) {
   return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, uid)
     .map(byte => ((byte + 256) % 256).toString(16).padStart(2, '0')).join('');
@@ -52,9 +46,8 @@ function hashUid(uid) {
 
 function doGet(e) {
   if (e?.parameter?.ponte) return paginaPonte(String(e.parameter.ponte), String(e.parameter.origem || ''));
-  const nomeAba = e?.parameter?.temporada === 'nova' ? NOME_ABA_TEMPORADA : NOME_ABA;
-  const aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(nomeAba);
-  if (!aba) throw new Error('A aba Ranking não foi encontrada.');
+  const aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(NOME_ABA_TEMPORADA);
+  if (!aba) throw new Error('A aba da nova temporada não foi encontrada.');
 
   const ranking = aba.getDataRange().getValues().slice(1)
     .filter(linha => linha[0] && linha[1])
@@ -347,17 +340,6 @@ function consultarContaFirebase(idToken, apiKey) {
   return JSON.parse(resposta.getContentText()).users?.[0] || {};
 }
 
-function buscarDadosOficiais(uid, idToken) {
-  const url = 'https://firestore.googleapis.com/v1/projects/' + FIREBASE_PROJECT_ID
-    + '/databases/(default)/documents/usuarios/' + encodeURIComponent(uid);
-  const resposta = UrlFetchApp.fetch(url, {
-    headers: { Authorization: 'Bearer ' + idToken },
-    muteHttpExceptions: true,
-  });
-  if (resposta.getResponseCode() !== 200) throw new Error('Leitura do Firestore negada.');
-  return JSON.parse(resposta.getContentText()).fields || {};
-}
-
 function verificarToken(idToken, apiKey) {
   const resposta = UrlFetchApp.fetch(
     'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + encodeURIComponent(apiKey),
@@ -379,77 +361,6 @@ function verificarToken(idToken, apiKey) {
   return uid;
 }
 
-function resumirUsuario(uid, campos) {
-  const xpTopicos = campos.xpTopicos?.mapValue?.fields || {};
-  const nivel = Object.values(xpTopicos).reduce((total, valor) => {
-    const xp = numero(valor);
-    return total + (xp > 0 ? Math.floor(Math.sqrt(xp / 1000)) + 1 : 0);
-  }, 0);
-  const estatisticas = campos.estatisticas?.mapValue?.fields || {};
-  let partidas = 0;
-  let letras = 0;
-  let tempo = 0;
-  Object.entries(estatisticas).forEach(([chave, valor]) => {
-    if (chave === 'ddx' || chave === 'hardcore') return;
-    const item = valor.mapValue?.fields;
-    if (!item || !item.partidas) return;
-    partidas += numero(item.partidas);
-    letras += numero(item.letras);
-    tempo += numero(item.tempo);
-  });
-  let nome = String(campos.nome?.stringValue || campos.username?.stringValue || 'Doutor(a)')
-    .trim().slice(0, 80);
-  if (!nome) nome = 'Doutor(a)';
-  if (/^[=+\-@]/.test(nome)) nome = "'" + nome;
-  return [
-    uid,
-    nome,
-    numero(campos.pontuacaoTotal),
-    nivel,
-    partidas,
-    letras,
-    new Date().toISOString(),
-    partidas ? Math.floor(tempo / partidas) : '',
-  ];
-}
-
-function doPost(e) {
-  try {
-    const conteudo = e?.postData?.contents || '';
-    if (conteudo.length > LIMITE_CORPO_BYTES) throw new Error('Requisição acima do limite.');
-    const corpo = JSON.parse(conteudo || '{}');
-    if (corpo.acao && corpo.acao !== 'sincronizarRanking') throw new Error('Ação desconhecida.');
-    const idToken = String(corpo.idToken || '');
-    const apiKey = String(corpo.apiKey || '');
-    if (!idToken || !apiKey) throw new Error('Credenciais ausentes.');
-
-    const uid = verificarToken(idToken, apiKey);
-    const campos = buscarDadosOficiais(uid, idToken);
-    const linha = resumirUsuario(uid, campos);
-    const bloqueio = LockService.getScriptLock();
-    bloqueio.waitLock(10000);
-    try {
-      const aba = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(NOME_ABA);
-      if (!aba) throw new Error('A aba Ranking não foi encontrada.');
-      aba.getRange(1, 8).setValue('tempoMedio');
-      const ultimaLinha = aba.getLastRow();
-      const uids = ultimaLinha > 1
-        ? aba.getRange(2, 1, ultimaLinha - 1, 1).getValues().map(item => String(item[0]))
-        : [];
-      const indice = uids.indexOf(uid);
-      const destino = indice >= 0 ? indice + 2 : ultimaLinha + 1;
-      aba.getRange(destino, 1, 1, linha.length).setValues([linha]);
-    } finally {
-      bloqueio.releaseLock();
-    }
-    return respostaJson({ sucesso: true });
-  } catch (erro) {
-    return respostaJson({ sucesso: false, erro: String(erro.message || erro) });
-  }
-}
-
-function verificarAcessoFirebase() {
-  return UrlFetchApp.fetch('https://firestore.googleapis.com/', {
-    muteHttpExceptions: true,
-  }).getResponseCode();
+function doPost() {
+  return respostaJson({ sucesso: false, erro: 'A sincronização antiga foi desativada.' });
 }

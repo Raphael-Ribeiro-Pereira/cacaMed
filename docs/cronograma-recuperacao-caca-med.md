@@ -2,7 +2,7 @@
 
 ## Estado atual — 27/09/2026
 
-A versão web padrão é a prioridade. Cruzadinhas, tutorial, missões, perfil, estatísticas e ranking usam a nova temporada na planilha via Apps Script **versão 6** quando `VITE_FONTE_DADOS=planilha`; Firebase Authentication permanece para login. DDX, Hardcore e IA ficam fora desta homologação. Os registros datados de 24–25/09 abaixo são histórico e não substituem este estado.
+A versão web padrão é a prioridade. Cruzadinhas, tutorial, missões, perfil, estatísticas e ranking usam a nova temporada na planilha via Apps Script **versão 7** quando `VITE_FONTE_DADOS=planilha`; Firebase Authentication permanece para login. DDX, Hardcore e IA ficam fora desta homologação. Os registros datados de 24–25/09 abaixo são histórico e não substituem este estado.
 
 - [x] Corrigir geração, feedback e relatório das cruzadinhas; criar controles admin no FAB e validar seu funcionamento básico com o usuário.
 - [x] Tratar CSV com campos citados e quebras de linha; exibir carregamento, vazio e falha com nova tentativa.
@@ -16,9 +16,11 @@ A versão web padrão é a prioridade. Cruzadinhas, tutorial, missões, perfil, 
 - [x] Gerador da cruzadinha passou de meta 10 para 12 palavras e tenta até 20 termos por ordem numa matriz ampliada. Teste automatizado com oito sementes de um tópico respiratório sintético passou; conteúdo real ainda precisa ser conferido no nível 2.
 - [x] O usuário confirmou a revalidação do login comum e da geração das grades de Sistema Respiratório após as correções.
 - [x] Reaberta a falha C11 após o usuário relatar que a letra repetida da interseção caía na próxima casa vazia. O input agora guarda as casas preenchidas puladas, aceita a repetição sem gravá-la de novo e permite substituir a letra de uma casa preenchida selecionada diretamente. Teste automatizado cobre os três casos.
-- [ ] Validar em uma partida real a repetição numa interseção, com e sem digitar a letra já preenchida. Confirmar que a casa seguinte recebe a letra correta em ambos os casos.
+- [x] Usuário validou em partida real a repetição da letra numa interseção, sem deslocar a próxima letra.
+- [x] Apps Script versão 7 publicado na implantação existente: GET público usa `RankingNovaTemporada` por padrão e a sincronização legada é rejeitada. URL pública respondeu com a temporada nova em 27/09/2026.
+- [x] Removida somente a aba legada `Ranking` da planilha autorizada; `PerfisGoogle`, `RankingNovaTemporada` e `Partidas` permanecem.
 - [ ] Simular falha de rede ao salvar recompensa e confirmar reenvio sem duplicação; concluir revisão clínica do banco de palavras.
-- [ ] Após a homologação, limpar documentos antigos do Firestore e a aba `Ranking` antiga. Não executar antes da validação; manter contas no Firebase Authentication.
+- [x] Após confirmação específica, a coleção Firestore `usuarios` foi excluída permanentemente; o console mostrou o banco vazio. As contas no Firebase Authentication foram mantidas. A remoção da aba `Ranking` também é permanente; as três abas atuais foram preservadas.
 - [ ] Publicação web final e revisão clínica do conteúdo. DDX, Hardcore e IA seguem para fase separada.
 
 Data da revisão: 24/09/2026. Base: arquivos locais e histórico até `81cad1e`.

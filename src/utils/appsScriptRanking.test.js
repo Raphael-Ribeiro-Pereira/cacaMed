@@ -24,8 +24,7 @@ function prepararScript({ projeto = 'caca-med', uid = 'jogador-1', email = 'joga
     abas.set(nome, { aba, registros });
     return aba;
   }
-  criarAba('Ranking', linhas);
-  criarAba('RankingNovaTemporada', [['uid', 'nome', 'xpGlobal', 'nivelGlobal', 'partidas', 'letras', 'atualizadoEm', 'tempoMedio']]);
+  criarAba('RankingNovaTemporada', linhas);
   criarAba('Partidas', [['firebaseUid', 'partidaId', 'registradaEm', 'xpConcedido']]);
   const campos = {
     nome: { stringValue: 'Jogador Um' },
@@ -72,20 +71,19 @@ function prepararScript({ projeto = 'caca-med', uid = 'jogador-1', email = 'joga
   return { contexto, linhas, abas, idToken };
 }
 
-test('sincroniza dados oficiais por UID sem confiar na pontuação enviada', () => {
+test('ranking público usa sempre a nova temporada e a rota antiga não grava', () => {
   const { contexto, linhas, idToken } = prepararScript();
-  const evento = { postData: { contents: JSON.stringify({ idToken, apiKey: 'chave-publica', xpGlobal: 999999 }) } };
-  assert.equal(JSON.parse(contexto.doPost(evento).texto).sucesso, true);
-  assert.deepEqual(linhas[1].slice(0, 6), ['jogador-1', 'Jogador Um', 480, 2, 2, 35]);
-  assert.equal(linhas[1][7], 80);
-  assert.equal(JSON.parse(contexto.doPost(evento).texto).sucesso, true);
+  linhas.push(['jogador-1', 'Jogador Um', 480, 2, 2, 35, 'hoje', 80]);
+  assert.equal(JSON.parse(contexto.doGet({ parameter: {} }).texto).ranking[0].xpGlobal, 480);
+  assert.equal(JSON.parse(contexto.doGet({ parameter: { temporada: 'antiga' } }).texto).ranking[0].xpGlobal, 480);
+  const antigo = contexto.doPost({ postData: { contents: JSON.stringify({ idToken, apiKey: 'chave-publica' }) } });
+  assert.equal(JSON.parse(antigo.texto).sucesso, false);
   assert.equal(linhas.length, 2);
 });
 
 test('rejeita token de outro projeto e omite UID da resposta pública', () => {
   const { contexto, linhas, idToken } = prepararScript({ projeto: 'outro-projeto' });
-  const evento = { postData: { contents: JSON.stringify({ idToken, apiKey: 'chave-publica' }) } };
-  assert.equal(JSON.parse(contexto.doPost(evento).texto).sucesso, false);
+  assert.throws(() => contexto.api({ acao: 'obterPerfil', idToken, apiKey: 'chave-publica' }), /Projeto ou usuário incorreto/);
   assert.equal(linhas.length, 1);
 
   linhas.push(['jogador-1', 'Jogador Um', 480, 2, 2, 35, 'hoje', 80]);
