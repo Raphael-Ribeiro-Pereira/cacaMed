@@ -45,7 +45,7 @@ function abrirPonte() {
       } else resolve();
     };
     const receber = evento => {
-      if (evento.source !== iframe.contentWindow || !origemGooglePermitida(evento.origin) || evento.data?.nonce !== nonce) return;
+      if (!origemGooglePermitida(evento.origin) || evento.data?.nonce !== nonce) return;
       if (evento.data.cacoMed === 'pronto') {
         ponte.origem = evento.origin;
         finalizar();
@@ -75,7 +75,7 @@ async function enviarPedido(usuario, acao, dados, timeoutMs) {
       else resolve(resultado);
     };
     const receber = evento => {
-      if (evento.source !== ponte.iframe.contentWindow || !origemGooglePermitida(evento.origin) || evento.data?.nonce !== ponte.nonce) return;
+      if (!origemGooglePermitida(evento.origin) || evento.data?.nonce !== ponte.nonce) return;
       if (evento.data.cacoMed === 'resposta') finalizar(evento.data.erro ? new Error(evento.data.erro) : null, evento.data.resultado);
     };
     const temporizador = setTimeout(() => {
