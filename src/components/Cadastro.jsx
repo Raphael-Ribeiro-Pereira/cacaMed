@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { User, Mail, Lock, Eye, EyeOff, Stethoscope, GraduationCap, Check, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { criarMissoesDiarias, dataLocalHoje } from '../utils/missoes';
+import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
+
+const PERFIL_NA_PLANILHA = import.meta.env.VITE_FONTE_DADOS === 'planilha';
 
 const SPECIALTIES = [
   { value: "anatomia", label: "Anatomia", emoji: "🦴" },
@@ -15,7 +18,7 @@ const SPECIALTIES = [
   { value: "patologia", label: "Patologia", emoji: "🔬" },
 ];
 
-export default function Cadastro({ setTelaAtual }) {
+export default function Cadastro({ setTelaAtual, onConcluido }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,6 +49,15 @@ export default function Cadastro({ setTelaAtual }) {
       // Cria o usuário na Autenticação do Firebase
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
+      if (PERFIL_NA_PLANILHA) {
+        await updateProfile(user, { displayName: name.trim() });
+        const perfil = await chamarPerfilPlanilha(user, 'cadastrar', {
+          titulo: gender === 'doutora' ? 'Doutora' : 'Doutor', materiaPreferida: specialty,
+        });
+        onConcluido(perfil);
+        return;
+      }
 
       // Cria o documento do usuário na Coleção "usuarios" no Firestore
       await setDoc(doc(db, "usuarios", user.uid), {

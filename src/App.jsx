@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { auth, db } from './firebase'; 
-import { onAuthStateChanged } from 'firebase/auth';
+import { getIdTokenResult, onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, runTransaction } from 'firebase/firestore';
 import { prepararMissoesDoDia } from './utils/missoes';
 import { Stethoscope } from 'lucide-react';
@@ -14,21 +14,34 @@ import PerfilUsuario from './components/PerfilUsuario';
 import SelecaoTopicos from './components/SelecaoTopicos';
 import Jogo from './components/Jogo';
 import Ranking from './components/Ranking';
+import { sincronizarRanking } from './services/rankingPublico';
 import Estatisticas from './components/Estatisticas';
+import Cadastro2 from './components/Cadastro2';
+import VincularGoogle from './components/VincularGoogle';
+import { chamarPerfilPlanilha } from './services/perfilPlanilha';
+import { importarBancoCSV } from './utils/importarBancoCSV';
 
-// 🔥 TELAS DO SIMULADOR CLÍNICO
+const PERFIL_NA_PLANILHA = import.meta.env.VITE_FONTE_DADOS === 'planilha';
+
+// Telas clínicas mantidas para a fase de reformulação.
 import SelecaoDDX from './components/SelecaoDDX'; 
 import JogoDDX from './components/JogoDDX';
-import Hardcore from './components/Hardcore'; // ⬅️ AQUI! Faltava importar o ficheiro Hardcore.jsx!
+import Hardcore from './components/Hardcore';
 
 function App() {
+  const modosClinicosBloqueados = true;
   const [usuario, setUsuario] = useState(null); 
   const [dadosUsuario, setDadosUsuario] = useState(null); 
   const [telaAtual, setTelaAtual] = useState('login'); 
   const [carregandoAuth, setCarregandoAuth] = useState(true);
+  const [erroPerfil, setErroPerfil] = useState('');
+  const [tentativaPerfil, setTentativaPerfil] = useState(0);
 
   // Estados das Cruzadinhas
   const [bancoDePalavras, setBancoDePalavras] = useState(null);
+  const [estadoBanco, setEstadoBanco] = useState('carregando');
+  const [erroBanco, setErroBanco] = useState('');
+  const [tentativaBanco, setTentativaBanco] = useState(0);
   const [materia, setMateria] = useState('');
   const [subMateria, setSubMateria] = useState('');
 
@@ -65,75 +78,94 @@ function App() {
   };
 
   useEffect(() => {
+    let ativo = true;
+    let versaoSessao = 0;
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      const versaoAtual = ++versaoSessao;
+      const sessaoAtual = () => ativo && versaoAtual === versaoSessao;
+      setCarregandoAuth(true);
       if (user) {
         setUsuario(user);
-        const docRef = doc(db, "usuarios", user.uid);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          let dados = docSnap.data();
-          dados = await verificarEResetarMissoes(user.uid, dados);
-          setDadosUsuario(dados);
+        if (PERFIL_NA_PLANILHA) {
+          try {
+            const perfil = await chamarPerfilPlanilha(user, 'obterPerfil');
+            if (!sessaoAtual()) return;
+            setDadosUsuario(perfil);
+            if (perfil) setTelaAtual('menu');
+            else {
+              const token = await getIdTokenResult(user);
+              if (!sessaoAtual()) return;
+              const veioDoGoogle = token.signInProvider === 'google.com';
+              const temSenhaAntiga = user.providerData.some(provedor => provedor.providerId === 'password');
+              setTelaAtual(veioDoGoogle && temSenhaAntiga ? 'vincularGoogle' : 'cadastro2');
+            }
+            setErroPerfil('');
+          } catch (erro) {
+            if (!sessaoAtual()) return;
+            setErroPerfil(erro.message || 'Não foi possível carregar seu perfil.');
+            setTelaAtual('erroPerfil');
+          } finally {
+            if (sessaoAtual()) setCarregandoAuth(false);
+          }
+          return;
         }
-        setTelaAtual('menu'); 
+        try {
+          const docSnap = await getDoc(doc(db, 'usuarios', user.uid));
+          if (!sessaoAtual()) return;
+          if (!docSnap.exists()) throw new Error('Perfil antigo não encontrado. Entre novamente ou conclua o cadastro.');
+          const dados = await verificarEResetarMissoes(user.uid, docSnap.data());
+          if (!sessaoAtual()) return;
+          setDadosUsuario(dados);
+          setTelaAtual('menu');
+          setErroPerfil('');
+        } catch (erro) {
+          if (!sessaoAtual()) return;
+          setErroPerfil(erro.message || 'Não foi possível carregar seu perfil.');
+          setTelaAtual('erroPerfil');
+        } finally {
+          if (sessaoAtual()) setCarregandoAuth(false);
+        }
       } else {
         setUsuario(null);
         setDadosUsuario(null);
         setTelaAtual('login');
+        setCarregandoAuth(false);
       }
-      setCarregandoAuth(false);
     });
-    return () => unsubscribe();
-  }, []);
+    return () => { ativo = false; versaoSessao++; unsubscribe(); };
+  }, [tentativaPerfil]);
 
   useEffect(() => {
+    const controlador = new AbortController();
     const carregarBancoDaNuvem = async () => {
+      setEstadoBanco('carregando');
+      setErroBanco('');
       try {
         const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQzuC7MJYVdSo2Ufi_OQnREAFSDrYi2SY5_KGJvrKv_7lSXGVbiieXop7OA0keLmZV5tuQgGdkSIT8/pub?output=csv";
-        const resposta = await fetch(urlCSV + "&tempo=" + new Date().getTime());
+        const resposta = await fetch(urlCSV + "&tempo=" + new Date().getTime(), { signal: controlador.signal });
+        if (!resposta.ok) throw new Error(`Banco de palavras indisponível (HTTP ${resposta.status}).`);
         const textoNuvem = await resposta.text();
-        const linhas = textoNuvem.replace(/\r/g, '').split('\n');
-        
-        const bancoFormatado = {};
-        let contadorPalavras = 1;
-
-        for (let i = 1; i < linhas.length; i++) {
-          const colunas = linhas[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-          
-          if (colunas[0] && colunas[0].trim() !== '' && colunas[1] && colunas[1].trim() !== '') {
-            const palavraSegura = colunas[0].trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/-/g, " ").replace(/\s+/g, " ").toUpperCase();
-            const materiaBruta = colunas[1].trim();
-            const subMateriaBruta = colunas[2] && colunas[2].trim() !== '' ? colunas[2].trim() : 'Geral';
-
-            const dificuldadeStr = colunas[3] ? colunas[3].replace(/"/g, '').trim() : '0';
-            const dificuldade = isNaN(parseInt(dificuldadeStr)) ? 0 : parseInt(dificuldadeStr);
-            const dicaBasica = colunas[4] ? colunas[4].replace(/"/g, '').trim() : '';
-
-            const materiaBlindada = materiaBruta.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-            const subMateriaBlindada = subMateriaBruta.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-
-            const chaveBanco = `${materiaBlindada}-${subMateriaBlindada}`;
-
-            if (!bancoFormatado[chaveBanco]) bancoFormatado[chaveBanco] = [];
-            
-            bancoFormatado[chaveBanco].push({ 
-              palavra: palavraSegura, 
-              numero: contadorPalavras,
-              palavraComEspaco: colunas[0].replace(/"/g, '').trim(),
-              dificuldade: dificuldade, 
-              dicaBasica: dicaBasica    
-            });
-            contadorPalavras++;
-          }
-        }
+        const bancoFormatado = importarBancoCSV(textoNuvem);
+        if (controlador.signal.aborted) return;
         setBancoDePalavras(bancoFormatado);
+        setEstadoBanco(Object.keys(bancoFormatado).length ? 'pronto' : 'vazio');
       } catch (erro) {
+        if (controlador.signal.aborted) return;
         console.error("Erro ao puxar a planilha:", erro);
+        setErroBanco(erro.message || 'Não foi possível carregar o banco de palavras.');
+        setEstadoBanco('erro');
       }
     };
     carregarBancoDaNuvem();
-  }, []);
+    return () => controlador.abort();
+  }, [tentativaBanco]);
+
+  useEffect(() => {
+    if (PERFIL_NA_PLANILHA || !usuario || !dadosUsuario) return;
+    sincronizarRanking(usuario, dadosUsuario).catch(() => {
+      console.warn('Ranking pendente de sincronização.');
+    });
+  }, [usuario, dadosUsuario]);
 
   const iniciarJogo = (materiaEscolhida, subMateriaEscolhida) => {
     setMateria(materiaEscolhida);
@@ -153,12 +185,15 @@ function App() {
   return (
     <>
       {telaAtual === 'login' && <Login setTelaAtual={setTelaAtual} />}
-      {telaAtual === 'cadastro' && <Cadastro setTelaAtual={setTelaAtual} />}
-      {telaAtual === 'menu' && usuario && <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
+      {telaAtual === 'cadastro' && <Cadastro setTelaAtual={setTelaAtual} onConcluido={perfil => { setDadosUsuario(perfil); setTelaAtual('menu'); }} />}
+      {telaAtual === 'vincularGoogle' && usuario && <VincularGoogle usuario={usuario} onConfirmado={() => setTelaAtual('cadastro2')} />}
+      {telaAtual === 'cadastro2' && usuario && <Cadastro2 usuario={usuario} onConcluido={perfil => { setDadosUsuario(perfil); setTelaAtual('menu'); }} />}
+      {telaAtual === 'erroPerfil' && <main className="stitch-page stitch-loading flex-col p-6 text-center"><p role="alert">{erroPerfil}</p><div className="flex gap-3"><button className="stitch-primary" onClick={() => setTentativaPerfil(valor => valor + 1)}>Tentar novamente</button><button className="stitch-back" onClick={() => signOut(auth)}>Voltar ao login</button></div></main>}
+      {telaAtual === 'menu' && usuario && <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} usuario={usuario} setDadosUsuario={setDadosUsuario} />}
       {telaAtual === 'perfil' && usuario && <PerfilUsuario usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       
       {/* CRUZADINHAS */}
-      {telaAtual === 'topicos' && usuario && <SelecaoTopicos setTelaAtual={setTelaAtual} iniciarJogo={iniciarJogo} dadosUsuario={dadosUsuario} bancoDePalavras={bancoDePalavras || {}} />}
+      {telaAtual === 'topicos' && usuario && <SelecaoTopicos setTelaAtual={setTelaAtual} iniciarJogo={iniciarJogo} dadosUsuario={dadosUsuario} bancoDePalavras={bancoDePalavras || {}} estadoBanco={estadoBanco} erroBanco={erroBanco} recarregarBanco={() => setTentativaBanco(valor => valor + 1)} usuario={usuario} setDadosUsuario={setDadosUsuario} />}
       {telaAtual === 'jogo' && usuario && (
         <Jogo bancoDePalavras={bancoDePalavras} materia={materia} subMateria={subMateria} setTelaAtual={setTelaAtual} usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />
       )}
@@ -168,11 +203,10 @@ function App() {
       {telaAtual === 'estatisticas' && usuario && <Estatisticas dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       
       {/* 🔥 MODO HOUSE (DDX) E MODO HARDCORE */}
-      {telaAtual === 'selecaoDDX' && usuario && <SelecaoDDX setTelaAtual={setTelaAtual} iniciarDDX={iniciarDDX} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />}
-      {telaAtual === 'jogoDDX' && usuario && <JogoDDX setTelaAtual={setTelaAtual} configDDX={configDDX} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />}
+      {telaAtual === 'selecaoDDX' && usuario && (modosClinicosBloqueados ? <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} /> : <SelecaoDDX setTelaAtual={setTelaAtual} iniciarDDX={iniciarDDX} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />)}
+      {telaAtual === 'jogoDDX' && usuario && (modosClinicosBloqueados ? <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} /> : <JogoDDX setTelaAtual={setTelaAtual} configDDX={configDDX} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />)}
       
-      {/* ⬅️ AQUI! O React agora sabe que tem de desenhar a sala de emergência! */}
-      {telaAtual === 'hardcore' && usuario && <Hardcore setTelaAtual={setTelaAtual} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />}
+      {telaAtual === 'hardcore' && usuario && (modosClinicosBloqueados ? <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} /> : <Hardcore setTelaAtual={setTelaAtual} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />)}
 
     </>
   );

@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
-import { ArrowLeft, Crown, Trophy, Flame, TrendingUp, Medal } from "lucide-react";
+import { ArrowLeft, Crown, Trophy, Flame } from "lucide-react";
 import { motion } from "framer-motion";
 import StitchBrand from './ui/StitchBrand';
 import { resumirCruzadinhas, somarNiveisTopicos } from '../utils/progressoCruzadinha';
 import { obterPatente } from '../utils/patentes';
+import { buscarRankingPublico, calcularIdPublico, sincronizarRanking } from '../services/rankingPublico';
 
 // ==========================================
 // 🌻 SISTEMA DE PARTÍCULAS DO EASTER EGG (INTOCADO)
@@ -46,6 +45,8 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
   const [dadosDoBanco, setDadosDoBanco] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erroRanking, setErroRanking] = useState(false);
+  const [idPublico, setIdPublico] = useState(null);
+  const [tentativaRanking, setTentativaRanking] = useState(0);
 
   // 🌻 EASTER EGG (MANTIDO)
   const dispararParticulas = () => {
@@ -66,57 +67,56 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
 
   const removerParticula = (id) => setParticulas(prev => prev.filter(p => p.id !== id));
 
-  const formatarTempo = (segundos) => {
-    if (segundos === null || segundos === undefined || !Number.isFinite(Number(segundos))) return "--:--";
-    const min = Math.floor(segundos / 60).toString().padStart(2, '0');
-    const seg = (segundos % 60).toString().padStart(2, '0');
-    return `${min}:${seg}`;
-  };
-
-  const somaNiveisPessoal = somarNiveisTopicos(dadosUsuario?.xpTopicos);
+  const somaNiveisPessoal = Number.isInteger(dadosUsuario?.nivelGlobalAdmin)
+    ? dadosUsuario.nivelGlobalAdmin : somarNiveisTopicos(dadosUsuario?.xpTopicos);
   const resumoPessoal = resumirCruzadinhas(dadosUsuario?.estatisticas);
 
   const patentePessoal = obterPatente(somaNiveisPessoal);
 
-  // ==========================================
-  // 🌍 BUSCANDO DADOS E MÉTRICAS
-  // ==========================================
+  // O ranking público recebe apenas as métricas expostas pelo Apps Script.
   useEffect(() => {
+    let ativo = true;
     const buscarDados = async () => {
+      setCarregando(true);
+      setErroRanking(false);
       try {
-        const querySnapshot = await getDocs(collection(db, "usuarios"));
-        const listaMedicos = [];
-
-        querySnapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          
-          const somaNiv = somarNiveisTopicos(data.xpTopicos);
-          const resumo = resumirCruzadinhas(data.estatisticas);
-          const pat = obterPatente(somaNiv);
-
-          listaMedicos.push({
-            uid: docSnap.id,
-            nome: data.username || data.nome || 'Doutor(a)',
-            nivel: somaNiv,
-            xpTotal: Number(data.pontuacaoTotal) || 0,
-            letras: resumo.letras,
-            tempoMedio: resumo.tempoMedio,
-            patente: pat.titulo,
-            cor: pat.cor,
-            partidas: resumo.partidas
-          });
-        });
-        
-        setDadosDoBanco(listaMedicos);
+        const meuId = await calcularIdPublico(usuario.uid);
+        if (ativo) setIdPublico(meuId);
+        await sincronizarRanking(usuario, dadosUsuario);
+        let ranking = [];
+        for (let tentativa = 0; tentativa < 4; tentativa++) {
+          if (!ativo) return;
+          ranking = await buscarRankingPublico();
+          const minhaLinha = ranking.find(item => item.idPublico === meuId);
+          if (import.meta.env.VITE_FONTE_DADOS === 'planilha' || (minhaLinha && Number(minhaLinha.xpGlobal) === Number(dadosUsuario?.pontuacaoTotal))) break;
+          if (tentativa < 3) await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+        if (!ativo) return;
+        setDadosDoBanco(ranking.map((data, index) => {
+          const nivel = Number(data.nivelGlobal) || 0;
+          const patente = obterPatente(nivel);
+          return {
+            uid: data.idPublico || `planilha-${index}`,
+            nome: String(data.nome || 'Doutor(a)'),
+            nivel,
+            xpTotal: Number(data.xpGlobal) || 0,
+            letras: Number(data.letras) || 0,
+            tempoMedio: data.tempoMedio == null ? null : Number(data.tempoMedio),
+            patente: patente.titulo,
+            cor: patente.cor,
+            partidas: Number(data.partidas) || 0,
+          };
+        }));
       } catch (error) {
-        console.error("Erro ao puxar dados do Firebase:", error);
-        setErroRanking(true);
+        console.error("Erro ao carregar ranking público:", error);
+        if (ativo) setErroRanking(true);
       } finally {
-        setCarregando(false);
+        if (ativo) setCarregando(false);
       }
     };
     buscarDados();
-  }, []);
+    return () => { ativo = false; };
+  }, [usuario, dadosUsuario, tentativaRanking]);
 
   // ==========================================
   // 🎛️ MOTOR DE FILTROS E ORDENAÇÃO
@@ -138,37 +138,24 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
 
   const top3 = rankingProcessado.slice(0, 3);
   const rest = rankingProcessado.slice(3);
+  const possuiTempo = dadosDoBanco.some(m => Number.isFinite(m.tempoMedio));
 
   // ==========================================
   // 🎯 MATEMÁTICA DE RIVALIDADE (RADAR)
   // ==========================================
-  const meuIndex = rankingProcessado.findIndex(m => m.uid === usuario?.uid);
+  const meuIndex = rankingProcessado.findIndex(m => m.uid === idPublico);
   const eu = meuIndex >= 0 ? rankingProcessado[meuIndex] : null;
-  
-  let textoRadar = "Continue jogando para subir posições!";
-  let tituloRadar = eu ? `#${eu.posicaoGlobal} do Mundo` : "Não rankeado";
-
-  if (!eu && abaAtual === 'patente') {
-    textoRadar = "Você não tem a patente necessária para esta lista.";
-  } else if (!eu && abaAtual === 'hall') {
-    textoRadar = "Chegue ao Top 3 para entrar no Hall da Fama!";
-  } else if (meuIndex === 0) {
-    textoRadar = "Você é o líder absoluto desta lista!";
-  } else if (meuIndex > 0) {
+  let tituloRadar = eu ? `#${eu.posicaoGlobal} do Mundo` : 'Sua posição';
+  let textoRadar = eu ? 'Continue jogando para subir posições!' : 'Você ainda não aparece no Top 100 da temporada.';
+  if (!eu && abaAtual === 'hall') textoRadar = 'Chegue ao Top 3 para entrar no Hall da Fama!';
+  else if (!eu && abaAtual === 'patente') textoRadar = 'Você ainda não aparece nesta patente.';
+  else if (meuIndex === 0) textoRadar = 'Você lidera esta lista!';
+  else if (meuIndex > 0) {
     const rival = rankingProcessado[meuIndex - 1];
-    if (criterioOrdenacao === 'nivel') {
-      const diff = rival.nivel - eu.nivel + 1;
-      textoRadar = `Faltam ${diff} níveis para passar o #${rival.posicaoExibida} (${rival.nome.split(' ')[0]}).`;
-    } else if (criterioOrdenacao === 'letras') {
-      const diff = rival.letras - eu.letras + 1;
-      textoRadar = `Faltam ${diff} acertos para passar o #${rival.posicaoExibida}.`;
-    } else if (criterioOrdenacao === 'tempo') {
-      if (eu.tempoMedio === null) textoRadar = "Jogue uma partida para registrar seu tempo médio!";
-      else {
-        const diff = eu.tempoMedio - rival.tempoMedio + 1;
-        textoRadar = `Corte ${diff}s do seu tempo para passar o #${rival.posicaoExibida}.`;
-      }
-    }
+    if (criterioOrdenacao === 'nivel') textoRadar = `Faltam ${rival.nivel - eu.nivel + 1} níveis para passar o #${rival.posicaoExibida}.`;
+    else if (criterioOrdenacao === 'letras') textoRadar = `Faltam ${rival.letras - eu.letras + 1} acertos para passar o #${rival.posicaoExibida}.`;
+    else if (eu.tempoMedio == null) textoRadar = 'Jogue uma cruzadinha para registrar seu tempo médio.';
+    else textoRadar = `Reduza ${Math.max(1, eu.tempoMedio - rival.tempoMedio + 1)}s para passar o #${rival.posicaoExibida}.`;
   }
 
   return (
@@ -214,11 +201,11 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
 
           <div className="flex items-center gap-3 bg-[#151F32] border border-cyan-500/20 rounded-full px-4 py-2 shadow-[0_0_15px_rgba(0,229,255,0.08)]">
             <div className="flex flex-col text-right">
-              <span className="text-white text-sm font-bold">{dadosUsuario?.nome?.split(' ')[0] || 'Doutor(a)'}</span>
+              <span className="text-white text-sm font-bold">{(dadosUsuario?.nome || dadosUsuario?.username || 'Doutor(a)').split(' ')[0]}</span>
               <span className="text-cyan-400 text-[10px] uppercase font-bold tracking-wider">{patentePessoal.titulo}</span>
             </div>
             <div className="w-8 h-8 rounded-full bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center">
-              <span className="text-cyan-400 font-mono text-xs font-bold">{eu ? `#${eu.posicaoGlobal}` : '-'}</span>
+              <span className="text-cyan-400 font-mono text-xs font-bold">{eu ? `#${eu.posicaoGlobal}` : '—'}</span>
             </div>
           </div>
         </header>
@@ -230,7 +217,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
              <p className="text-slate-400 font-bold uppercase tracking-widest">Sincronizando Plantões...</p>
            </div>
         ) : erroRanking ? (
-          <div role="alert" className="rounded-2xl border border-amber-500/30 bg-[#151F32] p-6 text-amber-400">Não foi possível carregar o ranking global. Tente abrir esta tela novamente.</div>
+          <div role="alert" className="rounded-2xl border border-amber-500/30 bg-[#151F32] p-6 text-amber-400"><p>Não foi possível carregar o ranking global.</p><button type="button" onClick={() => setTentativaRanking(valor => valor + 1)} className="mt-3 rounded-xl border border-amber-500/40 px-4 py-2 text-white">Tentar novamente</button></div>
         ) : (
           <>
             {top3.length > 0 && (
@@ -246,8 +233,6 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
                       const player = top3[cfg.idx];
                       if (!player) return <div key={cfg.idx} className={`w-20 md:w-28 ${cfg.order}`} />; 
                       
-                      const isEu = player.uid === usuario?.uid;
-
                       return (
                         <motion.div
                           key={player.uid}
@@ -255,7 +240,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.5, delay: cfg.idx * 0.15 }}
-                          className={`flex flex-col items-center ${cfg.order} ${isEu ? 'scale-105' : ''}`}
+                          className={`flex flex-col items-center ${cfg.order} ${player.uid === idPublico ? 'scale-105' : ''}`}
                         >
                           <div className="relative mb-3">
                             {cfg.idx === 0 && (
@@ -266,16 +251,16 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
                             <div className={`${cfg.avatarSize} rounded-full flex items-center justify-center font-bold text-lg border-[3px] ${cfg.borderColor} bg-[#0F172A]`} style={{ boxShadow: `0 0 20px ${cfg.glowColor}` }}>
                               {player.nome.charAt(0).toUpperCase()}
                             </div>
-                            {isEu && <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-cyan-500 text-[#0B1120] text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Você</div>}
                           </div>
-                          <span className={`text-xs font-bold mb-1 text-center truncate w-24 ${isEu ? 'text-cyan-300' : 'text-white'}`}>{player.nome}</span>
+                          {player.uid === idPublico && <span className="text-[9px] text-cyan-400 uppercase tracking-wider">Você</span>}
+                          <span className={`text-xs font-bold mb-1 text-center truncate w-24 ${player.uid === idPublico ? 'text-cyan-300' : 'text-white'}`}>{player.nome}</span>
                           <span className="text-slate-500 text-[10px] mb-1.5 hidden md:block">{player.patente}</span>
                           
                           <span className="font-mono text-xl font-bold" style={{ color: cfg.idx === 0 ? '#ffb95f' : (cfg.idx === 1 ? '#b9cac4' : '#8b5cf6'), filter: `drop-shadow(0 0 6px ${cfg.glowColor})` }}>
-                            {criterioOrdenacao === 'nivel' ? player.nivel : (criterioOrdenacao === 'letras' ? player.letras : formatarTempo(player.tempoMedio))}
+                            {criterioOrdenacao === 'nivel' ? player.nivel : criterioOrdenacao === 'letras' ? player.letras : player.tempoMedio == null ? '—' : `${Math.floor(player.tempoMedio / 60)}:${String(player.tempoMedio % 60).padStart(2, '0')}`}
                           </span>
                           <span className="text-slate-600 text-[9px] uppercase tracking-wider font-bold">
-                            {criterioOrdenacao === 'nivel' ? 'Níveis' : (criterioOrdenacao === 'letras' ? 'Acertos' : 'Média')}
+                            {criterioOrdenacao === 'nivel' ? 'Níveis' : criterioOrdenacao === 'letras' ? 'Acertos' : 'Média'}
                           </span>
 
                           <motion.div
@@ -317,7 +302,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
                 </div>
 
                 <div className="flex items-center bg-[#0B1120] rounded-xl p-1 border border-white/[0.04]">
-                  {[['nivel', 'Nível', '🎓'], ['letras', 'Acertos', '🎯'], ['tempo', 'Média', '⏱️']].map(([key, label, icone]) => (
+                  {[['nivel', 'Nível', '🎓'], ['letras', 'Acertos', '🎯'], ...(possuiTempo ? [['tempo', 'Média', '⏱️']] : [])].map(([key, label, icone]) => (
                     <button
                       key={key} onClick={() => setCriterioOrdenacao(key)}
                       aria-label={`Ordenar por ${label.toLowerCase()}`}
@@ -346,21 +331,14 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
                     Nenhum outro plantonista encontrado.
                   </div>
                 ) : (
-                  rest.map((player, i) => {
-                    const isEu = player.uid === usuario?.uid;
-
-                    return (
+                  rest.map((player, i) => (
                       <motion.div
                         key={player.uid}
                         layout="position"
                         initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: i * 0.03 }}
-                        className={`grid grid-cols-[36px_minmax(0,1fr)_64px] sm:grid-cols-[40px_minmax(0,1fr)_90px_80px_75px] gap-2 sm:gap-4 items-center px-4 sm:px-6 py-3.5 border-b border-white/[0.02] transition-colors group relative ${
-                          isEu ? 'bg-cyan-500/[0.06] hover:bg-cyan-500/[0.1]' : 'hover:bg-white/[0.02]'
-                        }`}
+                        className={`grid grid-cols-[36px_minmax(0,1fr)_64px] sm:grid-cols-[40px_minmax(0,1fr)_90px_80px_75px] gap-2 sm:gap-4 items-center px-4 sm:px-6 py-3.5 border-b border-white/[0.02] transition-colors group relative ${player.uid === idPublico ? 'bg-cyan-500/[0.06] hover:bg-cyan-500/[0.1]' : 'hover:bg-white/[0.02]'}`}
                       >
-                        {isEu && <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-400 rounded-r shadow-[0_0_10px_rgba(0,229,255,0.6)]" />}
-
-                        <span className={`font-mono text-base font-bold ${isEu ? 'text-cyan-400' : 'text-slate-500'}`}>
+                        <span className={`font-mono text-base font-bold ${player.uid === idPublico ? 'text-cyan-400' : 'text-slate-500'}`}>
                           #{player.posicaoExibida}
                         </span>
 
@@ -369,9 +347,9 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
                             {player.nome.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <span className={`text-sm font-bold truncate flex items-center gap-2 ${isEu ? 'text-cyan-300' : 'text-white'}`}>
+                            <span className={`text-sm font-bold truncate flex items-center gap-2 ${player.uid === idPublico ? 'text-cyan-300' : 'text-white'}`}>
                               {player.nome}
-                              {isEu && <span className="text-[9px] text-cyan-500 bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded-md uppercase tracking-wider">Você</span>}
+                              {player.uid === idPublico && <span className="text-[9px] text-cyan-500 bg-cyan-500/10 border border-cyan-500/30 px-2 py-0.5 rounded-md uppercase tracking-wider">Você</span>}
                             </span>
                           </div>
                         </div>
@@ -379,8 +357,8 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
                         <span className="text-center text-[10px] font-bold hidden sm:block truncate" style={{ color: player.cor }}>{player.patente}</span>
 
                         <div className="flex items-center justify-center">
-                          <span className={`font-mono text-base font-bold ${isEu ? 'text-cyan-400' : player.posicaoExibida <= 5 ? 'text-amber-400' : 'text-slate-300'}`}>
-                            {criterioOrdenacao === 'nivel' ? player.nivel : (criterioOrdenacao === 'letras' ? player.letras : formatarTempo(player.tempoMedio))}
+                          <span className={`font-mono text-base font-bold ${player.posicaoExibida <= 5 ? 'text-amber-400' : 'text-slate-300'}`}>
+                            {criterioOrdenacao === 'nivel' ? player.nivel : criterioOrdenacao === 'letras' ? player.letras : player.tempoMedio == null ? '—' : `${Math.floor(player.tempoMedio / 60)}:${String(player.tempoMedio % 60).padStart(2, '0')}`}
                           </span>
                         </div>
 
@@ -389,8 +367,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
                           <span className="text-[8px] text-slate-600 uppercase tracking-widest">Partidas</span>
                         </div>
                       </motion.div>
-                    );
-                  })
+                  ))
                 )}
               </div>
 
@@ -411,7 +388,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
                     <span className="text-orange-400 font-bold text-xs">{dadosUsuario?.estatisticasGerais?.streakAtual || 0} partidas seguidas</span>
                   </div>
                   <div className="text-amber-400 font-mono text-lg font-bold flex items-center gap-2" style={{ filter: 'drop-shadow(0 0 6px rgba(251,191,36,0.4))' }}>
-                    {criterioOrdenacao === 'nivel' ? somaNiveisPessoal : (criterioOrdenacao === 'letras' ? resumoPessoal.letras : formatarTempo(resumoPessoal.tempoMedio))}
+                    {criterioOrdenacao === 'nivel' ? somaNiveisPessoal : criterioOrdenacao === 'letras' ? resumoPessoal.letras : resumoPessoal.tempoMedio == null ? '—' : `${Math.floor(resumoPessoal.tempoMedio / 60)}:${String(resumoPessoal.tempoMedio % 60).padStart(2, '0')}`}
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest">{criterioOrdenacao}</span>
                   </div>
                 </div>

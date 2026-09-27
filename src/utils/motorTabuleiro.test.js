@@ -64,3 +64,37 @@ test('letra inicial e resposta de cada entrada permanecem coerentes após cruzam
     Math.random = randomOriginal;
   }
 });
+
+test('amplia a dificuldade quando o nível atual produziria uma grade pequena', () => {
+  const comuns = ['ATLAS', 'TALUS', 'ULNA', 'SACRO', 'RADIO', 'COCCIX'];
+  const extras = ['UMERO', 'FEMUR', 'TIBIA', 'FIBULA', 'ESCAPULA', 'CLAVICULA', 'PATELA', 'CARPO', 'TARSO'];
+  const banco = { OSSOS: [
+    ...comuns.map(palavra => ({ palavra, dificuldade: 0 })),
+    ...extras.map(palavra => ({ palavra, dificuldade: 2 })),
+  ] };
+  const original = Math.random;
+  let estado = 42;
+  Math.random = () => ((estado = (1664525 * estado + 1013904223) >>> 0) / 4294967296);
+  try {
+    const { metricas, selecao } = gerarTabuleiro(banco, 'OSSOS', 0);
+    assert.equal(selecao.compativeis, 6);
+    assert.ok(metricas.palavras >= 10);
+    assert.equal(selecao.expandiuDificuldade, true);
+    assert.equal(selecao.posicionadas, metricas.palavras);
+  } finally { Math.random = original; }
+});
+
+test('nível 2 usa até 12 termos quando o tópico permite cruzamentos', () => {
+  const termos = ['PULMAO', 'BRONQUIO', 'TRAQUEIA', 'ALVEOLO', 'LARINGE', 'FARINGE', 'DIAFRAGMA', 'PLEURA', 'EPIGLOTE', 'HEMATOSE', 'OXIGENIO', 'CARINA', 'BRONQUIOLO', 'VENTILACAO', 'INSPIRACAO', 'EXPIRACAO', 'TORAX', 'COSTELA'];
+  const banco = { RESPIRATORIO: termos.map(palavra => ({ palavra, dificuldade: 2 })) };
+  const aleatorioOriginal = Math.random;
+  try {
+    for (let semente = 1; semente <= 8; semente++) {
+      let estado = semente;
+      Math.random = () => ((estado = (1664525 * estado + 1013904223) >>> 0) / 4294967296);
+      const resultado = gerarTabuleiro(banco, 'RESPIRATORIO', 2);
+      assert.ok(resultado.metricas.palavras >= 12, `semente ${semente}: ${resultado.metricas.palavras} palavras`);
+      assert.equal(resultado.selecao.meta, 12);
+    }
+  } finally { Math.random = aleatorioOriginal; }
+});

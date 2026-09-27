@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { resumirCruzadinhas, somarNiveisTopicos } from '../utils/progressoCruzadinha';
 import { obterPatente } from '../utils/patentes';
 import { ArrowLeft, Check, KeyRound, LogOut, Pencil, Save, Shield, Stethoscope, Trophy, X, Zap, User, Mail, Calendar, Award } from "lucide-react";
 import { motion, AnimatePresence, useAnimation, useReducedMotion } from "framer-motion";
 import { auth, db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
-import { signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import { signOut, EmailAuthProvider, linkWithCredential, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import StitchBrand from './ui/StitchBrand';
+import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 
 // --- COMPONENTES VISUAIS ---
 function AvatarRing({ level }) {
@@ -111,9 +112,31 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   
   const [focusedField, setFocusedField] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [erroSalvar, setErroSalvar] = useState('');
+  const [salvandoPerfil, setSalvandoPerfil] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [senhaErro, setSenhaErro] = useState('');
+  const [salvandoSenha, setSalvandoSenha] = useState(false);
+  const [senhaVinculada, setSenhaVinculada] = useState(false);
+  const botaoSenhaRef = useRef(null);
+  const entradaSenhaRef = useRef(null);
+  const possuiSenha = senhaVinculada || usuario?.providerData?.some(provedor => provedor.providerId === 'password');
+
+  useEffect(() => {
+    if (!showPasswordModal) return;
+    entradaSenhaRef.current?.focus();
+    const aoTeclar = evento => {
+      if (evento.key === 'Escape' && !salvandoSenha) {
+        setShowPasswordModal(false);
+        botaoSenhaRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', aoTeclar);
+    return () => document.removeEventListener('keydown', aoTeclar);
+  }, [showPasswordModal, salvandoSenha]);
 
   const infoPerfil = String(dadosUsuario?.titulo || dadosUsuario?.genero || dadosUsuario?.sexo || '').toLowerCase().trim();
   const ehFeminino = infoPerfil.includes('doutora') || infoPerfil.includes('dra') || infoPerfil.includes('fem') || infoPerfil === 'f';
@@ -131,9 +154,9 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
     }
   });
 
-  const level = somarNiveisTopicos(xpTopicos) || 1;
+  const level = Number.isInteger(dadosUsuario?.nivelGlobalAdmin) ? dadosUsuario.nivelGlobalAdmin : somarNiveisTopicos(xpTopicos);
   const xpCurrent = dadosUsuario?.pontuacaoTotal || 0;
-  // 🔥 CIRURGIA: Calcula a base do nível atual (ex: se tem 167.795, a base é 167.000)
+  // A barra exibe o avanço dentro do bloco atual de 1.000 XP.
   const xpBaseAtual = Math.floor(xpCurrent / 1000) * 1000;
   const xpNext = xpBaseAtual + 1000;
   const progressoNesteMilestone = xpCurrent - xpBaseAtual;
@@ -156,18 +179,24 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   const patente = obterPatente(level).titulo;
 
   const handleSave = async () => {
-    if (!usuario?.uid) return;
+    if (!usuario?.uid || salvandoPerfil) return;
+    setSalvandoPerfil(true);
+    setErroSalvar('');
     try {
-        await updateDoc(doc(db, "usuarios", usuario.uid), {
-            username: username,
-            nome: fullName
-        });
-        setDadosUsuario(prev => ({...prev, username, nome: fullName}));
+        if (import.meta.env.VITE_FONTE_DADOS === 'planilha') {
+          const perfil = await chamarPerfilPlanilha(usuario, 'editarPerfil', { username, nome: fullName });
+          setDadosUsuario(perfil);
+        } else {
+          await updateDoc(doc(db, "usuarios", usuario.uid), { username, nome: fullName });
+          setDadosUsuario(prev => ({...prev, username, nome: fullName}));
+        }
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
     } catch (e) {
         console.error("Erro ao salvar perfil:", e);
-        alert("Erro de comunicação com o servidor hospitalar.");
+        setErroSalvar(e.message || 'Não foi possível salvar o perfil. Tente novamente.');
+    } finally {
+        setSalvandoPerfil(false);
     }
   };
 
@@ -181,17 +210,36 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   };
 
   const handlePasswordChange = async () => {
-    if(!currentPw || !newPw || newPw.length < 6) return;
+    if ((possuiSenha && !currentPw) || newPw.length < 6 || salvandoSenha) return;
+    if (!possuiSenha && newPw !== confirmPw) {
+      setSenhaErro('As senhas não coincidem.');
+      return;
+    }
+    if (possuiSenha && currentPw === newPw) {
+      setSenhaErro('A nova senha precisa ser diferente da atual.');
+      return;
+    }
+    setSenhaErro('');
+    setSalvandoSenha(true);
     try {
-        const credential = EmailAuthProvider.credential(usuario.email, currentPw);
-        await reauthenticateWithCredential(usuario, credential);
-        await updatePassword(usuario, newPw);
-        alert("Senha alterada com sucesso, Doutor!");
+        if (possuiSenha) {
+          const credential = EmailAuthProvider.credential(usuario.email, currentPw);
+          await reauthenticateWithCredential(usuario, credential);
+          await updatePassword(usuario, newPw);
+        } else {
+          await linkWithCredential(usuario, EmailAuthProvider.credential(usuario.email, newPw));
+          setSenhaVinculada(true);
+        }
         setShowPasswordModal(false);
         setCurrentPw("");
         setNewPw("");
-    } catch {
-        alert("Acesso negado. A senha atual está incorreta.");
+        setConfirmPw("");
+    } catch (falha) {
+        setSenhaErro(falha.code === 'auth/email-already-in-use'
+          ? 'Este e-mail já possui uma conta por senha. Entre nela e vincule o Google antes de criar outra senha.'
+          : possuiSenha ? 'Não foi possível trocar a senha. Confira a senha atual e tente novamente.' : 'Não foi possível criar a senha. Entre novamente com Google e tente outra vez.');
+    } finally {
+        setSalvandoSenha(false);
     }
   };
 
@@ -366,7 +414,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
               </div>
 
               <div className="mt-4 pt-4 border-t border-white/[0.04] space-y-2">
-                <motion.button whileHover={{ y: -1, boxShadow: '0 0 25px rgba(59,130,246,0.3)' }} whileTap={{ scale: 0.98 }} onClick={handleSave} className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-[0_0_15px_rgba(59,130,246,0.15)] flex items-center justify-center gap-2 text-sm relative overflow-hidden">
+                <motion.button whileHover={{ y: -1, boxShadow: '0 0 25px rgba(59,130,246,0.3)' }} whileTap={{ scale: 0.98 }} onClick={handleSave} disabled={salvandoPerfil} className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-[0_0_15px_rgba(59,130,246,0.15)] flex items-center justify-center gap-2 text-sm relative overflow-hidden disabled:opacity-50">
                   <AnimatePresence mode="wait">
                     {saved ? (
                       <motion.span key="saved" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex items-center gap-2"><Check className="w-4 h-4" /> Salvo com Sucesso!</motion.span>
@@ -375,10 +423,11 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
                     )}
                   </AnimatePresence>
                 </motion.button>
+                {erroSalvar && <p role="alert" className="text-rose-400 text-xs">{erroSalvar}</p>}
 
                 <div className="grid grid-cols-2 gap-2">
-                  <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }} onClick={() => setShowPasswordModal(true)} className="py-2.5 rounded-xl bg-[#0B1120] border border-white/[0.08] hover:border-blue-500/30 text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 text-xs">
-                    <KeyRound className="w-3.5 h-3.5 text-blue-400" /> Mudar Senha
+                  <motion.button ref={botaoSenhaRef} whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }} onClick={() => { setSenhaErro(''); setShowPasswordModal(true); }} className="py-2.5 rounded-xl bg-[#0B1120] border border-white/[0.08] hover:border-blue-500/30 text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 text-xs">
+                    <KeyRound className="w-3.5 h-3.5 text-blue-400" /> {possuiSenha ? 'Mudar Senha' : 'Criar Senha'}
                   </motion.button>
                   <motion.button whileHover={{ y: -1, boxShadow: '0 0 20px rgba(239,68,68,0.15)' }} whileTap={{ scale: 0.98 }} onClick={handleLogout} className="py-2.5 rounded-xl bg-red-950/40 border border-red-500/20 hover:border-red-500/50 text-red-400 hover:text-red-300 transition-all flex items-center justify-center gap-2 text-xs">
                     <LogOut className="w-3.5 h-3.5" /> Sair da Conta
@@ -404,37 +453,42 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
       <AnimatePresence>
         {showPasswordModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1120]/90 backdrop-blur-md">
-            <motion.div initial={{ opacity: 0, scale: 0.93, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.93, y: 10 }} transition={{ duration: 0.3 }} className="w-full max-w-[400px] bg-[#151F32] rounded-[24px] border border-white/[0.05] shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6 relative overflow-hidden">
+            <motion.div role="dialog" aria-modal="true" aria-labelledby="perfil-titulo-senha" initial={{ opacity: 0, scale: 0.93, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.93, y: 10 }} transition={{ duration: 0.3 }} className="w-full max-w-[400px] bg-[#151F32] rounded-[24px] border border-white/[0.05] shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6 relative overflow-hidden">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-20 bg-blue-500/5 blur-[40px] rounded-full pointer-events-none" />
               <button aria-label="Fechar alteração de senha" onClick={() => setShowPasswordModal(false)} className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
 
               <div className="relative z-10">
                 <div className="text-center mb-5">
                   <div className="w-11 h-11 mx-auto rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(59,130,246,0.15)]"><KeyRound className="w-5 h-5 text-blue-400" /></div>
-                  <h2 className="text-white text-base">Alterar Senha de Acesso</h2>
-                  <p className="text-slate-500 text-[10px] mt-0.5">Insira a senha atual e defina uma nova.</p>
+                  <h2 id="perfil-titulo-senha" className="text-white text-base">{possuiSenha ? 'Alterar Senha de Acesso' : 'Criar Senha de Acesso'}</h2>
+                  <p className="text-slate-500 text-[10px] mt-0.5">{possuiSenha ? 'Insira a senha atual e defina uma nova.' : 'Depois você poderá entrar também com e-mail e senha.'}</p>
                 </div>
 
                 <div className="space-y-3 mb-4">
-                  <div>
+                  {possuiSenha && <div>
                     <label htmlFor="perfil-senha-atual" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">Senha Atual</label>
                     <div className="flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 border-white/[0.05] focus-within:border-blue-500/50 focus-within:shadow-[0_0_12px_rgba(59,130,246,0.1)] transition-all">
                       <KeyRound className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                      <input id="perfil-senha-atual" type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} placeholder="••••••••" className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
+                      <input ref={entradaSenhaRef} id="perfil-senha-atual" type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} placeholder="••••••••" className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
                     </div>
-                  </div>
+                  </div>}
                   <div>
-                    <label htmlFor="perfil-senha-nova" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">Nova Senha</label>
+                    <label htmlFor="perfil-senha-nova" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">{possuiSenha ? 'Nova Senha' : 'Senha'}</label>
                     <div className="flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 border-white/[0.05] focus-within:border-emerald-500/50 focus-within:shadow-[0_0_12px_rgba(16,185,129,0.1)] transition-all">
                       <KeyRound className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                      <input id="perfil-senha-nova" type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Mín. 6 caracteres" className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
+                      <input ref={possuiSenha ? undefined : entradaSenhaRef} id="perfil-senha-nova" type="password" autoComplete="new-password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Mín. 6 caracteres" className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
                       {newPw.length >= 6 && <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/40"><Check className="w-2.5 h-2.5 text-emerald-400" /></div>}
                     </div>
                   </div>
+                  {!possuiSenha && <div>
+                    <label htmlFor="perfil-senha-confirmar" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">Confirmar senha</label>
+                    <input id="perfil-senha-confirmar" type="password" autoComplete="new-password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className="w-full rounded-xl bg-[#0B1120] border border-white/[0.05] px-4 py-2.5 text-white text-sm" />
+                  </div>}
                 </div>
 
-                <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }} disabled={currentPw.length < 4 || newPw.length < 6} onClick={handlePasswordChange} className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-[0_0_12px_rgba(59,130,246,0.15)] flex items-center justify-center gap-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed">
-                  <Save className="w-4 h-4" /> Confirmar Alteração
+                {senhaErro && <p role="alert" className="text-rose-400 text-xs mb-3">{senhaErro}</p>}
+                <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }} disabled={(possuiSenha && currentPw.length < 4) || newPw.length < 6 || (!possuiSenha && newPw !== confirmPw) || salvandoSenha} onClick={handlePasswordChange} className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-[0_0_12px_rgba(59,130,246,0.15)] flex items-center justify-center gap-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed">
+                  <Save className="w-4 h-4" /> {possuiSenha ? 'Confirmar Alteração' : 'Criar Senha'}
                 </motion.button>
                 <button onClick={() => setShowPasswordModal(false)} className="w-full mt-2 py-2 rounded-xl bg-[#0B1120] border border-white/[0.05] text-slate-400 hover:text-white transition-all text-xs">Cancelar</button>
               </div>

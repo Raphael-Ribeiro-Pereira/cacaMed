@@ -1,8 +1,13 @@
 import { doc, runTransaction } from 'firebase/firestore';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
 import { aplicarProgressoMissoes, lerMissoes } from '../utils/missoes';
+import { chamarPerfilPlanilha } from './perfilPlanilha';
 
 export const registrarCruzadinha = async (uid, partida) => {
+  if (import.meta.env.VITE_FONTE_DADOS === 'planilha') {
+    if (auth.currentUser?.uid !== uid) throw new Error('Sessão diferente da conta da partida.');
+    return chamarPerfilPlanilha(auth.currentUser, 'registrarPartida', { partida });
+  }
   const ref = doc(db, 'usuarios', uid);
   return runTransaction(db, async transaction => {
     const snapshot = await transaction.get(ref);

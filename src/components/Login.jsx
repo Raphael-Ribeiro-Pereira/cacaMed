@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Mail, Lock, Eye, EyeOff, Stethoscope } from "lucide-react";
 import { motion, useAnimation } from "framer-motion";
 import { auth } from '../firebase';
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail, signInWithPopup, GoogleAuthProvider, linkWithCredential, signOut } from 'firebase/auth';
+
+const PERFIL_NA_PLANILHA = import.meta.env.VITE_FONTE_DADOS === 'planilha';
 
 function EcgPulse() {
   const controls = useAnimation();
@@ -44,6 +46,50 @@ export default function Login({ setTelaAtual }) {
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState("");
+  const [credencialGooglePendente, setCredencialGooglePendente] = useState(null);
+  const [emailVinculo, setEmailVinculo] = useState('');
+  const [senhaVinculo, setSenhaVinculo] = useState('');
+
+  const entrarComGoogle = async () => {
+    setErro('');
+    setLoading(true);
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch (falha) {
+      if (falha.code === 'auth/account-exists-with-different-credential') {
+        const credencial = GoogleAuthProvider.credentialFromError(falha);
+        setCredencialGooglePendente(credencial);
+        setEmailVinculo(falha.customData?.email || '');
+      } else if (falha.code !== 'auth/popup-closed-by-user') {
+        const mensagens = {
+          'auth/unauthorized-domain': 'Este endereço local não está autorizado para login Google. Abra http://localhost:5173/.',
+          'auth/popup-blocked': 'O navegador bloqueou a janela do Google. Autorize pop-ups e tente novamente.',
+          'auth/operation-not-allowed': 'O login Google ainda não está disponível neste projeto.',
+        };
+        setErro(mensagens[falha.code] || `Não foi possível entrar com Google (${falha.code || 'erro desconhecido'}).`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmarVinculo = async evento => {
+    evento.preventDefault();
+    if (!credencialGooglePendente || !senhaVinculo || !emailVinculo) return;
+    setLoading(true);
+    setErro('');
+    try {
+      const resultado = await signInWithEmailAndPassword(auth, emailVinculo, senhaVinculo);
+      await linkWithCredential(resultado.user, credencialGooglePendente);
+      setSenhaVinculo('');
+      setCredencialGooglePendente(null);
+    } catch {
+      await signOut(auth);
+      setErro('Senha antiga incorreta ou vínculo indisponível. Confira e tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePasswordReset = async () => {
     const address = forgotEmail.trim();
@@ -200,6 +246,17 @@ export default function Login({ setTelaAtual }) {
               )}
             </motion.button>
           </form>
+
+          {PERFIL_NA_PLANILHA && <div className="relative z-10 mt-4 border-t border-white/[0.05] pt-4">
+            <button type="button" onClick={entrarComGoogle} disabled={loading} className="w-full py-3 rounded-xl border border-cyan-500/40 text-cyan-400 font-bold hover:bg-cyan-500/10 disabled:opacity-50">Entrar com Google</button>
+            {credencialGooglePendente && <form onSubmit={confirmarVinculo} className="mt-4 space-y-3">
+              <p className="text-slate-300 text-sm">Encontramos uma conta antiga para {emailVinculo}. Você autoriza vinculá-la ao Google? Confirme com a senha antiga.</p>
+              <label htmlFor="senha-antiga-vinculo" className="block text-sm">Senha antiga</label>
+              <input id="senha-antiga-vinculo" type="password" autoComplete="current-password" value={senhaVinculo} onChange={evento => setSenhaVinculo(evento.target.value)} className="w-full rounded-xl bg-[#0B1120] border border-cyan-500/30 p-3 text-white" />
+              <button type="submit" disabled={loading || !senhaVinculo} className="w-full py-3 rounded-xl bg-cyan-500 text-[#0B1120] font-bold disabled:opacity-50">Autorizo vincular</button>
+              <button type="button" onClick={() => { setCredencialGooglePendente(null); setSenhaVinculo(''); }} className="w-full text-slate-300 text-sm underline">Agora não</button>
+            </form>}
+          </div>}
 
           <div className="mt-6 pt-4 border-t border-white/[0.04] flex justify-center">
             <div className="flex items-center gap-1.5">

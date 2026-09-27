@@ -135,6 +135,15 @@ const tentarPosicionar = (matrizAtual, palavras, indexAtual) => {
   return false; 
 };
 
+const embaralhar = itens => {
+  const resultado = [...itens];
+  for (let i = resultado.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [resultado[i], resultado[j]] = [resultado[j], resultado[i]];
+  }
+  return resultado;
+};
+
 export const gerarTabuleiro = (bancoDePalavras, materia, nivelAtual = 0, { tentativas = 20 } = {}) => {
   let tamanhoMatriz = 16;
   if (bancoDePalavras && materia) {
@@ -143,15 +152,16 @@ export const gerarTabuleiro = (bancoDePalavras, materia, nivelAtual = 0, { tenta
       
       const limiteDificuldade = nivelAtual + 1;
       const palavrasFiltradas = palavrasOriginais.filter(p => p.dificuldade <= limiteDificuldade);
-      const bancoParaSortear = palavrasFiltradas.length >= 6 ? palavrasFiltradas : palavrasOriginais;
-
-      const palavrasDaFase = [...bancoParaSortear].sort(() => Math.random() - 0.5).slice(0, 15);
+      const palavrasProximas = palavrasOriginais.filter(p => p.dificuldade <= limiteDificuldade + 1);
+      const bancos = [palavrasFiltradas, palavrasProximas, palavrasOriginais]
+        .filter((banco, indice, todos) => banco.length && !todos.slice(0, indice).some(anterior => anterior.length === banco.length));
+      const metaPalavras = Math.min(12, palavrasOriginais.length);
       
       let tamanhoMaiorPalavra = 0;
-      palavrasDaFase.forEach(item => {
+      palavrasOriginais.forEach(item => {
         if (item.palavra.length > tamanhoMaiorPalavra) tamanhoMaiorPalavra = item.palavra.length;
       });
-      tamanhoMatriz = Math.max(16, tamanhoMaiorPalavra + 8);
+      tamanhoMatriz = Math.max(20, tamanhoMaiorPalavra + 10);
       
       let matrizVazia = [];
       for (let l = 0; l < tamanhoMatriz; l++) {
@@ -164,21 +174,24 @@ export const gerarTabuleiro = (bancoDePalavras, materia, nivelAtual = 0, { tenta
       
       let matrizFinal = matrizVazia;
       let melhor = medirGrade(matrizFinal);
-      for (let tentativa = 0; tentativa < Math.max(1, Math.min(30, tentativas)); tentativa++) {
-        const ordem = [...palavrasDaFase];
-        if (tentativa > 0) {
-          for (let i = ordem.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [ordem[i], ordem[j]] = [ordem[j], ordem[i]];
+      let selecionadas = 0;
+      let bancoUtilizado = 0;
+      const totalTentativas = Math.max(1, Math.min(40, tentativas));
+      const qualidade = m => m.densidade * 100 + m.intersecoes * 3 - m.area * 0.1;
+      for (let indiceBanco = 0; indiceBanco < bancos.length; indiceBanco++) {
+        const banco = bancos[indiceBanco];
+        for (let tentativa = 0; tentativa < totalTentativas; tentativa++) {
+          const ordem = embaralhar(banco).slice(0, 20);
+          const candidata = tentarPosicionar(matrizVazia, ordem, 0) || matrizVazia;
+          const metrica = medirGrade(candidata);
+          if (metrica.palavras > melhor.palavras || (metrica.palavras === melhor.palavras && qualidade(metrica) > qualidade(melhor))) {
+            matrizFinal = candidata;
+            melhor = metrica;
+            selecionadas = ordem.length;
+            bancoUtilizado = indiceBanco;
           }
         }
-        const candidata = tentarPosicionar(matrizVazia, ordem, 0) || matrizVazia;
-        const metrica = medirGrade(candidata);
-        const qualidade = m => m.densidade * 100 + m.intersecoes * 3 - m.area * 0.1;
-        if (metrica.palavras > melhor.palavras || (metrica.palavras === melhor.palavras && qualidade(metrica) > qualidade(melhor))) {
-          matrizFinal = candidata;
-          melhor = metrica;
-        }
+        if (melhor.palavras >= metaPalavras) break;
       }
       
       let contadorSequencial = 1;
@@ -221,7 +234,12 @@ export const gerarTabuleiro = (bancoDePalavras, materia, nivelAtual = 0, { tenta
         minRow = 0; maxRow = 10; minCol = 0; maxCol = 10; 
       }
 
-      return { gradePronta: matrizFinal, limites: { minRow, maxRow, minCol, maxCol }, metricas: medirGrade(matrizFinal) };
+      return {
+        gradePronta: matrizFinal,
+        limites: { minRow, maxRow, minCol, maxCol },
+        metricas: medirGrade(matrizFinal),
+        selecao: { disponiveis: palavrasOriginais.length, compativeis: palavrasFiltradas.length, selecionadas, posicionadas: melhor.palavras, meta: metaPalavras, expandiuDificuldade: bancoUtilizado > 0 },
+      };
     }
   }
   return { gradePronta: [], limites: { minRow: 0, maxRow: 10, minCol: 0, maxCol: 10 } };

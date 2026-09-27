@@ -17,6 +17,7 @@
 .stitch-page { position: relative; isolation: isolate; min-height: 100vh; background: var(--stitch-bg); color: var(--stitch-text); font: 400 14px 'Plus Jakarta Sans', sans-serif; }
 .stitch-page::before, .stitch-page::after { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 .stitch-page > * { position: relative; z-index: 1; }
+.stitch-page > .admin-speed-dial { position: fixed; z-index: 60; }
 .stitch-page::before { background: radial-gradient(ellipse at 75% 20%, #00f5d412, transparent 60%); animation: stitch-bg-breathe 7s ease-in-out infinite; }
 .stitch-page::after { height: 18%; background: linear-gradient(transparent, #00f5d40a, transparent); animation: stitch-bg-scan 9s ease-in-out infinite; }
 @keyframes stitch-bg-breathe { 0%, 100% { opacity: .45; transform: scale(1); } 50% { opacity: .9; transform: scale(1.13); } }

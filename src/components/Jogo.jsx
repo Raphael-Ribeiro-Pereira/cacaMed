@@ -6,10 +6,12 @@ import Tabuleiro from './Tabuleiro';
 import { chamarOpenRouter } from '../services/openrouter';
 import { registrarCruzadinha } from '../services/registrarCruzadinha';
 import { dataLocalHoje } from '../utils/missoes';
-import { proximaCelulaDaEntrada } from '../utils/navegacaoCruzadinha';
+import { celulasPreenchidasAteProximaVazia, escolherDirecaoDaEntrada, proximaCelulaDaEntrada, resolverLetraRepetida } from '../utils/navegacaoCruzadinha';
 import { aplicarProgressoMissoes, lerMissoes } from '../utils/missoes';
 import { somarNiveisTopicos } from '../utils/progressoCruzadinha';
 import { obterPatente } from '../utils/patentes';
+import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
+import AdminSpeedDial from './AdminSpeedDial';
 
 import { Clock, LogOut, Stethoscope, Trophy, Ticket, Star, Lock, ChevronDown, User, Activity } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,8 +29,8 @@ const aplicarCensura = (textoDica, palavraSecreta) => {
 };
 
 const passosTutorial = [
-  { titulo: 'Escolha uma palavra', texto: 'Clique em uma casa numerada para selecionar uma palavra. Em uma interseção, clique novamente para alternar entre horizontal e vertical.' },
-  { titulo: 'Preencha a grade', texto: 'Digite uma letra por casa. O cursor avança automaticamente e pula letras já preenchidas; Backspace volta para a casa anterior.' },
+  { titulo: 'Escolha uma palavra', texto: 'Clique em uma casa numerada para selecionar uma palavra. Em uma interseção, o jogo prioriza a palavra com mais casas vazias; Enter ou Espaço alterna a direção.' },
+  { titulo: 'Preencha a grade', texto: 'Digite uma letra por casa. O cursor pula letras já preenchidas e aceita a letra repetida de uma interseção sem duplicá-la; Backspace volta para a casa anterior.' },
   { titulo: 'Entenda o feedback', texto: 'A casa mostra feedback enquanto você digita. Uma palavra só é validada quando todas as suas casas estiverem preenchidas. Complete todas as palavras para terminar o plantão.' },
   { titulo: 'Use as dicas', texto: 'O laudo fica no prontuário. A partir do nível 3, você pode abrir dicas adicionais: a do residente custa 5 XP e a do paciente, mais 10 XP.' },
   { titulo: 'Receba suas recompensas', texto: 'Letras e palavras formam o XP base. Nível e tempo podem multiplicá-lo; dicas reduzem o resultado, com mínimo de 10 XP por partida. Missões podem dar XP extra, e a cada dois plantões completos você ganha um ticket. O relatório final mostra cada parcela.' },
@@ -61,9 +63,10 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   const cadeadoRecompensa = useRef(false);
   const partidaIdRef = useRef(null);
   const direcaoFocoRef = useRef(null);
+  const letrasPuladasRef = useRef([]);
   const tentativasErradasRef = useRef(new Set());
 
-  // O COFRE DE XP (A Sala de Espera que resolve o bug do tabuleiro)
+  // Recompensa pendente até a conclusão ser confirmada pelo backend.
   const [xpPendente, setXpPendente] = useState(null);
   const [tutorialAberto, setTutorialAberto] = useState(() =>
     dadosUsuario?.tutorialCruzadinhasConcluido !== true &&
@@ -119,8 +122,13 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     setSalvandoTutorial(true);
     setErroTutorial('');
     try {
-      await updateDoc(doc(db, 'usuarios', meuUid), { tutorialCruzadinhasConcluido: true });
-      setDadosUsuario(prev => ({ ...prev, tutorialCruzadinhasConcluido: true }));
+      if (import.meta.env.VITE_FONTE_DADOS === 'planilha') {
+        const perfil = await chamarPerfilPlanilha(usuario, 'tutorial');
+        setDadosUsuario(perfil);
+      } else {
+        await updateDoc(doc(db, 'usuarios', meuUid), { tutorialCruzadinhasConcluido: true });
+        setDadosUsuario(prev => ({ ...prev, tutorialCruzadinhasConcluido: true }));
+      }
       setTutorialAberto(false);
     } catch (error) {
       console.error('Falha ao registrar tutorial da cruzadinha:', error);
@@ -156,7 +164,11 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   };
 
   const { gradePronta, limites } = useMemo(() => {
-    return gerarTabuleiro(bancoDePalavras, chaveXP, nivelDaGrade);
+    const resultado = gerarTabuleiro(bancoDePalavras, chaveXP, nivelDaGrade);
+    if (import.meta.env.DEV && resultado.selecao) {
+      console.debug('[Cruzadinha] seleção da grade', chaveXP, resultado.selecao);
+    }
+    return resultado;
   // A chave força uma nova grade aleatória ao avançar, mesmo no mesmo nível.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bancoDePalavras, chaveXP, chaveRecarregamento, nivelDaGrade]);
@@ -324,7 +336,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
             status: 'pendente',
             partida: {
               id: partidaIdRef.current, chaveXP, subMateria, dia: dataLocalHoje(),
-              xp: xpFinalDaFase, palavras: palavrasDoTabuleiro.length,
+              xp: xpFinalDaFase, palavras: palavrasDoTabuleiro.length, penalidadeXP,
               letras: numLetras, tempo: tempoDecorrido, erros: errosNaPartida,
               maiorPalavra: tamanhoMaiorPalavra
             }
@@ -387,22 +399,50 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   };
 
   const handleFocus = (celula) => {
-    const novaDirecao = direcaoFocoRef.current || (celula.pertenceHorizontal && celula.pertenceVertical
-      ? direcaoAtual
-      : celula.pertenceHorizontal ? 'horizontal' : 'vertical');
+    if (!direcaoFocoRef.current) letrasPuladasRef.current = [];
+    const novaDirecao = direcaoFocoRef.current || escolherDirecaoDaEntrada(gradePronta, valores, celula, direcaoAtual);
     direcaoFocoRef.current = null;
     selecionarEntrada(celula, novaDirecao);
   };
 
   const handleClick = (celula) => {
+    letrasPuladasRef.current = [];
     if (celula.pertenceHorizontal && celula.pertenceVertical) {
-      const direcaoInvertida = direcaoAtual === 'horizontal' ? 'vertical' : 'horizontal';
-      selecionarEntrada(celula, direcaoInvertida);
+      selecionarEntrada(celula, escolherDirecaoDaEntrada(gradePronta, valores, celula, direcaoAtual));
     }
+  };
+
+  const preencherPalavraAdmin = () => {
+    if (dadosUsuario?.role !== 'admin' || !jogoIniciado || vitoria) return;
+    const preenchimento = {};
+    gradePronta.flat().forEach(celula => {
+      const chave = `${celula.linha}-${celula.coluna}`;
+      if (celulasDestacadas.includes(chave)) preenchimento[chave] = celula.letraCerta;
+    });
+    setValores(anterior => ({ ...anterior, ...preenchimento }));
+  };
+
+  const finalizarAdmin = () => {
+    if (dadosUsuario?.role !== 'admin' || !jogoIniciado || vitoria) return;
+    const preenchimento = {};
+    gradePronta.flat().forEach(celula => {
+      if (!celula.vazia && celula.letraCerta !== ' ') preenchimento[`${celula.linha}-${celula.coluna}`] = celula.letraCerta;
+    });
+    setValores(preenchimento);
+  };
+
+  const novaGradeAdmin = () => {
+    if (dadosUsuario?.role !== 'admin' || vitoria) return;
+    setValores({}); setCelulasDestacadas([]); setPalavraSelecionada(null);
+    setJogoIniciado(false); setTempoDecorrido(0); setErrosNaPartida(0);
+    tentativasErradasRef.current.clear(); setDicasSalvas({}); setNiveisDesbloqueados({});
+    setPenalidadeXP(0); partidaIdRef.current = null;
+    setChaveRecarregamento(anterior => anterior + 1);
   };
 
   const handleInput = (e, l, c) => {
     const val = e.target.value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+    letrasPuladasRef.current = [];
     const novosValores = { ...valores, [`${l}-${c}`]: val };
     setValores(novosValores);
     if (val && val !== gradePronta[l][c].letraCerta) {
@@ -414,8 +454,23 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     }
     
     if (val !== '') {
+      /* MODO ALTERNATIVO — avançar uma casa por vez, inclusive preenchidas:
+      const proxima = proximaCelulaDaEntrada(gradePronta, novosValores, l, c, direcaoAtual, 1, false);
+      if (proxima) {
+        direcaoFocoRef.current = direcaoAtual;
+        document.getElementById(`input-${proxima.linha}-${proxima.coluna}`)?.focus();
+      }
+      Para ativar, substituir o bloco ativo abaixo. O tratamento de letras
+      digitadas sobre células já preenchidas está no handleKeyDown.
+      */
+      // MODO ATUAL — avança ao vazio e guarda as letras puladas para aceitar repetição.
       const proxima = proximaCelulaDaEntrada(gradePronta, novosValores, l, c, direcaoAtual);
-      if (proxima) document.getElementById(`input-${proxima.linha}-${proxima.coluna}`)?.focus();
+      if (proxima) {
+        letrasPuladasRef.current = celulasPreenchidasAteProximaVazia(gradePronta, novosValores, l, c, direcaoAtual);
+        direcaoFocoRef.current = direcaoAtual;
+        document.getElementById(`input-${proxima.linha}-${proxima.coluna}`)?.focus();
+      }
+      // Fim do modo atual.
     }
   };
 
@@ -423,11 +478,12 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     const celula = gradePronta[l]?.[c];
     if ((e.key === ' ' || e.key === 'Enter') && celula?.pertenceHorizontal && celula?.pertenceVertical) {
       e.preventDefault();
-      handleClick(celula);
+      selecionarEntrada(celula, direcaoAtual === 'horizontal' ? 'vertical' : 'horizontal');
       return;
     }
     const seta = { ArrowRight: [0, 1, 'horizontal'], ArrowLeft: [0, -1, 'horizontal'], ArrowDown: [1, 0, 'vertical'], ArrowUp: [-1, 0, 'vertical'] }[e.key];
     if (seta) {
+      letrasPuladasRef.current = [];
       const [passoLinha, passoColuna, direcao] = seta;
       const destino = gradePronta[l + passoLinha]?.[c + passoColuna];
       if (destino && !destino.vazia && destino.letraCerta !== ' ') {
@@ -438,8 +494,22 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       return;
     }
     if (e.key === 'Backspace' && !valores[`${l}-${c}`]) {
+      letrasPuladasRef.current = [];
       const anterior = proximaCelulaDaEntrada(gradePronta, valores, l, c, direcaoAtual, -1, false);
       if (anterior) document.getElementById(`input-${anterior.linha}-${anterior.coluna}`)?.focus();
+      return;
+    }
+    if (e.key.length === 1 && /^[A-Z]$/.test(e.key.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase())) {
+      const resultado = resolverLetraRepetida(e.key, letrasPuladasRef.current, valores[`${l}-${c}`]);
+      if (resultado.acao === 'consumir') {
+        e.preventDefault();
+        letrasPuladasRef.current = resultado.restantes;
+      } else if (resultado.acao === 'substituir') {
+        e.preventDefault();
+        handleInput({ target: { value: resultado.letra } }, l, c);
+      } else {
+        letrasPuladasRef.current = [];
+      }
     }
   };
 
@@ -624,6 +694,8 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           </div>
         </div>
       </main>
+
+      {dadosUsuario?.role === 'admin' && !tutorialAberto && !confirmarSaida && !vitoria && <AdminSpeedDial titulo="Ferramentas admin · Tabuleiro"><div className="flex flex-col gap-2"><button type="button" onClick={preencherPalavraAdmin} disabled={!celulasDestacadas.length || !jogoIniciado} className="stitch-primary disabled:opacity-40">Preencher palavra selecionada</button><button type="button" onClick={finalizarAdmin} disabled={!jogoIniciado} className="stitch-primary disabled:opacity-40">Finalizar cruzadinha</button><button type="button" onClick={novaGradeAdmin} className="stitch-primary">Gerar nova grade</button></div></AdminSpeedDial>}
 
       <AnimatePresence>
         {vitoria && (
