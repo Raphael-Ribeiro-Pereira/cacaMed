@@ -154,6 +154,42 @@ test('partida da nova temporada calcula XP no servidor e não duplica no reenvio
   assert.equal(publico[0].uid, undefined);
 });
 
+test('reenvio recupera gravações interrompidas sem duplicar XP, missões ou tickets', () => {
+  for (const nomeAba of ['PerfisGoogle', 'RankingNovaTemporada', 'Partidas']) {
+    const { contexto, abas, idToken } = prepararScript();
+    const credenciais = { idToken, apiKey: 'chave-publica' };
+    contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'anatomia', username: 'jogador' });
+    const partida = {
+      id: '12345678-1234-4123-8123-123456789abc', chaveXP: 'ANATOMIA-GERAL', subMateria: 'Geral',
+      palavras: 7, letras: 32, tempo: 120, erros: 0, maiorPalavra: 9, penalidadeXP: 0,
+    };
+    const aba = abas.get(nomeAba).aba;
+    const getRangeOriginal = aba.getRange;
+    let falhou = false;
+    aba.getRange = (...args) => {
+      const range = getRangeOriginal(...args);
+      const setValuesOriginal = range.setValues;
+      range.setValues = values => {
+        setValuesOriginal(values);
+        if (!falhou) {
+          falhou = true;
+          throw new Error(`Resposta perdida após gravar ${nomeAba}`);
+        }
+      };
+      return range;
+    };
+    assert.throws(() => contexto.api({ ...credenciais, acao: 'registrarPartida', partida }), /Resposta perdida/);
+    const recuperado = contexto.api({ ...credenciais, acao: 'registrarPartida', partida });
+    assert.equal(recuperado.pontuacaoTotal, 384, nomeAba);
+    assert.equal(recuperado.xpTopicos['ANATOMIA-GERAL'], 134, nomeAba);
+    assert.equal(recuperado.tickets, 0, nomeAba);
+    assert.equal(recuperado.estatisticas['ANATOMIA-GERAL'].partidas, 1, nomeAba);
+    assert.equal(recuperado.missoesDiarias.filter(missao => missao.concluida).length, 2, nomeAba);
+    assert.equal(abas.get('Partidas').registros.length, 2, nomeAba);
+    assert.equal(abas.get('RankingNovaTemporada').registros.length, 2, nomeAba);
+  }
+});
+
 test('ponte só envia respostas para a origem local autorizada', () => {
   const { contexto } = prepararScript();
   const nonce = '0123456789abcdef0123456789abcdef';

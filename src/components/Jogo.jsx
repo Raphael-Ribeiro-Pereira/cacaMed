@@ -709,6 +709,13 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
                 <h2 tabIndex="-1" className="text-2xl text-emerald-400 mb-1 relative z-10 font-bold">Plantão Concluído! 🎉</h2>
                 <p className="text-slate-400 text-sm mb-6 relative z-10">Todas as palavras foram preenchidas corretamente.</p>
+                {xpPendente?.status !== 'salvo' && (
+                  <p role="status" aria-live="polite" className={`mb-4 text-sm relative z-10 ${xpPendente?.status === 'erro' ? 'text-rose-400' : 'text-cyan-400'}`}>
+                    {xpPendente?.status === 'erro'
+                      ? 'Não foi possível confirmar o salvamento. Mantenha esta tela aberta e tente novamente; a mesma partida será reenviada sem duplicar a recompensa.'
+                      : 'Confirmando sua recompensa na planilha. Os valores abaixo são uma prévia até o salvamento terminar.'}
+                  </p>
+                )}
 
                 <div className="flex justify-center gap-3 mb-6 relative z-10">
                   <div className="bg-[#0B1120] border border-emerald-500/20 px-5 py-3 rounded-xl flex items-center gap-2">
@@ -718,7 +725,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                 </div>
                 
                 <div className="bg-[#0B1120] border border-white/[0.1] rounded-xl p-4 mb-5 text-left text-xs text-slate-300 space-y-2 relative z-10" aria-label="Detalhamento do XP">
-                  <h3 className="text-sm font-bold text-cyan-400 mb-2">Relatório de XP</h3>
+                  <h3 className="text-sm font-bold text-cyan-400 mb-2">{xpPendente?.status === 'salvo' ? 'Relatório de XP' : 'Prévia de XP'}</h3>
                   <div className="flex justify-between"><span>{relatorioXP?.letras} letras × 2 XP</span><span>+{relatorioXP?.xpLetras} XP</span></div>
                   <div className="flex justify-between"><span>{relatorioXP?.palavras} palavras × 10 XP</span><span>+{relatorioXP?.xpPalavras} XP</span></div>
                   <div className="flex justify-between border-t border-white/[0.1] pt-2"><span>Base</span><span>{relatorioXP?.base} XP</span></div>

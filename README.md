@@ -20,6 +20,8 @@ No Cadastro 2.0, contas Google sem senha criam uma senha para também entrar pel
 
 No primeiro acesso, o tutorial é exibido e sua conclusão fica registrada no perfil da fonte de dados ativa (Firestore antigo ou planilha nova). O botão **Tutorial** permite reabri-lo. Durante a partida, clique ou use Tab para selecionar uma casa; as setas movem o foco entre casas vizinhas e Enter/Espaço alternam a direção numa interseção. O cursor pula letras já preenchidas. **Abandonar plantão** pede confirmação e descarta o progresso não concluído.
 
+O banco de palavras é lido de um CSV público. No mesmo tópico, o importador mantém a primeira ocorrência de cada resposta normalizada e ignora cópias da mesma palavra; a planilha de origem não é modificada. A revisão médica das dicas cabe ao usuário antes da homologação de conteúdo.
+
 Ao completar a grade, o resultado mostra XP de letras e palavras, multiplicadores de nível e tempo, desconto de dicas, bônus de missões e tickets. A recompensa tem ID único e reenvio idempotente; enquanto o salvamento não terminar, a saída permanece bloqueada. No modo planilha, o Apps Script recalcula XP a partir de métricas limitadas, mas **não comprova que a partida foi jogada honestamente**. O histórico recente contém no máximo 30 partidas; os totais do menu, perfil, estatísticas e ranking vêm dos contadores acumulados por tópico.
 
 ## Ranking público
@@ -27,6 +29,8 @@ Ao completar a grade, o resultado mostra XP de letras e palavras, multiplicadore
 A tela de ranking lê a implantação pública do Google Apps Script. Ela não consulta a coleção privada `usuarios` inteira. O código da implantação está em [docs/apps-script-ranking.gs](docs/apps-script-ranking.gs). A temporada ativa usa `RankingNovaTemporada`; a aba legada `Ranking` foi removida. O UID fica na planilha e a resposta pública traz apenas um hash para identificar a posição do próprio jogador. O navegador recebe somente os dados públicos por JSONP.
 
 O Apps Script vinculado à planilha `cacoMed - Ranking Global` está na implantação existente (versão 7), com a mesma URL `/exec`. No modo novo, o cliente envia o token Firebase à API privada do Apps Script por uma ponte HTML, e o script armazena perfis em `PerfisGoogle`, recibos em `Partidas` e o placar em `RankingNovaTemporada`. O Firestore antigo não é usado nesse caminho. A resposta pública inclui nome e métricas, sem e-mail ou perfil privado. A sincronização antiga de ranking é rejeitada.
+
+O deploy da interface na Vercel fica para depois da homologação local. Antes de publicá-la, adicionar o domínio final à lista `ORIGENS_APP` do Apps Script e aos domínios autorizados do Firebase Authentication, republicar o script e testar o fluxo na URL final. Sem esse ajuste, a ponte de perfil/recompensa rejeitará a origem de produção.
 
 ## Segurança do Firestore
 

@@ -34,6 +34,7 @@ const normalizar = texto => String(texto || '').trim().normalize('NFD')
 
 export function importarBancoCSV(texto) {
   const banco = {};
+  const respostasPorTopico = new Map();
   const linhas = lerLinhasCSV(texto);
   let numero = 1;
   for (const colunas of linhas.slice(1)) {
@@ -45,6 +46,10 @@ export function importarBancoCSV(texto) {
     const dificuldadeBruta = Number.parseInt(String(colunas[3] || '0').trim(), 10);
     const dificuldade = Number.isInteger(dificuldadeBruta) && dificuldadeBruta >= 0 ? dificuldadeBruta : 0;
     const chave = `${materia}-${subMateria}`;
+    if (!respostasPorTopico.has(chave)) respostasPorTopico.set(chave, new Set());
+    const respostas = respostasPorTopico.get(chave);
+    if (respostas.has(palavra)) continue;
+    respostas.add(palavra);
     (banco[chave] ||= []).push({
       palavra,
       numero: numero++,
