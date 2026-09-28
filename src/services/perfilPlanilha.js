@@ -52,8 +52,14 @@ function abrirPonte() {
         finalizar();
       }
     };
-    const temporizador = setTimeout(() => finalizar(new Error('Não foi possível conectar à planilha. Confira a URL autorizada no Apps Script e tente novamente.')), TEMPO_ABERTURA_MS);
-    iframe.onerror = () => finalizar(new Error('Não foi possível abrir o serviço de perfis.'));
+    const falharAbertura = mensagem => {
+      const erro = new Error(mensagem);
+      erro.code = 'PONTE_ABERTURA';
+      console.warn('[cacoMed] A ponte de perfis não confirmou a abertura.', { origem: window.location.origin });
+      finalizar(erro);
+    };
+    const temporizador = setTimeout(() => falharAbertura('Não foi possível abrir a conexão com a planilha. Tente novamente.'), TEMPO_ABERTURA_MS);
+    iframe.onerror = () => falharAbertura('Não foi possível abrir o serviço de perfis.');
     window.addEventListener('message', receber);
     iframe.src = url.toString();
     document.body.appendChild(iframe);
@@ -63,8 +69,15 @@ function abrirPonte() {
 
 async function enviarPedido(usuario, acao, dados, timeoutMs) {
   const idToken = await getIdToken(usuario);
-  const ponte = abrirPonte();
-  await ponte.pronta;
+  let ponte = abrirPonte();
+  try {
+    await ponte.pronta;
+  } catch (erro) {
+    if (erro.code !== 'PONTE_ABERTURA') throw erro;
+    // Nenhum pedido foi enviado: recriar a ponte não repete uma gravação.
+    ponte = abrirPonte();
+    await ponte.pronta;
+  }
   return new Promise((resolve, reject) => {
     let concluido = false;
     const finalizar = (erro, resultado) => {

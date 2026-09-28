@@ -25,6 +25,7 @@ const PERFIL_NA_PLANILHA = import.meta.env.VITE_FONTE_DADOS === 'planilha';
 
 import PlantaoMedico from './components/PlantaoMedico';
 import ErroMedico from './components/ErroMedico';
+import CausaEfeito from './components/CausaEfeito';
 
 function App() {
   const [usuario, setUsuario] = useState(null); 
@@ -195,6 +196,7 @@ function App() {
       
       {telaAtual === 'selecaoDDX' && usuario && <PlantaoMedico usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'erroMedico' && usuario && <ErroMedico usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
+      {telaAtual === 'causaEfeito' && usuario && <CausaEfeito usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
 
     </>
   );

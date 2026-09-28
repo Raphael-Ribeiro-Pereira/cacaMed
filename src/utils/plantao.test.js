@@ -27,5 +27,6 @@ test('artefato Apps Script é idêntico ao motor do navegador', () => {
   const origem = readFileSync(new URL('./plantao.js', import.meta.url), 'utf8');
   const script = readFileSync(new URL('../../docs/plantao-motor.gs', import.meta.url), 'utf8');
   const auditoria = readFileSync(new URL('./erroMedico.js', import.meta.url), 'utf8');
-  assert.equal(script, '// GERADO por node scripts/sincronizar-plantao.mjs. Não editar manualmente.\n' + origem.replace(/^export /gm, '') + '\n' + auditoria.replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, ''));
+  const relacao = readFileSync(new URL('./causaEfeito.js', import.meta.url), 'utf8');
+  assert.equal(script, '// GERADO por node scripts/sincronizar-plantao.mjs. Não editar manualmente.\n' + origem.replace(/^export /gm, '') + '\n' + auditoria.replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '') + '\n' + relacao.replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, ''));
 });

@@ -203,6 +203,72 @@ test('Erro médico bloqueia piloto não revisado e recupera resposta perdida no 
   assert.equal(recuperado.xpTopicos['DDX-ERRO-MEDICO-RESPIRATORIO'], 100);
 });
 
+test('Causa e efeito salva cada etapa, não duplica ticket ou XP e mantém Plantão separado', () => {
+  const { contexto, abas, idToken } = prepararScript({ email: 'raphaelrpereira.rp@gmail.com' });
+  const credenciais = { idToken, apiKey: 'chave-publica' };
+  contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'clinica', username: 'admin' });
+  const registros = abas.get('PerfisGoogle').registros;
+  const perfil = JSON.parse(registros[1][2]); perfil.tickets = 2; perfil.ddx = { partidas: 3, xp: 500 }; registros[1][2] = JSON.stringify(perfil);
+  const entradaId = '12345678-1234-4123-8123-123456789abc';
+  const inicio = { ...credenciais, acao: 'iniciarRelacao', relacaoId: 'resp-asma-relacoes-1', entradaId };
+  assert.equal(contexto.api(inicio).tickets, 1);
+  assert.equal(contexto.api(inicio).tickets, 1);
+  assert.equal(contexto.api({ ...inicio, entradaId: '12345678-1234-4123-8123-123456789abd' }).tickets, 1);
+  const responder = respostas => contexto.api({ ...credenciais, acao: 'responderRelacao', entradaId, respostas, xp: 99999 });
+  assert.throws(() => responder(['contracao', 'resistencia']), /outra aba/);
+  assert.throws(() => responder(['inventada']), /inválida/);
+  responder(['contracao']);
+  assert.deepEqual(JSON.parse(JSON.stringify(contexto.api({ ...credenciais, acao: 'obterPerfil' }).causaEfeito.entrada.respostas)), ['contracao']);
+  assert.throws(() => responder(['relaxamento', 'resistencia']), /outra aba/);
+  responder(['contracao', 'resistencia']); responder(['contracao', 'resistencia', 'tentativa']);
+  const respostas = ['contracao', 'resistencia', 'tentativa', 'relaxar'];
+  const final = responder(respostas);
+  assert.equal(final.causaEfeito.entrada.xpConcedido, 100);
+  assert.equal(final.causaEfeito.entrada.relatorio.acertos, 4);
+  assert.equal(final.ddx.partidas, 3);
+  assert.equal(final.ddx.xp, 500);
+  assert.equal(responder(respostas).pontuacaoTotal, 100);
+  assert.equal(responder(respostas).causaEfeito.partidas, 1);
+  assert.throws(() => responder(['contracao', 'resistencia', 'tentativa', 'curar']), /outra aba/);
+  const repeticao = contexto.api({ ...inicio, entradaId: '12345678-1234-4123-8123-123456789abd' });
+  assert.equal(repeticao.tickets, 0);
+  let repetido;
+  for (let i = 1; i <= 4; i++) repetido = contexto.api({ ...credenciais, acao: 'responderRelacao', entradaId: repeticao.causaEfeito.entrada.id, respostas: respostas.slice(0, i) });
+  assert.equal(repetido.pontuacaoTotal, 100);
+  assert.equal(repetido.causaEfeito.entrada.xpConcedido, 0);
+  assert.equal(repetido.causaEfeito.entrada.repeticao, true);
+});
+
+test('Causa e efeito bloqueia piloto não revisado e recupera resposta perdida no ranking', () => {
+  const comum = prepararScript();
+  comum.contexto.api({ idToken: comum.idToken, apiKey: 'chave-publica', acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'clinica', username: 'teste' });
+  assert.throws(() => comum.contexto.api({ idToken: comum.idToken, apiKey: 'chave-publica', acao: 'iniciarRelacao', relacaoId: 'resp-asma-relacoes-1' }), /revisão clínica/);
+  const { contexto, abas, idToken } = prepararScript({ email: 'raphaelrpereira.rp@gmail.com' });
+  const credenciais = { idToken, apiKey: 'chave-publica' };
+  contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'clinica', username: 'admin' });
+  const registros = abas.get('PerfisGoogle').registros;
+  const perfil = JSON.parse(registros[1][2]); perfil.tickets = 1; registros[1][2] = JSON.stringify(perfil);
+  const entradaId = '12345678-1234-4123-8123-123456789abc';
+  contexto.api({ ...credenciais, acao: 'iniciarRelacao', relacaoId: 'resp-asma-relacoes-1', entradaId });
+  const respostas = ['contracao', 'resistencia', 'tentativa', 'relaxar'];
+  for (let i = 1; i < 4; i++) contexto.api({ ...credenciais, acao: 'responderRelacao', entradaId, respostas: respostas.slice(0, i) });
+  const ranking = abas.get('RankingNovaTemporada').aba;
+  const original = ranking.getRange;
+  let falhou = false;
+  ranking.getRange = (...args) => {
+    const range = original(...args); const gravar = range.setValues;
+    range.setValues = valores => { gravar(valores); if (!falhou) { falhou = true; throw new Error('Resposta perdida'); } };
+    return range;
+  };
+  const pedido = { ...credenciais, acao: 'responderRelacao', entradaId, respostas };
+  assert.throws(() => contexto.api(pedido), /Resposta perdida/);
+  const recuperado = contexto.api(pedido);
+  assert.equal(recuperado.pontuacaoTotal, 100);
+  assert.equal(recuperado.causaEfeito.partidas, 1);
+  assert.equal(recuperado.tickets, 0);
+  assert.equal(recuperado.xpTopicos['DDX-CAUSA-EFEITO-RESPIRATORIO'], 100);
+});
+
 test('ranking público usa sempre a nova temporada e a rota antiga não grava', () => {
   const { contexto, linhas, idToken } = prepararScript();
   linhas.push(['jogador-1', 'Jogador Um', 480, 2, 2, 35, 'hoje', 80]);
@@ -322,11 +388,16 @@ test('reenvio recupera gravações interrompidas sem duplicar XP, missões ou ti
   }
 });
 
-test('ponte só envia respostas para a origem local autorizada', () => {
+test('ponte aceita origens locais 5173/5174 e Vercel e rejeita outras origens', () => {
   const { contexto } = prepararScript();
   const nonce = '0123456789abcdef0123456789abcdef';
   const resposta = contexto.doGet({ parameter: { ponte: nonce, origem: 'http://127.0.0.1:5173' } });
   assert.match(resposta.html, /http:\/\/127\.0\.0\.1:5173/);
+  for (const origem of ['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5174', 'https://caca-med.vercel.app']) {
+    const ponte = contexto.doGet({ parameter: { ponte: nonce, origem } });
+    assert.ok(ponte.html.includes(JSON.stringify({ nonce, origem })));
+  }
+  assert.throws(() => contexto.doGet({ parameter: { ponte: nonce, origem: 'http://localhost:5175' } }));
   assert.throws(() => contexto.doGet({ parameter: { ponte: nonce, origem: 'https://site-desconhecido.example' } }));
 });
 

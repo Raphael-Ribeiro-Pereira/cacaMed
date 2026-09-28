@@ -3,7 +3,7 @@ const NOME_ABA_PERFIS = 'PerfisGoogle';
 const LIMITE_CORPO_BYTES = 32768;
 const NOME_ABA_TEMPORADA = 'RankingNovaTemporada';
 const NOME_ABA_PARTIDAS = 'Partidas';
-const ORIGENS_APP = ['http://localhost:5173', 'http://127.0.0.1:5173', 'https://caca-med.vercel.app'];
+const ORIGENS_APP = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'http://127.0.0.1:5174', 'https://caca-med.vercel.app'];
 const EMAIL_ADMIN_INICIAL = 'raphaelrpereira.rp@gmail.com';
 
 // O HTML fica em iframe do Google. Ele troca mensagens com o jogo e usa
@@ -368,6 +368,61 @@ function operarAuditoria(aba, local, pedido) {
   return atualizado;
 }
 
+function operarRelacao(aba, local, pedido) {
+  const perfil = local.perfil;
+  const stats = { concluidos: [], historico: [], partidas: 0, acertos: 0, etapas: 0, xp: 0, ...perfil.causaEfeito };
+  let entrada = stats.entrada;
+  if (pedido.acao === 'iniciarRelacao') {
+    const auditoria = obterRelacao(String(pedido.relacaoId || ''));
+    if (!auditoria.caso.revisado && perfil.role !== 'admin') throw new Error('Caso aguardando revisão clínica.');
+    if (entrada && !entrada.relatorio) {
+      if (entrada.relacaoId !== auditoria.id) throw new Error('Conclua a análise atual antes de iniciar outra.');
+      return perfil;
+    }
+    const id = String(pedido.entradaId || '');
+    if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error('Identificador de entrada inválido.');
+    if (entrada?.id === id) return perfil;
+    if (stats.historico.some(item => item.id === id)) throw new Error('Entrada já encerrada.');
+    if ((Number(perfil.tickets) || 0) < 1) throw new Error('Tickets insuficientes.');
+    entrada = { id, relacaoId: auditoria.id, versao: auditoria.versao, respostas: [], iniciadoEm: new Date().toISOString() };
+    const atualizado = { ...perfil, tickets: perfil.tickets - 1, causaEfeito: { ...stats, entrada } };
+    salvarPerfil(aba, local.linha, atualizado);
+    return atualizado;
+  }
+  if (!entrada || entrada.id !== pedido.entradaId) throw new Error('Análise não encontrada. Atualize o perfil.');
+  const auditoria = obterRelacao(entrada.relacaoId);
+  if (auditoria.versao !== entrada.versao) throw new Error('A versão da análise mudou. Solicite revisão ao administrador.');
+  const respostas = pedido.respostas;
+  if (!Array.isArray(respostas)) throw new Error('Respostas inválidas.');
+  if (JSON.stringify(respostas) === JSON.stringify(entrada.respostas)) {
+    if (entrada.relatorio) atualizarRankingNovo(perfil);
+    return perfil;
+  }
+  if (entrada.relatorio || respostas.length !== entrada.respostas.length + 1 ||
+      respostas.length > auditoria.perguntas.length || entrada.respostas.some((id, indice) => respostas[indice] !== id)) {
+    throw new Error('A análise mudou em outra aba. Atualize o perfil antes de continuar.');
+  }
+  respostas.forEach((resposta, indice) => {
+    if (!auditoria.perguntas[indice].alternativas.some(item => item.id === resposta)) throw new Error('Resposta inválida.');
+  });
+  const terminou = respostas.length === auditoria.perguntas.length;
+  const relatorio = terminou ? avaliarRelacao(auditoria, respostas) : null;
+  const chave = auditoria.id + ':' + auditoria.versao;
+  const repeticao = stats.concluidos.includes(chave);
+  const xp = terminou && !repeticao ? relatorio.acertos * 25 : 0;
+  entrada = { ...entrada, respostas: [...respostas], ...(terminou ? { relatorio, xpConcedido: xp, repeticao, encerradoEm: new Date().toISOString() } : {}) };
+  const atualizado = { ...perfil, pontuacaoTotal: (Number(perfil.pontuacaoTotal) || 0) + xp,
+    xpTopicos: { ...perfil.xpTopicos, 'DDX-CAUSA-EFEITO-RESPIRATORIO': (Number(perfil.xpTopicos?.['DDX-CAUSA-EFEITO-RESPIRATORIO']) || 0) + xp },
+    causaEfeito: { ...stats, entrada, partidas: stats.partidas + Number(terminou),
+      acertos: stats.acertos + (relatorio?.acertos || 0), etapas: stats.etapas + (relatorio?.total || 0), xp: stats.xp + xp,
+      concluidos: terminou ? [...new Set([...stats.concluidos, chave])] : stats.concluidos,
+      historico: terminou ? [...stats.historico, { id: entrada.id, relacaoId: auditoria.id, versao: auditoria.versao, xp, acertos: relatorio.acertos, total: relatorio.total, data: entrada.encerradoEm }].slice(-30) : stats.historico,
+    } };
+  salvarPerfil(aba, local.linha, atualizado);
+  if (terminou) atualizarRankingNovo(atualizado);
+  return atualizado;
+}
+
 function api(pedido) {
   if (!pedido || JSON.stringify(pedido).length > LIMITE_CORPO_BYTES) throw new Error('Pedido inválido.');
   const token = String(pedido.idToken || '');
@@ -375,7 +430,7 @@ function api(pedido) {
   const uid = verificarToken(token, apiKey);
   const acao = String(pedido.acao || '');
   const aba = abaPerfis();
-  if (!['obterPerfil', 'cadastrar', 'tutorial', 'editarPerfil', 'registrarPartida', 'admin', 'iniciarPlantao', 'acaoPlantao', 'iniciarAuditoria', 'responderAuditoria'].includes(acao)) throw new Error('Ação desconhecida.');
+  if (!['obterPerfil', 'cadastrar', 'tutorial', 'editarPerfil', 'registrarPartida', 'admin', 'iniciarPlantao', 'acaoPlantao', 'iniciarAuditoria', 'responderAuditoria', 'iniciarRelacao', 'responderRelacao'].includes(acao)) throw new Error('Ação desconhecida.');
 
   const bloqueio = LockService.getScriptLock();
   bloqueio.waitLock(10000);
@@ -415,6 +470,7 @@ function api(pedido) {
     const perfilDoDia = atualizarMissoesDoDia(aba, atual);
     if (acao === 'iniciarPlantao' || acao === 'acaoPlantao') return operarPlantao(aba, { ...atual, perfil: perfilDoDia }, pedido);
     if (acao === 'iniciarAuditoria' || acao === 'responderAuditoria') return operarAuditoria(aba, { ...atual, perfil: perfilDoDia }, pedido);
+    if (acao === 'iniciarRelacao' || acao === 'responderRelacao') return operarRelacao(aba, { ...atual, perfil: perfilDoDia }, pedido);
     if (acao === 'admin') {
       if (perfilDoDia.role !== 'admin') throw new Error('Acesso restrito ao administrador.');
       return executarAcaoAdmin(aba, atual.linha, perfilDoDia, pedido);

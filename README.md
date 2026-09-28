@@ -1,6 +1,6 @@
 # cacoMed
 
-Jogo web de treinamento médico com cruzadinhas, progresso por tópico, missões, tickets, perfil, estatísticas e ranking global. A seção DDX tem os pilotos de Plantão médico e Erro médico sem IA, restritos ao administrador até revisão clínica. Causa e efeito é a próxima entrega; o antigo Hardcore foi retirado do código ativo.
+Jogo web de treinamento médico com cruzadinhas, progresso por tópico, missões, tickets, perfil, estatísticas e ranking global. A seção DDX tem os pilotos de Plantão médico, Erro médico e Causa e efeito sem IA, restritos ao administrador até revisão clínica. O antigo Hardcore foi retirado do código ativo.
 
 ## Executar localmente
 
@@ -38,7 +38,9 @@ As regras atuais do Firestore permitem a cada usuário autenticado ler e editar 
 
 ## Acompanhamento
 
-Erro médico usa o mesmo paciente do Plantão numa variante de atendimento auditado. Cada análise custa um ticket e tem quatro etapas, com até 100 XP apenas na primeira conclusão de cada versão. O progresso fica separado em `erroMedico` na planilha. A API está publicada na versão 11 da implantação existente; consulte [o roteiro de Erro médico](docs/ddx-erro-medico.md). O frontend atualizado segue local enquanto a revisão do fluxo é concluída.
+Causa e efeito relaciona mecanismo, consequência, compensação e intervenção em quatro etapas. Custa um ticket e concede até 100 XP somente na primeira conclusão por versão; progresso próprio em `causaEfeito`. Backend versão 13 publicado na implantação existente; frontend atualizado local. Consulte [o roteiro de Causa e efeito](docs/ddx-causa-efeito.md).
+
+Erro médico usa o mesmo paciente do Plantão numa variante de atendimento auditado. Cada análise custa um ticket e tem quatro etapas, com até 100 XP apenas na primeira conclusão de cada versão. O progresso fica separado em `erroMedico` na planilha. A API está publicada na versão 13 da implantação existente; consulte [o roteiro de Erro médico](docs/ddx-erro-medico.md). O frontend atualizado segue local enquanto a revisão do fluxo é concluída.
 
 O [cronograma de recuperação](docs/cronograma-recuperacao-caca-med.md) contém o inventário de problemas, o andamento e as verificações de aceitação. A referência visual enviada pelo usuário está em `docs/stitch-reference/`.
 

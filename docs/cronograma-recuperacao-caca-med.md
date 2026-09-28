@@ -1,5 +1,21 @@
 # Caça-Med — diagnóstico e cronograma de recuperação
 
+## Retomada em 28/09/2026 — Causa e efeito
+
+28/09 às 12:07: backend versão 13 publicado na mesma implantação, autorizando localhost e 127.0.0.1 nas portas 5173 e 5174. Domínio https://caca-med.vercel.app já estava permitido e foi preservado sem barra final. 46 testes e lint passaram, incluindo aceitação das origens previstas e rejeição de 5175 e domínio desconhecido. GET da ponte publicada confirmou resposta HTML nas origens 5174 e Vercel. Isso resolve a recusa por origem 5174; não elimina falhas transitórias de rede.
+
+Homologação real dos três modos: conexão, login, catálogo, restrição de revisão clínica e navegação para Plantão, Erro médico e Causa e efeito conferidos no navegador. A partida completa de Causa e efeito permanece pendente porque o perfil admin está com zero tickets; o saldo não foi alterado artificialmente. Testes automatizados cobrem início, retomada, cobrança única, reenvio, respostas inválidas, repetição sem XP e recuperação de ranking.
+
+Parecer de conteúdo: os três pilotos têm escopo claro, fontes e gabaritos determinísticos; as alternativas evitam tratar desfecho desconhecido como prova de erro e evitam prometer segurança clínica a partir de um único sinal. O ponto que ainda exige validação externa é a revisão médica formal dos gabaritos e da redação, especialmente as relações fisiológicas de Causa e efeito. A aprovação de gameplay do usuário não substitui essa revisão clínica.
+
+Conexão local: usuário relatou timeout de abertura da ponte sem mensagens no console. A tentativa pelo botão carregou o perfil admin (5.322 XP, zero tickets); GET da ponte publicada retornou HTTP 200 com motor Causa e efeito disponível e origem localhost autorizada. A causa da intermitência não foi identificada. Frontend agora recria a ponte uma vez após falha de abertura, antes de enviar qualquer pedido, e registra aviso sem tokens no console. A mensagem final deixa de atribuir a falha à URL autorizada sem evidência.
+
+Usuário aprovou o caso respiratório compartilhado, quatro etapas (mecanismo, consequência, compensação e intervenção), um ticket e 25 XP por acerto, até 100 XP somente na primeira conclusão por versão. Implementados motor, salvamento por etapa, retomada, relatório e estatísticas próprios em `causaEfeito`. Admin pode validar; jogadores comuns permanecem bloqueados até revisão clínica independente e aprovação do caso-base.
+
+Backend versão 13 publicado às 12:07 na implantação existente; editor remoto comparado integralmente com API e motor locais. 46 testes, lint e build passaram. Frontend em localhost; publicação Vercel permanece pendente. Validação real autenticada depende de login admin, solicitado ao usuário. As seções anteriores descrevem o histórico; o estado atual dos três modos está nos roteiros `ddx-plantao-medico.md`, `ddx-erro-medico.md` e `ddx-causa-efeito.md`.
+
+Decisões técnicas: gabarito próprio revisável; uma confirmação salva por etapa; sequência causal como alternativa completa; nenhuma recompensa de tempo; desempenho separado dos demais modos; mesmas proteções contra reenvio, alteração de respostas e duplicação de XP. O saldo real de tickets não foi modificado para viabilizar testes.
+
 ## Implantação DDX — retomada após desligamento em 27/09/2026
 
 - [x] Remover Hardcore e o antigo fluxo DDX da navegação e do código ativo; arquivos antigos removidos permanecem recuperáveis no Git.
