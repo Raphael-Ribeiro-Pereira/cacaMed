@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { resumirCruzadinhas, somarNiveisTopicos } from '../utils/progressoCruzadinha';
 import { obterPatente } from '../utils/patentes';
-import { ArrowLeft, Check, KeyRound, LogOut, Pencil, Save, Shield, Stethoscope, Trophy, X, Zap, User, Mail, Calendar, Award } from "lucide-react";
+import { ArrowLeft, Check, KeyRound, LogOut, Pencil, Save, Shield, Stethoscope, Trophy, X, User, Mail, Calendar, Award } from "lucide-react";
 import { motion, AnimatePresence, useAnimation, useReducedMotion } from "framer-motion";
 import { auth, db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -170,8 +170,8 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
 
   const stats = [
     { label: "Cruzadinhas", value: totalCruzadinhas.toString(), icon: Stethoscope, color: "#00f5d4" },
-    { label: "Vitórias DDX", value: String(dadosUsuario?.estatisticas?.ddx?.partidas_ganhas || 0), icon: Trophy, color: "#ffb95f" },
-    { label: "Vitórias Hardcore", value: String(dadosUsuario?.estatisticas?.hardcore?.partidas_ganhas || 0), icon: Zap, color: "#d4004b" },
+    { label: "Plantões seguros", value: String(dadosUsuario?.ddx?.seguros || 0), icon: Trophy, color: "#ffb95f" },
+    { label: "Plantões concluídos", value: String(dadosUsuario?.ddx?.partidas || 0), icon: Stethoscope, color: "#00f5d4" },
     { label: "XP Total", value: xpCurrent > 1000 ? `${(xpCurrent/1000).toFixed(1)}k` : xpCurrent, icon: Award, color: "#8b5cf6" },
   ];
 

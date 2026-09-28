@@ -1,7 +1,7 @@
 import { getIdToken } from 'firebase/auth';
 
 const ENDPOINT = 'https://script.google.com/macros/s/AKfycbyo7eh7LTMLKpR7KAINlxMarLRe2DbL72niTbPA9xKlgi8fMy2WUs8bhb_fMl0y06pWfw/exec';
-const TEMPO_ABERTURA_MS = 15000;
+const TEMPO_ABERTURA_MS = 60000;
 let ponteAtual;
 let fila = Promise.resolve();
 

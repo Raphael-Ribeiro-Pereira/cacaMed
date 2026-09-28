@@ -23,13 +23,10 @@ import { importarBancoCSV } from './utils/importarBancoCSV';
 
 const PERFIL_NA_PLANILHA = import.meta.env.VITE_FONTE_DADOS === 'planilha';
 
-// Telas clínicas mantidas para a fase de reformulação.
-import SelecaoDDX from './components/SelecaoDDX'; 
-import JogoDDX from './components/JogoDDX';
-import Hardcore from './components/Hardcore';
+import PlantaoMedico from './components/PlantaoMedico';
+import ErroMedico from './components/ErroMedico';
 
 function App() {
-  const modosClinicosBloqueados = true;
   const [usuario, setUsuario] = useState(null); 
   const [dadosUsuario, setDadosUsuario] = useState(null); 
   const [telaAtual, setTelaAtual] = useState('login'); 
@@ -45,8 +42,6 @@ function App() {
   const [materia, setMateria] = useState('');
   const [subMateria, setSubMateria] = useState('');
 
-  // 🔥 ESTADO DO MODO DDX (Para guardar a equipe e dificuldade)
-  const [configDDX, setConfigDDX] = useState(null);
 
   const verificarEResetarMissoes = async (uid, dadosAtuais) => {
     if (!prepararMissoesDoDia(dadosAtuais) && !possuiEstatisticasClinicasAntigas(dadosAtuais.estatisticas)) return dadosAtuais;
@@ -173,10 +168,6 @@ function App() {
     setTelaAtual('jogo');
   };
 
-  const iniciarDDX = (configuracoes) => {
-    setConfigDDX(configuracoes);
-    setTelaAtual('jogoDDX');
-  };
 
   if (carregandoAuth) {
     return <div className="stitch-page stitch-loading"><Stethoscope aria-hidden="true" /><span>Acessando prontuários...</span></div>;
@@ -202,11 +193,8 @@ function App() {
       {telaAtual === 'ranking' && usuario && <Ranking usuario={usuario} dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'estatisticas' && usuario && <Estatisticas dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       
-      {/* 🔥 MODO HOUSE (DDX) E MODO HARDCORE */}
-      {telaAtual === 'selecaoDDX' && usuario && (modosClinicosBloqueados ? <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} /> : <SelecaoDDX setTelaAtual={setTelaAtual} iniciarDDX={iniciarDDX} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />)}
-      {telaAtual === 'jogoDDX' && usuario && (modosClinicosBloqueados ? <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} /> : <JogoDDX setTelaAtual={setTelaAtual} configDDX={configDDX} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />)}
-      
-      {telaAtual === 'hardcore' && usuario && (modosClinicosBloqueados ? <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} /> : <Hardcore setTelaAtual={setTelaAtual} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />)}
+      {telaAtual === 'selecaoDDX' && usuario && <PlantaoMedico usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
+      {telaAtual === 'erroMedico' && usuario && <ErroMedico usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
 
     </>
   );

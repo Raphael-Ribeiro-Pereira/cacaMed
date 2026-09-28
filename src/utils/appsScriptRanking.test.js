@@ -68,8 +68,140 @@ function prepararScript({ projeto = 'caca-med', uid = 'jogador-1', email = 'joga
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
   });
   vm.runInContext(codigo, contexto);
+  vm.runInContext(readFileSync(new URL('../../docs/plantao-motor.gs', import.meta.url), 'utf8'), contexto);
   return { contexto, linhas, abas, idToken };
 }
+
+test('plantão cobra um ticket, retoma entrada e rejeita caso não revisado para jogador comum', () => {
+  const comum = prepararScript();
+  comum.contexto.api({ idToken: comum.idToken, apiKey: 'chave-publica', acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'clinica', username: 'teste' });
+  assert.throws(() => comum.contexto.api({ idToken: comum.idToken, apiKey: 'chave-publica', acao: 'iniciarPlantao', casoId: 'resp-asma-1', entradaId: '12345678-1234-4123-8123-123456789abc' }), /revisão clínica/);
+  const { contexto, abas, idToken } = prepararScript({ email: 'raphaelrpereira.rp@gmail.com' });
+  const credenciais = { idToken, apiKey: 'chave-publica' };
+  contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'clinica', username: 'admin' });
+  const registros = abas.get('PerfisGoogle').registros;
+  const perfil = JSON.parse(registros[1][2]); perfil.tickets = 2; registros[1][2] = JSON.stringify(perfil);
+  const pedido = { ...credenciais, acao: 'iniciarPlantao', casoId: 'resp-asma-1', entradaId: '12345678-1234-4123-8123-123456789abc' };
+  assert.equal(contexto.api(pedido).tickets, 1);
+  assert.equal(contexto.api(pedido).tickets, 1);
+  assert.equal(contexto.api({ ...pedido, entradaId: '12345678-1234-4123-8123-123456789abd' }).tickets, 1);
+});
+
+test('plantão recalcula XP, rejeita reescrita de histórico e não recompensa repetição', () => {
+  const { contexto, abas, idToken } = prepararScript({ email: 'raphaelrpereira.rp@gmail.com' });
+  const credenciais = { idToken, apiKey: 'chave-publica' };
+  contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'clinica', username: 'admin' });
+  const registros = abas.get('PerfisGoogle').registros;
+  const perfil = JSON.parse(registros[1][2]); perfil.tickets = 2; registros[1][2] = JSON.stringify(perfil);
+  const entradaId = '12345678-1234-4123-8123-123456789abc';
+  contexto.api({ ...credenciais, acao: 'iniciarPlantao', casoId: 'resp-asma-1', entradaId });
+  const pedido = { ...credenciais, acao: 'acaoPlantao', entradaId, escolhas: ['gravidade'] };
+  contexto.api(pedido);
+  assert.throws(() => contexto.api({ ...pedido, escolhas: ['alergias', 'gravidade'] }), /outra aba/);
+  const escolhas = ['gravidade', 'inicio', 'antecedentes', 'medicamentos', 'alergias', 'associados', 'ausculta', 'pfe', 'asma', 'tratamento', 'antiinflamatorio', 'oxigenio', 'reavaliar', 'orientar', 'alta'];
+  const final = contexto.api({ ...pedido, escolhas, xp: 999999 });
+  assert.equal(final.ddx.entrada.relatorio.seguro, true);
+  assert.equal(final.ddx.entrada.xpConcedido, 250);
+  assert.equal(contexto.api({ ...pedido, escolhas }).pontuacaoTotal, 250);
+  const segundoId = '12345678-1234-4123-8123-123456789abd';
+  contexto.api({ ...credenciais, acao: 'iniciarPlantao', casoId: 'resp-asma-1', entradaId: segundoId });
+  const repetido = contexto.api({ ...pedido, entradaId: segundoId, escolhas });
+  assert.equal(repetido.pontuacaoTotal, 250);
+  assert.equal(repetido.ddx.partidas, 2);
+  assert.equal(repetido.ddx.entrada.xpConcedido, 0);
+});
+
+test('plantão recupera resposta perdida no ranking sem duplicar recompensa', () => {
+  const { contexto, abas, idToken } = prepararScript({ email: 'raphaelrpereira.rp@gmail.com' });
+  const credenciais = { idToken, apiKey: 'chave-publica' };
+  contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'clinica', username: 'admin' });
+  const registros = abas.get('PerfisGoogle').registros;
+  const perfil = JSON.parse(registros[1][2]); perfil.tickets = 1; registros[1][2] = JSON.stringify(perfil);
+  const entradaId = '12345678-1234-4123-8123-123456789abc';
+  contexto.api({ ...credenciais, acao: 'iniciarPlantao', casoId: 'resp-asma-1', entradaId });
+  const aba = abas.get('RankingNovaTemporada').aba;
+  const original = aba.getRange;
+  let falhou = false;
+  aba.getRange = (...args) => {
+    const range = original(...args);
+    const gravar = range.setValues;
+    range.setValues = values => { gravar(values); if (!falhou) { falhou = true; throw new Error('Resposta perdida'); } };
+    return range;
+  };
+  const pedido = { ...credenciais, acao: 'acaoPlantao', entradaId, escolhas: ['gravidade', 'inicio', 'antecedentes', 'medicamentos', 'alergias', 'associados', 'ausculta', 'pfe', 'asma', 'tratamento', 'antiinflamatorio', 'oxigenio', 'reavaliar', 'orientar', 'alta'] };
+  assert.throws(() => contexto.api(pedido), /Resposta perdida/);
+  const recuperado = contexto.api(pedido);
+  assert.equal(recuperado.pontuacaoTotal, 250);
+  assert.equal(recuperado.xpTopicos['DDX-RESPIRATORIO'], 250);
+  assert.equal(recuperado.ddx.partidas, 1);
+  assert.equal(recuperado.tickets, 0);
+});
+
+test('Erro médico salva cada etapa, não duplica ticket ou XP e mantém Plantão separado', () => {
+  const { contexto, abas, idToken } = prepararScript({ email: 'raphaelrpereira.rp@gmail.com' });
+  const credenciais = { idToken, apiKey: 'chave-publica' };
+  contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'clinica', username: 'admin' });
+  const registros = abas.get('PerfisGoogle').registros;
+  const perfil = JSON.parse(registros[1][2]); perfil.tickets = 2; perfil.ddx = { partidas: 3, xp: 500 }; registros[1][2] = JSON.stringify(perfil);
+  const entradaId = '12345678-1234-4123-8123-123456789abc';
+  const inicio = { ...credenciais, acao: 'iniciarAuditoria', auditoriaId: 'resp-asma-auditoria-1', entradaId };
+  assert.equal(contexto.api(inicio).tickets, 1);
+  assert.equal(contexto.api(inicio).tickets, 1);
+  assert.equal(contexto.api({ ...inicio, entradaId: '12345678-1234-4123-8123-123456789abd' }).tickets, 1);
+  const responder = respostas => contexto.api({ ...credenciais, acao: 'responderAuditoria', entradaId, respostas, xp: 99999 });
+  assert.throws(() => responder(['alta', 'resposta']), /outra aba/);
+  assert.throws(() => responder(['inventada']), /inválida/);
+  responder(['alta']);
+  assert.deepEqual(JSON.parse(JSON.stringify(contexto.api({ ...credenciais, acao: 'obterPerfil' }).erroMedico.entrada.respostas)), ['alta']);
+  assert.throws(() => responder(['pfe', 'resposta']), /outra aba/);
+  responder(['alta', 'resposta']); responder(['alta', 'resposta', 'reavaliar']);
+  const respostas = ['alta', 'resposta', 'reavaliar', 'criterios'];
+  const final = responder(respostas);
+  assert.equal(final.erroMedico.entrada.xpConcedido, 100);
+  assert.equal(final.erroMedico.entrada.relatorio.acertos, 4);
+  assert.equal(final.ddx.partidas, 3);
+  assert.equal(final.ddx.xp, 500);
+  assert.equal(responder(respostas).pontuacaoTotal, 100);
+  assert.equal(responder(respostas).erroMedico.partidas, 1);
+  assert.throws(() => responder(['alta', 'resposta', 'reavaliar', 'certeza']), /outra aba/);
+  const repeticao = contexto.api({ ...inicio, entradaId: '12345678-1234-4123-8123-123456789abd' });
+  assert.equal(repeticao.tickets, 0);
+  let repetido;
+  for (let i = 1; i <= 4; i++) repetido = contexto.api({ ...credenciais, acao: 'responderAuditoria', entradaId: repeticao.erroMedico.entrada.id, respostas: respostas.slice(0, i) });
+  assert.equal(repetido.pontuacaoTotal, 100);
+  assert.equal(repetido.erroMedico.entrada.xpConcedido, 0);
+  assert.equal(repetido.erroMedico.entrada.repeticao, true);
+});
+
+test('Erro médico bloqueia piloto não revisado e recupera resposta perdida no ranking', () => {
+  const comum = prepararScript();
+  comum.contexto.api({ idToken: comum.idToken, apiKey: 'chave-publica', acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'clinica', username: 'teste' });
+  assert.throws(() => comum.contexto.api({ idToken: comum.idToken, apiKey: 'chave-publica', acao: 'iniciarAuditoria', auditoriaId: 'resp-asma-auditoria-1' }), /revisão clínica/);
+  const { contexto, abas, idToken } = prepararScript({ email: 'raphaelrpereira.rp@gmail.com' });
+  const credenciais = { idToken, apiKey: 'chave-publica' };
+  contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'clinica', username: 'admin' });
+  const registros = abas.get('PerfisGoogle').registros;
+  const perfil = JSON.parse(registros[1][2]); perfil.tickets = 1; registros[1][2] = JSON.stringify(perfil);
+  const entradaId = '12345678-1234-4123-8123-123456789abc';
+  contexto.api({ ...credenciais, acao: 'iniciarAuditoria', auditoriaId: 'resp-asma-auditoria-1', entradaId });
+  const respostas = ['alta', 'resposta', 'reavaliar', 'criterios'];
+  for (let i = 1; i < 4; i++) contexto.api({ ...credenciais, acao: 'responderAuditoria', entradaId, respostas: respostas.slice(0, i) });
+  const ranking = abas.get('RankingNovaTemporada').aba;
+  const original = ranking.getRange;
+  let falhou = false;
+  ranking.getRange = (...args) => {
+    const range = original(...args); const gravar = range.setValues;
+    range.setValues = valores => { gravar(valores); if (!falhou) { falhou = true; throw new Error('Resposta perdida'); } };
+    return range;
+  };
+  const pedido = { ...credenciais, acao: 'responderAuditoria', entradaId, respostas };
+  assert.throws(() => contexto.api(pedido), /Resposta perdida/);
+  const recuperado = contexto.api(pedido);
+  assert.equal(recuperado.pontuacaoTotal, 100);
+  assert.equal(recuperado.erroMedico.partidas, 1);
+  assert.equal(recuperado.tickets, 0);
+  assert.equal(recuperado.xpTopicos['DDX-ERRO-MEDICO-RESPIRATORIO'], 100);
+});
 
 test('ranking público usa sempre a nova temporada e a rota antiga não grava', () => {
   const { contexto, linhas, idToken } = prepararScript();

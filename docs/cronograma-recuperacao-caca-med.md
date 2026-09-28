@@ -1,8 +1,28 @@
 # Caça-Med — diagnóstico e cronograma de recuperação
 
+## Implantação DDX — retomada após desligamento em 27/09/2026
+
+- [x] Remover Hardcore e o antigo fluxo DDX da navegação e do código ativo; arquivos antigos removidos permanecem recuperáveis no Git.
+- [x] Implementar Plantão médico determinístico: avaliação, anamnese, exame físico, exames, hipótese, conduta, reavaliação, encerramento e relatório.
+- [x] Implementar contrato local Apps Script para ticket idempotente, retomada, pontuação calculada no servidor e repetição sem novo XP.
+- [x] Integrar perfil, estatísticas e nível global à informação DDX da planilha.
+- [x] Documentar decisões, publicação e roteiro em `docs/ddx-plantao-medico.md`.
+- [x] Verificação após recuperação: 36 testes passaram, ESLint sem erros e build concluída. Inclui resposta perdida no ranking do Plantão sem duplicar recompensa; permanece aviso de bundle acima de 500 kB.
+- [x] Conferir Código.gs e Plantao.gs no editor: ambos coincidem integralmente com os arquivos locais (comparação SHA-256 após normalizar quebras de linha). Gerenciar implantações confirmou versão 9, de 27/09/2026 às 22:50, descrição "Plantão medico sem IA", na mesma URL e com as permissões existentes.
+- [x] Retomada nesta sessão: 36 testes e ESLint passaram; build Vite concluída após liberar escrita na pasta do projeto. GET público da nova temporada retornou HTTP 200 com ranking; isso confirma disponibilidade, mas não comprova a versão do motor Plantão.
+- [x] Frontend local iniciado em `http://localhost:5173/`; tela de login carregou no navegador integrado.
+- [x] Usuário abriu sessão e editor Apps Script no navegador integrado; projeto conferido em `1LXJXeYi9wTav0XFwozJuqFbp0EZ6XPM2QZbkOri8QwDyPtfdxpzKuNQd`.
+- [x] Ampliar espera inicial da ponte de 15 para 60 segundos. Após a alteração, o perfil carregou no navegador integrado e novamente após recarregar; chamadas de início, salvamento, reavaliação e encerramento funcionaram. O usuário havia relatado o timeout também no Chrome. A causa exata da intermitência anterior não foi determinada; estabilidade no Chrome após a alteração ainda precisa de confirmação.
+- [x] Validar uma partida real do piloto com admin e backend versão 9: tickets 3 → 2, retomada sem nova cobrança, seis ações salvas preservadas após recarregar, atendimento seguro sem omissões e 250 XP confirmados. Menu mostrou XP 4.972 → 5.222 e um plantão seguro. Repetição, falhas de escrita e bloqueio de conta comum continuam cobertos pelos testes automatizados; esses cenários não foram repetidos com contas reais nesta rodada.
+- [ ] Revisar clinicamente o caso respiratório piloto com a consultora; acesso continua exclusivo do admin.
+- [ ] Validar visualmente e executar o roteiro de ponta a ponta com o backend publicado.
+- [ ] Encerrar a entrega do Plantão médico antes de iniciar Erro médico e Causa e efeito.
+
+O fechamento web anterior continua válido para cruzadinhas. A nova entrega DDX não foi homologada nem publicada. Não houve ativação de plano pago.
+
 ## Estado atual — 27/09/2026 — versão web homologada
 
-A versão web padrão é a prioridade. Cruzadinhas, tutorial, missões, perfil, estatísticas e ranking usam a nova temporada na planilha via Apps Script **versão 8** quando `VITE_FONTE_DADOS=planilha`; Firebase Authentication permanece para login. DDX, Hardcore e IA ficam fora desta homologação. Os registros datados de 24–25/09 abaixo são histórico e não substituem este estado.
+A versão web padrão está homologada. Cruzadinhas, tutorial, missões, perfil, estatísticas e ranking usam a nova temporada na planilha via Apps Script **versão 8** quando `VITE_FONTE_DADOS=planilha`; Firebase Authentication permanece para login. O produto seguirá com um único modo de casos, chamado DDX. Hardcore será removido e a IA será desvinculada do modo antes da escolha e implementação dos novos jogos.
 
 - [x] Corrigir geração, feedback e relatório das cruzadinhas; criar controles admin no FAB e validar seu funcionamento básico com o usuário.
 - [x] Tratar CSV com campos citados e quebras de linha; exibir carregamento, vazio e falha com nova tentativa.
@@ -33,7 +53,36 @@ A versão web padrão é a prioridade. Cruzadinhas, tutorial, missões, perfil, 
 
 Em 27/09/2026, o usuário confirmou a homologação dos fluxos web padrão: autenticação, Cadastro 2.0, tutorial, geração e preenchimento de cruzadinhas, interseções, relatório pós-partida, XP, missões, tickets, perfil, estatísticas, ranking global, conta admin, conta comum, responsividade, acessibilidade básica, reenvio após falha e persistência na planilha. A ponte Apps Script/Vercel também foi validada após a correção da origem de produção e da reutilização da conexão.
 
-Próxima fase: reformular DDX, Hardcore e IA.
+Próxima fase: simplificar o DDX, remover Hardcore e desvincular a IA; depois escolher e implementar os novos jogos com a consultora.
+
+### Nova direção do modo de casos — decisão de 27/09/2026
+
+- [x] Decidir a unificação do DDX e Hardcore em uma seção DDX; implementação ainda pendente.
+- [ ] Remover do código, navegação, estatísticas, recompensas, textos e documentação tudo que for específico do Hardcore.
+- [ ] Mapear e remover a dependência obrigatória da IA no DDX, preservando o funcionamento do modo sem chamadas ao OpenRouter.
+- [ ] Definir o novo contrato do DDX sem IA: seleção de sistema, estrutura de partida, tipos de pergunta, pontuação, tickets, XP e relatório.
+- [x] Escolher os três formatos e seus nomes: **Plantão médico**, **Erro médico** e **Causa e efeito**.
+- [ ] Implementar os jogos escolhidos dentro do DDX e atualizar tutorial, estatísticas, missões e ranking.
+- [ ] Homologar o DDX reformulado antes de reabrir qualquer modo clínico adicional.
+
+### Implantação da nova seção DDX
+
+Os três modos compartilham uma base de casos roteirizados e revisados, separados por sistema, sem IA em tempo de execução. Respostas, resultados e consequências devem estar cadastrados; cada modo mantém fluxo e desempenho próprios. Os nomes definitivos são Plantão médico, Erro médico e Causa e efeito.
+
+1. **Plantão médico (primeira entrega):** acompanhar o paciente desde a chegada até o encerramento; escolher perguntas, exame físico, exames complementares, hipóteses e condutas; acompanhar evolução e reavaliar. Prontuário e linha do tempo registram informações descobertas e decisões. Relatório explica acertos, omissões e consequências. A evolução é roteirizada e não exige esperar vários minutos por exames reais.
+2. **Erro médico (segunda entrega):** analisar um atendimento já realizado; identificar falhas ou omissões, justificar o problema e escolher a correção. Usar versões próprias dos atendimentos, sem presumir que todo resultado desfavorável comprova erro.
+3. **Causa e efeito (terceira entrega):** interpretar mecanismos fisiológicos, respostas compensatórias e efeitos de intervenções em situações clínicas; responder relações e sequências com gabarito previamente revisado.
+
+- [ ] Definir com o usuário o primeiro sistema/caso, a cobrança de tickets e as recompensas reais. Essas escolhas ainda não foram aprovadas; a economia antiga não é uma especificação do novo modo.
+- [ ] Remover o Hardcore e substituir os fluxos DDX antigos; eliminar chamadas de IA da experiência clínica e referências específicas do Hardcore.
+- [ ] Criar contrato de conteúdo compartilhado com IDs, versões, fontes, respostas, ações, consequências, explicações e estado de revisão clínica.
+- [ ] Implementar motor determinístico do Plantão médico e interface com prontuário, ações, evolução, confirmação de abandono e relatório.
+- [ ] Integrar progresso e recompensas à planilha/Apps Script com recibos idempotentes e reenvio após falha. O serviço antigo de tickets DDX usa Firestore e precisa ser substituído.
+- [ ] Verificar motor, ramificações, permissões e recompensas com testes relevantes; conferir teclado, foco, desktop/notebook e ausência de chamadas de IA.
+- [ ] Entregar um Plantão médico completo e roteiro de validação antes de iniciar Erro médico.
+- [ ] Implementar e entregar Erro médico; depois implementar e entregar Causa e efeito.
+
+Regra de execução: continuar até concluir um modo completo ou encontrar uma decisão necessária do usuário. O redesign web/mobile será planejado sobre os fluxos definidos, seguindo a paleta aprovada.
 
 Data da revisão: 24/09/2026. Base: arquivos locais e histórico até `81cad1e`.
 
@@ -391,3 +440,9 @@ O plano integrado com Cloud Functions foi **cancelado antes de qualquer função
 - [ ] Revisar publicação web e dados de produção após os itens acima. A reformulação de DDX, Hardcore e IA vem depois dessa homologação.
 
 Para cada correção, registrar ID, commit no padrão Conventional Commits, verificação realizada e risco remanescente. Preservar alterações existentes do usuário, inclusive `docs/guia_conventional_commits.md`.
+
+### 27/09 — Erro médico concluído como piloto
+
+Regras aprovadas: um ticket por análise, quatro etapas, 25 XP por acerto (até 100 XP), recompensa somente na primeira conclusão de cada versão. Progresso e estatísticas próprios, salvos na planilha; servidor valida cada resposta e calcula XP. A auditoria exige revisão clínica própria, além da aprovação do caso-base do Plantão.
+
+Backend publicado na versão 11 da implantação existente às 23:44, preservando URL e permissões. Validação real: ticket 1 → 0, retomada após recarga na segunda etapa, conclusão 4/4, +100 XP, total 5.322 e relatório persistido. 42 testes, lint e build passaram; testes cobrem repetição, reenvio e ausência de duplicação. Frontend atualizado disponível em localhost; Vercel e revisão clínica continuam pendentes. Esta entrega encerra o segundo modo conforme o modelo de parada combinado; Causa e efeito ainda não foi iniciado. Detalhes em `ddx-erro-medico.md`.

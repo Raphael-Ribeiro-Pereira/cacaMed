@@ -8,8 +8,7 @@ const banco = {
     { id: 'acertar_palavras', titulo: 'Mão Firme', subtitulo: 'Acertar 5 palavras', meta: 5, recompensaXP: 150, recompensaTicket: 0 }
   ],
   dificeis: [
-    { id: 'vencer_ddx', titulo: 'Salvador de Vidas', subtitulo: 'Salvar 1 paciente na UTI (DDX)', meta: 1, recompensaXP: 300, recompensaTicket: 1 },
-    { id: 'jogar_hardcore', titulo: 'Adrenalina Pura', subtitulo: 'Jogar 1 caso em Modo Hardcore', meta: 1, recompensaXP: 400, recompensaTicket: 1 }
+    { id: 'vencer_ddx', titulo: 'Salvador de Vidas', subtitulo: 'Concluir 1 atendimento seguro no DDX', meta: 1, recompensaXP: 300, recompensaTicket: 1 }
   ]
 };
 

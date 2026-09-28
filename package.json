@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "sync:plantao": "node scripts/sincronizar-plantao.mjs",
     "dev": "vite",
     "server": "node server/index.js",
     "build": "vite build",

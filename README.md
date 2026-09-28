@@ -1,12 +1,12 @@
 # cacoMed
 
-Jogo web de treinamento médico com cruzadinhas, progresso por tópico, missões, tickets, perfil, estatísticas e ranking global. DDX, Hardcore e a integração de IA têm uma reformulação planejada separadamente.
+Jogo web de treinamento médico com cruzadinhas, progresso por tópico, missões, tickets, perfil, estatísticas e ranking global. A seção DDX tem os pilotos de Plantão médico e Erro médico sem IA, restritos ao administrador até revisão clínica. Causa e efeito é a próxima entrega; o antigo Hardcore foi retirado do código ativo.
 
 ## Executar localmente
 
 Requisitos: Node.js compatível com Vite 8 e um projeto Firebase configurado. Instale as dependências com `npm install`, preencha as variáveis de ambiente locais sem versionar chaves e inicie a interface com `npm run dev`. Quando precisar do serviço de IA, inicie também `npm run server` em outro terminal. O endereço do Vite é exibido no terminal, normalmente `http://localhost:5173/`; o servidor de IA responde em `http://localhost:3001/health`.
 
-**Operação sem faturamento:** o projeto `caca-med` está no plano Firebase Spark, sem faturamento vinculado. Firebase Authentication continua servindo login antigo por e-mail/senha e Google. O modo `VITE_FONTE_DADOS=planilha` grava perfis e progresso na planilha cacoMed via Apps Script. Para login Google local, use **`http://localhost:5173/`** (não `127.0.0.1`). DDX e Hardcore seguem temporariamente bloqueados. Consulte [o cronograma](docs/cronograma-recuperacao-caca-med.md).
+**Operação sem faturamento:** o projeto `caca-med` está no plano Firebase Spark, sem faturamento vinculado. Firebase Authentication continua servindo login antigo por e-mail/senha e Google. O modo `VITE_FONTE_DADOS=planilha` grava perfis e progresso na planilha cacoMed via Apps Script. Para login Google local, use **`http://localhost:5173/`** (não `127.0.0.1`). O piloto Plantão médico está disponível somente para administrador e exige o backend atualizado com `Plantao.gs`. Consulte [o roteiro do Plantão](docs/ddx-plantao-medico.md) e [o cronograma](docs/cronograma-recuperacao-caca-med.md).
 
 No Cadastro 2.0, contas Google sem senha criam uma senha para também entrar pelo formulário de e-mail. A senha é vinculada à **mesma conta Firebase Authentication**; nunca é enviada ao Apps Script ou gravada na planilha. Se a conta Google já tinha perfil antes dessa mudança, use **Perfil → Criar Senha**. Contas com senha antiga preservam essa credencial.
 
@@ -38,4 +38,7 @@ As regras atuais do Firestore permitem a cada usuário autenticado ler e editar 
 
 ## Acompanhamento
 
+Erro médico usa o mesmo paciente do Plantão numa variante de atendimento auditado. Cada análise custa um ticket e tem quatro etapas, com até 100 XP apenas na primeira conclusão de cada versão. O progresso fica separado em `erroMedico` na planilha. A API está publicada na versão 11 da implantação existente; consulte [o roteiro de Erro médico](docs/ddx-erro-medico.md). O frontend atualizado segue local enquanto a revisão do fluxo é concluída.
+
 O [cronograma de recuperação](docs/cronograma-recuperacao-caca-med.md) contém o inventário de problemas, o andamento e as verificações de aceitação. A referência visual enviada pelo usuário está em `docs/stitch-reference/`.
+

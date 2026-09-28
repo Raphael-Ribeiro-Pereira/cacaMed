@@ -219,10 +219,6 @@
 .stitch-command .stitch-callout > * { position: relative; z-index: 1; }
 .stitch-command .stitch-emergency-ecg { display: block; width: min(320px, 100%); height: 34px; margin-top: 15px; fill: none; stroke: var(--stitch-red); stroke-width: 2; opacity: .78; }
 .stitch-command .stitch-emergency-ecg path { stroke-dasharray: 260 100; animation: stitch-ecg 2.6s linear infinite; }
-.stitch-command .stitch-hardcore-target { transition: filter .3s, opacity .3s, border-color .3s, box-shadow .3s; }
-.stitch-command.is-hardcore-focus :is(.stitch-heading, .stitch-section-heading, .stitch-dashboard-bottom, .stitch-footer, .stitch-mode:not(.stitch-mode-alert)) { filter: brightness(.65); transition: filter .3s; }
-.stitch-command.is-hardcore-focus .stitch-hardcore-target:is(:hover, :focus-within) { animation: stitch-alarm 1.5s ease-in-out infinite; border-color: var(--stitch-red); }
-.stitch-command.is-hardcore-focus .stitch-hardcore-target:is(:hover, :focus-within) .stitch-primary { animation: stitch-tachycardia 1s ease-in-out infinite; }
 .stitch-emergency-flash { position: fixed !important; inset: 0; z-index: 30 !important; pointer-events: none; background: var(--stitch-red); animation: stitch-emergency-impact .76s ease-out both; }
 .stitch-command.is-emergency-entering .stitch-content { animation: stitch-shake .3s ease-out 1; }
 .stitch-command .stitch-primary:not(:disabled):hover svg, .stitch-topic-select .stitch-primary:hover svg { transform: translateX(4px); transition: transform .2s ease; }
@@ -268,8 +264,6 @@
 .stitch-clinical main button:not(:disabled):hover { filter: brightness(1.12); }
 .stitch-clinical main button:not(:disabled):active { transform: scale(.98); }
 .stitch-clinical .lucide-heart-pulse { animation: stitch-bar-glow 2s ease-in-out infinite; }
-.stitch-hardcore .lucide-heart-pulse { animation-duration: 1s; }
-.stitch-hardcore :is([class*="text-rose-"], [class*="text-red-"]).animate-pulse { animation: stitch-alarm 1s ease-in-out infinite; }
 .stitch-clinical.is-admitted aside { animation: stitch-reveal .5s ease-out both; }
 .stitch-clinical.is-admitted main { animation: stitch-reveal .6s ease-out both; }
 .stitch-clinical.is-thinking main :is(button, input):disabled { filter: saturate(.7); }

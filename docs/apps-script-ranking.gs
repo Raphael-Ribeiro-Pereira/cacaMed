@@ -251,13 +251,120 @@ function executarAcaoAdmin(aba, linha, perfil, pedido) {
   } else if (operacao === 'resetarProgresso') {
     atualizado = { ...perfil, pontuacaoTotal: 0, xpTopicos: {}, tickets: 0,
       medidorTicketsCruzadinha: 0, missoesDiarias: criarMissoesCruzadinha(),
-      estatisticas: {}, estatisticasGerais: {}, cruzadinhasRegistradas: [] };
+      estatisticas: {}, estatisticasGerais: {}, cruzadinhasRegistradas: [], ddx: { concluidos: [], historico: [], partidas: 0 } };
     delete atualizado.nivelGlobalAdmin;
   } else {
     throw new Error('Operação administrativa desconhecida.');
   }
   salvarPerfil(aba, linha, atualizado);
   atualizarRankingNovo(atualizado);
+  return atualizado;
+}
+
+function operarPlantao(aba, local, pedido) {
+  const perfil = local.perfil;
+  const ddx = { concluidos: [], historico: [], partidas: 0, ...perfil.ddx };
+  let entrada = ddx.entrada;
+  if (pedido.acao === 'iniciarPlantao') {
+    const caso = obterCasoPlantao(String(pedido.casoId || ''));
+    if (!caso.revisado && perfil.role !== 'admin') throw new Error('Caso aguardando revisão clínica.');
+    if (entrada && !entrada.relatorio.encerrado) {
+      if (entrada.casoId !== caso.id) throw new Error('Conclua o plantão atual antes de iniciar outro.');
+      return perfil;
+    }
+    const id = String(pedido.entradaId || '');
+    if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error('Identificador de entrada inválido.');
+    if (entrada?.id === id) return perfil;
+    if (ddx.historico.some(item => item.id === id)) throw new Error('Entrada já encerrada.');
+    if ((Number(perfil.tickets) || 0) < 1) throw new Error('Tickets insuficientes. Conclua cruzadinhas para ganhar tickets.');
+    entrada = { id, casoId: caso.id, versao: caso.versao, iniciadoEm: new Date().toISOString(), relatorio: executarPlantao(caso, []) };
+    const atualizado = { ...perfil, tickets: perfil.tickets - 1, ddx: { ...ddx, entrada } };
+    salvarPerfil(aba, local.linha, atualizado);
+    return atualizado;
+  }
+  if (!entrada || entrada.id !== pedido.entradaId) throw new Error('Plantão não encontrado. Atualize o perfil.');
+  const caso = obterCasoPlantao(entrada.casoId);
+  if (caso.versao !== entrada.versao) throw new Error('A versão deste caso mudou. Solicite revisão da entrada ao administrador.');
+  const anteriores = entrada.relatorio.escolhas;
+  const passos = pedido.escolhas;
+  if (!Array.isArray(passos)) throw new Error('Registro de ações inválido.');
+  if (JSON.stringify(passos) === JSON.stringify(anteriores)) {
+    if (entrada.relatorio.encerrado) atualizarRankingNovo(perfil);
+    return perfil;
+  }
+  if (entrada.relatorio.encerrado || passos.length <= anteriores.length || anteriores.some((id, indice) => passos[indice] !== id)) {
+    throw new Error('O plantão mudou em outra aba. Atualize o perfil antes de continuar.');
+  }
+  const relatorio = executarPlantao(caso, passos);
+  const chave = caso.id + ':' + caso.versao;
+  const xp = relatorio.encerrado && !ddx.concluidos.includes(chave) ? relatorio.xp : 0;
+  entrada = { ...entrada, relatorio, ...(relatorio.encerrado ? { xpConcedido: xp, encerradoEm: new Date().toISOString() } : {}) };
+  const atualizado = { ...perfil, pontuacaoTotal: (Number(perfil.pontuacaoTotal) || 0) + xp,
+    xpTopicos: { ...perfil.xpTopicos, 'DDX-RESPIRATORIO': (Number(perfil.xpTopicos?.['DDX-RESPIRATORIO']) || 0) + xp },
+    ddx: { ...ddx, entrada,
+      concluidos: relatorio.encerrado ? [...new Set([...ddx.concluidos, chave])] : ddx.concluidos,
+      partidas: ddx.partidas + Number(relatorio.encerrado),
+      seguros: (Number(ddx.seguros) || 0) + Number(relatorio.seguro),
+      xp: (Number(ddx.xp) || 0) + xp,
+      historico: relatorio.encerrado ? [...ddx.historico, { id: entrada.id, casoId: caso.id, versao: caso.versao, xp, seguro: relatorio.seguro, data: entrada.encerradoEm }].slice(-30) : ddx.historico,
+    } };
+  salvarPerfil(aba, local.linha, atualizado);
+  if (relatorio.encerrado) atualizarRankingNovo(atualizado);
+  return atualizado;
+}
+
+function operarAuditoria(aba, local, pedido) {
+  const perfil = local.perfil;
+  const stats = { concluidos: [], historico: [], partidas: 0, acertos: 0, etapas: 0, xp: 0, ...perfil.erroMedico };
+  let entrada = stats.entrada;
+  if (pedido.acao === 'iniciarAuditoria') {
+    const auditoria = obterAuditoria(String(pedido.auditoriaId || ''));
+    if (!auditoria.caso.revisado && perfil.role !== 'admin') throw new Error('Caso aguardando revisão clínica.');
+    if (entrada && !entrada.relatorio) {
+      if (entrada.auditoriaId !== auditoria.id) throw new Error('Conclua a análise atual antes de iniciar outra.');
+      return perfil;
+    }
+    const id = String(pedido.entradaId || '');
+    if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error('Identificador de entrada inválido.');
+    if (entrada?.id === id) return perfil;
+    if (stats.historico.some(item => item.id === id)) throw new Error('Entrada já encerrada.');
+    if ((Number(perfil.tickets) || 0) < 1) throw new Error('Tickets insuficientes.');
+    entrada = { id, auditoriaId: auditoria.id, versao: auditoria.versao, respostas: [], iniciadoEm: new Date().toISOString() };
+    const atualizado = { ...perfil, tickets: perfil.tickets - 1, erroMedico: { ...stats, entrada } };
+    salvarPerfil(aba, local.linha, atualizado);
+    return atualizado;
+  }
+  if (!entrada || entrada.id !== pedido.entradaId) throw new Error('Análise não encontrada. Atualize o perfil.');
+  const auditoria = obterAuditoria(entrada.auditoriaId);
+  if (auditoria.versao !== entrada.versao) throw new Error('A versão da análise mudou. Solicite revisão ao administrador.');
+  const respostas = pedido.respostas;
+  if (!Array.isArray(respostas)) throw new Error('Respostas inválidas.');
+  if (JSON.stringify(respostas) === JSON.stringify(entrada.respostas)) {
+    if (entrada.relatorio) atualizarRankingNovo(perfil);
+    return perfil;
+  }
+  if (entrada.relatorio || respostas.length !== entrada.respostas.length + 1 ||
+      respostas.length > auditoria.perguntas.length || entrada.respostas.some((id, indice) => respostas[indice] !== id)) {
+    throw new Error('A análise mudou em outra aba. Atualize o perfil antes de continuar.');
+  }
+  respostas.forEach((resposta, indice) => {
+    if (!auditoria.perguntas[indice].alternativas.some(item => item.id === resposta)) throw new Error('Resposta inválida.');
+  });
+  const terminou = respostas.length === auditoria.perguntas.length;
+  const relatorio = terminou ? avaliarAuditoria(auditoria, respostas) : null;
+  const chave = auditoria.id + ':' + auditoria.versao;
+  const repeticao = stats.concluidos.includes(chave);
+  const xp = terminou && !repeticao ? relatorio.acertos * 25 : 0;
+  entrada = { ...entrada, respostas: [...respostas], ...(terminou ? { relatorio, xpConcedido: xp, repeticao, encerradoEm: new Date().toISOString() } : {}) };
+  const atualizado = { ...perfil, pontuacaoTotal: (Number(perfil.pontuacaoTotal) || 0) + xp,
+    xpTopicos: { ...perfil.xpTopicos, 'DDX-ERRO-MEDICO-RESPIRATORIO': (Number(perfil.xpTopicos?.['DDX-ERRO-MEDICO-RESPIRATORIO']) || 0) + xp },
+    erroMedico: { ...stats, entrada, partidas: stats.partidas + Number(terminou),
+      acertos: stats.acertos + (relatorio?.acertos || 0), etapas: stats.etapas + (relatorio?.total || 0), xp: stats.xp + xp,
+      concluidos: terminou ? [...new Set([...stats.concluidos, chave])] : stats.concluidos,
+      historico: terminou ? [...stats.historico, { id: entrada.id, auditoriaId: auditoria.id, versao: auditoria.versao, xp, acertos: relatorio.acertos, total: relatorio.total, data: entrada.encerradoEm }].slice(-30) : stats.historico,
+    } };
+  salvarPerfil(aba, local.linha, atualizado);
+  if (terminou) atualizarRankingNovo(atualizado);
   return atualizado;
 }
 
@@ -268,7 +375,7 @@ function api(pedido) {
   const uid = verificarToken(token, apiKey);
   const acao = String(pedido.acao || '');
   const aba = abaPerfis();
-  if (!['obterPerfil', 'cadastrar', 'tutorial', 'editarPerfil', 'registrarPartida', 'admin'].includes(acao)) throw new Error('Ação desconhecida.');
+  if (!['obterPerfil', 'cadastrar', 'tutorial', 'editarPerfil', 'registrarPartida', 'admin', 'iniciarPlantao', 'acaoPlantao', 'iniciarAuditoria', 'responderAuditoria'].includes(acao)) throw new Error('Ação desconhecida.');
 
   const bloqueio = LockService.getScriptLock();
   bloqueio.waitLock(10000);
@@ -306,6 +413,8 @@ function api(pedido) {
     }
     if (!atual.perfil) throw new Error('Cadastro não concluído.');
     const perfilDoDia = atualizarMissoesDoDia(aba, atual);
+    if (acao === 'iniciarPlantao' || acao === 'acaoPlantao') return operarPlantao(aba, { ...atual, perfil: perfilDoDia }, pedido);
+    if (acao === 'iniciarAuditoria' || acao === 'responderAuditoria') return operarAuditoria(aba, { ...atual, perfil: perfilDoDia }, pedido);
     if (acao === 'admin') {
       if (perfilDoDia.role !== 'admin') throw new Error('Acesso restrito ao administrador.');
       return executarAcaoAdmin(aba, atual.linha, perfilDoDia, pedido);
