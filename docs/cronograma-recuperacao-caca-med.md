@@ -1,5 +1,15 @@
 # Caça-Med — diagnóstico e cronograma de recuperação
 
+## Retomada em 28/09/2026 — novos jogos e economia v2
+
+Quiz (Teoria e Casos clínicos) e Verdade ou mentira implementados, com salvamento por resposta, explicações/fontes, retomada, relatórios, estatísticas e registro permanente para revisão futura. Economia central: nível global pelo XP total, dois tickets por cruzadinha, um a cada duas rodadas válidas de cada novo modo, um por missão e N por novo nível N. Migração preserva saldos, sem bônus retroativos. [Decisões e roteiro completo](jogos-e-economia-v2.md).
+
+60 testes passaram; lint sem erros e build concluída. Navegador validou interface com serviço isolado: Quiz Teoria 4/5, Casos 5/5, Verdade ou mentira 3/5, 5/5 e 0/5, contadores de tickets, missões, nível e recarga. Login Google não concluiu neste navegador; validação autenticada dos novos jogos com dados reais permanece pendente. Nenhum saldo real foi alterado para testar.
+
+Correção posterior do Quiz publicada na versão 17: comparação por conteúdo elimina falso conflito por ordem dos campos. Duas rodadas 5/5 e recarga passaram na homologação com reordenação de objetos. A versão 16 corrigiu trabalho redundante e revelou o erro, mas não resolveu o conflito. [Registro das tentativas, causa reproduzida e prevenção](incidente-quiz-rodada-mudou.md).
+
+API publicada na versão 15 da implantação existente, preservando URL e permissões. Frontend em localhost:5173; Vercel, liberação para jogadores comuns e validação de conteúdo aguardam o usuário. Deploy automático permanece desativado. Revisão inteligente fica para a última fase; respostas já ficam registradas.
+
 ## Retomada em 28/09/2026 — Causa e efeito
 
 28/09 às 12:07: backend versão 13 publicado na mesma implantação, autorizando localhost e 127.0.0.1 nas portas 5173 e 5174. Domínio https://caca-med.vercel.app já estava permitido e foi preservado sem barra final. 46 testes e lint passaram, incluindo aceitação das origens previstas e rejeição de 5175 e domínio desconhecido. GET da ponte publicada confirmou resposta HTML nas origens 5174 e Vercel. Isso resolve a recusa por origem 5174; não elimina falhas transitórias de rede.

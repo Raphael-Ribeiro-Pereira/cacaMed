@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Crown, Trophy, Flame } from "lucide-react";
 import { motion } from "framer-motion";
 import StitchBrand from './ui/StitchBrand';
-import { resumirCruzadinhas, somarNiveisTopicos } from '../utils/progressoCruzadinha';
+import { resumirCruzadinhas } from '../utils/progressoCruzadinha';
+import { nivelPorXP } from '../utils/economia';
 import { obterPatente } from '../utils/patentes';
 import { buscarRankingPublico, calcularIdPublico, sincronizarRanking } from '../services/rankingPublico';
 
@@ -67,8 +68,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
 
   const removerParticula = (id) => setParticulas(prev => prev.filter(p => p.id !== id));
 
-  const somaNiveisPessoal = Number.isInteger(dadosUsuario?.nivelGlobalAdmin)
-    ? dadosUsuario.nivelGlobalAdmin : somarNiveisTopicos(dadosUsuario?.xpTopicos);
+  const somaNiveisPessoal = nivelPorXP(dadosUsuario?.pontuacaoTotal);
   const resumoPessoal = resumirCruzadinhas(dadosUsuario?.estatisticas);
 
   const patentePessoal = obterPatente(somaNiveisPessoal);

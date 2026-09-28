@@ -19,7 +19,7 @@ function paginaPonte(nonce, origem) {
     + 'window.addEventListener("message",function(e){'
     + 'if(e.origin!==destino||e.data?.cacoMed!=="pedido"||e.data.nonce!==cfg.nonce)return;'
     + 'google.script.run.withSuccessHandler(function(r){window.top.postMessage({cacoMed:"resposta",nonce:cfg.nonce,resultado:r},destino)})'
-    + '.withFailureHandler(function(){window.top.postMessage({cacoMed:"resposta",nonce:cfg.nonce,erro:"Falha ao consultar o servidor."},destino)})'
+    + '.withFailureHandler(function(erro){window.top.postMessage({cacoMed:"resposta",nonce:cfg.nonce,erro:(erro&&erro.message)||"Falha ao consultar o servidor."},destino)})'
     + '.api(e.data.pedido);'
     + '});</script>';
   return HtmlService.createHtmlOutput(html)
@@ -55,7 +55,7 @@ function doGet(e) {
       idPublico: hashUid(String(linha[0])),
       nome: String(linha[1]),
       xpGlobal: Number(linha[2]) || 0,
-      nivelGlobal: Number(linha[3]) || 0,
+      nivelGlobal: nivelPorXP(Number(linha[2]) || 0),
       partidas: Number(linha[4]) || 0,
       letras: Number(linha[5]) || 0,
       atualizadoEm: linha[6] ? String(linha[6]) : null,
@@ -93,18 +93,13 @@ function perfilNovo(uid, email, nome, username, titulo, materiaPreferida) {
     role: email.toLowerCase() === EMAIL_ADMIN_INICIAL ? 'admin' : 'jogador',
     materiaPreferida, especialidade: materiaPreferida,
     pontuacaoTotal: 0, xpTopicos: {}, tickets: 0,
-    medidorTicketsCruzadinha: 0, missoesDiarias: criarMissoesCruzadinha(),
+    economia: { versao: VERSAO_ECONOMIA, ultimoNivelPremiado: 1 }, medidorTicketsCruzadinha: 0, missoesDiarias: criarMissoesCruzadinha(),
     dataUltimoLogin: hoje, tutorialCruzadinhasConcluido: false,
     estatisticas: {}, estatisticasGerais: {}, criadoEm: new Date().toISOString(),
   };
 }
 
-function criarMissoesCruzadinha() {
-  return [
-    { id: 'jogar_cruzadinha', titulo: 'Rato de Biblioteca', subtitulo: 'Jogar 1 Cruzadinha', meta: 1, recompensaXP: 100, recompensaTicket: 0, progresso: 0, concluida: false },
-    { id: 'acertar_palavras', titulo: 'Mão Firme', subtitulo: 'Acertar 5 palavras', meta: 5, recompensaXP: 150, recompensaTicket: 0, progresso: 0, concluida: false },
-  ];
-}
+function criarMissoesCruzadinha() { return criarMissoesDiarias(); }
 
 function salvarPerfil(aba, linha, perfil) {
   const destino = linha || aba.getLastRow() + 1;
@@ -116,9 +111,18 @@ function salvarPerfil(aba, linha, perfil) {
 function atualizarMissoesDoDia(aba, local) {
   if (!local.perfil) return null;
   const hoje = Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'yyyy-MM-dd');
-  if (local.perfil.dataUltimoLogin === hoje) return local.perfil;
-  const perfil = { ...local.perfil, dataUltimoLogin: hoje, missoesDiarias: criarMissoesCruzadinha() };
-  salvarPerfil(aba, local.linha, perfil);
+  let perfil = migrarEconomia(local.perfil);
+  if (perfil.dataUltimoLogin !== hoje || perfil.missoesDiarias?.length !== 3 || perfil.missoesDiarias.some(m => !['jogar_cruzadinha', 'rodadas_validas', 'acertos_treino'].includes(m.id))) {
+    perfil = { ...perfil, dataUltimoLogin: hoje, missoesDiarias: criarMissoesDiarias() };
+  }
+  if (perfil !== local.perfil) salvarPerfil(aba, local.linha, perfil);
+  // Rodadas ativas são gravadas pelo próprio operarTreino após cada resposta.
+  // Reparar somente rodadas encerradas evita varrer a aba inteira a cada clique.
+  for (const stats of Object.values(perfil.treinos || {})) {
+    if (!stats.entrada?.encerrada) continue;
+    registrarRespostasTreino(perfil, stats.entrada);
+    reciboTreino(perfil, stats.entrada);
+  }
   return perfil;
 }
 
@@ -163,8 +167,6 @@ function registrarPartidaPlanilha(aba, local, partida) {
   const ideal = palavras * 15;
   const multTempo = tempo <= ideal * 0.25 ? 2 : tempo <= ideal * 0.5 ? 1.5 : tempo <= ideal ? 1.2 : 1;
   const xp = Math.max(10, Math.floor(base * multNivel * multTempo) - penalidade);
-  const medidorAnterior = Number(perfil.medidorTicketsCruzadinha) || 0;
-  const ganhouTicket = medidorAnterior + 1 >= 2;
   const stats = { ...(perfil.estatisticas || {}) };
   const anterior = stats[chaveXP] || {};
   stats[chaveXP] = {
@@ -186,20 +188,12 @@ function registrarPartidaPlanilha(aba, local, partida) {
   gerais.historico = [...(gerais.historico || []), {
     data: dia, materia: subMateria, tempo, erros, letrasCorretas: letras,
   }].slice(-30);
-  const missoes = (perfil.missoesDiarias || []).map(missao => {
-    if (missao.concluida || !['jogar_cruzadinha', 'acertar_palavras'].includes(missao.id)) return missao;
-    const adicional = missao.id === 'jogar_cruzadinha' ? 1 : palavras;
-    const progresso = Math.min(missao.meta, (missao.progresso || 0) + adicional);
-    return { ...missao, progresso, concluida: progresso >= missao.meta };
-  });
-  const xpMissoes = missoes.reduce((total, missao, indice) =>
-    total + (missao.concluida && !perfil.missoesDiarias[indice].concluida ? Number(missao.recompensaXP) || 0 : 0), 0);
+  const progresso = aplicarProgressoMissoes(lerMissoes(perfil), { jogar_cruzadinha: 1, acertar_palavras: palavras });
   const atualizado = {
-    ...perfil, pontuacaoTotal: (Number(perfil.pontuacaoTotal) || 0) + xp + xpMissoes,
+    ...concederRecompensa(perfil, xp + progresso.xp, 2 + progresso.tickets),
     xpTopicos: { ...perfil.xpTopicos, [chaveXP]: xpAnterior + xp },
-    tickets: (Number(perfil.tickets) || 0) + Number(ganhouTicket),
-    medidorTicketsCruzadinha: ganhouTicket ? 0 : medidorAnterior + 1,
-    missoesDiarias: missoes, estatisticas: stats, estatisticasGerais: gerais,
+    medidorTicketsCruzadinha: 0,
+    missoesDiarias: progresso.missoes, estatisticas: stats, estatisticasGerais: gerais,
     cruzadinhasRegistradas: [...(perfil.cruzadinhasRegistradas || []), id].slice(-100),
   };
   salvarPerfil(aba, local.linha, atualizado);
@@ -220,9 +214,7 @@ function atualizarRankingNovo(perfil) {
   const partidas = estatisticas.reduce((total, item) => total + (Number(item.partidas) || 0), 0);
   const letras = estatisticas.reduce((total, item) => total + (Number(item.letras) || 0), 0);
   const tempo = estatisticas.reduce((total, item) => total + (Number(item.tempo) || 0), 0);
-  const nivelCalculado = Object.values(perfil.xpTopicos || {}).reduce((total, xp) =>
-    total + (Number(xp) > 0 ? Math.floor(Math.sqrt(Number(xp) / 1000)) + 1 : 0), 0);
-  const nivel = Number.isInteger(perfil.nivelGlobalAdmin) ? perfil.nivelGlobalAdmin : nivelCalculado;
+  const nivel = nivelPorXP(perfil.pontuacaoTotal);
   aba.getRange(indice >= 0 ? indice + 2 : ultima + 1, 1, 1, 8).setValues([[
     perfil.uid, perfil.nome, perfil.pontuacaoTotal, nivel, partidas, letras,
     new Date().toISOString(), partidas ? Math.floor(tempo / partidas) : '',
@@ -238,10 +230,12 @@ function executarAcaoAdmin(aba, linha, perfil, pedido) {
   let atualizado;
   if (operacao === 'setXP') {
     inteiro(0, 1000000000);
-    atualizado = { ...perfil, pontuacaoTotal: valor };
+    atualizado = { ...perfil, pontuacaoTotal: valor, economia: { versao: VERSAO_ECONOMIA, ultimoNivelPremiado: nivelPorXP(valor) } };
+    delete atualizado.nivelGlobalAdmin;
   } else if (operacao === 'setNivelGlobal') {
-    inteiro(0, 1000);
-    atualizado = { ...perfil, nivelGlobalAdmin: valor };
+    inteiro(1, 1000);
+    atualizado = { ...perfil, pontuacaoTotal: xpParaNivel(valor), economia: { versao: VERSAO_ECONOMIA, ultimoNivelPremiado: valor } };
+    delete atualizado.nivelGlobalAdmin;
   } else if (operacao === 'setNivelCruzadinha') {
     inteiro(0, 100);
     const chaveXP = String(pedido.chaveXP || '');
@@ -249,9 +243,9 @@ function executarAcaoAdmin(aba, linha, perfil, pedido) {
     const xp = valor === 0 ? 0 : valor === 1 ? 1 : (valor - 1) ** 2 * 1000;
     atualizado = { ...perfil, xpTopicos: { ...perfil.xpTopicos, [chaveXP]: xp } };
   } else if (operacao === 'resetarProgresso') {
-    atualizado = { ...perfil, pontuacaoTotal: 0, xpTopicos: {}, tickets: 0,
+    atualizado = { ...perfil, pontuacaoTotal: 0, xpTopicos: {}, tickets: 0, economia: { versao: VERSAO_ECONOMIA, ultimoNivelPremiado: 1 },
       medidorTicketsCruzadinha: 0, missoesDiarias: criarMissoesCruzadinha(),
-      estatisticas: {}, estatisticasGerais: {}, cruzadinhasRegistradas: [], ddx: { concluidos: [], historico: [], partidas: 0 } };
+      estatisticas: {}, estatisticasGerais: {}, cruzadinhasRegistradas: [], treinos: {}, erroMedico: {}, causaEfeito: {}, ddx: { concluidos: [], historico: [], partidas: 0 } };
     delete atualizado.nivelGlobalAdmin;
   } else {
     throw new Error('Operação administrativa desconhecida.');
@@ -276,7 +270,7 @@ function operarPlantao(aba, local, pedido) {
     if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error('Identificador de entrada inválido.');
     if (entrada?.id === id) return perfil;
     if (ddx.historico.some(item => item.id === id)) throw new Error('Entrada já encerrada.');
-    if ((Number(perfil.tickets) || 0) < 1) throw new Error('Tickets insuficientes. Conclua cruzadinhas para ganhar tickets.');
+    if ((Number(perfil.tickets) || 0) < 1) throw new Error('Tickets insuficientes. Conclua Cruzadinhas, Quiz ou Verdade ou mentira para ganhar tickets.');
     entrada = { id, casoId: caso.id, versao: caso.versao, iniciadoEm: new Date().toISOString(), relatorio: executarPlantao(caso, []) };
     const atualizado = { ...perfil, tickets: perfil.tickets - 1, ddx: { ...ddx, entrada } };
     salvarPerfil(aba, local.linha, atualizado);
@@ -299,7 +293,7 @@ function operarPlantao(aba, local, pedido) {
   const chave = caso.id + ':' + caso.versao;
   const xp = relatorio.encerrado && !ddx.concluidos.includes(chave) ? relatorio.xp : 0;
   entrada = { ...entrada, relatorio, ...(relatorio.encerrado ? { xpConcedido: xp, encerradoEm: new Date().toISOString() } : {}) };
-  const atualizado = { ...perfil, pontuacaoTotal: (Number(perfil.pontuacaoTotal) || 0) + xp,
+  const atualizado = { ...concederRecompensa(perfil, xp),
     xpTopicos: { ...perfil.xpTopicos, 'DDX-RESPIRATORIO': (Number(perfil.xpTopicos?.['DDX-RESPIRATORIO']) || 0) + xp },
     ddx: { ...ddx, entrada,
       concluidos: relatorio.encerrado ? [...new Set([...ddx.concluidos, chave])] : ddx.concluidos,
@@ -356,7 +350,7 @@ function operarAuditoria(aba, local, pedido) {
   const repeticao = stats.concluidos.includes(chave);
   const xp = terminou && !repeticao ? relatorio.acertos * 25 : 0;
   entrada = { ...entrada, respostas: [...respostas], ...(terminou ? { relatorio, xpConcedido: xp, repeticao, encerradoEm: new Date().toISOString() } : {}) };
-  const atualizado = { ...perfil, pontuacaoTotal: (Number(perfil.pontuacaoTotal) || 0) + xp,
+  const atualizado = { ...concederRecompensa(perfil, xp),
     xpTopicos: { ...perfil.xpTopicos, 'DDX-ERRO-MEDICO-RESPIRATORIO': (Number(perfil.xpTopicos?.['DDX-ERRO-MEDICO-RESPIRATORIO']) || 0) + xp },
     erroMedico: { ...stats, entrada, partidas: stats.partidas + Number(terminou),
       acertos: stats.acertos + (relatorio?.acertos || 0), etapas: stats.etapas + (relatorio?.total || 0), xp: stats.xp + xp,
@@ -411,7 +405,7 @@ function operarRelacao(aba, local, pedido) {
   const repeticao = stats.concluidos.includes(chave);
   const xp = terminou && !repeticao ? relatorio.acertos * 25 : 0;
   entrada = { ...entrada, respostas: [...respostas], ...(terminou ? { relatorio, xpConcedido: xp, repeticao, encerradoEm: new Date().toISOString() } : {}) };
-  const atualizado = { ...perfil, pontuacaoTotal: (Number(perfil.pontuacaoTotal) || 0) + xp,
+  const atualizado = { ...concederRecompensa(perfil, xp),
     xpTopicos: { ...perfil.xpTopicos, 'DDX-CAUSA-EFEITO-RESPIRATORIO': (Number(perfil.xpTopicos?.['DDX-CAUSA-EFEITO-RESPIRATORIO']) || 0) + xp },
     causaEfeito: { ...stats, entrada, partidas: stats.partidas + Number(terminou),
       acertos: stats.acertos + (relatorio?.acertos || 0), etapas: stats.etapas + (relatorio?.total || 0), xp: stats.xp + xp,
@@ -430,7 +424,7 @@ function api(pedido) {
   const uid = verificarToken(token, apiKey);
   const acao = String(pedido.acao || '');
   const aba = abaPerfis();
-  if (!['obterPerfil', 'cadastrar', 'tutorial', 'editarPerfil', 'registrarPartida', 'admin', 'iniciarPlantao', 'acaoPlantao', 'iniciarAuditoria', 'responderAuditoria', 'iniciarRelacao', 'responderRelacao'].includes(acao)) throw new Error('Ação desconhecida.');
+  if (!['obterPerfil', 'cadastrar', 'tutorial', 'editarPerfil', 'registrarPartida', 'admin', 'iniciarPlantao', 'acaoPlantao', 'iniciarAuditoria', 'responderAuditoria', 'iniciarRelacao', 'responderRelacao', 'iniciarTreino', 'responderTreino', 'abandonarTreino'].includes(acao)) throw new Error('Ação desconhecida.');
 
   const bloqueio = LockService.getScriptLock();
   bloqueio.waitLock(10000);
@@ -468,6 +462,7 @@ function api(pedido) {
     }
     if (!atual.perfil) throw new Error('Cadastro não concluído.');
     const perfilDoDia = atualizarMissoesDoDia(aba, atual);
+    if (['iniciarTreino', 'responderTreino', 'abandonarTreino'].includes(acao)) return operarTreino(aba, { ...atual, perfil: perfilDoDia }, pedido);
     if (acao === 'iniciarPlantao' || acao === 'acaoPlantao') return operarPlantao(aba, { ...atual, perfil: perfilDoDia }, pedido);
     if (acao === 'iniciarAuditoria' || acao === 'responderAuditoria') return operarAuditoria(aba, { ...atual, perfil: perfilDoDia }, pedido);
     if (acao === 'iniciarRelacao' || acao === 'responderRelacao') return operarRelacao(aba, { ...atual, perfil: perfilDoDia }, pedido);

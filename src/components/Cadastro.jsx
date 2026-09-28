@@ -66,7 +66,7 @@ export default function Cadastro({ setTelaAtual, onConcluido }) {
         username: name.split(" ")[0].toLowerCase() + Math.floor(Math.random() * 1000),
         titulo: gender === 'doutora' ? 'Doutora' : 'Doutor',
         especialidade: specialty,
-        pontuacaoTotal: 100, // Cadastro + missão de login do primeiro dia
+        pontuacaoTotal: 0, // XP é ganho nas atividades
         xpTopicos: {},
         tutorialCruzadinhasConcluido: false,
         dataUltimoLogin: dataLocalHoje(),
@@ -278,7 +278,7 @@ export default function Cadastro({ setTelaAtual, onConcluido }) {
                     <motion.div initial={{ width: 0 }} animate={{ width: '5%' }} transition={{ duration: 1, delay: 0.6 }} className="h-full bg-emerald-400 rounded-full" style={{ boxShadow: '0 0 6px rgba(16,185,129,0.5)' }} />
                   </div>
                   <Star className="w-3 h-3 text-emerald-500/60" />
-                  <span className="text-[9px] text-emerald-500/80">+50 XP inicial</span>
+                  <span className="text-[9px] text-emerald-500/80">Progresso começa no nível 1</span>
                 </div>
               </div>
             </motion.div>

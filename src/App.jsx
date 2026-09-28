@@ -26,6 +26,7 @@ const PERFIL_NA_PLANILHA = import.meta.env.VITE_FONTE_DADOS === 'planilha';
 import PlantaoMedico from './components/PlantaoMedico';
 import ErroMedico from './components/ErroMedico';
 import CausaEfeito from './components/CausaEfeito';
+import TreinoMedico from './components/TreinoMedico';
 
 function App() {
   const [usuario, setUsuario] = useState(null); 
@@ -190,6 +191,7 @@ function App() {
         <Jogo bancoDePalavras={bancoDePalavras} materia={materia} subMateria={subMateria} setTelaAtual={setTelaAtual} usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />
       )}
       
+      {['quiz', 'verdadeMentira'].includes(telaAtual) && usuario && <TreinoMedico key={telaAtual} modo={telaAtual} usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       {/* PAINÉIS DE DADOS */}
       {telaAtual === 'ranking' && usuario && <Ranking usuario={usuario} dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'estatisticas' && usuario && <Estatisticas dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}

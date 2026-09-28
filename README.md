@@ -1,6 +1,8 @@
 # cacoMed
 
-Jogo web de treinamento médico com cruzadinhas, progresso por tópico, missões, tickets, perfil, estatísticas e ranking global. A seção DDX tem os pilotos de Plantão médico, Erro médico e Causa e efeito sem IA, restritos ao administrador até revisão clínica. O antigo Hardcore foi retirado do código ativo.
+Jogo web de treinamento médico com cruzadinhas, Quiz (Teoria e Casos clínicos), Verdade ou mentira, missões, tickets, perfil, estatísticas e ranking global. Os novos bancos e os três modos DDX estão em piloto para administrador até validação de conteúdo. O antigo Hardcore foi retirado do código ativo.
+
+Quiz, Verdade ou mentira e economia v2 implementados em 28/09/2026. [Regras, decisões e roteiro de validação](docs/jogos-e-economia-v2.md). API versão 17 na implantação existente; frontend atualizado local, aguardando validação e publicação Vercel. A API não varre mais rodadas ativas a cada resposta e compara respostas por conteúdo, sem depender da ordem dos campos. [Incidente do Quiz: tentativas, causa, correção e prevenção](docs/incidente-quiz-rodada-mudou.md).
 
 ## Executar localmente
 
@@ -28,7 +30,7 @@ Ao completar a grade, o resultado mostra XP de letras e palavras, multiplicadore
 
 A tela de ranking lê a implantação pública do Google Apps Script. Ela não consulta a coleção privada `usuarios` inteira. O código da implantação está em [docs/apps-script-ranking.gs](docs/apps-script-ranking.gs). A temporada ativa usa `RankingNovaTemporada`; a aba legada `Ranking` foi removida. O UID fica na planilha e a resposta pública traz apenas um hash para identificar a posição do próprio jogador. O navegador recebe somente os dados públicos por JSONP.
 
-O Apps Script vinculado à planilha `cacoMed - Ranking Global` está na implantação existente (versão 8), com a mesma URL `/exec`. No modo novo, o cliente envia o token Firebase à API privada do Apps Script por uma ponte HTML, e o script armazena perfis em `PerfisGoogle`, recibos em `Partidas` e o placar em `RankingNovaTemporada`. O Firestore antigo não é usado nesse caminho. A resposta pública inclui nome e métricas, sem e-mail ou perfil privado. A sincronização antiga de ranking é rejeitada. A ponte HTML é reutilizada nas chamadas seguintes da mesma aba para evitar uma nova abertura a cada leitura ou salvamento.
+O Apps Script vinculado à planilha `cacoMed - Ranking Global` está na implantação existente (versão 15), com a mesma URL `/exec`. No modo novo, o cliente envia o token Firebase à API privada do Apps Script por uma ponte HTML, e o script armazena perfis em `PerfisGoogle`, recibos em `Partidas` e o placar em `RankingNovaTemporada`. O Firestore antigo não é usado nesse caminho. A resposta pública inclui nome e métricas, sem e-mail ou perfil privado. A sincronização antiga de ranking é rejeitada. A ponte HTML é reutilizada nas chamadas seguintes da mesma aba para evitar uma nova abertura a cada leitura ou salvamento.
 
 A interface está publicada em `https://caca-med.vercel.app/` e a versão web padrão foi homologada em 27/09/2026. Esse endereço, **sem barra final**, deve permanecer em `ORIGENS_APP` no Apps Script e nos domínios autorizados do Firebase Authentication. Alterações no Apps Script exigem atualizar a implantação web existente; salvar o editor sozinho não atualiza `/exec`. O primeiro acesso pode levar mais tempo por iniciar a ponte e executar a chamada no Apps Script; os acessos seguintes reutilizam a ponte na aba aberta.
 
@@ -43,4 +45,3 @@ Causa e efeito relaciona mecanismo, consequência, compensação e intervenção
 Erro médico usa o mesmo paciente do Plantão numa variante de atendimento auditado. Cada análise custa um ticket e tem quatro etapas, com até 100 XP apenas na primeira conclusão de cada versão. O progresso fica separado em `erroMedico` na planilha. A API está publicada na versão 13 da implantação existente; consulte [o roteiro de Erro médico](docs/ddx-erro-medico.md). O frontend atualizado segue local enquanto a revisão do fluxo é concluída.
 
 O [cronograma de recuperação](docs/cronograma-recuperacao-caca-med.md) contém o inventário de problemas, o andamento e as verificações de aceitação. A referência visual enviada pelo usuário está em `docs/stitch-reference/`.
-

@@ -1,6 +1,7 @@
 import { doc, runTransaction } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { aplicarProgressoMissoes, lerMissoes } from '../utils/missoes';
+import { concederRecompensa } from '../utils/economia';
 import { chamarPerfilPlanilha } from './perfilPlanilha';
 
 export const registrarCruzadinha = async (uid, partida) => {
@@ -20,8 +21,6 @@ export const registrarCruzadinha = async (uid, partida) => {
       jogar_cruzadinha: 1,
       acertar_palavras: partida.palavras
     });
-    const medidorAnterior = Number(dados.medidorTicketsCruzadinha) || 0;
-    const ganhouTicket = medidorAnterior + 1 >= 2;
     const stats = { ...(dados.estatisticas || {}) };
     const anterior = stats[partida.chaveXP] || {};
     stats[partida.chaveXP] = {
@@ -49,17 +48,16 @@ export const registrarCruzadinha = async (uid, partida) => {
     }].slice(-30);
 
     const atualizado = {
-      ...dados,
-      pontuacaoTotal: (Number(dados.pontuacaoTotal) || 0) + partida.xp + progresso.xp,
+      ...concederRecompensa(dados, partida.xp + progresso.xp, 2 + progresso.tickets),
       xpTopicos: { ...(dados.xpTopicos || {}), [partida.chaveXP]: (Number(dados.xpTopicos?.[partida.chaveXP]) || 0) + partida.xp },
-      tickets: (Number(dados.tickets) || 0) + progresso.tickets + Number(ganhouTicket),
-      medidorTicketsCruzadinha: ganhouTicket ? 0 : medidorAnterior + 1,
+      medidorTicketsCruzadinha: 0,
       missoesDiarias: progresso.missoes,
       estatisticas: stats,
       estatisticasGerais: gerais,
       cruzadinhasRegistradas: [...ids, partida.id].slice(-100)
     };
     transaction.update(ref, {
+      economia: atualizado.economia,
       pontuacaoTotal: atualizado.pontuacaoTotal,
       xpTopicos: atualizado.xpTopicos,
       tickets: atualizado.tickets,

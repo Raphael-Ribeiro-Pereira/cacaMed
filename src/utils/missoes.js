@@ -1,25 +1,14 @@
 export const dataLocalHoje = (agora = new Date()) =>
   agora.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
 
-const banco = {
-  facil: { id: 'login_diario', titulo: 'Plantão Iniciado', subtitulo: 'Bater o ponto no hospital', meta: 1, recompensaXP: 50, recompensaTicket: 0 },
-  medias: [
-    { id: 'jogar_cruzadinha', titulo: 'Rato de Biblioteca', subtitulo: 'Jogar 1 Cruzadinha', meta: 1, recompensaXP: 100, recompensaTicket: 0 },
-    { id: 'acertar_palavras', titulo: 'Mão Firme', subtitulo: 'Acertar 5 palavras', meta: 5, recompensaXP: 150, recompensaTicket: 0 }
-  ],
-  dificeis: [
-    { id: 'vencer_ddx', titulo: 'Salvador de Vidas', subtitulo: 'Concluir 1 atendimento seguro no DDX', meta: 1, recompensaXP: 300, recompensaTicket: 1 }
-  ]
-};
-
 export const lerMissoes = dados =>
   Array.isArray(dados?.missoesDiarias) ? dados.missoesDiarias :
     Array.isArray(dados?.missoesDiarias?.missoes) ? dados.missoesDiarias.missoes : [];
 
-export const criarMissoesDiarias = (sorteio = Math.random) => [
-  { ...banco.facil, progresso: 1, concluida: true },
-  { ...banco.medias[Math.floor(sorteio() * banco.medias.length)], progresso: 0, concluida: false },
-  { ...banco.dificeis[Math.floor(sorteio() * banco.dificeis.length)], progresso: 0, concluida: false }
+export const criarMissoesDiarias = () => [
+ { id: 'jogar_cruzadinha', titulo: 'Palavras em dia', subtitulo: 'Concluir 1 cruzadinha', meta: 1, recompensaXP: 50, recompensaTicket: 1, progresso: 0, concluida: false },
+ { id: 'rodadas_validas', titulo: 'Dose de conhecimento', subtitulo: 'Concluir 2 rodadas de Quiz ou Verdade ou mentira com pelo menos 1 acerto', meta: 2, recompensaXP: 50, recompensaTicket: 1, progresso: 0, concluida: false },
+ { id: 'acertos_treino', titulo: 'Conexões corretas', subtitulo: 'Acertar 5 itens nos novos jogos', meta: 5, recompensaXP: 50, recompensaTicket: 1, progresso: 0, concluida: false },
 ];
 
 export const prepararMissoesDoDia = (dados, hoje = dataLocalHoje()) => {
@@ -31,7 +20,7 @@ export const prepararMissoesDoDia = (dados, hoje = dataLocalHoje()) => {
     dataUltimoLogin: hoje,
     missoesDiarias: criarMissoesDiarias(),
     // Documentos antigos podem ter recebido o bônus antes de migrar o formato.
-    xpLogin: mesmoDia ? 0 : banco.facil.recompensaXP
+    xpLogin: 0
   };
 };
 

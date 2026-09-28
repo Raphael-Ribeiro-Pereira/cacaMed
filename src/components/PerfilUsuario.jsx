@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { resumirCruzadinhas, somarNiveisTopicos } from '../utils/progressoCruzadinha';
-import { obterPatente } from '../utils/patentes';
+import { resumirCruzadinhas } from '../utils/progressoCruzadinha';
+import { progressoGlobal } from '../utils/economia';
 import { ArrowLeft, Check, KeyRound, LogOut, Pencil, Save, Shield, Stethoscope, Trophy, X, User, Mail, Calendar, Award } from "lucide-react";
 import { motion, AnimatePresence, useAnimation, useReducedMotion } from "framer-motion";
 import { auth, db } from '../firebase';
@@ -154,14 +154,11 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
     }
   });
 
-  const level = Number.isInteger(dadosUsuario?.nivelGlobalAdmin) ? dadosUsuario.nivelGlobalAdmin : somarNiveisTopicos(xpTopicos);
-  const xpCurrent = dadosUsuario?.pontuacaoTotal || 0;
-  // A barra exibe o avanço dentro do bloco atual de 1.000 XP.
-  const xpBaseAtual = Math.floor(xpCurrent / 1000) * 1000;
-  const xpNext = xpBaseAtual + 1000;
-  const progressoNesteMilestone = xpCurrent - xpBaseAtual;
-  // Agora a porcentagem é baseada apenas no que falta para os próximos 1000 (ex: 795/1000 = 79.5%)
-  const xpPercent = Math.max(0, Math.min(100, Math.round((progressoNesteMilestone / 1000) * 100)));
+  const progresso = progressoGlobal(dadosUsuario);
+  const level = progresso.nivel;
+  const xpCurrent = progresso.xp;
+  const xpNext = progresso.proximo;
+  const xpPercent = progresso.percentual;
 
   const totalCruzadinhas = resumirCruzadinhas(dadosUsuario?.estatisticas).partidas;
   const dataCadastro = usuario?.metadata?.creationTime
@@ -176,7 +173,6 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   ];
 
   const tituloData = obterTituloEpico(materiaEspecialista);
-  const patente = obterPatente(level).titulo;
 
   const handleSave = async () => {
     if (!usuario?.uid || salvandoPerfil) return;
@@ -306,7 +302,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
               <div className="flex flex-col gap-1.5 w-full">
                 <div className="flex items-center justify-center gap-2 bg-[#0B1120] border border-cyan-500/15 rounded-lg px-3 py-1.5">
                   <Stethoscope className="w-3 h-3 text-cyan-400" />
-                  <span className="text-cyan-300 text-[10px]">Nível {level} — {patente}</span>
+                  <span className="text-cyan-300 text-[10px]">Nível {level}</span>
                 </div>
                 <div className="flex items-center justify-center gap-2 bg-[#0B1120] border border-amber-500/15 rounded-lg px-3 py-1.5">
                   <span className="text-sm">{tituloData.emoji}</span>

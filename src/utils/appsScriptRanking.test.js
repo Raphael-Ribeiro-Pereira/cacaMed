@@ -69,6 +69,7 @@ function prepararScript({ projeto = 'caca-med', uid = 'jogador-1', email = 'joga
   });
   vm.runInContext(codigo, contexto);
   vm.runInContext(readFileSync(new URL('../../docs/plantao-motor.gs', import.meta.url), 'utf8'), contexto);
+  vm.runInContext(readFileSync(new URL('../../docs/treinos-motor.gs', import.meta.url), 'utf8'), contexto);
   return { contexto, linhas, abas, idToken };
 }
 
@@ -325,7 +326,7 @@ test('somente admin autenticado altera XP, nível e progresso reais', () => {
   assert.equal(perfil.role, 'admin');
   assert.equal(perfil.username, 'jogador');
   assert.equal(admin.contexto.api({ ...chave, acao: 'admin', operacao: 'setXP', valor: 500 }).pontuacaoTotal, 500);
-  assert.equal(admin.contexto.api({ ...chave, acao: 'admin', operacao: 'setNivelGlobal', valor: 7 }).nivelGlobalAdmin, 7);
+  assert.equal(admin.contexto.api({ ...chave, acao: 'admin', operacao: 'setNivelGlobal', valor: 7 }).pontuacaoTotal, 18000);
   assert.equal(admin.contexto.api({ ...chave, acao: 'admin', operacao: 'setNivelCruzadinha', chaveXP: 'ANATOMIA-GERAL', valor: 3 }).xpTopicos['ANATOMIA-GERAL'], 4000);
   assert.equal(admin.abas.get('RankingNovaTemporada').registros[1][3], 7);
   assert.throws(() => admin.contexto.api({ ...chave, acao: 'admin', operacao: 'setXP', valor: -1 }), /limites/);
@@ -342,13 +343,13 @@ test('partida da nova temporada calcula XP no servidor e não duplica no reenvio
     penalidadeXP: 0, xp: 999999,
   };
   const primeiro = contexto.api({ ...credenciais, acao: 'registrarPartida', partida });
-  assert.equal(primeiro.pontuacaoTotal, 384); // 134 XP da grade + 250 XP das duas missões
+  assert.equal(primeiro.pontuacaoTotal, 184); // 134 XP da grade + 50 XP da missão
   assert.equal(primeiro.xpTopicos['ANATOMIA-GERAL'], 134);
-  assert.equal(contexto.api({ ...credenciais, acao: 'registrarPartida', partida }).pontuacaoTotal, 384);
+  assert.equal(contexto.api({ ...credenciais, acao: 'registrarPartida', partida }).pontuacaoTotal, 184);
   assert.equal(abas.get('Partidas').registros.length, 2);
   assert.equal(abas.get('RankingNovaTemporada').registros.length, 2);
   const publico = JSON.parse(contexto.doGet({ parameter: { temporada: 'nova' } }).texto).ranking;
-  assert.equal(publico[0].xpGlobal, 384);
+  assert.equal(publico[0].xpGlobal, 184);
   assert.equal(publico[0].uid, undefined);
 });
 
@@ -378,11 +379,11 @@ test('reenvio recupera gravações interrompidas sem duplicar XP, missões ou ti
     };
     assert.throws(() => contexto.api({ ...credenciais, acao: 'registrarPartida', partida }), /Resposta perdida/);
     const recuperado = contexto.api({ ...credenciais, acao: 'registrarPartida', partida });
-    assert.equal(recuperado.pontuacaoTotal, 384, nomeAba);
+    assert.equal(recuperado.pontuacaoTotal, 184, nomeAba);
     assert.equal(recuperado.xpTopicos['ANATOMIA-GERAL'], 134, nomeAba);
-    assert.equal(recuperado.tickets, 0, nomeAba);
+    assert.equal(recuperado.tickets, 3, nomeAba);
     assert.equal(recuperado.estatisticas['ANATOMIA-GERAL'].partidas, 1, nomeAba);
-    assert.equal(recuperado.missoesDiarias.filter(missao => missao.concluida).length, 2, nomeAba);
+    assert.equal(recuperado.missoesDiarias.filter(missao => missao.concluida).length, 1, nomeAba);
     assert.equal(abas.get('Partidas').registros.length, 2, nomeAba);
     assert.equal(abas.get('RankingNovaTemporada').registros.length, 2, nomeAba);
   }
@@ -417,4 +418,136 @@ test('missões concluídas recomeçam no dia seguinte sem apagar XP', () => {
   assert.equal(atualizado.dataUltimoLogin, '2026-09-25');
   assert.equal(atualizado.missoesDiarias[0].concluida, false);
   assert.equal(contexto.api({ ...credenciais, acao: 'obterPerfil' }).pontuacaoTotal, 250);
+});
+
+test('Quiz real salva tentativas, retoma após recarga e concede ticket só a cada duas rodadas válidas', () => {
+  const { contexto, abas, idToken } = prepararScript({ email: 'raphaelrpereira.rp@gmail.com' });
+  const credenciais = { idToken, apiKey: 'chave-publica' };
+  contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'admin' });
+  let final;
+  for (let rodada = 0; rodada < 2; rodada++) {
+    const entradaId = `12345678-1234-4123-8123-123456789ab${rodada}`;
+    const inicio = { ...credenciais, acao: 'iniciarTreino', modo: 'quiz', variante: rodada ? 'casos' : 'teoria', entradaId };
+    const perfil = contexto.api(inicio);
+    assert.equal(contexto.api(inicio).treinos.quiz.entrada.id, entradaId);
+    const respostas = [];
+    for (const item of perfil.treinos.quiz.entrada.itens) {
+      const correta = vm.runInContext(`BANCO_QUIZ.find(q => q.id === ${JSON.stringify(item.id)}).correta`, contexto);
+      respostas.push({ itemId: item.id, escolha: correta });
+      const pedido = { ...credenciais, acao: 'responderTreino', modo: 'quiz', entradaId, respostas: [...respostas], xp: 999999 };
+      final = contexto.api(pedido);
+      assert.equal(contexto.api(pedido).pontuacaoTotal, final.pontuacaoTotal);
+      assert.equal(contexto.api({ ...credenciais, acao: 'obterPerfil' }).treinos.quiz.entrada.respostas.length, respostas.length);
+    }
+    assert.equal(final.treinos.quiz.entrada.relatorio.xp, rodada ? 125 : 100);
+  }
+  assert.equal(final.treinos.quiz.partidas, 2);
+  assert.equal(final.treinos.quiz.medidor, 0);
+  assert.equal(final.tickets, 3); // jogo + duas missões
+  assert.equal(final.pontuacaoTotal, 325);
+  assert.equal(abas.get('RespostasTreino').registros.length, 11);
+  assert.equal(abas.get('Partidas').registros.length, 3);
+});
+
+test('API completa duas rodadas com campos reordenados pelo transporte e rejeita conflitos reais', () => {
+  const { contexto, abas, idToken } = prepararScript({ email: 'raphaelrpereira.rp@gmail.com' });
+  const credenciais = { idToken, apiKey: 'chave-publica' };
+  contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'admin' });
+  let final;
+  for (let rodada = 0; rodada < 2; rodada++) {
+    const entradaId = `12345678-1234-4123-8123-123456789ab${rodada}`;
+    let perfil = contexto.api({ ...credenciais, acao: 'iniciarTreino', modo: 'quiz', variante: rodada ? 'casos' : 'teoria', entradaId });
+    for (let i = 0; i < 5; i++) {
+      const entrada = perfil.treinos.quiz.entrada;
+      const item = entrada.itens[i];
+      const escolha = vm.runInContext(`BANCO_QUIZ.find(q => q.id === ${JSON.stringify(item.id)}).correta`, contexto);
+      // Cada volta entre cliente, google.script.run e JSON da planilha pode
+      // reconstruir as mesmas propriedades em uma ordem diferente.
+      const respostas = [...entrada.respostas.map(r => ({ escolha: r.escolha, itemId: r.itemId })), { itemId: item.id, escolha }];
+      const pedido = { ...credenciais, acao: 'responderTreino', modo: 'quiz', entradaId, respostas };
+      perfil = contexto.api(pedido);
+      const repetido = contexto.api({ ...pedido, respostas: respostas.map(r => ({ escolha: r.escolha, itemId: r.itemId })) });
+      assert.equal(repetido.pontuacaoTotal, perfil.pontuacaoTotal);
+      assert.equal(repetido.tickets, perfil.tickets);
+      assert.equal(repetido.treinos.quiz.entrada.respostas.length, i + 1);
+      if (i === 0) {
+        const outra = item.opcoes.find(o => o.id !== escolha).id;
+        assert.throws(() => contexto.api({ ...pedido, respostas: [{ itemId: item.id, escolha: outra }] }), /outra aba/);
+        perfil = contexto.api({ ...credenciais, acao: 'obterPerfil' });
+      }
+    }
+    final = perfil;
+  }
+  assert.equal(final.treinos.quiz.partidas, 2);
+  assert.equal(final.pontuacaoTotal, 325);
+  assert.equal(final.tickets, 3);
+  assert.equal(abas.get('RespostasTreino').registros.length, 11);
+  assert.equal(abas.get('Partidas').registros.length, 3);
+});
+
+test('resposta perdida no encerramento de treino repara histórico e recibo sem duplicar recompensas', () => {
+  for (const alvo of ['PerfisGoogle', 'RespostasTreino', 'RankingNovaTemporada', 'Partidas']) {
+    const { contexto, abas, idToken } = prepararScript({ email: 'raphaelrpereira.rp@gmail.com' });
+    const credenciais = { idToken, apiKey: 'chave-publica' };
+    contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'admin' });
+    const entradaId = '12345678-1234-4123-8123-123456789abc';
+    const perfil = contexto.api({ ...credenciais, acao: 'iniciarTreino', modo: 'verdadeMentira', entradaId });
+    contexto.abaRespostasTreino();
+    const respostas = perfil.treinos.verdadeMentira.entrada.itens.map(item => ({ itemId: item.id,
+      escolha: vm.runInContext(`BANCO_FRASES.find(q => q.id === ${JSON.stringify(item.id)}).verdadeira`, contexto) }));
+    const aba = abas.get(alvo).aba;
+    const original = aba.getRange; let falhou = false;
+    aba.getRange = (...args) => {
+      const range = original(...args); const gravar = range.setValues;
+      range.setValues = values => { gravar(values); if (!falhou) { falhou = true; throw new Error('Resposta perdida'); } };
+      return range;
+    };
+    const pedido = { ...credenciais, acao: 'responderTreino', modo: 'verdadeMentira', entradaId, respostas };
+    assert.throws(() => contexto.api(pedido), /Resposta perdida/);
+    const salvo = contexto.api(pedido);
+    assert.equal(salvo.pontuacaoTotal, 150, alvo);
+    assert.equal(salvo.tickets, 1, alvo);
+    assert.equal(salvo.treinos.verdadeMentira.partidas, 1, alvo);
+    assert.equal(abas.get('RespostasTreino').registros.length, 6, alvo);
+    assert.equal(abas.get('Partidas').registros.length, 2, alvo);
+  }
+});
+
+test('treinos bloqueiam conteúdo piloto para jogador comum', () => {
+  const comum = prepararScript();
+  const credenciais = { idToken: comum.idToken, apiKey: 'chave-publica' };
+  comum.contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'comum' });
+  assert.throws(() => comum.contexto.api({ ...credenciais, acao: 'iniciarTreino', modo: 'quiz', variante: 'teoria', entradaId: '12345678-1234-4123-8123-123456789abc' }), /validação/);
+});
+
+test('cruzadinha combina 2 tickets, missão e novo nível sem pagar novamente no reenvio', () => {
+  const { contexto, abas, idToken } = prepararScript();
+  const credenciais = { idToken, apiKey: 'chave-publica' };
+  contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'comum' });
+  const registros = abas.get('PerfisGoogle').registros;
+  const perfil = JSON.parse(registros[1][2]); perfil.pontuacaoTotal = 490; registros[1][2] = JSON.stringify(perfil);
+  const partida = { id: '12345678-1234-4123-8123-123456789abc', chaveXP: 'ANATOMIA-GERAL', subMateria: 'Geral', palavras: 7, letras: 32, tempo: 120, erros: 0, maiorPalavra: 9 };
+  const pedido = { ...credenciais, acao: 'registrarPartida', partida };
+  const salvo = contexto.api(pedido);
+  assert.equal(salvo.pontuacaoTotal, 674);
+  assert.equal(salvo.tickets, 5); // 2 jogo + 1 missão + 2 nível
+  assert.equal(contexto.api(pedido).tickets, 5);
+});
+
+test('consulta do perfil repara respostas de treino perdidas após gravação da recompensa', () => {
+  const { contexto, abas, idToken } = prepararScript({ email: 'raphaelrpereira.rp@gmail.com' });
+  const credenciais = { idToken, apiKey: 'chave-publica' };
+  contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'admin' });
+  const entradaId = '12345678-1234-4123-8123-123456789abc';
+  const perfil = contexto.api({ ...credenciais, acao: 'iniciarTreino', modo: 'verdadeMentira', entradaId });
+  const respostas = perfil.treinos.verdadeMentira.entrada.itens.map(item => ({ itemId: item.id,
+    escolha: vm.runInContext(`BANCO_FRASES.find(q => q.id === ${JSON.stringify(item.id)}).verdadeira`, contexto) }));
+  const aba = abas.get('PerfisGoogle').aba; const original = aba.getRange; let falhou = false;
+  aba.getRange = (...args) => { const range = original(...args); const gravar = range.setValues;
+    range.setValues = values => { gravar(values); if (!falhou) { falhou = true; throw new Error('Resposta perdida'); } }; return range; };
+  assert.throws(() => contexto.api({ ...credenciais, acao: 'responderTreino', modo: 'verdadeMentira', entradaId, respostas }), /Resposta perdida/);
+  const recuperado = contexto.api({ ...credenciais, acao: 'obterPerfil' });
+  assert.equal(recuperado.pontuacaoTotal, 150);
+  assert.equal(abas.get('RespostasTreino').registros.length, 6);
+  assert.equal(abas.get('Partidas').registros.length, 2);
 });

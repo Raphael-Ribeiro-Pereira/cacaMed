@@ -8,8 +8,7 @@ import { registrarCruzadinha } from '../services/registrarCruzadinha';
 import { dataLocalHoje } from '../utils/missoes';
 import { celulasPreenchidasAteProximaVazia, escolherDirecaoDaEntrada, proximaCelulaDaEntrada, resolverLetraRepetida } from '../utils/navegacaoCruzadinha';
 import { aplicarProgressoMissoes, lerMissoes } from '../utils/missoes';
-import { somarNiveisTopicos } from '../utils/progressoCruzadinha';
-import { obterPatente } from '../utils/patentes';
+import { nivelPorXP } from '../utils/economia';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import AdminSpeedDial from './AdminSpeedDial';
 
@@ -33,7 +32,7 @@ const passosTutorial = [
   { titulo: 'Preencha a grade', texto: 'Digite uma letra por casa. O cursor pula letras já preenchidas e aceita a letra repetida de uma interseção sem duplicá-la; Backspace volta para a casa anterior.' },
   { titulo: 'Entenda o feedback', texto: 'A casa mostra feedback enquanto você digita. Uma palavra só é validada quando todas as suas casas estiverem preenchidas. Complete todas as palavras para terminar o plantão.' },
   { titulo: 'Use as dicas', texto: 'O laudo fica no prontuário. A partir do nível 3, você pode abrir dicas adicionais: a do residente custa 5 XP e a do paciente, mais 10 XP.' },
-  { titulo: 'Receba suas recompensas', texto: 'Letras e palavras formam o XP base. Nível e tempo podem multiplicá-lo; dicas reduzem o resultado, com mínimo de 10 XP por partida. Missões podem dar XP extra, e a cada dois plantões completos você ganha um ticket. O relatório final mostra cada parcela.' },
+  { titulo: 'Receba suas recompensas', texto: 'Letras e palavras formam o XP base. Nível e tempo podem multiplicá-lo; dicas reduzem o resultado, com mínimo de 10 XP por partida. Missões podem dar XP extra, e cada cruzadinha concluída concede 2 tickets, além das recompensas de missão e nível global. O relatório final mostra cada parcela.' },
   { titulo: 'Antes de sair', texto: 'Se abandonar o plantão antes de completá-lo, as letras e o progresso desta partida serão perdidos. O botão de saída pedirá confirmação.' }
 ];
 
@@ -304,32 +303,13 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
           const xpCalculado = Math.floor(xpBase * multNivel * multTempo) - penalidadeXP;
           const xpFinalDaFase = Math.max(10, xpCalculado);
 
-          const medidorAntigo = dadosUsuario.medidorTicketsCruzadinha || 0;
-          let novoMedidor = medidorAntigo + 1;
-          let ticketGanhoPartida = 0;
-          if (novoMedidor >= 2) { novoMedidor = 0; ticketGanhoPartida = 1; }
-          setProgressoTicket({ atual: ticketGanhoPartida > 0 ? 2 : novoMedidor, ganhou: ticketGanhoPartida > 0 });
+          setProgressoTicket({ atual: 2, ganhou: true });
 
           const progressoMissoes = aplicarProgressoMissoes(lerMissoes(dadosUsuario), { jogar_cruzadinha: 1, acertar_palavras: numPalavras });
           const xpMissaoBonus = progressoMissoes.xp;
           const ticketMissaoBonus = progressoMissoes.tickets;
           const missoesConcluidas = progressoMissoes.missoes.filter((missao, index) => !lerMissoes(dadosUsuario)[index]?.concluida && missao.concluida);
           setRelatorioXP({ ganho: xpFinalDaFase, letras: numLetras, palavras: numPalavras, xpLetras, xpPalavras, base: xpBase, multNivel, multTempo, penalidade: penalidadeXP, xpCalculado, xpMissoes: xpMissaoBonus, ticketsMissoes: ticketMissaoBonus, missoesConcluidas });
-
-          const newSubXP = xpAtualSubtopico + xpFinalDaFase;
-          const newSubLevel = Math.floor(Math.sqrt(newSubXP / 1000)) + 1;
-          const oldSubLevel = xpAtualSubtopico === 0 ? 0 : Math.floor(Math.sqrt(xpAtualSubtopico / 1000)) + 1;
-          
-          const oldSomaNiveis = somarNiveisTopicos(dadosUsuario.xpTopicos);
-          const newSomaNiveis = somarNiveisTopicos({ ...dadosUsuario.xpTopicos, [chaveXP]: newSubXP });
-
-          const oldPatente = obterPatente(oldSomaNiveis); const newPatente = obterPatente(newSomaNiveis);
-          let alertasNivel = [];
-          if (newPatente.titulo !== oldPatente.titulo && oldSomaNiveis > 0) alertasNivel.push({ isPromocao: true, nome: 'PROMOÇÃO DE CARREIRA', antigo: oldPatente.titulo, novo: newPatente.titulo, icone: '🌟', cor: newPatente.cor });
-          else if (newSomaNiveis > oldSomaNiveis && oldSomaNiveis > 0) alertasNivel.push({ nome: 'Nível Global', antigo: oldSomaNiveis, novo: newSomaNiveis, icone: '🌍' });
-          if (newSubLevel > oldSubLevel && oldSubLevel > 0) alertasNivel.push({ nome: subMateria, antigo: oldSubLevel, novo: newSubLevel, icone: '⭐' });
-          
-          if (alertasNivel.length > 0) { setLevelUps(alertasNivel); setTimeout(() => setLevelUps([]), 8000); }
 
           if (!partidaIdRef.current) partidaIdRef.current = crypto.randomUUID();
           setXpPendente({
@@ -359,6 +339,9 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         const ticketRecebido = (Number(dados.tickets) || 0) - (Number(dadosUsuario?.tickets) || 0);
         setRelatorioXP(prev => prev ? { ...prev, ganho: xpRecebido, xpMissoes: Math.max(0, xpGlobalRecebido - xpRecebido), ticketsRecebidos: Math.max(0, ticketRecebido) } : prev);
         setProgressoTicket({ atual: dados.medidorTicketsCruzadinha === 0 ? 2 : dados.medidorTicketsCruzadinha, ganhou: dados.medidorTicketsCruzadinha === 0 });
+        const anterior = nivelPorXP(dadosUsuario?.pontuacaoTotal);
+        const novo = nivelPorXP(dados.pontuacaoTotal);
+        if (novo > anterior) { setLevelUps([{ nome: 'Nível global', antigo: anterior, novo, icone: '⭐' }]); setTimeout(() => setLevelUps([]), 8000); }
         setDadosUsuario(dados);
         setXpPendente(prev => ({ ...prev, status: 'salvo' }));
       })
@@ -585,7 +568,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
 
         <div className="flex items-center gap-3 md:gap-10 min-w-0">
           <div className="flex flex-col items-center">
-            <span className="text-cyan-400 text-xs uppercase tracking-widest mb-1.5 font-bold">Nível {nivelAtual}</span>
+            <span className="text-cyan-400 text-xs uppercase tracking-widest mb-1.5 font-bold">Dificuldade {nivelAtual}</span>
             <div role="progressbar" aria-label={`Progresso do tópico ${subMateria}`} aria-valuemin="0" aria-valuemax={xpNecessarioParaUpar} aria-valuenow={xpProgressoNesteNivel} className="w-20 md:w-36 h-2 bg-[#0F172A] rounded-full overflow-hidden border border-white/[0.05]" title={`${xpProgressoNesteNivel} / ${xpNecessarioParaUpar} XP`}>
               <div className="h-full bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.8)]" style={{ width: `${porcentagemBarra}%` }} />
             </div>
@@ -736,7 +719,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                   <div className="flex justify-between border-t border-white/[0.1] pt-2 font-bold text-emerald-400"><span>XP da cruzadinha</span><span>+{relatorioXP?.ganho || 0} XP</span></div>
                   <div className="flex justify-between"><span>Missões diárias{relatorioXP?.missoesConcluidas?.length ? `: ${relatorioXP.missoesConcluidas.map(m => m.titulo).join(', ')}` : ''}</span><span>+{relatorioXP?.xpMissoes || 0} XP</span></div>
                   <div className="flex justify-between font-bold text-cyan-400"><span>Total de XP global</span><span>+{(relatorioXP?.ganho || 0) + (relatorioXP?.xpMissoes || 0)} XP</span></div>
-                  <p className="text-slate-400">Tickets: +{relatorioXP?.ticketsRecebidos ?? ((progressoTicket?.ganhou ? 1 : 0) + (relatorioXP?.ticketsMissoes || 0))} (fidelidade e missões).</p>
+                  <p className="text-slate-400">Tickets: +{relatorioXP?.ticketsRecebidos ?? ((progressoTicket?.ganhou ? 2 : 0) + (relatorioXP?.ticketsMissoes || 0))} (jogo, missões e nível).</p>
                 </div>
 
                 {progressoTicket && (
@@ -745,8 +728,8 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                       <motion.div animate={{ opacity: [0, 0.15, 0] }} transition={{ duration: 1.5, repeat: Infinity }} className="absolute inset-0 bg-orange-500 pointer-events-none" />
                     )}
                     <div className="flex justify-between items-center mb-2 relative z-10">
-                      <span className="text-orange-400 font-bold text-xs uppercase tracking-wider">Cartão Fidelidade</span>
-                      <span className="text-orange-400 font-mono text-xs font-bold">{progressoTicket.atual}/2</span>
+                      <span className="text-orange-400 font-bold text-xs uppercase tracking-wider">Tickets da cruzadinha</span>
+                      <span className="text-orange-400 font-mono text-xs font-bold">+2 tickets</span>
                     </div>
                     <div className="flex gap-2 relative z-10">
                       <div className={`flex-1 h-8 rounded-lg flex items-center justify-center border transition-all duration-500 ${progressoTicket.atual >= 1 ? 'bg-orange-500/20 border-orange-500 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.3)]' : 'bg-[#0F172A] border-white/[0.05] text-slate-600'}`}>
@@ -758,7 +741,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
                     </div>
                     {progressoTicket.ganhou && (
                       <motion.p initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="text-orange-400 text-[10px] font-bold mt-2 text-center uppercase tracking-widest">
-                        +1 Ticket ganho! Pode ir para a UTI.
+                        +2 tickets da cruzadinha! Disponíveis para o DDX.
                       </motion.p>
                     )}
                   </div>
