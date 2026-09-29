@@ -1,5 +1,5 @@
-// Somente administrador durante a revisão do banco inicial.
-const TREINOS_REVISADOS = false;
+// Banco inicial revisado pelo responsável do produto e liberado para jogadores.
+const TREINOS_REVISADOS = true;
 
 function abaRespostasTreino() {
   const planilha = SpreadsheetApp.getActiveSpreadsheet();

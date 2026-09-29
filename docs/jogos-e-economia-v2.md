@@ -35,11 +35,11 @@ Três missões diárias: concluir uma cruzadinha, concluir duas rodadas válidas
 
 Banco inicial determinístico: 32 questões (16 Teoria, 16 Casos) e 32 frases (16 verdadeiras, 16 falsas), sobre 16 conceitos. Alternativas e ordem embaralhadas. A seleção prioriza itens ausentes da rodada anterior; versões opostas do mesmo conceito não aparecem juntas. Não usa geração por IA nem serviço pago. Fontes: CDC, NIDDK, NCBI e artigo sobre endolinfa coclear no PubMed, disponíveis após responder.
 
-O banco é piloto para administrador, seguindo a revisão de conteúdo dos modos DDX. Validar interesse, dificuldade, redação e gabaritos antes de liberar. Para liberar, atualizar `TREINOS_REVISADOS` em `docs/treinos-api.gs` e a condição de piloto em `TreinoMedico.jsx`, regenerar o motor e atualizar a implantação.
+O banco foi revisado e liberado para jogadores. A documentação da próxima fase está em [Revisão Inteligente](revisao-inteligente.md).
 
 Cada resposta confirmada registra na aba privada `RespostasTreino`: UID, rodada, item/versão, modo/variante, tema, escolha, gabarito, acerto, data e estado. Respostas de Quiz interrompido também são registradas. O perfil mantém somente a entrada mais recente de cada modo e totais acumulados; o histórico permanente não aumenta indefinidamente o JSON do perfil.
 
-A revisão inteligente continua para a última fase: gratuita, baseada nos erros, com reapresentação menos frequente após acertos. Nesta entrega o histórico necessário é armazenado; tela e agendamento da revisão ainda não implementados.
+A revisão inteligente continua para a última fase: gratuita, baseada nos erros, com reapresentação menos frequente após acertos. O histórico necessário é armazenado; tela e agendamento ainda não implementados. O plano está em [revisao-inteligente.md](revisao-inteligente.md).
 
 ## Salvamento e manutenção
 

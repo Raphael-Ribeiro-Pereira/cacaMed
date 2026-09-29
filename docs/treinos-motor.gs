@@ -1373,7 +1373,7 @@ function responderTreinoPerfil(perfil, modo, entradaId, respostas) {
 }
 
 // Somente administrador durante a revisão do banco inicial.
-const TREINOS_REVISADOS = false;
+const TREINOS_REVISADOS = true;
 
 function abaRespostasTreino() {
   const planilha = SpreadsheetApp.getActiveSpreadsheet();

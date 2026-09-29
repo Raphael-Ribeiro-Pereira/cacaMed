@@ -18,7 +18,7 @@ export default function TreinoMedico({ modo, usuario, dadosUsuario, setDadosUsua
   const item = ativa && quiz ? entrada.itens[entrada.respostas.length] : null;
   const ultimo = ativa && quiz ? entrada.resultados.at(-1) : null;
   const nivel = progressoGlobal(dadosUsuario);
-  const bloqueado = dadosUsuario?.role !== 'admin';
+  const bloqueado = false;
   async function enviar(pedido) {
     if (ocupado) return;
     setOcupado(true); setErro(''); setPendente(pedido);

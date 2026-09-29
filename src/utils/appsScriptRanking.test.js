@@ -513,11 +513,12 @@ test('resposta perdida no encerramento de treino repara histórico e recibo sem 
   }
 });
 
-test('treinos bloqueiam conteúdo piloto para jogador comum', () => {
+test('treinos liberados permitem conteúdo revisado para jogador comum', () => {
   const comum = prepararScript();
   const credenciais = { idToken: comum.idToken, apiKey: 'chave-publica' };
   comum.contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'comum' });
-  assert.throws(() => comum.contexto.api({ ...credenciais, acao: 'iniciarTreino', modo: 'quiz', variante: 'teoria', entradaId: '12345678-1234-4123-8123-123456789abc' }), /validação/);
+  const perfil = comum.contexto.api({ ...credenciais, acao: 'iniciarTreino', modo: 'quiz', variante: 'teoria', entradaId: '12345678-1234-4123-8123-123456789abc' });
+  assert.equal(perfil.treinos.quiz.entrada.id, '12345678-1234-4123-8123-123456789abc');
 });
 
 test('cruzadinha combina 2 tickets, missão e novo nível sem pagar novamente no reenvio', () => {
