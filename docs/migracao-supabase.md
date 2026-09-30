@@ -107,3 +107,5 @@ Validação: 86 testes passaram, incluindo quatro novos testes de migração de 
 
 Google: no Google Cloud do projeto `caca-med`, abrir Google Auth Platform → Clients; usar/criar cliente do tipo Web application. Autorizar callback `https://lruzndfqfivlvcckvgbw.supabase.co/auth/v1/callback`; copiar Client ID e Client Secret diretamente para o provedor Google do Supabase. A entrada e o envio de credenciais pelo navegador são feitos pelo usuário. Não apagar os callbacks existentes do Firebase. Origens de desenvolvimento: `http://localhost:5173`, `http://localhost:5174`; produção: `https://caca-med.vercel.app`. Manter verificações de nonce e e-mail habilitadas.
 
+Correção de segurança: a chave não é mais gerada nem versionada em `firebasePublic.js`. Ela foi cadastrada como segredo criptografado `FIREBASE_WEB_API_KEY` na Edge Function `cacamed-api`; o arquivo local foi removido e o sincronizador não copia valores do `.env` para o código publicado. A chave continua sendo uma chave Web pública do Firebase, sem privilégios administrativos, mas deve permanecer restrita no Google Cloud (APIs e origens autorizadas).
+

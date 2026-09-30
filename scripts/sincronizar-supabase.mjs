@@ -1,5 +1,4 @@
-import { mkdir, copyFile, readFile, writeFile } from 'node:fs/promises';
-import { parse } from 'dotenv';
+import { mkdir, copyFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 const root = new URL('../', import.meta.url);
 const modules = [
@@ -15,8 +14,3 @@ for (const module of modules) {
   await copyFile(new URL(`src/${module}`, root), destination);
 }
 console.log('Motor JavaScript da API Supabase sincronizado com as regras atuais.');
-// Chave WEB pública já usada pelo frontend; nunca copia outros valores do .env.
-const config = parse(await readFile(new URL('.env', root), 'utf8'));
-if (!config.VITE_FIREBASE_API_KEY) throw new Error('Chave pública Firebase ausente para a migração de senha.');
-await writeFile(new URL('supabase/functions/cacamed-api/firebasePublic.js', root),
-  `// Identificador público do projeto Firebase, não é uma chave Admin.\nexport const FIREBASE_WEB_API_KEY = ${JSON.stringify(config.VITE_FIREBASE_API_KEY)};\n`);

@@ -3,7 +3,6 @@ import { createRemoteJWKSet, jwtVerify } from 'npm:jose@6.1.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
 import { criarApiSupabase } from './shared/apiSupabase.js';
 import { criarMigracaoSenha } from './shared/migrarSenhaSupabase.js';
-import { FIREBASE_WEB_API_KEY } from './firebasePublic.js';
 import { nivelPorXP } from './utils/economia.js';
 import { importarBancoCSV } from './utils/importarBancoCSV.js';
 
@@ -106,7 +105,7 @@ async function palavras() {
 const migratePassword = criarMigracaoSenha({
   vincular: migrateIdentity,
   verificarSenha: async (email, password) => {
-    const key = Deno.env.get('FIREBASE_WEB_API_KEY') || FIREBASE_WEB_API_KEY;
+    const key = Deno.env.get('FIREBASE_WEB_API_KEY');
     if (!key) throw new Error('Migração de senha ainda não configurada.');
     const response = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + encodeURIComponent(key), {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(10000),
