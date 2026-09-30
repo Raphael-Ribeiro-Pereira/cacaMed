@@ -1,10 +1,13 @@
+import { sairDaConta } from '../services/sairDaConta';
 import React, { useState, useEffect } from "react";
 import { Mail, Lock, Eye, EyeOff, Stethoscope } from "lucide-react";
 import { motion, useAnimation } from "framer-motion";
 import { auth } from '../firebase';
-import { signInWithEmailAndPassword, sendPasswordResetEmail, signInWithPopup, GoogleAuthProvider, linkWithCredential, signOut } from 'firebase/auth';
+import { USAR_AUTH_SUPABASE, supabase } from '../supabase';
+import { entrarComSenhaPreservada } from '../services/authSupabase';
+import { signInWithEmailAndPassword, sendPasswordResetEmail, signInWithPopup, GoogleAuthProvider, linkWithCredential } from 'firebase/auth';
 
-const PERFIL_NA_PLANILHA = import.meta.env.VITE_FONTE_DADOS === 'planilha';
+const PERFIL_NA_PLANILHA = ['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS);
 
 function EcgPulse() {
   const controls = useAnimation();
@@ -38,7 +41,8 @@ export default function Login({ setTelaAtual }) {
   const [showPassword, setShowPassword] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
-  const [erro, setErro] = useState("");
+  const [erro, setErro] = useState(() => new URLSearchParams(window.location.search).has('error')
+    ? 'Não foi possível concluir o login Google. Confira a configuração do provedor e tente novamente.' : '');
   const [loading, setLoading] = useState(false);
 
   const [showForgot, setShowForgot] = useState(false);
@@ -49,11 +53,21 @@ export default function Login({ setTelaAtual }) {
   const [credencialGooglePendente, setCredencialGooglePendente] = useState(null);
   const [emailVinculo, setEmailVinculo] = useState('');
   const [senhaVinculo, setSenhaVinculo] = useState('');
+  useEffect(() => {
+    // O retorno pode conter detalhes internos do provedor. Não os mostra nem
+    // deixa códigos OAuth no endereço depois de informar o erro ao jogador.
+    if (new URLSearchParams(window.location.search).has('error')) window.history.replaceState(null, '', window.location.pathname);
+  }, []);
 
   const entrarComGoogle = async () => {
     setErro('');
     setLoading(true);
     try {
+      if (USAR_AUTH_SUPABASE) {
+        const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/' } });
+        if (error) throw error;
+        return;
+      }
       await signInWithPopup(auth, new GoogleAuthProvider());
     } catch (falha) {
       if (falha.code === 'auth/account-exists-with-different-credential') {
@@ -84,7 +98,7 @@ export default function Login({ setTelaAtual }) {
       setSenhaVinculo('');
       setCredencialGooglePendente(null);
     } catch {
-      await signOut(auth);
+      await sairDaConta();
       setErro('Senha antiga incorreta ou vínculo indisponível. Confira e tente novamente.');
     } finally {
       setLoading(false);
@@ -98,7 +112,10 @@ export default function Login({ setTelaAtual }) {
     setForgotError("");
     setForgotLoading(true);
     try {
-      await sendPasswordResetEmail(auth, address);
+      if (USAR_AUTH_SUPABASE) {
+        const { error } = await supabase.auth.resetPasswordForEmail(address, { redirectTo: window.location.origin + '/?recuperar=1' });
+        if (error) throw error;
+      } else await sendPasswordResetEmail(auth, address);
       setForgotSent(true);
     } catch (error) {
       if (error.code === 'auth/invalid-email') {
@@ -118,12 +135,23 @@ export default function Login({ setTelaAtual }) {
     setErro("");
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      if (USAR_AUTH_SUPABASE) await entrarComSenhaPreservada(email, password);
+      else await signInWithEmailAndPassword(auth, email, password);
     } catch {
       setErro("Credenciais inválidas ou Doutor não encontrado no sistema.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const recuperarContaAntiga = async () => {
+    if (!forgotEmail.trim() || forgotLoading) return;
+    setForgotLoading(true); setForgotError('');
+    try {
+      await sendPasswordResetEmail(auth, forgotEmail.trim());
+      setForgotSent(true);
+    } catch { setForgotError('Não foi possível enviar o link. Tente novamente mais tarde.'); }
+    finally { setForgotLoading(false); }
   };
 
   return (
@@ -333,6 +361,7 @@ export default function Login({ setTelaAtual }) {
                     {forgotLoading ? 'Enviando...' : 'Enviar link de recuperação'}
                   </motion.button>
                   {forgotError && <p role="alert" className="text-rose-400 text-xs text-center">{forgotError}</p>}
+                  {USAR_AUTH_SUPABASE && <button type="button" disabled={forgotLoading || !forgotEmail.includes('@')} onClick={recuperarContaAntiga} className="text-cyan-400 text-xs underline">Ainda não entrei após a atualização: recuperar acesso antigo</button>}
                 </div>
               )}
 

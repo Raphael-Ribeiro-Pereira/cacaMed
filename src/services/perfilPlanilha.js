@@ -1,4 +1,6 @@
 import { getIdToken } from 'firebase/auth';
+import { USAR_SUPABASE } from '../supabase';
+import { chamarPerfilSupabase } from './perfilSupabase';
 
 const ENDPOINT = 'https://script.google.com/macros/s/AKfycbyo7eh7LTMLKpR7KAINlxMarLRe2DbL72niTbPA9xKlgi8fMy2WUs8bhb_fMl0y06pWfw/exec';
 const TEMPO_ABERTURA_MS = 60000;
@@ -106,6 +108,7 @@ async function enviarPedido(usuario, acao, dados, timeoutMs) {
 
 export function chamarPerfilPlanilha(usuario, acao, dados = {}, timeoutMs = 60000) {
   if (!usuario) return Promise.reject(new Error('Entre na conta para continuar.'));
+  if (USAR_SUPABASE) return chamarPerfilSupabase(usuario, acao, dados, Math.min(timeoutMs, 15000));
   const pedido = fila.catch(() => {}).then(() => enviarPedido(usuario, acao, dados, timeoutMs));
   fila = pedido;
   return pedido;

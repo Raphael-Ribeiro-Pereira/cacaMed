@@ -394,6 +394,11 @@
     flex-direction: column;
   }
 }
+.revisao-empty { padding: 1.5rem; margin-top: 1rem; }
+.revisao-empty h2 { font-size: 1.35rem; margin-bottom: .75rem; }
+.revisao-empty p { margin-bottom: 1rem; }
+.revisao-empty .stitch-back { margin-top: 1rem; }
+.treino-feedback h3 { display: flex; gap: .5rem; align-items: flex-start; }
 /* 💉 VACINA CONTRA O FUNDO BRANCO DO AUTOFILL DO NAVEGADOR */
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 

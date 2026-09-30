@@ -1,13 +1,15 @@
+import { sairDaConta } from '../services/sairDaConta';
 import React, { useState, useEffect, useRef } from "react";
 import { resumirCruzadinhas } from '../utils/progressoCruzadinha';
 import { progressoGlobal } from '../utils/economia';
 import { ArrowLeft, Check, KeyRound, LogOut, Pencil, Save, Shield, Stethoscope, Trophy, X, User, Mail, Calendar, Award } from "lucide-react";
 import { motion, AnimatePresence, useAnimation, useReducedMotion } from "framer-motion";
-import { auth, db } from '../firebase';
+import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
-import { signOut, EmailAuthProvider, linkWithCredential, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import { EmailAuthProvider, linkWithCredential, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import StitchBrand from './ui/StitchBrand';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
+import { supabase } from '../supabase';
 
 // --- COMPONENTES VISUAIS ---
 function AvatarRing({ level }) {
@@ -179,7 +181,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
     setSalvandoPerfil(true);
     setErroSalvar('');
     try {
-        if (import.meta.env.VITE_FONTE_DADOS === 'planilha') {
+        if (['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS)) {
           const perfil = await chamarPerfilPlanilha(usuario, 'editarPerfil', { username, nome: fullName });
           setDadosUsuario(perfil);
         } else {
@@ -198,7 +200,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
 
   const handleLogout = async () => {
     try {
-        await signOut(auth);
+        await sairDaConta();
         setTelaAtual('login');
     } catch (error) {
         console.error("Erro ao sair:", error);
@@ -218,7 +220,14 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
     setSenhaErro('');
     setSalvandoSenha(true);
     try {
-        if (possuiSenha) {
+        if (usuario.source === 'supabase') {
+          if (possuiSenha) {
+            const verificacao = await supabase.auth.signInWithPassword({ email: usuario.email, password: currentPw });
+            if (verificacao.error || verificacao.data.user?.id !== usuario.authId) throw new Error('Senha atual inválida.');
+          }
+          await chamarPerfilPlanilha(usuario, 'definirSenha', { senha: newPw });
+          setSenhaVinculada(true);
+        } else if (possuiSenha) {
           const credential = EmailAuthProvider.credential(usuario.email, currentPw);
           await reauthenticateWithCredential(usuario, credential);
           await updatePassword(usuario, newPw);

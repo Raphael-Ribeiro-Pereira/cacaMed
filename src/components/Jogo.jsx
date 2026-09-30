@@ -121,7 +121,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     setSalvandoTutorial(true);
     setErroTutorial('');
     try {
-      if (import.meta.env.VITE_FONTE_DADOS === 'planilha') {
+      if (['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS)) {
         const perfil = await chamarPerfilPlanilha(usuario, 'tutorial');
         setDadosUsuario(perfil);
       } else {

@@ -1,6 +1,6 @@
+import { sairDaConta } from '../services/sairDaConta';
 import { useState } from 'react';
-import { EmailAuthProvider, linkWithCredential, signOut } from 'firebase/auth';
-import { auth } from '../firebase';
+import { EmailAuthProvider, linkWithCredential } from 'firebase/auth';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 
 const MATERIAS = [
@@ -29,7 +29,9 @@ export default function Cadastro2({ usuario, onConcluido }) {
     setErro('');
     try {
       if (precisaCriarSenha) {
-        await linkWithCredential(usuario, EmailAuthProvider.credential(usuario.email, senha));
+        if (usuario.source === 'supabase') {
+          await chamarPerfilPlanilha(usuario, 'definirSenha', { senha });
+        } else await linkWithCredential(usuario, EmailAuthProvider.credential(usuario.email, senha));
         setSenhaCriada(true);
         setSenha('');
         setConfirmacaoSenha('');
@@ -72,7 +74,7 @@ export default function Cadastro2({ usuario, onConcluido }) {
         {MATERIAS.map(([valor, nome]) => <option key={valor} value={valor}>{nome}</option>)}
       </select>
       {precisaCriarSenha && <div className="space-y-3">
-        <p className="text-slate-300 text-sm">Crie uma senha para também entrar pelo formulário de e-mail. Ela fica somente no Firebase Authentication, não na planilha.</p>
+        <p className="text-slate-300 text-sm">Crie uma senha para também entrar pelo formulário de e-mail. Ela é protegida pelo serviço de autenticação.</p>
         <label className="block text-sm font-semibold" htmlFor="cadastro2-senha">Senha</label>
         <input id="cadastro2-senha" type="password" autoComplete="new-password" minLength={6} required value={senha} onChange={evento => setSenha(evento.target.value)} className="w-full rounded-xl bg-[#0B1120] border border-cyan-500/30 p-3 text-white" />
         <label className="block text-sm font-semibold" htmlFor="cadastro2-confirmacao">Confirmar senha</label>
@@ -83,7 +85,7 @@ export default function Cadastro2({ usuario, onConcluido }) {
       <button type="submit" disabled={salvando || !titulo || !materiaPreferida || (!usarNomeGoogle && username.trim().length < 2) || !senhaValida} className="w-full rounded-xl bg-cyan-500 p-3 text-[#0B1120] font-bold disabled:opacity-50">
         {salvando ? 'Salvando...' : 'Concluir cadastro'}
       </button>
-      <button type="button" onClick={() => signOut(auth)} className="w-full text-slate-300 text-sm underline">Sair da conta</button>
+      <button type="button" onClick={() => sairDaConta()} className="w-full text-slate-300 text-sm underline">Sair da conta</button>
     </form>
   </main>;
 }

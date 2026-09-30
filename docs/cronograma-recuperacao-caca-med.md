@@ -1,5 +1,13 @@
 # Caça-Med — diagnóstico e cronograma de recuperação
 
+## Estado atual em 28/09/2026 — Revisão inteligente
+
+Implementada como piloto para administrador: gratuita, até cinco itens dos próprios erros de Quiz/Verdade ou mentira, feedback e fontes, retomada, encerramento parcial e agendamento 1/3/7 dias com teto de duas revisões por item em sete dias. Não concede XP/tickets nem modifica missões. Histórico privado em `RevisoesTreino`, isolado por autenticação. Reset reinicia a fila sem apagar a auditoria. [Decisões e roteiro do piloto](revisao-inteligente.md).
+
+72 testes, lint e build passaram. Navegador com dados fictícios confirmou sessão mista 4/5, falha após gravação, reenvio/recarga sem duplicar, retorno apenas do erro e limite semanal; XP 490 e saldo zero preservados. Motor gerado coberto por teste de equivalência. API versão 19 publicada às 23:24, mesma URL e permissões; Código.gs e Treinos.gs conferidos integralmente com as fontes locais.
+
+Quiz e Verdade ou mentira já foram validados pelo usuário e liberados na API versão 18. Frontend atualizado permanece local; próxima parada é validar a revisão autenticada antes de liberar para jogadores e publicar no Vercel. Deploy automático continua desativado. Nenhum dado real foi alterado para os testes. As seções seguintes registram o histórico de entregas anteriores.
+
 ## Retomada em 28/09/2026 — novos jogos e economia v2
 
 Quiz (Teoria e Casos clínicos) e Verdade ou mentira implementados, com salvamento por resposta, explicações/fontes, retomada, relatórios, estatísticas e registro permanente para revisão futura. Economia central: nível global pelo XP total, dois tickets por cruzadinha, um a cada duas rodadas válidas de cada novo modo, um por missão e N por novo nível N. Migração preserva saldos, sem bônus retroativos. [Decisões e roteiro completo](jogos-e-economia-v2.md).
@@ -472,3 +480,114 @@ Para cada correção, registrar ID, commit no padrão Conventional Commits, veri
 Regras aprovadas: um ticket por análise, quatro etapas, 25 XP por acerto (até 100 XP), recompensa somente na primeira conclusão de cada versão. Progresso e estatísticas próprios, salvos na planilha; servidor valida cada resposta e calcula XP. A auditoria exige revisão clínica própria, além da aprovação do caso-base do Plantão.
 
 Backend publicado na versão 11 da implantação existente às 23:44, preservando URL e permissões. Validação real: ticket 1 → 0, retomada após recarga na segunda etapa, conclusão 4/4, +100 XP, total 5.322 e relatório persistido. 42 testes, lint e build passaram; testes cobrem repetição, reenvio e ausência de duplicação. Frontend atualizado disponível em localhost; Vercel e revisão clínica continuam pendentes. Esta entrega encerra o segundo modo conforme o modelo de parada combinado; Causa e efeito ainda não foi iniciado. Detalhes em `ddx-erro-medico.md`.
+
+## Atualização de 30/09/2026 — novo modo secreto do DDX
+
+Foi aprovado o conceito do novo modo **Batalha diagnóstica**, uma batalha 2D arcade didática em que o médico enfrenta uma doença inicialmente oculta e usa habilidades médicas para investigá-la, reconhecê-la e controlá-la. A especificação completa está em [ddx-batalha-diagnostica.md](ddx-batalha-diagnostica.md).
+
+Decisões registradas:
+
+- haverá dois formatos: **História — Road to Doctor** e um modo aleatório X1, ainda sem nome definitivo;
+- o jogador controla apenas o médico e escolhe um companheiro auxiliar com especialidade própria;
+- cada companheiro terá uma habilidade de emergência que aparece em momentos críticos;
+- as batalhas serão baseadas em casos parciais, suficientes para ensinar como raciocinar contra doenças bacterianas, virais, protozoárias e outros agentes;
+- na História, as doenças serão apresentadas em progressão pedagógica; no X1, serão sorteadas;
+- a doença começa sem cores e sem identificação; quando o jogador a descobre, ela se revela;
+- uma habilidade diretamente adequada pode reduzir a vida da doença antes da revelação;
+- habilidades terão apenas tempo de recarga, sem custo de energia na primeira versão;
+- o médico nunca causa dano ao paciente; escolhas inadequadas fortalecem a doença ou ativam buffs que indiretamente aumentam o risco;
+- após a revelação, a doença terá uma evolução visual moderada e poderá ganhar resistência ou novas complicações;
+- nomes de habilidades serão lúdicos, com trocadilhos baseados em termos médicos;
+- o modo será desenvolvido depois da Revisão Inteligente e ainda depende de definição de economia e revisão clínica.
+
+### Cronograma atualizado
+
+#### Fase A — Pendências herdadas antes do novo modo
+
+- [ ] Validar a Revisão Inteligente com sessão autenticada e dados reais, sem alterar o saldo definitivo.
+- [ ] Revisar clinicamente os gabaritos e explicações de Quiz, Verdade ou mentira, Plantão, Erro médico e Causa e efeito.
+- [ ] Homologar o frontend publicado após a validação local dos modos.
+- [ ] Reavaliar a migração de Apps Script/Sheets para Supabase; medir latência real antes de decidir uma migração estrutural.
+- [ ] Otimizar o bundle e investigar a lentidão percebida de abertura e login depois da medição de API.
+- [ ] Manter o deploy automático da Vercel desativado até o fluxo de publicação ser aprovado.
+
+#### Fase B — Fechamento da Revisão Inteligente
+
+- [ ] Confirmar fila, repetição, feedback, fontes e registro dos erros no navegador autenticado.
+- [ ] Confirmar que a revisão continua gratuita e não concede XP, tickets ou missões.
+- [ ] Atualizar a documentação com o resultado da validação real.
+
+#### Fase C — Entrevista e pré-produção da Batalha diagnóstica
+
+- [ ] Escolher o nome final do Modo X1.
+- [ ] Definir tickets, XP, repetição e demais regras de economia.
+- [ ] Selecionar os três primeiros agentes/doenças e revisar fontes clínicas.
+- [ ] Definir os pets iniciais, especialidades e habilidades de emergência.
+- [ ] Fechar regras de recarga, descoberta, dano, buff, evolução e vitória.
+- [ ] Criar contrato de conteúdo versionado para doenças, pistas, habilidades, consequências e explicações.
+- [ ] Criar protótipo visual 2D sem assets derivados de franquias existentes.
+
+#### Fase D — Protótipo implementável
+
+- [ ] Implementar motor determinístico da batalha.
+- [ ] Implementar a História com uma sequência curta de encontros.
+- [ ] Implementar o Modo X1 aleatório.
+- [ ] Integrar escolha do pet e habilidades auxiliares.
+- [ ] Implementar recarga, revelação, evolução visual e buffs.
+- [ ] Implementar relatório final e registro dos erros para a Revisão Inteligente.
+- [ ] Integrar persistência, retomada, tickets e recompensas idempotentes.
+
+#### Fase E — Validação e liberação
+
+- [ ] Testar partidas interrompidas, recarga, reenvio e ausência de duplicação.
+- [ ] Testar teclado, foco, responsividade e desempenho.
+- [ ] Revisar clinicamente todos os casos e explicações.
+- [ ] Validar História e X1 com o usuário no navegador.
+- [ ] Só depois liberar o modo para jogadores comuns e atualizar o cronograma com a data de publicação.
+
+A ordem oficial passa a ser: concluir e validar a Revisão Inteligente, fechar o contrato clínico e econômico da Batalha diagnóstica, construir o protótipo da História, construir o X1, testar os dois e então liberar o modo.
+
+## Prioridade de 30/09/2026 — preparação para Supabase e mobile
+
+Esta frente passa para primeiro plano e deve começar hoje. A decisão arquitetural é manter JavaScript e evitar uma migração simultânea para TypeScript ou Next.js.
+
+- [ ] Mapear os dados atuais do Apps Script/Sheets: usuários, autenticação, progresso, XP, tickets, partidas, estatísticas, ranking e erros para revisão.
+- [ ] Desenhar o schema inicial do Supabase e as relações entre usuário, partida, recompensa, estatística e conteúdo clínico.
+- [ ] Definir as políticas RLS por tabela antes de expor dados pelo Data API; nenhum cliente poderá receber a chave `service_role`.
+- [ ] Criar uma camada JavaScript compartilhada para regras de XP, tickets, validação, jogos e revisão inteligente, reutilizável pelo web e pelo futuro app mobile.
+- [ ] Fazer um primeiro vertical slice: autenticação, leitura do perfil e gravação idempotente de uma partida de teste no Supabase.
+- [ ] Medir latência e comparar a experiência com o fluxo atual antes de migrar os demais modos.
+- [ ] Registrar plano de rollback e manter Apps Script/Sheets como fonte de retorno até a homologação.
+- [ ] Depois da validação web, iniciar o app mobile com React Native + Expo reutilizando a camada JavaScript compartilhada.
+
+Fora do escopo de hoje: reescrever o frontend em Next.js, converter o projeto para TypeScript, migrar todos os modos de uma vez ou desligar o backend atual antes da homologação.
+
+### Início da implementação — 30/09
+
+Mapeamento inicial registrado em [migracao-supabase.md](migracao-supabase.md). Criada entrada compartilhada JavaScript para os motores existentes e transporte HTTP independente da interface, com timeout e sem repetição automática de gravações. 76 testes passaram; lint e build passaram. Permanece o aviso de bundle acima de 500 kB.
+
+O único projeto Supabase conectado é `eu-jogo-tu-jogas` e contém dados de outro jogo. A definição do projeto destino está pendente com o usuário antes de qualquer alteração remota. Auth, schema remoto, API, importação e validação no navegador ainda pendentes; o transporte novo ainda não foi ativado.
+
+### Projeto separado criado e primeira API publicada — 30/09
+
+Usuário confirmou criação em `Raphael-Ribeiro-Pereira's Org`, com custo informado de US$ 0/mês. Projeto `caca-med` (`lruzndfqfivlvcckvgbw`) criado e ativo em São Paulo. Schema inicial e API de perfil/treinos publicados. RLS e permissões diretas conferidos, persistência atômica/deduplicação/conflito testados no banco com rollback, endpoint sem credencial retornou HTTP 401. 77 testes locais passaram. Transferência de contas e histórico, demais modos e homologação no navegador continuam pendentes. Detalhes em [migracao-supabase.md](migracao-supabase.md).
+
+### Estado consolidado — 30/09, após homologação remota
+
+Este bloco substitui o status das etapas anteriores. Usuário autorizou continuação sem paradas de checkpoint.
+
+- [x] Mapear dados, criar projeto separado em São Paulo e schema privado com RLS.
+- [x] Criar camada JavaScript compartilhada, API protegida e confirmação atômica de perfil, histórico e recibos.
+- [x] Importar dois perfis, 35 respostas de treino, quatro revisões, 16 recibos e banco de palavras.
+- [x] Integrar todos os modos no frontend local, ranking e edição do perfil.
+- [x] Vincular a identidade real ao Supabase preservando progresso; manter login Firebase como ponte nesta etapa.
+- [x] Homologar todos os motores pela API real, incluindo duas rodadas de Quiz, repetição DDX, reenvio, cruzadinha e revisão sem recompensa.
+- [x] Medir 50 chamadas no navegador: média 410 ms, mediana 398 ms, p95 560 ms. Perfil real preservado.
+- [x] Iniciar otimização de abertura com carregamento das telas sob demanda; lint, build e 82 testes passaram.
+- [x] Documentar evidências, limitações, tentativas e rollback em [auditoria-supabase-2026-09-30.md](auditoria-supabase-2026-09-30.md).
+- [x] Concluir estratégia de senhas antigas e configurar Google OAuth no Supabase antes de retirar a ponte Firebase. Senhas antigas têm migração por login válido; o Google OAuth foi configurado, os retornos autorizados foram registrados e o login real local foi validado preservando XP, tickets e histórico. A ponte Firebase continua ativa como fallback até a homologação pública.
+- [ ] Reconciliar a origem imediatamente antes da troca de produção, publicar manualmente na Vercel e homologar o domínio público.
+- [ ] Medir abertura a frio/mobile e carga concorrente.
+- [ ] Manter revisão clínica do conteúdo, piloto atual, pendências da Batalha diagnóstica e futuro mobile após esta migração.
+
+Não considerar a migração integral concluída enquanto login nativo e produção não estiverem validados. Nenhum reset de senha, desligamento do Firebase ou publicação automática foi feito.

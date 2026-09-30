@@ -1,4 +1,6 @@
 import { getIdToken } from 'firebase/auth';
+import { USAR_SUPABASE } from '../supabase';
+import { buscarConteudoSupabase } from './perfilSupabase';
 
 const ENDPOINT_RANKING = 'https://script.google.com/macros/s/AKfycbyo7eh7LTMLKpR7KAINlxMarLRe2DbL72niTbPA9xKlgi8fMy2WUs8bhb_fMl0y06pWfw/exec';
 let sequencia = 0;
@@ -11,7 +13,7 @@ export async function calcularIdPublico(uid) {
 }
 
 export async function sincronizarRanking(user, dadosUsuario) {
-  if (import.meta.env.VITE_FONTE_DADOS === 'planilha') return;
+  if (['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS)) return;
   if (!user || !dadosUsuario) return;
   const chave = JSON.stringify([
     user.uid,
@@ -46,6 +48,7 @@ export async function sincronizarRanking(user, dadosUsuario) {
 }
 
 export function buscarRankingPublico({ documentRef = document, timeoutMs = 45000 } = {}) {
+  if (USAR_SUPABASE) return buscarConteudoSupabase('ranking', { signal: AbortSignal.timeout(Math.min(timeoutMs, 15000)) }).then(body => body.ranking);
   return new Promise((resolve, reject) => {
     const callback = `__cacoMedRanking${Date.now()}_${++sequencia}`;
     const script = documentRef.createElement('script');

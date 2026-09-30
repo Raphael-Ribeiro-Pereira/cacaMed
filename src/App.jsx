@@ -1,6 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { auth, db } from './firebase'; 
-import { getIdTokenResult, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getIdTokenResult, onAuthStateChanged } from 'firebase/auth';
+import { sairDaConta } from './services/sairDaConta';
+import { USAR_SUPABASE, USAR_AUTH_SUPABASE, supabase } from './supabase';
+import { usuarioSupabase } from './services/authSupabase';
+import { buscarConteudoSupabase, migrarSessaoFirebase } from './services/perfilSupabase';
 import { doc, getDoc, runTransaction } from 'firebase/firestore';
 import { prepararMissoesDoDia } from './utils/missoes';
 import { Stethoscope } from 'lucide-react';
@@ -8,25 +12,27 @@ import { limparEstatisticasClinicasAntigas, possuiEstatisticasClinicasAntigas } 
 import './index.css';
 
 import Login from './components/Login';
-import Cadastro from './components/Cadastro';
+const Cadastro = lazy(() => import('./components/Cadastro'));
+const RecuperarSenha = lazy(() => import('./components/RecuperarSenha'));
 import MenuPrincipal from './components/MenuPrincipal';
-import PerfilUsuario from './components/PerfilUsuario';
-import SelecaoTopicos from './components/SelecaoTopicos';
-import Jogo from './components/Jogo';
-import Ranking from './components/Ranking';
+const PerfilUsuario = lazy(() => import('./components/PerfilUsuario'));
+const SelecaoTopicos = lazy(() => import('./components/SelecaoTopicos'));
+const Jogo = lazy(() => import('./components/Jogo'));
+const Ranking = lazy(() => import('./components/Ranking'));
 import { sincronizarRanking } from './services/rankingPublico';
-import Estatisticas from './components/Estatisticas';
-import Cadastro2 from './components/Cadastro2';
-import VincularGoogle from './components/VincularGoogle';
+const Estatisticas = lazy(() => import('./components/Estatisticas'));
+const Cadastro2 = lazy(() => import('./components/Cadastro2'));
+const VincularGoogle = lazy(() => import('./components/VincularGoogle'));
 import { chamarPerfilPlanilha } from './services/perfilPlanilha';
 import { importarBancoCSV } from './utils/importarBancoCSV';
 
-const PERFIL_NA_PLANILHA = import.meta.env.VITE_FONTE_DADOS === 'planilha';
+const PERFIL_NA_PLANILHA = ['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS);
 
-import PlantaoMedico from './components/PlantaoMedico';
-import ErroMedico from './components/ErroMedico';
-import CausaEfeito from './components/CausaEfeito';
-import TreinoMedico from './components/TreinoMedico';
+const PlantaoMedico = lazy(() => import('./components/PlantaoMedico'));
+const ErroMedico = lazy(() => import('./components/ErroMedico'));
+const CausaEfeito = lazy(() => import('./components/CausaEfeito'));
+const TreinoMedico = lazy(() => import('./components/TreinoMedico'));
+const RevisaoInteligente = lazy(() => import('./components/RevisaoInteligente'));
 
 function App() {
   const [usuario, setUsuario] = useState(null); 
@@ -35,6 +41,7 @@ function App() {
   const [carregandoAuth, setCarregandoAuth] = useState(true);
   const [erroPerfil, setErroPerfil] = useState('');
   const [tentativaPerfil, setTentativaPerfil] = useState(0);
+  const [recuperandoSenha, setRecuperandoSenha] = useState(false);
 
   // Estados das Cruzadinhas
   const [bancoDePalavras, setBancoDePalavras] = useState(null);
@@ -77,7 +84,7 @@ function App() {
   useEffect(() => {
     let ativo = true;
     let versaoSessao = 0;
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const receberUsuario = async (user) => {
       const versaoAtual = ++versaoSessao;
       const sessaoAtual = () => ativo && versaoAtual === versaoSessao;
       setCarregandoAuth(true);
@@ -86,15 +93,18 @@ function App() {
         if (PERFIL_NA_PLANILHA) {
           try {
             const perfil = await chamarPerfilPlanilha(user, 'obterPerfil');
+            if (USAR_SUPABASE && perfil && user.source !== 'supabase') {
+              await migrarSessaoFirebase(user);
+            }
             if (!sessaoAtual()) return;
             setDadosUsuario(perfil);
             if (perfil) setTelaAtual('menu');
             else {
-              const token = await getIdTokenResult(user);
+              const token = user.source === 'supabase' ? { signInProvider: user.providerData.some(p => p.providerId === 'google.com') ? 'google.com' : 'password' } : await getIdTokenResult(user);
               if (!sessaoAtual()) return;
               const veioDoGoogle = token.signInProvider === 'google.com';
               const temSenhaAntiga = user.providerData.some(provedor => provedor.providerId === 'password');
-              setTelaAtual(veioDoGoogle && temSenhaAntiga ? 'vincularGoogle' : 'cadastro2');
+              setTelaAtual(user.source !== 'supabase' && veioDoGoogle && temSenhaAntiga ? 'vincularGoogle' : 'cadastro2');
             }
             setErroPerfil('');
           } catch (erro) {
@@ -128,8 +138,22 @@ function App() {
         setTelaAtual('login');
         setCarregandoAuth(false);
       }
+    };
+    const unsubscribe = onAuthStateChanged(auth, async user => {
+      if (USAR_AUTH_SUPABASE) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) return;
+      }
+      if (ativo) void receberUsuario(user);
     });
-    return () => { ativo = false; versaoSessao++; unsubscribe(); };
+    const subscription = USAR_AUTH_SUPABASE ? supabase.auth.onAuthStateChange((evento, session) => {
+      if (evento === 'PASSWORD_RECOVERY') setRecuperandoSenha(true);
+      // Não chama APIs Auth dentro do callback: o SDK ainda segura o lock da sessão.
+      if (['INITIAL_SESSION', 'SIGNED_IN', 'SIGNED_OUT'].includes(evento)) setTimeout(() => {
+        if (ativo) void receberUsuario(session ? usuarioSupabase(session.user) : evento === 'SIGNED_OUT' ? null : auth.currentUser);
+      }, 0);
+    }).data.subscription : null;
+    return () => { ativo = false; versaoSessao++; unsubscribe(); subscription?.unsubscribe(); };
   }, [tentativaPerfil]);
 
   useEffect(() => {
@@ -139,10 +163,13 @@ function App() {
       setErroBanco('');
       try {
         const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQzuC7MJYVdSo2Ufi_OQnREAFSDrYi2SY5_KGJvrKv_7lSXGVbiieXop7OA0keLmZV5tuQgGdkSIT8/pub?output=csv";
-        const resposta = await fetch(urlCSV + "&tempo=" + new Date().getTime(), { signal: controlador.signal });
-        if (!resposta.ok) throw new Error(`Banco de palavras indisponível (HTTP ${resposta.status}).`);
-        const textoNuvem = await resposta.text();
-        const bancoFormatado = importarBancoCSV(textoNuvem);
+        let bancoFormatado;
+        if (USAR_SUPABASE) bancoFormatado = (await buscarConteudoSupabase('palavras', { signal: controlador.signal })).resultado.banco;
+        else {
+          const resposta = await fetch(urlCSV + "&tempo=" + new Date().getTime(), { signal: controlador.signal });
+          if (!resposta.ok) throw new Error(`Banco de palavras indisponível (HTTP ${resposta.status}).`);
+          bancoFormatado = importarBancoCSV(await resposta.text());
+        }
         if (controlador.signal.aborted) return;
         setBancoDePalavras(bancoFormatado);
         setEstadoBanco(Object.keys(bancoFormatado).length ? 'pronto' : 'vazio');
@@ -171,17 +198,18 @@ function App() {
   };
 
 
+  if (recuperandoSenha) return <Suspense fallback={<div className="stitch-page stitch-loading">Carregando...</div>}><RecuperarSenha /></Suspense>;
   if (carregandoAuth) {
     return <div className="stitch-page stitch-loading"><Stethoscope aria-hidden="true" /><span>Acessando prontuários...</span></div>;
   }
 
   return (
-    <>
+    <Suspense fallback={<div className="stitch-page stitch-loading" role="status">Carregando...</div>}>
       {telaAtual === 'login' && <Login setTelaAtual={setTelaAtual} />}
       {telaAtual === 'cadastro' && <Cadastro setTelaAtual={setTelaAtual} onConcluido={perfil => { setDadosUsuario(perfil); setTelaAtual('menu'); }} />}
       {telaAtual === 'vincularGoogle' && usuario && <VincularGoogle usuario={usuario} onConfirmado={() => setTelaAtual('cadastro2')} />}
       {telaAtual === 'cadastro2' && usuario && <Cadastro2 usuario={usuario} onConcluido={perfil => { setDadosUsuario(perfil); setTelaAtual('menu'); }} />}
-      {telaAtual === 'erroPerfil' && <main className="stitch-page stitch-loading flex-col p-6 text-center"><p role="alert">{erroPerfil}</p><div className="flex gap-3"><button className="stitch-primary" onClick={() => setTentativaPerfil(valor => valor + 1)}>Tentar novamente</button><button className="stitch-back" onClick={() => signOut(auth)}>Voltar ao login</button></div></main>}
+      {telaAtual === 'erroPerfil' && <main className="stitch-page stitch-loading flex-col p-6 text-center"><p role="alert">{erroPerfil}</p><div className="flex gap-3"><button className="stitch-primary" onClick={() => setTentativaPerfil(valor => valor + 1)}>Tentar novamente</button><button className="stitch-back" onClick={sairDaConta}>Voltar ao login</button></div></main>}
       {telaAtual === 'menu' && usuario && <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} usuario={usuario} setDadosUsuario={setDadosUsuario} />}
       {telaAtual === 'perfil' && usuario && <PerfilUsuario usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       
@@ -192,6 +220,7 @@ function App() {
       )}
       
       {['quiz', 'verdadeMentira'].includes(telaAtual) && usuario && <TreinoMedico key={telaAtual} modo={telaAtual} usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
+      {telaAtual === 'revisaoInteligente' && usuario && <RevisaoInteligente usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       {/* PAINÉIS DE DADOS */}
       {telaAtual === 'ranking' && usuario && <Ranking usuario={usuario} dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'estatisticas' && usuario && <Estatisticas dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
@@ -200,7 +229,7 @@ function App() {
       {telaAtual === 'erroMedico' && usuario && <ErroMedico usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'causaEfeito' && usuario && <CausaEfeito usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
 
-    </>
+    </Suspense>
   );
 }
 

@@ -1,6 +1,6 @@
+import { sairDaConta } from '../services/sairDaConta';
 import { useState } from 'react';
-import { EmailAuthProvider, reauthenticateWithCredential, signOut } from 'firebase/auth';
-import { auth } from '../firebase';
+import { EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 
 export default function VincularGoogle({ usuario, onConfirmado }) {
   const [senha, setSenha] = useState('');
@@ -32,7 +32,7 @@ export default function VincularGoogle({ usuario, onConfirmado }) {
       <input id="senha-vinculacao" type="password" autoComplete="current-password" required value={senha} onChange={evento => setSenha(evento.target.value)} className="w-full rounded-xl bg-[#0B1120] border border-cyan-500/30 p-3 text-white" />
       {erro && <p role="alert" className="text-red-400 text-sm">{erro}</p>}
       <button type="submit" disabled={!senha || ocupado} className="w-full rounded-xl bg-cyan-500 p-3 text-[#0B1120] font-bold disabled:opacity-50">{ocupado ? 'Confirmando...' : 'Autorizo vincular as contas'}</button>
-      <button type="button" onClick={() => signOut(auth)} className="w-full text-slate-300 text-sm underline">Agora não</button>
+      <button type="button" onClick={() => sairDaConta()} className="w-full text-slate-300 text-sm underline">Agora não</button>
     </form>
   </main>;
 }

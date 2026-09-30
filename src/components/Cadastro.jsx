@@ -6,8 +6,9 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { criarMissoesDiarias, dataLocalHoje } from '../utils/missoes';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
+import { USAR_AUTH_SUPABASE, supabase } from '../supabase';
 
-const PERFIL_NA_PLANILHA = import.meta.env.VITE_FONTE_DADOS === 'planilha';
+const PERFIL_NA_PLANILHA = ['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS);
 
 const SPECIALTIES = [
   { value: "anatomia", label: "Anatomia", emoji: "🦴" },
@@ -29,6 +30,7 @@ export default function Cadastro({ setTelaAtual, onConcluido }) {
   const [focusedField, setFocusedField] = useState(null);
   const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
+  const [aviso, setAviso] = useState('');
 
   const nameValid = name.trim().length >= 3;
   const emailValid = email.includes('@') && email.includes('.');
@@ -46,6 +48,15 @@ export default function Cadastro({ setTelaAtual, onConcluido }) {
 
     setLoading(true);
     try {
+      if (USAR_AUTH_SUPABASE) {
+        const { error } = await supabase.auth.signUp({ email: email.trim(), password,
+          options: { emailRedirectTo: window.location.origin + '/', data: { name: name.trim() } } });
+        if (error) throw error;
+        setPassword(''); setConfirmPassword('');
+        setAviso('Confira seu e-mail para confirmar a conta. Depois entre para concluir seu cadastro.');
+        setLoading(false);
+        return;
+      }
       // Cria o usuário na Autenticação do Firebase
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -53,7 +64,7 @@ export default function Cadastro({ setTelaAtual, onConcluido }) {
       if (PERFIL_NA_PLANILHA) {
         await updateProfile(user, { displayName: name.trim() });
         const perfil = await chamarPerfilPlanilha(user, 'cadastrar', {
-          titulo: gender === 'doutora' ? 'Doutora' : 'Doutor', materiaPreferida: specialty,
+          titulo: gender === 'doutora' ? 'Doutora' : 'Doutor', materiaPreferida: specialty, username: name.trim().split(/\s+/)[0].toLocaleLowerCase('pt-BR'),
         });
         onConcluido(perfil);
         return;
@@ -96,6 +107,7 @@ export default function Cadastro({ setTelaAtual, onConcluido }) {
 
   return (
     <div className="stitch-integrated stitch-auth min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-x-hidden flex items-center justify-center selection:bg-emerald-500/30">
+      {aviso && <div role="status" className="fixed top-4 z-50 rounded-xl bg-emerald-950 border border-emerald-500 p-4 text-white max-w-lg">{aviso}</div>}
       {/* BG */}
       <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)`, backgroundSize: '28px 28px' }} />
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(0,245,212,0.05)_0%,#0c1322_70%)]" />

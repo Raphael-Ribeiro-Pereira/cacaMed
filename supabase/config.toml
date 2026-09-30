@@ -1,0 +1,7 @@
+project_id = "caca-med"
+
+# Autenticação personalizada: a função valida assinatura/issuer/audience do
+# Firebase ou consulta Supabase Auth. Não aceita pedidos sem identidade válida.
+[functions.cacamed-api]
+verify_jwt = false
+entrypoint = "./functions/cacamed-api/index.js"

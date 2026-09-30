@@ -1,6 +1,6 @@
 # Quiz, Verdade ou mentira e economia v2
 
-Entrega de 28/09/2026. API na implantação existente do Apps Script, versão 17. Frontend local, aguardando validação autenticada pelo usuário e publicação Vercel. Deploy automático permanece desativado. [Histórico do incidente do Quiz, incluindo a tentativa anterior incompleta](incidente-quiz-rodada-mudou.md).
+Entrega de 28/09/2026. Quiz e Verdade ou mentira validados pelo usuário e liberados na versão 18; API atual na versão 19, incluindo o piloto da Revisão inteligente. Frontend local, aguardando validação do novo piloto e publicação Vercel. Deploy automático permanece desativado. [Histórico do incidente do Quiz, incluindo a tentativa anterior incompleta](incidente-quiz-rodada-mudou.md).
 
 ## Regras implementadas
 
@@ -14,6 +14,7 @@ Entrega de 28/09/2026. API na implantação existente do Apps Script, versão 17
 | Subir de nível | Sem XP adicional | N tickets ao alcançar o novo nível N |
 | Plantão médico | Regra existente, até 250 na primeira conclusão da versão | Custa 1 por atendimento |
 | Erro médico / Causa e efeito | 25 por etapa, até 100 na primeira conclusão da versão | Custa 1 por análise |
+| Revisão inteligente | Nenhum | Gratuita; não consome nem concede tickets |
 
 Uma rodada válida tem cinco itens confirmados e pelo menos um acerto. Zero acertos não concede XP nem avança o contador. Os contadores sobrevivem à mudança de dia. Os dois novos jogos são gratuitos, sem bônus de tempo. Rodadas novas podem conceder XP novamente; reenvio da mesma rodada não duplica recompensas.
 
@@ -31,15 +32,15 @@ Uma recompensa que cruza vários níveis concede tickets para todos os níveis a
 
 Três missões diárias: concluir uma cruzadinha, concluir duas rodadas válidas dos novos jogos e acertar cinco itens nos novos jogos. Cada uma concede 50 XP e um ticket uma vez por dia. O dia usa America/Sao_Paulo. A mudança de formato substitui missões antigas; saldos e XP recebidos permanecem.
 
-## Banco e revisão futura
+## Banco e revisão inteligente
 
 Banco inicial determinístico: 32 questões (16 Teoria, 16 Casos) e 32 frases (16 verdadeiras, 16 falsas), sobre 16 conceitos. Alternativas e ordem embaralhadas. A seleção prioriza itens ausentes da rodada anterior; versões opostas do mesmo conceito não aparecem juntas. Não usa geração por IA nem serviço pago. Fontes: CDC, NIDDK, NCBI e artigo sobre endolinfa coclear no PubMed, disponíveis após responder.
 
-O banco foi revisado e liberado para jogadores. A documentação da próxima fase está em [Revisão Inteligente](revisao-inteligente.md).
+O banco foi validado pelo usuário e liberado para jogadores na API. As decisões e verificações do novo piloto estão em [Revisão Inteligente](revisao-inteligente.md).
 
 Cada resposta confirmada registra na aba privada `RespostasTreino`: UID, rodada, item/versão, modo/variante, tema, escolha, gabarito, acerto, data e estado. Respostas de Quiz interrompido também são registradas. O perfil mantém somente a entrada mais recente de cada modo e totais acumulados; o histórico permanente não aumenta indefinidamente o JSON do perfil.
 
-A revisão inteligente continua para a última fase: gratuita, baseada nos erros, com reapresentação menos frequente após acertos. O histórico necessário é armazenado; tela e agendamento ainda não implementados. O plano está em [revisao-inteligente.md](revisao-inteligente.md).
+A revisão inteligente foi implementada como piloto admin: até cinco itens dos próprios erros, feedback com fontes, retomada e intervalos de 1/3/7 dias sujeitos ao teto de duas revisões do mesmo item em sete dias. Não altera XP, tickets ou missões. Histórico privado em `RevisoesTreino`; [regras, API e validação](revisao-inteligente.md).
 
 ## Salvamento e manutenção
 
@@ -47,11 +48,11 @@ Apps Script autentica a identidade Firebase, limita operações ao próprio perf
 
 Reenvio, consulta de perfil e início da rodada seguinte reparam registros de respostas/recibos que falharam após salvar o perfil. Não repetem recompensa. A interface oferece reenviar pedido ou consultar progresso salvo; bloqueia saída enquanto existe pedido sem resultado confirmado.
 
-Fontes: `src/utils/economia.js`, `missoes.js`, `bancoTreinos.js`, `treinos.js` e `docs/treinos-api.gs`. Execute `node scripts/sincronizar-plantao.mjs` para gerar `docs/treinos-motor.gs`. Editor remoto: `Código.gs` (API), `Plantao.gs` (DDX) e `Treinos.gs` (economia e novos jogos). Salvar sozinho não atualiza `/exec`; atualizar a versão da implantação existente mantendo URL e permissões.
+Fontes: `src/utils/economia.js`, `missoes.js`, `bancoTreinos.js`, `treinos.js`, `revisaoInteligente.js`, `docs/treinos-api.gs` e `docs/revisao-api.gs`. Execute `npm run sync:plantao` para gerar `docs/treinos-motor.gs`. Editor remoto: `Código.gs` (API), `Plantao.gs` (DDX) e `Treinos.gs` (economia, jogos e revisão). Salvar sozinho não atualiza `/exec`; atualizar a versão da implantação existente mantendo URL e permissões.
 
 ## Verificações
 
-- 60 testes passaram: banco, distribuição de verdades, XP, nível, migração, contadores, missões, zero acertos, respostas inválidas, recuperação de gravação interrompida, reenvio, recibos, campos reordenados pelo transporte e regressão de cruzadinhas/DDX.
+- 72 testes passaram após adicionar revisão, reset e equivalência do motor gerado. Os 60 anteriores cobrem banco, distribuição de verdades, XP, nível, migração, contadores, missões, zero acertos, respostas inválidas, recuperação de gravação interrompida, reenvio, recibos, campos reordenados pelo transporte e regressão de cruzadinhas/DDX.
 - ESLint sem erros e build concluída; permanece o aviso de bundle JavaScript acima de 500 kB.
 - Navegador: componente real `TreinoMedico`, serviço isolado e dados fictícios em `http://localhost:5173/homologacao.html`. Nenhum teste gravado no perfil real. Essa entrada não integra a build de produção.
 - Quiz Teoria 4/5: +80 XP, 490 → 570, nível 2 e +2 tickets de nível. Recarga preservou a resposta anterior.
@@ -63,7 +64,7 @@ Fontes: `src/utils/economia.js`, `missoes.js`, `bancoTreinos.js`, `treinos.js` e
 - A versão 17 corrige o falso conflito causado por comparar respostas com `JSON.stringify`. Pergunta e escolha são comparadas por valor e tipo; mudanças reais continuam bloqueadas. Dois testes falharam antes da correção e passaram depois. Homologação agora reordena os campos do pedido; duas rodadas 5/5 e recarga foram verificadas no navegador, com dados fictícios (490 → 815 XP e 0 → 5 tickets).
 - A build da correção passou com `npm run build -- --configLoader runner`, evitando o arquivo temporário de configuração bloqueado pelo Vite em execução.
 
-Login Google não concluiu no navegador integrado desta sessão. Integração autenticada dos novos jogos com perfil/planilha real, navegação do menu e saldo DDX precisam de conferência no navegador habitual. Testes isolados cobrem interface/regras; testes de backend usam simulação de planilha.
+O usuário validou os jogos existentes. Para a Revisão inteligente, o navegador conferiu cinco erros fictícios, reenvio, recarga, relatório e teto de frequência, sem gravar no perfil real. Fluxo autenticado do novo piloto com a planilha publicada permanece para validação do usuário; testes de backend usam simulação de planilha.
 
 ## Validação do usuário
 

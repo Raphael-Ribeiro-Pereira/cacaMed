@@ -73,6 +73,130 @@ function prepararScript({ projeto = 'caca-med', uid = 'jogador-1', email = 'joga
   return { contexto, linhas, abas, idToken };
 }
 
+function prepararRevisaoAPI() {
+  const dados = prepararScript({ email: 'raphaelrpereira.rp@gmail.com' });
+  const { contexto, idToken } = dados;
+  const credenciais = { idToken, apiKey: 'chave-publica' };
+  contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'admin' });
+  const entradaId = '12345678-1234-4123-8123-123456789abc';
+  let perfil = contexto.api({ ...credenciais, acao: 'iniciarTreino', modo: 'quiz', variante: 'teoria', entradaId });
+  const respostas = [];
+  for (const item of perfil.treinos.quiz.entrada.itens) {
+    const correta = vm.runInContext(`BANCO_QUIZ.find(q => q.id === ${JSON.stringify(item.id)}).correta`, contexto);
+    respostas.push({ itemId: item.id, escolha: item.opcoes.find(o => o.id !== correta).id });
+    perfil = contexto.api({ ...credenciais, acao: 'responderTreino', modo: 'quiz', entradaId, respostas: [...respostas] });
+  }
+  return { ...dados, credenciais, perfil };
+}
+
+test('motor gerado contém exatamente as regras e APIs atuais de treino e revisão', () => {
+  const partes = ['economia', 'missoes', 'bancoTreinos', 'treinos', 'revisaoInteligente'].map(nome =>
+    readFileSync(new URL(`./${nome}.js`, import.meta.url), 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '')).join('\n');
+  const esperado = '// GERADO por node scripts/sincronizar-plantao.mjs. Não editar manualmente.\n' + partes + '\n'
+    + readFileSync(new URL('../../docs/treinos-api.gs', import.meta.url), 'utf8') + '\n'
+    + readFileSync(new URL('../../docs/revisao-api.gs', import.meta.url), 'utf8');
+  const gerado = readFileSync(new URL('../../docs/treinos-motor.gs', import.meta.url), 'utf8');
+  assert.equal(gerado.replace(/\r\n/g, '\n'), esperado.replace(/\r\n/g, '\n'));
+});
+
+test('reset administrativo reinicia fila e contadores sem apagar o histórico permanente', () => {
+  const { contexto, abas, credenciais } = prepararRevisaoAPI();
+  const revisaoId = '12345678-1234-4123-8123-123456789abd';
+  const perfil = contexto.api({ ...credenciais, acao: 'iniciarRevisao', revisaoId });
+  const item = perfil.revisao.entrada.itens[0];
+  contexto.api({ ...credenciais, acao: 'responderRevisao', revisaoId, itemId: item.id, versao: item.versao, escolha: item.opcoes[0].id });
+  const respostas = abas.get('RespostasTreino').registros.length;
+  const revisoes = abas.get('RevisoesTreino').registros.length;
+  const resetado = contexto.api({ ...credenciais, acao: 'admin', operacao: 'resetarProgresso' });
+  assert.ok(resetado.revisao.reiniciadoEm);
+  assert.equal(resetado.revisao.itens, undefined);
+  assert.equal(contexto.api({ ...credenciais, acao: 'consultarRevisao' }).revisao.resumo.total, 0);
+  assert.equal(abas.get('RespostasTreino').registros.length, respostas);
+  assert.equal(abas.get('RevisoesTreino').registros.length, revisoes);
+  const nova = [...abas.get('RespostasTreino').registros[1]];
+  nova[1] = 'rodada-pos-reset'; nova[9] = false; nova[10] = new Date(Date.parse(resetado.revisao.reiniciadoEm) + 1000).toISOString();
+  abas.get('RespostasTreino').registros.push(nova);
+  assert.equal(contexto.api({ ...credenciais, acao: 'consultarRevisao' }).revisao.resumo.total, 1);
+});
+
+test('revisão usa histórico do próprio UID, preserva economia e retoma sem duplicar registros', () => {
+  const { contexto, abas, credenciais, perfil: inicial } = prepararRevisaoAPI();
+  const estrangeira = [...abas.get('RespostasTreino').registros[1]];
+  estrangeira[0] = 'outro-jogador'; estrangeira[2] = 'quiz-teoria-antivirus';
+  abas.get('RespostasTreino').registros.push(estrangeira);
+  const consultado = contexto.api({ ...credenciais, acao: 'consultarRevisao', uid: 'outro-jogador' });
+  assert.equal(consultado.revisao.resumo.disponiveis, 5);
+  const revisaoId = '12345678-1234-4123-8123-123456789abd';
+  const inicio = { ...credenciais, acao: 'iniciarRevisao', revisaoId };
+  let perfil = contexto.api(inicio);
+  assert.equal(contexto.api({ ...inicio, revisaoId: '12345678-1234-4123-8123-123456789abe' }).revisao.entrada.id, revisaoId);
+  for (const item of perfil.revisao.entrada.itens) {
+    assert.ok(!('correta' in item)); assert.ok(!('explicacao' in item));
+    const escolha = vm.runInContext(`BANCO_QUIZ.find(q => q.id === ${JSON.stringify(item.id)}).correta`, contexto);
+    const pedido = { ...credenciais, acao: 'responderRevisao', revisaoId, itemId: item.id, versao: item.versao, escolha, xp: 99999, tickets: 9999 };
+    perfil = contexto.api(pedido);
+    const recuperado = contexto.api({ ...credenciais, acao: 'obterPerfil' });
+    assert.equal(recuperado.revisao.itens, perfil.revisao.itens);
+    assert.equal(contexto.api({ ...pedido, escolha, itemId: item.id }).revisao.itens, perfil.revisao.itens);
+    assert.throws(() => contexto.api({ ...pedido, escolha: 'outra' }), /já foi confirmada/);
+  }
+  assert.equal(perfil.pontuacaoTotal, inicial.pontuacaoTotal); assert.equal(perfil.tickets, inicial.tickets);
+  assert.equal(perfil.revisao.sessoes, 1); assert.equal(perfil.revisao.itens, 5);
+  assert.equal(abas.get('RevisoesTreino').registros.length, 6);
+  assert.equal(perfil.revisao.resumo.disponiveis, 0);
+  assert.equal(perfil.revisao.resumo.aguardando, 5);
+  assert.equal(contexto.api(inicio).revisao.sessoes, 1);
+});
+
+test('revisão repara gravações interrompidas no perfil, log e recibo via consulta sem duplicar', () => {
+  for (const alvo of ['PerfisGoogle', 'RevisoesTreino', 'Partidas']) {
+    const { contexto, abas, credenciais } = prepararRevisaoAPI();
+    const revisaoId = '12345678-1234-4123-8123-123456789abd';
+    let perfil = contexto.api({ ...credenciais, acao: 'iniciarRevisao', revisaoId });
+    let pedido;
+    for (const item of perfil.revisao.entrada.itens.slice(0, 4)) {
+      const escolha = vm.runInContext(`BANCO_QUIZ.find(q => q.id === ${JSON.stringify(item.id)}).correta`, contexto);
+      perfil = contexto.api({ ...credenciais, acao: 'responderRevisao', revisaoId, itemId: item.id, versao: item.versao, escolha });
+    }
+    const aba = abas.get(alvo).aba;
+    const original = aba.getRange; let falhou = false;
+    aba.getRange = (...args) => {
+      const range = original(...args); const gravar = range.setValues;
+      range.setValues = values => { gravar(values); if (!falhou) { falhou = true; throw new Error('Resposta perdida na revisão'); } }; return range;
+    };
+    const item = perfil.revisao.entrada.itens[4];
+    const escolha = vm.runInContext(`BANCO_QUIZ.find(q => q.id === ${JSON.stringify(item.id)}).correta`, contexto);
+    pedido = { ...credenciais, acao: 'responderRevisao', revisaoId, itemId: item.id, versao: item.versao, escolha };
+    assert.throws(() => contexto.api(pedido), /Resposta perdida/);
+    const recuperado = contexto.api({ ...credenciais, acao: 'obterPerfil' });
+    assert.equal(recuperado.revisao.entrada.historicoConfirmado, true, alvo);
+    assert.equal(contexto.api(pedido).revisao.sessoes, 1, alvo);
+    assert.equal(contexto.api({ ...credenciais, acao: 'consultarRevisao' }).revisao.resumo.disponiveis, 0, alvo);
+    assert.equal(abas.get('RevisoesTreino').registros.length, 6, alvo);
+    assert.equal(abas.get('Partidas').registros.length, 3, alvo);
+  }
+});
+
+test('revisão tem estado vazio, encerramento parcial e bloqueio de piloto na API', () => {
+  const comum = prepararScript(); const dadosComum = { idToken: comum.idToken, apiKey: 'chave-publica' };
+  comum.contexto.api({ ...dadosComum, acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'comum' });
+  for (const acao of ['consultarRevisao', 'iniciarRevisao', 'responderRevisao', 'encerrarRevisao']) {
+    assert.throws(() => comum.contexto.api({ ...dadosComum, acao }), /piloto/);
+  }
+  const dados = prepararScript({ email: 'raphaelrpereira.rp@gmail.com' }); const credenciais = { idToken: dados.idToken, apiKey: 'chave-publica' };
+  dados.contexto.api({ ...credenciais, acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'admin' });
+  assert.equal(dados.contexto.api({ ...credenciais, acao: 'consultarRevisao' }).revisao.resumo.total, 0);
+  assert.throws(() => dados.contexto.api({ ...credenciais, acao: 'iniciarRevisao', revisaoId: '12345678-1234-4123-8123-123456789abd' }), /Nenhum item/);
+  const { contexto, abas, credenciais: auth } = prepararRevisaoAPI();
+  const revisaoId = '12345678-1234-4123-8123-123456789abd';
+  const perfil = contexto.api({ ...auth, acao: 'iniciarRevisao', revisaoId }); const item = perfil.revisao.entrada.itens[0];
+  contexto.api({ ...auth, acao: 'responderRevisao', revisaoId, itemId: item.id, versao: item.versao, escolha: item.opcoes[0].id });
+  contexto.api({ ...auth, acao: 'encerrarRevisao', revisaoId });
+  assert.equal(contexto.api({ ...auth, acao: 'encerrarRevisao', revisaoId }).revisao.abandonadas, 1);
+  assert.equal(abas.get('RevisoesTreino').registros.length, 2);
+  assert.equal(contexto.api({ ...auth, acao: 'consultarRevisao' }).revisao.resumo.disponiveis >= 4, true);
+});
+
 test('plantão cobra um ticket, retoma entrada e rejeita caso não revisado para jogador comum', () => {
   const comum = prepararScript();
   comum.contexto.api({ idToken: comum.idToken, apiKey: 'chave-publica', acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'clinica', username: 'teste' });

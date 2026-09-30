@@ -123,7 +123,7 @@ function atualizarMissoesDoDia(aba, local) {
     registrarRespostasTreino(perfil, stats.entrada);
     reciboTreino(perfil, stats.entrada);
   }
-  return perfil;
+  return repararHistoricoRevisao(aba, { ...local, perfil });
 }
 
 function registrarPartidaPlanilha(aba, local, partida) {
@@ -245,7 +245,7 @@ function executarAcaoAdmin(aba, linha, perfil, pedido) {
   } else if (operacao === 'resetarProgresso') {
     atualizado = { ...perfil, pontuacaoTotal: 0, xpTopicos: {}, tickets: 0, economia: { versao: VERSAO_ECONOMIA, ultimoNivelPremiado: 1 },
       medidorTicketsCruzadinha: 0, missoesDiarias: criarMissoesCruzadinha(),
-      estatisticas: {}, estatisticasGerais: {}, cruzadinhasRegistradas: [], treinos: {}, erroMedico: {}, causaEfeito: {}, ddx: { concluidos: [], historico: [], partidas: 0 } };
+      estatisticas: {}, estatisticasGerais: {}, cruzadinhasRegistradas: [], treinos: {}, revisao: { reiniciadoEm: new Date().toISOString() }, erroMedico: {}, causaEfeito: {}, ddx: { concluidos: [], historico: [], partidas: 0 } };
     delete atualizado.nivelGlobalAdmin;
   } else {
     throw new Error('Operação administrativa desconhecida.');
@@ -424,7 +424,7 @@ function api(pedido) {
   const uid = verificarToken(token, apiKey);
   const acao = String(pedido.acao || '');
   const aba = abaPerfis();
-  if (!['obterPerfil', 'cadastrar', 'tutorial', 'editarPerfil', 'registrarPartida', 'admin', 'iniciarPlantao', 'acaoPlantao', 'iniciarAuditoria', 'responderAuditoria', 'iniciarRelacao', 'responderRelacao', 'iniciarTreino', 'responderTreino', 'abandonarTreino'].includes(acao)) throw new Error('Ação desconhecida.');
+  if (!['obterPerfil', 'cadastrar', 'tutorial', 'editarPerfil', 'registrarPartida', 'admin', 'iniciarPlantao', 'acaoPlantao', 'iniciarAuditoria', 'responderAuditoria', 'iniciarRelacao', 'responderRelacao', 'iniciarTreino', 'responderTreino', 'abandonarTreino', 'consultarRevisao', 'iniciarRevisao', 'responderRevisao', 'encerrarRevisao'].includes(acao)) throw new Error('Ação desconhecida.');
 
   const bloqueio = LockService.getScriptLock();
   bloqueio.waitLock(10000);
@@ -462,6 +462,7 @@ function api(pedido) {
     }
     if (!atual.perfil) throw new Error('Cadastro não concluído.');
     const perfilDoDia = atualizarMissoesDoDia(aba, atual);
+    if (['consultarRevisao', 'iniciarRevisao', 'responderRevisao', 'encerrarRevisao'].includes(acao)) return operarRevisao(aba, { ...atual, perfil: perfilDoDia }, pedido);
     if (['iniciarTreino', 'responderTreino', 'abandonarTreino'].includes(acao)) return operarTreino(aba, { ...atual, perfil: perfilDoDia }, pedido);
     if (acao === 'iniciarPlantao' || acao === 'acaoPlantao') return operarPlantao(aba, { ...atual, perfil: perfilDoDia }, pedido);
     if (acao === 'iniciarAuditoria' || acao === 'responderAuditoria') return operarAuditoria(aba, { ...atual, perfil: perfilDoDia }, pedido);

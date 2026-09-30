@@ -88,7 +88,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual }) {
           if (!ativo) return;
           ranking = await buscarRankingPublico();
           const minhaLinha = ranking.find(item => item.idPublico === meuId);
-          if (import.meta.env.VITE_FONTE_DADOS === 'planilha' || (minhaLinha && Number(minhaLinha.xpGlobal) === Number(dadosUsuario?.pontuacaoTotal))) break;
+          if (['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS) || (minhaLinha && Number(minhaLinha.xpGlobal) === Number(dadosUsuario?.pontuacaoTotal))) break;
           if (tentativa < 3) await new Promise(resolve => setTimeout(resolve, 1500));
         }
         if (!ativo) return;

@@ -5,7 +5,7 @@ import { concederRecompensa } from '../utils/economia';
 import { chamarPerfilPlanilha } from './perfilPlanilha';
 
 export const registrarCruzadinha = async (uid, partida) => {
-  if (import.meta.env.VITE_FONTE_DADOS === 'planilha') {
+  if (['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS)) {
     if (auth.currentUser?.uid !== uid) throw new Error('Sessão diferente da conta da partida.');
     return chamarPerfilPlanilha(auth.currentUser, 'registrarPartida', { partida });
   }
