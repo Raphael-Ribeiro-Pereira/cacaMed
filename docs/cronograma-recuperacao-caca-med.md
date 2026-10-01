@@ -1,5 +1,24 @@
 # Caça-Med — diagnóstico e cronograma de recuperação
 
+## Estado atual — 30/09/2026, produção Supabase
+
+Este bloco substitui pendências históricas abaixo. Produção Vercel ativada com fonte e autenticação Supabase; login Google no domínio público validado pelo agente e pelo usuário.
+
+- [x] Reconciliação final: dois perfis integralmente iguais, 35 respostas, quatro revisões e 16 recibos presentes sem divergências; nenhuma importação adicional necessária.
+- [x] Medição pública de leituras: lotes de 1/10/25/50/100 chamadas simultâneas, zero falhas; evidências e limites no [relatório](reconciliacao-producao-2026-09-30.md).
+- [x] Login em viewport de 360/390 px sem transbordamento horizontal.
+- [x] Instrumentar abertura completa e chamadas API com diagnóstico opcional local. Build otimizada em desktop: primeira abertura autenticada 2.006 ms, recarga 1.968 ms; medição pública e celular ainda necessários.
+- [x] Homologar gravações autenticadas concorrentes no perfil isolado: 2/5/10 reenvios do mesmo recibo e cinco da resposta final do Quiz, sem recompensa duplicada. API v10 e RPC PT409 corrigem timeout e resposta desatualizada.
+- [x] Homologação completa dos seis modos: 48 chamadas, média 415 ms, p95 572 ms, perfil real preservado; 88 testes/lint/build aprovados.
+- [ ] Testar aparelho físico/rede celular seguindo [roteiro](roteiro-smartphone.md); carga sustentada de usuários distintos requer contas de teste adicionais.
+- [ ] Configurar SMTP público após escolher domínio: [proposta Resend Free](proposta-email-autenticacao.md); padrão atual só envia à equipe, dois emails/hora.
+- [ ] Concluir vínculo do segundo perfil e migração/teste de senhas antigas, cadastro, recuperação e logout públicos.
+- [x] Definir retirada do Firebase por critérios: concluir as validações, observar sete dias estáveis e retirar fallback antes de desligar o serviço. Ponte mantida porque há conta não vinculada e senha ainda não migrada.
+
+Revisão clínica, Batalha diagnóstica e mobile Expo continuam na sequência. Não tratar as medições HTTP como aprovação de desempenho em celular real.
+
+[Relatório final, falhas reproduzidas e correções](homologacao-final-2026-09-30.md). Ponte Firebase permanece até as provas de identidade/senha e a janela de homologação; não há data automática de desligamento.
+
 ## Estado atual em 28/09/2026 — Revisão inteligente
 
 Implementada como piloto para administrador: gratuita, até cinco itens dos próprios erros de Quiz/Verdade ou mentira, feedback e fontes, retomada, encerramento parcial e agendamento 1/3/7 dias com teto de duas revisões por item em sete dias. Não concede XP/tickets nem modifica missões. Histórico privado em `RevisoesTreino`, isolado por autenticação. Reset reinicia a fila sem apagar a auditoria. [Decisões e roteiro do piloto](revisao-inteligente.md).

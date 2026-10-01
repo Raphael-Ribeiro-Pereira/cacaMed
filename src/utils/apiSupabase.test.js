@@ -11,20 +11,22 @@ function fixture() {
   const states = new Map();
   const events = new Map();
   let conflictAfterCommit = false;
+  let antesDoRecibo;
   const database = async (path, options = {}) => {
     if (path === 'rpc/cacamed_commit') {
       const p = JSON.parse(options.body);
       const old = states.get(p.p_player_id);
-      if (old ? old.version !== p.p_expected_version : p.p_expected_version !== -1) throw Object.assign(new Error('conflict'), { code: '40001' });
+      if (old ? old.version !== p.p_expected_version : p.p_expected_version !== -1) throw Object.assign(new Error('conflict'), { code: 'PT409' });
       states.set(p.p_player_id, { profile: structuredClone(p.p_profile), version: (old?.version ?? -1) + 1 });
       for (const e of p.p_events || []) if (!events.has(p.p_player_id + ':' + e.id)) events.set(p.p_player_id + ':' + e.id, { ...e, playerId: p.p_player_id });
-      if (conflictAfterCommit) { conflictAfterCommit = false; throw Object.assign(new Error('race'), { code: '40001' }); }
+      if (conflictAfterCommit) { conflictAfterCommit = false; throw Object.assign(new Error('race'), { code: 'PT409' }); }
       return 1;
     }
     const url = new URL('https://test/' + path);
     const uid = url.searchParams.get('player_id')?.slice(3);
     if (url.pathname === '/cacamed_player_state') return states.has(uid) ? [structuredClone(states.get(uid))] : [];
     if (url.pathname === '/cacamed_events') {
+      if (antesDoRecibo) { const executar = antesDoRecibo; antesDoRecibo = undefined; executar(); }
       const id = url.searchParams.get('event_id')?.slice(3);
       let rows = [...events.values()].filter(e => e.playerId === uid && (!id || e.id === id));
       if (url.searchParams.has('kind')) rows = rows.filter(e => ['resposta', 'revisao'].includes(e.kind));
@@ -41,8 +43,25 @@ function fixture() {
     const body = await r.json();
     return { status: r.status, ...body };
   }
-  return { api, call, states, events, race: () => { conflictAfterCommit = true; } };
+  return { api, call, states, events, race: () => { conflictAfterCommit = true; }, antesDoRecibo: executar => { antesDoRecibo = executar; } };
 }
+
+test('recibo confirmado entre leituras devolve perfil atualizado, sem recompensa duplicada', async () => {
+  const f = fixture();
+  await f.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'teste' });
+  const partida = { id: crypto.randomUUID(), chaveXP: 'ANATOMIA-OSSOS', subMateria: 'Ossos', palavras: 5, letras: 30, tempo: 100, erros: 0, maiorPalavra: 10 };
+  const anterior = f.states.get('jogador');
+  const confirmado = executarPedidoSupabase(anterior.profile, { acao: 'registrarPartida', partida });
+  f.antesDoRecibo(() => {
+    f.states.set('jogador', { profile: confirmado.perfil, version: anterior.version + 1 });
+    for (const e of confirmado.eventos) f.events.set('jogador:' + e.id, { ...e, playerId: 'jogador' });
+  });
+  const r = await f.call({ acao: 'registrarPartida', partida });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.resultado, confirmado.perfil);
+  assert.equal(f.states.get('jogador').version, anterior.version + 1);
+  assert.equal(f.events.size, 1);
+});
 
 test('API Supabase: duas rodadas, recuperação de concorrência e recibo permanente sem duplicar XP', async () => {
   const f = fixture();

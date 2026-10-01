@@ -1,5 +1,6 @@
 // Não conhece Firebase, React ou armazenamento do navegador: o cliente fornece
 // uma credencial vigente. Nunca recebe uma chave service_role.
+import { registrarTempoAPI } from './diagnosticoDesempenho.js';
 export function criarTransporteSupabase({ url, chavePublica, obterToken, fetchImpl = globalThis.fetch }) {
   const endpoint = new URL(url);
   if (endpoint.protocol !== 'https:' || !endpoint.hostname.endsWith('.supabase.co')) {
@@ -7,6 +8,7 @@ export function criarTransporteSupabase({ url, chavePublica, obterToken, fetchIm
   }
   if (!chavePublica || typeof obterToken !== 'function') throw new Error('Configuração Supabase incompleta.');
   return async (acao, dados = {}, timeoutMs = 15000) => {
+    const inicio = performance.now();
     const token = await obterToken();
     if (!token) throw new Error('Entre na conta para continuar.');
     const controlador = new AbortController();
@@ -19,8 +21,10 @@ export function criarTransporteSupabase({ url, chavePublica, obterToken, fetchIm
       });
       const corpo = await resposta.json();
       if (!resposta.ok || corpo.erro) throw new Error(corpo.erro || `Falha no serviço (HTTP ${resposta.status}).`);
+      registrarTempoAPI(acao, inicio, true);
       return corpo.resultado;
     } catch (erro) {
+      registrarTempoAPI(acao, inicio, false);
       if (erro.name === 'AbortError') throw new Error('O servidor demorou a responder. Consulte o progresso salvo antes de reenviar.');
       throw erro;
     } finally {

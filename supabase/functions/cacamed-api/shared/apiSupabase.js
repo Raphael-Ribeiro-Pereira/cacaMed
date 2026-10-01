@@ -66,7 +66,7 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
       // rejeita edição de respostas e trata reenvio sem pagar novamente.
       for (let tentativa = 0; tentativa < 3; tentativa++) {
         const rows = await database('cacamed_player_state?' + filter + '&select=profile,version,auth_user_id');
-        const row = rows[0];
+        let row = rows[0];
         if (acao === 'prepararHomologacao') {
           if (row) return answer({ resultado: row.profile });
           const perfil = { uid: user.uid, nome: 'Homologação isolada', username: 'homologacao', role: 'admin',
@@ -75,7 +75,7 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
           try {
             await database('rpc/cacamed_commit', { method: 'POST', body: JSON.stringify({ p_player_id: user.uid, p_expected_version: -1, p_profile: perfil }) });
             return answer({ resultado: perfil });
-          } catch (erro) { if (erro.code === '40001') continue; throw erro; }
+          } catch (erro) { if (['PT409', '40001'].includes(erro.code)) continue; throw erro; }
         }
         if (!row) {
           if (acao === 'obterPerfil') return answer({ resultado: null });
@@ -92,7 +92,7 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
             await database('rpc/cacamed_commit', { method: 'POST', body: JSON.stringify({ p_player_id: user.uid, p_expected_version: -1, p_profile: perfil }) });
             if (user.authId) await database('cacamed_player_state?' + filter + '&auth_user_id=is.null', { method: 'PATCH', body: JSON.stringify({ auth_user_id: user.authId }) });
             return answer({ resultado: perfil });
-          } catch (erro) { if (erro.code === '40001') continue; throw erro; }
+          } catch (erro) { if (['PT409', '40001'].includes(erro.code)) continue; throw erro; }
         }
         if (acao === 'cadastrar') return answer({ resultado: row.profile });
         let historico = [];
@@ -106,6 +106,9 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         }
         const id = pedido.entradaId || pedido.revisaoId || pedido.partida?.id;
         const recibo = id ? await database('cacamed_events?' + filter + '&event_id=eq.' + encodeURIComponent('recibo:' + id) + '&select=event_id') : [];
+        // O recibo pode ter sido confirmado por outra chamada depois da leitura
+        // acima. Nesse caso, devolve o perfil lido DEPOIS do recibo confirmado.
+        if (recibo.length) row = (await database('cacamed_player_state?' + filter + '&select=profile,version,auth_user_id'))[0];
         let alteracao;
         try {
           alteracao = executarPedidoSupabase(row.profile, pedido, { recibos: recibo.length ? [id] : [],
@@ -116,7 +119,7 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
           await database('rpc/cacamed_commit', { method: 'POST', body: JSON.stringify({ p_player_id: user.uid, p_expected_version: row.version,
             p_profile: alteracao.perfil, p_events: alteracao.eventos }) });
           return answer({ resultado: alteracao.perfil });
-        } catch (erro) { if (erro.code === '40001') continue; throw erro; }
+        } catch (erro) { if (['PT409', '40001'].includes(erro.code)) continue; throw erro; }
       }
       return answer({ erro: 'Outro pedido atualizou o progresso. Consulte o progresso salvo antes de reenviar.' }, 409);
     } catch (erro) {

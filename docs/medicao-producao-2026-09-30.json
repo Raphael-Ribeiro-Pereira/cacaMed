@@ -1,0 +1,1189 @@
+{
+  "data": "2026-09-30T18:35:24.682Z",
+  "ambiente": "HTTP no computador, sem simulação de rede celular",
+  "primeiraRequisicao": {
+    "ms": 143,
+    "status": 200,
+    "bytes": 1186,
+    "serverTiming": null
+  },
+  "primeiraAPI": {
+    "ms": 917,
+    "status": 200,
+    "bytes": 481,
+    "serverTiming": "api;dur=591"
+  },
+  "lotes": [
+    {
+      "simultaneas": 1,
+      "chamadas": 1,
+      "falhas": 0,
+      "mediaMs": 243,
+      "medianaMs": 243,
+      "p95Ms": 243,
+      "maxMs": 243,
+      "amostras": [
+        {
+          "ms": 243,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=73"
+        }
+      ]
+    },
+    {
+      "simultaneas": 10,
+      "chamadas": 10,
+      "falhas": 0,
+      "mediaMs": 286,
+      "medianaMs": 293,
+      "p95Ms": 305,
+      "maxMs": 305,
+      "amostras": [
+        {
+          "ms": 296,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=87"
+        },
+        {
+          "ms": 255,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=71"
+        },
+        {
+          "ms": 305,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=126"
+        },
+        {
+          "ms": 290,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=84"
+        },
+        {
+          "ms": 295,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=110"
+        },
+        {
+          "ms": 267,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=90"
+        },
+        {
+          "ms": 299,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=95"
+        },
+        {
+          "ms": 293,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=117"
+        },
+        {
+          "ms": 292,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=121"
+        },
+        {
+          "ms": 263,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=96"
+        }
+      ]
+    },
+    {
+      "simultaneas": 25,
+      "chamadas": 25,
+      "falhas": 0,
+      "mediaMs": 299,
+      "medianaMs": 329,
+      "p95Ms": 361,
+      "maxMs": 375,
+      "amostras": [
+        {
+          "ms": 237,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=64"
+        },
+        {
+          "ms": 346,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=186"
+        },
+        {
+          "ms": 214,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=59"
+        },
+        {
+          "ms": 298,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=130"
+        },
+        {
+          "ms": 335,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=148"
+        },
+        {
+          "ms": 352,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=147"
+        },
+        {
+          "ms": 332,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=128"
+        },
+        {
+          "ms": 221,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=51"
+        },
+        {
+          "ms": 335,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=163"
+        },
+        {
+          "ms": 270,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=103"
+        },
+        {
+          "ms": 253,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=87"
+        },
+        {
+          "ms": 279,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=114"
+        },
+        {
+          "ms": 333,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=133"
+        },
+        {
+          "ms": 291,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=118"
+        },
+        {
+          "ms": 344,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=138"
+        },
+        {
+          "ms": 353,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=179"
+        },
+        {
+          "ms": 276,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=83"
+        },
+        {
+          "ms": 209,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=56"
+        },
+        {
+          "ms": 223,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=62"
+        },
+        {
+          "ms": 333,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=140"
+        },
+        {
+          "ms": 375,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=169"
+        },
+        {
+          "ms": 225,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=63"
+        },
+        {
+          "ms": 361,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=176"
+        },
+        {
+          "ms": 346,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=149"
+        },
+        {
+          "ms": 329,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=149"
+        }
+      ]
+    },
+    {
+      "simultaneas": 50,
+      "chamadas": 50,
+      "falhas": 0,
+      "mediaMs": 639,
+      "medianaMs": 781,
+      "p95Ms": 819,
+      "maxMs": 837,
+      "amostras": [
+        {
+          "ms": 781,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=587"
+        },
+        {
+          "ms": 326,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=144"
+        },
+        {
+          "ms": 195,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=46"
+        },
+        {
+          "ms": 797,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=624"
+        },
+        {
+          "ms": 796,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=615"
+        },
+        {
+          "ms": 784,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=617"
+        },
+        {
+          "ms": 302,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=116"
+        },
+        {
+          "ms": 779,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=595"
+        },
+        {
+          "ms": 781,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=592"
+        },
+        {
+          "ms": 808,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=632"
+        },
+        {
+          "ms": 324,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=145"
+        },
+        {
+          "ms": 777,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=616"
+        },
+        {
+          "ms": 233,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=62"
+        },
+        {
+          "ms": 801,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=644"
+        },
+        {
+          "ms": 807,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=607"
+        },
+        {
+          "ms": 800,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=597"
+        },
+        {
+          "ms": 289,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=115"
+        },
+        {
+          "ms": 764,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=604"
+        },
+        {
+          "ms": 782,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=606"
+        },
+        {
+          "ms": 228,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=63"
+        },
+        {
+          "ms": 340,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=167"
+        },
+        {
+          "ms": 768,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=583"
+        },
+        {
+          "ms": 807,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=574"
+        },
+        {
+          "ms": 329,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=148"
+        },
+        {
+          "ms": 795,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=579"
+        },
+        {
+          "ms": 806,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=592"
+        },
+        {
+          "ms": 805,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=620"
+        },
+        {
+          "ms": 806,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=623"
+        },
+        {
+          "ms": 800,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=568"
+        },
+        {
+          "ms": 774,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=586"
+        },
+        {
+          "ms": 764,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=598"
+        },
+        {
+          "ms": 223,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=52"
+        },
+        {
+          "ms": 803,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=596"
+        },
+        {
+          "ms": 830,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=31"
+        },
+        {
+          "ms": 774,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=581"
+        },
+        {
+          "ms": 792,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=613"
+        },
+        {
+          "ms": 805,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=624"
+        },
+        {
+          "ms": 279,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=101"
+        },
+        {
+          "ms": 773,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=615"
+        },
+        {
+          "ms": 278,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=94"
+        },
+        {
+          "ms": 805,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=476"
+        },
+        {
+          "ms": 837,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=30"
+        },
+        {
+          "ms": 805,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=596"
+        },
+        {
+          "ms": 323,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=133"
+        },
+        {
+          "ms": 277,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=103"
+        },
+        {
+          "ms": 779,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=596"
+        },
+        {
+          "ms": 819,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=26"
+        },
+        {
+          "ms": 804,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=611"
+        },
+        {
+          "ms": 782,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=595"
+        },
+        {
+          "ms": 199,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=41"
+        }
+      ]
+    },
+    {
+      "simultaneas": 100,
+      "chamadas": 100,
+      "falhas": 0,
+      "mediaMs": 395,
+      "medianaMs": 444,
+      "p95Ms": 507,
+      "maxMs": 609,
+      "amostras": [
+        {
+          "ms": 490,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=273"
+        },
+        {
+          "ms": 217,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=45"
+        },
+        {
+          "ms": 257,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=75"
+        },
+        {
+          "ms": 456,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=229"
+        },
+        {
+          "ms": 454,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=272"
+        },
+        {
+          "ms": 350,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=166"
+        },
+        {
+          "ms": 449,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=265"
+        },
+        {
+          "ms": 210,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=40"
+        },
+        {
+          "ms": 458,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=275"
+        },
+        {
+          "ms": 396,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=196"
+        },
+        {
+          "ms": 102,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=56"
+        },
+        {
+          "ms": 399,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=218"
+        },
+        {
+          "ms": 223,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=45"
+        },
+        {
+          "ms": 341,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=161"
+        },
+        {
+          "ms": 97,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=33"
+        },
+        {
+          "ms": 244,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=63"
+        },
+        {
+          "ms": 451,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=233"
+        },
+        {
+          "ms": 512,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=304"
+        },
+        {
+          "ms": 398,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=203"
+        },
+        {
+          "ms": 409,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=229"
+        },
+        {
+          "ms": 270,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=86"
+        },
+        {
+          "ms": 492,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=273"
+        },
+        {
+          "ms": 237,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=60"
+        },
+        {
+          "ms": 347,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=154"
+        },
+        {
+          "ms": 254,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=71"
+        },
+        {
+          "ms": 346,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=129"
+        },
+        {
+          "ms": 449,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=241"
+        },
+        {
+          "ms": 238,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=55"
+        },
+        {
+          "ms": 410,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=189"
+        },
+        {
+          "ms": 254,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=60"
+        },
+        {
+          "ms": 247,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=63"
+        },
+        {
+          "ms": 394,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=209"
+        },
+        {
+          "ms": 445,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=270"
+        },
+        {
+          "ms": 453,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=239"
+        },
+        {
+          "ms": 511,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=281"
+        },
+        {
+          "ms": 494,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=277"
+        },
+        {
+          "ms": 450,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=248"
+        },
+        {
+          "ms": 474,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=257"
+        },
+        {
+          "ms": 507,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=309"
+        },
+        {
+          "ms": 403,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=209"
+        },
+        {
+          "ms": 150,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=30"
+        },
+        {
+          "ms": 104,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=46"
+        },
+        {
+          "ms": 467,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=226"
+        },
+        {
+          "ms": 446,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=239"
+        },
+        {
+          "ms": 445,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=252"
+        },
+        {
+          "ms": 490,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=277"
+        },
+        {
+          "ms": 501,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=314"
+        },
+        {
+          "ms": 507,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=319"
+        },
+        {
+          "ms": 451,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=223"
+        },
+        {
+          "ms": 476,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=205"
+        },
+        {
+          "ms": 414,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=221"
+        },
+        {
+          "ms": 465,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=258"
+        },
+        {
+          "ms": 446,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=227"
+        },
+        {
+          "ms": 391,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=196"
+        },
+        {
+          "ms": 502,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=316"
+        },
+        {
+          "ms": 452,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=227"
+        },
+        {
+          "ms": 468,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=230"
+        },
+        {
+          "ms": 508,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=255"
+        },
+        {
+          "ms": 452,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=223"
+        },
+        {
+          "ms": 481,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=272"
+        },
+        {
+          "ms": 456,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=207"
+        },
+        {
+          "ms": 492,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=301"
+        },
+        {
+          "ms": 525,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=26"
+        },
+        {
+          "ms": 443,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=229"
+        },
+        {
+          "ms": 502,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=275"
+        },
+        {
+          "ms": 447,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=250"
+        },
+        {
+          "ms": 118,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=25"
+        },
+        {
+          "ms": 448,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=209"
+        },
+        {
+          "ms": 482,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=205"
+        },
+        {
+          "ms": 393,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=204"
+        },
+        {
+          "ms": 404,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=185"
+        },
+        {
+          "ms": 403,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=192"
+        },
+        {
+          "ms": 249,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=48"
+        },
+        {
+          "ms": 98,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=32"
+        },
+        {
+          "ms": 444,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=253"
+        },
+        {
+          "ms": 403,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=173"
+        },
+        {
+          "ms": 444,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=243"
+        },
+        {
+          "ms": 93,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=24"
+        },
+        {
+          "ms": 391,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=198"
+        },
+        {
+          "ms": 408,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=205"
+        },
+        {
+          "ms": 470,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=249"
+        },
+        {
+          "ms": 389,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=205"
+        },
+        {
+          "ms": 403,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=211"
+        },
+        {
+          "ms": 429,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=180"
+        },
+        {
+          "ms": 448,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=258"
+        },
+        {
+          "ms": 440,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=251"
+        },
+        {
+          "ms": 473,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=234"
+        },
+        {
+          "ms": 441,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=235"
+        },
+        {
+          "ms": 409,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=201"
+        },
+        {
+          "ms": 609,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=348"
+        },
+        {
+          "ms": 483,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=282"
+        },
+        {
+          "ms": 438,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=240"
+        },
+        {
+          "ms": 450,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=255"
+        },
+        {
+          "ms": 447,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=219"
+        },
+        {
+          "ms": 122,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=28"
+        },
+        {
+          "ms": 338,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=133"
+        },
+        {
+          "ms": 402,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=193"
+        },
+        {
+          "ms": 475,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=278"
+        },
+        {
+          "ms": 472,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=242"
+        },
+        {
+          "ms": 507,
+          "status": 200,
+          "bytes": 481,
+          "serverTiming": "api;dur=256"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "tipo": "transcricao-resumida-dos-relatorios-visiveis-no-browser",
+  "dataLocal": "2026-09-30",
+  "apiVersao": 10,
+  "concorrencia": {
+    "dataUTC": "2026-10-01T00:48:20.329Z",
+    "recibosSimultaneos": [2, 5, 10],
+    "quizRespostaFinalSimultaneas": 5,
+    "perfilRealPreservado": true,
+    "alteracaoRespostaRecusada": true,
+    "medidasSucessoMs": [376,430,545,369,386,219,375,417,417,418,244,406,851,885,918,924,925,941,959,960,961,961,376,498,388,565,428,420,448,387,441,509,525,543,218],
+    "recusaEsperadaMs": 395
+  },
+  "homologacaoCompleta": {
+    "dataUTC": "2026-10-01T00:50:48.582Z",
+    "modos": ["quiz-teoria", "quiz-casos", "verdadeMentira", "revisao", "plantao", "erroMedico", "causaEfeito", "cruzadinha"],
+    "perfilRealPreservado": true,
+    "amostras": 48,
+    "mediaMs": 415,
+    "medianaMs": 410,
+    "p95Ms": 572,
+    "medidasMs": [461,502,429,393,442,396,414,330,466,463,408,572,416,427,386,421,435,396,433,428,392,421,363,393,597,403,406,369,383,371,428,435,366,273,410,410,445,595,387,405,392,369,418,437,386,220,457,372]
+  },
+  "buildLocal": [
+    {"tipo":"primeira-abertura-autenticada","menuMs":2006,"fcpMs":1976,"lcpObservadoMs":1976,"assets":9,"bytesTransferidos":313713,"api":{"palavrasMs":268,"obterPerfilMs":1330}},
+    {"tipo":"recarga-autenticada","menuMs":1968,"fcpMs":1960,"lcpObservadoMs":1960,"assets":9,"bytesTransferidos":2700,"api":{"palavrasMs":457,"obterPerfilMs":1606}}
+  ],
+  "limites": "Desktop no navegador integrado, build local, API remota. Concorrencia de um mesmo jogador isolado; sem multiplos jogadores ou carga sustentada. Nao substitui smartphone real. Transcricao compacta, nao dump de tokens/sessoes."
+}

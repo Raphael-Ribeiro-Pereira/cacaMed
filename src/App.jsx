@@ -4,6 +4,7 @@ import { getIdTokenResult, onAuthStateChanged } from 'firebase/auth';
 import { sairDaConta } from './services/sairDaConta';
 import { USAR_SUPABASE, USAR_AUTH_SUPABASE, supabase } from './supabase';
 import { usuarioSupabase } from './services/authSupabase';
+import { marcarInterfacePronta } from './services/diagnosticoDesempenho';
 import { buscarConteudoSupabase, migrarSessaoFirebase } from './services/perfilSupabase';
 import { doc, getDoc, runTransaction } from 'firebase/firestore';
 import { prepararMissoesDoDia } from './utils/missoes';
@@ -51,6 +52,10 @@ function App() {
   const [materia, setMateria] = useState('');
   const [subMateria, setSubMateria] = useState('');
 
+  useEffect(() => {
+    if (!carregandoAuth) marcarInterfacePronta(telaAtual);
+  }, [carregandoAuth, telaAtual]);
+
 
   const verificarEResetarMissoes = async (uid, dadosAtuais) => {
     if (!prepararMissoesDoDia(dadosAtuais) && !possuiEstatisticasClinicasAntigas(dadosAtuais.estatisticas)) return dadosAtuais;
@@ -84,7 +89,13 @@ function App() {
   useEffect(() => {
     let ativo = true;
     let versaoSessao = 0;
+    let ultimaIdentidade;
     const receberUsuario = async (user) => {
+      const identidade = user ? `${user.source || 'firebase'}:${user.authId || user.uid}` : null;
+      // INITIAL_SESSION e SIGNED_IN podem chegar para a mesma sessão no retorno
+      // OAuth. Uma identidade já recebida não precisa recarregar o perfil.
+      if (identidade === ultimaIdentidade) return;
+      ultimaIdentidade = identidade;
       const versaoAtual = ++versaoSessao;
       const sessaoAtual = () => ativo && versaoAtual === versaoSessao;
       setCarregandoAuth(true);
