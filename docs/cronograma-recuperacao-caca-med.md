@@ -10,6 +10,7 @@ Este bloco substitui pendências históricas abaixo. Produção Vercel ativada c
 - [x] Instrumentar abertura completa e chamadas API com diagnóstico opcional local. Build otimizada em desktop: primeira abertura autenticada 2.006 ms, recarga 1.968 ms; medição pública e celular ainda necessários.
 - [x] Homologar gravações autenticadas concorrentes no perfil isolado: 2/5/10 reenvios do mesmo recibo e cinco da resposta final do Quiz, sem recompensa duplicada. API v10 e RPC PT409 corrigem timeout e resposta desatualizada.
 - [x] Homologação completa dos seis modos: 48 chamadas, média 415 ms, p95 572 ms, perfil real preservado; 88 testes/lint/build aprovados.
+- [x] Deploy frontend 297fdb7 validado no domínio público; três recargas autenticadas até menu em 937/511/508 ms, sem falhas; Google e logout conferidos. Configuração versionada restaura deploy automático desativado para próximos pushes.
 - [ ] Testar aparelho físico/rede celular seguindo [roteiro](roteiro-smartphone.md); carga sustentada de usuários distintos requer contas de teste adicionais.
 - [ ] Configurar SMTP público após escolher domínio: [proposta Resend Free](proposta-email-autenticacao.md); padrão atual só envia à equipe, dois emails/hora.
 - [ ] Concluir vínculo do segundo perfil e migração/teste de senhas antigas, cadastro, recuperação e logout públicos.

@@ -30,6 +30,14 @@ Verificação de acesso público: as três tabelas retornaram HTTP 401/42501 ao 
 
 O marco menu após login manual inclui espera humana até o clique. Para medir retomada da sessão, recarregar a mesma aba já autenticada. Painel de diagnóstico adiciona uma pequena sobrecarga; FCP/LCP são auxiliares e podem incluir o painel. Comparar marcos de interface junto com transferência/cache. Medidas locais de build não substituem medição de Vercel/rede celular.
 
+## Publicação
+
+Frontend do commit 297fdb7 publicado e Ready/Current no Vercel. O push disparou deploy automático, apesar da preferência histórica de publicação manual. `vercel.json` agora registra `git.deploymentEnabled: false`, [configuração oficial](https://vercel.com/docs/project-configuration/git-configuration), para restaurar essa preferência nos próximos pushes. Para publicar uma mudança futura: Vercel → projeto caca-med → Deployments → Create Deployment, informando o commit/main; [roteiro oficial](https://vercel.com/docs/git). O commit posterior de documentação/configuração não altera os arquivos da build publicada.
+
+Primeira abertura da tela de login em produção com esta versão: marco de interface 1.702 ms, HTML 385 ms e palavras 380 ms; FCP/LCP observados 3.864 ms no navegador integrado. Assets parcialmente em cache (78.574 bytes transferidos), portanto não é medição pública de cache vazio. A divergência de FCP/marco de interface reforça a necessidade do teste em navegador/celular reais.
+
+Três recargas autenticadas em produção: menu em 937 / 511 / 508 ms, média 652 ms, zero falhas de API. ObterPerfil em 803 / 403 / 351 ms; palavras em 455 / 13 / 9 ms (cache da consulta pública nas últimas duas). Em cada abertura houve apenas uma consulta de perfil. Nove assets com 2.700 bytes transferidos por recarga, compatíveis com revalidação/cache; não chamar essas amostras de abertura a frio. Google, logout e retorno à tela de login após recarga foram verificados no domínio público.
+
 ## Pendências que exigem acesso humano
 
 Build otimizada local no navegador integrado, sessão já autenticada: primeira abertura até menu 2.006 ms, FCP/LCP observado 1.976 ms, nove assets com 313.713 bytes transferidos. Reabertura na mesma aba: menu 1.968 ms, FCP/LCP 1.960 ms, nove assets com só 2.700 bytes transferidos (cabeçalhos/revalidação, compatível com cache). Uma chamada de obterPerfil por abertura, sem duplicação. Não houve login manual nessas amostras. São duas medições locais, sem latência CDN, sem garantia de cold start da função e sem CPU/rede móvel; FCP no navegador integrado pode ser afetado pela execução em segundo plano. Medição da primeira tela de login em outra origem local ficou em 2.064 ms, antes do ajuste do filtro de assets; não usar o contador parcial antigo como evidência de cache frio.

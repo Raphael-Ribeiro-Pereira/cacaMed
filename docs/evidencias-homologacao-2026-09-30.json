@@ -25,5 +25,16 @@
     {"tipo":"primeira-abertura-autenticada","menuMs":2006,"fcpMs":1976,"lcpObservadoMs":1976,"assets":9,"bytesTransferidos":313713,"api":{"palavrasMs":268,"obterPerfilMs":1330}},
     {"tipo":"recarga-autenticada","menuMs":1968,"fcpMs":1960,"lcpObservadoMs":1960,"assets":9,"bytesTransferidos":2700,"api":{"palavrasMs":457,"obterPerfilMs":1606}}
   ],
-  "limites": "Desktop no navegador integrado, build local, API remota. Concorrencia de um mesmo jogador isolado; sem multiplos jogadores ou carga sustentada. Nao substitui smartphone real. Transcricao compacta, nao dump de tokens/sessoes."
+  "producao": {
+    "commitFrontend": "297fdb7",
+    "loginInterfaceMs": 1702,
+    "recargasAutenticadas": [
+      {"menuMs":937,"obterPerfilMs":803,"palavrasMs":455,"bytesAssets":2700,"falhas":0},
+      {"menuMs":511,"obterPerfilMs":403,"palavrasMs":13,"bytesAssets":2700,"falhas":0},
+      {"menuMs":508,"obterPerfilMs":351,"palavrasMs":9,"bytesAssets":2700,"falhas":0}
+    ],
+    "googleELogoutVerificados": true,
+    "cache": "parcial na primeira visita e aquecido nas recargas; nao vazio"
+  },
+  "limites": "Desktop no navegador integrado, build local e publica, API remota. Concorrencia de um mesmo jogador isolado; sem multiplos jogadores ou carga sustentada. Nao substitui smartphone real. Transcricao compacta, nao dump de tokens/sessoes."
 }
