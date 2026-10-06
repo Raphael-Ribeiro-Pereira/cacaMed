@@ -28,7 +28,7 @@ Estilos: `src/prototipo.css`, gerado a partir de todos os CSS do protótipo e is
 - Sem ofensiva de login diária: o jogo não registra isso. O painel e o verso do crachá mostram a sequência de cruzadinhas (`streakAtual`, recorde `maiorStreak`).
 - Conquistas trocadas por dados que existem: "Mão firme" virou 50 acertos no Quiz, "Plantão perfeito" virou um Plantão seguro e a ofensiva de 7 dias virou 7 cruzadinhas seguidas.
 - Autorizações do verso refletem o acesso real (Batalha e Revisão só para administrador). A "UTI de simulação" do protótipo não existe no jogo e saiu.
-- Barra de abas inferior do celular e barra lateral da web não foram portadas: as telas abrem do menu atual e voltam por ele.
+- Barra de abas do celular e barra lateral da web entraram depois, com o menu: ver [Entrada, menu e casca](entrada-menu-casca.md).
 - Corrigida uma colisão de CSS do protótipo: a legenda dos gráficos (`.lg`) deixava o pódio grande em `inline-flex`, desalinhado. No jogo a legenda ficou restrita aos títulos dos gráficos e o pódio fica centralizado, como o CSS dele pretendia.
 
 ## Homologação

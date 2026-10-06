@@ -1,5 +1,5 @@
 // Entrada de desenvolvimento independente; não é incluída na build de produção.
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import TreinoMedico from '../src/components/TreinoMedico';
 import RevisaoInteligente from '../src/components/RevisaoInteligente';
@@ -7,6 +7,12 @@ import BatalhaDiagnostica from '../src/components/BatalhaDiagnostica';
 import Ranking from '../src/components/Ranking';
 import Estatisticas from '../src/components/Estatisticas';
 import PerfilUsuario from '../src/components/PerfilUsuario';
+import MenuPrincipal from '../src/components/MenuPrincipal';
+import Login from '../src/components/Login';
+import Cadastro from '../src/components/Cadastro';
+import Cadastro2 from '../src/components/Cadastro2';
+import { BarraLateral } from '../src/components/cascaUi';
+import { fotoDoPerfil } from '../src/utils/fotosCracha';
 import { calcularIdPublico } from '../src/services/rankingPublico';
 import { MATERIAS, semanaCoroas, fimDaSemana } from '../src/utils/coroas';
 import { resumirHistorico } from '../src/utils/estatisticasPainel';
@@ -14,7 +20,7 @@ import { executarPedidoSupabase } from '../src/shared/executarPedidoSupabase';
 import { BANCO_QUIZ, BANCO_FRASES } from '../src/utils/bancoTreinos';
 import { selecionarFilaRevisao, criarEntradaRevisao, responderRevisaoPerfil, encerrarRevisaoPerfil, chaveItemRevisao } from '../src/utils/revisaoInteligente';
 import { criarEntradaTreino, responderTreinoPerfil } from '../src/utils/treinos';
-import { criarMissoesDiarias } from '../src/utils/missoes';
+import { criarMissoesDiarias, dataLocalHoje } from '../src/utils/missoes';
 import '../src/index.css';
 
 const chave = 'cacoMed-homologacao-v2';
@@ -135,10 +141,58 @@ function semearPainel() {
     revisao: { ...salvo.revisao, resumo: { total: 8, disponiveis: 5, aguardando: 3, proximaRevisao: new Date(agora + dia).toISOString() } },
     coroas: { semana: semanaCoroas(), xp: { anatomia: 640, neurologia: 330, micro: 90 } } });
 }
+// Entrada (login, cadastro e Cadastro 2.0) com conta fictícia: senha certa "plantao2026";
+// o e-mail homologacao@exemplo.com já tem conta; usernames ana, bruno, carla, admin e raphael já estão em uso.
+const espera = ms => new Promise(ok => setTimeout(ok, ms));
+let navegarFicticio = () => {};
+let simularFalhaCadastro = false;
+let simularContaAntigaGoogle = false;
+let perfilCadastrado = null;
+const contaFicticia = {
+  async entrarComSenha(email, senha) { await espera(800); if (senha !== 'plantao2026') throw new Error('Credenciais inválidas.'); navegarFicticio('menu'); },
+  async entrarComGoogle() {
+    await espera(1100);
+    if (simularContaAntigaGoogle) { simularContaAntigaGoogle = false; return { pendente: { credencial: 'ficticia', email: 'homologacao@exemplo.com' } }; }
+    navegarFicticio('cadastro2');
+    return {};
+  },
+  async vincularGoogle(email, senha) { await espera(800); if (senha !== 'plantao2026') throw new Error('Senha antiga incorreta.'); navegarFicticio('menu'); },
+  async recuperarSenha() { await espera(800); },
+  async criarConta({ nome, email }) {
+    await espera(900);
+    if (email.toLowerCase() === 'homologacao@exemplo.com') throw Object.assign(new Error('Em uso.'), { code: 'auth/email-already-in-use' });
+    return { user: { uid: 'cadastro-' + email.toLowerCase(), email, displayName: nome, providerData: [{ providerId: 'password' }] } };
+  },
+  async criarSenha() { await espera(700); },
+  async gravarPerfilAntigo() { await espera(700); },
+  async sair() { await espera(300); navegarFicticio('login'); },
+};
+const usuarioGoogle = { uid: 'google-ficticio', email: 'ana.souza@exemplo.com', displayName: 'Ana Beatriz Souza', providerData: [{ providerId: 'google.com' }] };
+async function servicoEntrada(user, acao, pedido = {}) {
+  if (acao === 'verificarUsername') return servicoCracha(user, acao, pedido);
+  await espera(acao === 'cadastrar' ? 1800 : 600);
+  if (acao === 'cadastrar') {
+    if (simularFalhaCadastro) { simularFalhaCadastro = false; throw new Error('Falha simulada no cadastro.'); }
+    perfilCadastrado = { uid: user.uid, email: user.email, nome: user.displayName || user.email.split('@')[0], username: pedido.username, titulo: pedido.titulo, role: 'jogador',
+      materiaPreferida: pedido.materiaPreferida, especialidade: pedido.materiaPreferida, pontuacaoTotal: 0, tickets: 0, xpTopicos: {}, estatisticas: {}, estatisticasGerais: {},
+      economia: { versao: 2, ultimoNivelPremiado: 1 }, missoesDiarias: criarMissoesDiarias(), dataUltimoLogin: dataLocalHoje(), tutorialCruzadinhasConcluido: false, criadoEm: new Date().toISOString() };
+    return perfilCadastrado;
+  }
+  if (acao === 'editarPerfil') return (perfilCadastrado = { ...perfilCadastrado, ...pedido });
+  throw new Error('Ação indisponível na homologação.');
+}
+const TELAS_PROTOTIPO = ['batalha', 'ranking', 'estatisticas', 'perfil', 'menu', 'login', 'cadastro', 'cadastro2'];
+const TELAS_CASCA = ['menu', 'ranking', 'estatisticas', 'perfil'];
+
 export function Homologacao() {
   const [modo, setModo] = useState(localStorage.getItem('cacoMed-homologacao-modo') || 'quiz');
   const [dados, setDados] = useState(salvo);
   const trocarModo = valor => { setModo(valor); localStorage.setItem('cacoMed-homologacao-modo', valor); };
+  // Navegação das telas como no App: telas sem equivalente aqui (cruzadinhas, DDX) voltam ao menu.
+  const navegar = tela => trocarModo({ revisaoInteligente: 'revisao', topicos: 'menu', selecaoDDX: 'menu', jogo: 'menu' }[tela] || tela);
+  useEffect(() => { navegarFicticio = navegar; });
+  const comCasca = TELAS_CASCA.includes(modo);
+  useEffect(() => { document.body.classList.toggle('com-casca', comCasca); }, [comCasca]);
   // As telas do protótipo ocupam a janela inteira; começam abaixo da faixa de homologação.
   const faixa = useRef(null);
   const [alturaFaixa, setAlturaFaixa] = useState(86);
@@ -148,10 +202,14 @@ export function Homologacao() {
     window.addEventListener('resize', medir);
     return () => window.removeEventListener('resize', medir);
   }, []);
-  return <><aside ref={faixa} style={{ padding: 12, background: '#ffb95f', color: '#0c1322', position: 'relative', zIndex: 100 }}><strong>HOMOLOGAÇÃO ISOLADA · dados fictícios locais · sem gravação no perfil real</strong><nav style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginTop: 8 }}><button onClick={() => trocarModo('quiz')}>Testar Quiz</button><button onClick={() => trocarModo('verdadeMentira')}>Testar Verdade ou mentira</button><button onClick={() => trocarModo('revisao')}>Testar Revisão</button><button onClick={() => { historico = { tentativas: [], revisoes: [] }; guardarHistorico(); setDados(guardar(inicial)); trocarModo('quiz'); }}>Reiniciar dados de teste</button><button onClick={() => { setDados(semearErrosRevisao()); trocarModo('revisao'); }}>Criar cinco erros fictícios</button><button onClick={() => { simularFalhaRevisao = true; }}>Simular falha na próxima resposta</button><button onClick={() => trocarModo('batalha')}>Testar Batalha</button><button onClick={() => { setDados(guardar({ ...salvo, tickets: 3, batalha: {} })); trocarModo('batalha'); }}>Reiniciar Batalha (3 tickets)</button><button onClick={() => { simularFalhaBatalha = true; }}>Simular falha no próximo turno</button><button onClick={() => trocarModo('ranking')}>Testar Ranking e Coroas</button><button onClick={() => trocarModo('estatisticas')}>Testar Estatísticas</button><button onClick={() => trocarModo('perfil')}>Testar Crachá</button><button onClick={() => { setDados(semearPainel()); }}>Semear painel, coroas e histórico</button><button onClick={() => { simularFalhaPerfil = true; }}>Simular falha ao salvar o crachá</button></nav></aside>{['batalha', 'ranking', 'estatisticas', 'perfil'].includes(modo) && <style>{`.cbt { top: ${alturaFaixa}px; }`}</style>}{modo === 'batalha' ? <BatalhaDiagnostica usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('quiz')} servicoPerfil={servicoBatalha} />
-  : modo === 'ranking' ? <Ranking usuario={inicial} dadosUsuario={dados} setTelaAtual={tela => trocarModo(['menu', 'topicos'].includes(tela) ? 'quiz' : tela)} buscarRanking={rankingFicticio} buscarCoroas={coroasFicticias} sincronizar={async () => {}} />
-  : modo === 'estatisticas' ? <Estatisticas usuario={inicial} dadosUsuario={dados} setTelaAtual={tela => trocarModo(['menu', 'topicos'].includes(tela) ? 'quiz' : tela === 'revisaoInteligente' ? 'revisao' : tela)} servicoPerfil={servicoCracha} />
-  : modo === 'perfil' ? <PerfilUsuario usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={tela => trocarModo(['menu', 'login'].includes(tela) ? 'quiz' : tela)} servicoPerfil={servicoCracha} aoSair={async () => {}} /> : modo === 'revisao' ? <RevisaoInteligente usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('quiz')} servicoPerfil={servicoPerfil} /> : <TreinoMedico key={modo} modo={modo} usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('revisao')} servicoPerfil={servicoPerfil} />}</>;
+  return <><aside ref={faixa} style={{ padding: 12, background: '#ffb95f', color: '#0c1322', position: 'relative', zIndex: 100 }}><strong>HOMOLOGAÇÃO ISOLADA · dados fictícios locais · sem gravação no perfil real</strong><nav style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginTop: 8 }}><button onClick={() => trocarModo('quiz')}>Testar Quiz</button><button onClick={() => trocarModo('verdadeMentira')}>Testar Verdade ou mentira</button><button onClick={() => trocarModo('revisao')}>Testar Revisão</button><button onClick={() => { historico = { tentativas: [], revisoes: [] }; guardarHistorico(); setDados(guardar(inicial)); trocarModo('quiz'); }}>Reiniciar dados de teste</button><button onClick={() => { setDados(semearErrosRevisao()); trocarModo('revisao'); }}>Criar cinco erros fictícios</button><button onClick={() => { simularFalhaRevisao = true; }}>Simular falha na próxima resposta</button><button onClick={() => trocarModo('batalha')}>Testar Batalha</button><button onClick={() => { setDados(guardar({ ...salvo, tickets: 3, batalha: {} })); trocarModo('batalha'); }}>Reiniciar Batalha (3 tickets)</button><button onClick={() => { simularFalhaBatalha = true; }}>Simular falha no próximo turno</button><button onClick={() => trocarModo('ranking')}>Testar Ranking e Coroas</button><button onClick={() => trocarModo('estatisticas')}>Testar Estatísticas</button><button onClick={() => trocarModo('perfil')}>Testar Crachá</button><button onClick={() => { setDados(semearPainel()); }}>Semear painel, coroas e histórico</button><button onClick={() => { simularFalhaPerfil = true; }}>Simular falha ao salvar o crachá</button><button onClick={() => trocarModo('menu')}>Testar menu</button><button onClick={() => trocarModo('login')}>Testar login</button><button onClick={() => trocarModo('cadastro')}>Testar cadastro</button><button onClick={() => trocarModo('cadastro2')}>Testar Cadastro 2.0</button><button onClick={() => { simularFalhaCadastro = true; }}>Simular falha no cadastro</button><button onClick={() => { simularContaAntigaGoogle = true; }}>Google com conta antiga</button></nav></aside>{TELAS_PROTOTIPO.includes(modo) && <style>{`.cbt { top: ${alturaFaixa}px; }`}</style>}{comCasca && <BarraLateral tela={modo} ir={navegar} p={dados} foto={fotoDoPerfil(dados)} />}{modo === 'menu' ? <MenuPrincipal usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} buscarRanking={rankingFicticio} />
+  : modo === 'login' ? <Login setTelaAtual={navegar} conta={contaFicticia} />
+  : modo === 'cadastro' ? <Cadastro setTelaAtual={navegar} conta={contaFicticia} servicoPerfil={servicoEntrada} onConcluido={perfil => { setDados(perfil); navegar('menu'); }} />
+  : modo === 'cadastro2' ? <Cadastro2 usuario={usuarioGoogle} conta={contaFicticia} servicoPerfil={servicoEntrada} onConcluido={perfil => { setDados(perfil); navegar('menu'); }} />
+  : modo === 'batalha' ? <BatalhaDiagnostica usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('quiz')} servicoPerfil={servicoBatalha} />
+  : modo === 'ranking' ? <Ranking usuario={inicial} dadosUsuario={dados} setTelaAtual={navegar} buscarRanking={rankingFicticio} buscarCoroas={coroasFicticias} sincronizar={async () => {}} />
+  : modo === 'estatisticas' ? <Estatisticas usuario={inicial} dadosUsuario={dados} setTelaAtual={navegar} servicoPerfil={servicoCracha} />
+  : modo === 'perfil' ? <PerfilUsuario usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoCracha} aoSair={async () => {}} /> : modo === 'revisao' ? <RevisaoInteligente usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('quiz')} servicoPerfil={servicoPerfil} /> : <TreinoMedico key={modo} modo={modo} usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('revisao')} servicoPerfil={servicoPerfil} />}</>;
 }
 const root = import.meta.hot?.data.root || createRoot(document.getElementById('root'));
 if (import.meta.hot) import.meta.hot.data.root = root;

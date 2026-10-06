@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowDown, ArrowUp, ChevronLeft, Trophy } from 'lucide-react';
+import { ArrowDown, ArrowUp, Trophy } from 'lucide-react';
 import { buscarCoroasPublicas, buscarRankingPublico, calcularIdPublico, sincronizarRanking } from '../services/rankingPublico';
+import { guardarRanking, rankingEmCache } from '../services/rankingSessao';
 import { MATERIAS, coroasDoJogador, montarTabelaCoroas, semanaCoroas, xpDaSemana } from '../utils/coroas';
 import { fotoDoPerfil } from '../utils/fotosCracha';
 import { animar, fmt, gravarLocal, lerLocal, useLargo } from '../utils/prototipo';
-import { Avatar, Podium } from './prototipoUi';
+import { Avatar, Podium, Tabbar } from './prototipoUi';
 import { Coroas, TagsCoroa, Trono } from './CoroasMateria';
 import '../prototipo.css';
 
@@ -20,7 +21,6 @@ const ParticulaRomantica = ({ id, texto, posicaoInicial, duracao, tamanho, deriv
 };
 
 // Última lista desta sessão do app: na segunda visita o ranking abre na hora e atualiza por trás.
-let cacheRanking = null;
 const CRITERIOS = [['xp', 'XP'], ['letras', 'Letras certas'], ['tempo', 'Tempo médio']];
 const minutos = s => s == null ? '—' : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
@@ -33,8 +33,8 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual, abaInicia
   const [aba, setAba] = useState(abaInicial);
   const [criterio, setCriterio] = useState('xp');
   const [meuId, setMeuId] = useState(null);
-  const [lista, setLista] = useState(cacheRanking);
-  const [primeira] = useState(!cacheRanking);
+  const [lista, setLista] = useState(rankingEmCache);
+  const [primeira] = useState(() => !rankingEmCache());
   const [erro, setErro] = useState(false);
   const [tentativa, setTentativa] = useState(0);
   const [particulas, setParticulas] = useState([]);
@@ -58,7 +58,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual, abaInicia
       try {
         await sincronizar(usuario, perfilRef.current);
         const r = await buscarRanking();
-        cacheRanking = r;
+        guardarRanking(r);
         if (vivo) setLista(r);
       } catch (falha) {
         console.error('Erro ao carregar ranking público:', falha);
@@ -127,7 +127,6 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual, abaInicia
     {particulas.map(p => <ParticulaRomantica key={p.id} id={p.id} texto={p.texto} posicaoInicial={p.posicao} duracao={p.duracao} tamanho={p.tamanho} derivaH={p.derivaH} onFinalizar={removerParticula} />)}
     <div className="cbt-scr r-ranking">
       <div className="topbar">
-        <button className="icon-btn" onClick={() => setTelaAtual('menu')} aria-label="Voltar ao centro de comando"><ChevronLeft /></button>
         <h1><small>Ranking de plantonistas</small>Devoradores de Plantão</h1>
         {aba === 'coroas' ? <span className="chip"><span aria-hidden="true">👑</span><span>{coroasDoJogador(tabela).length}/{MATERIAS.length}</span></span>
           : <span className="chip"><Trophy /><span>{pos >= 0 ? `${pos + 1}º` : '–'}</span></span>}
@@ -161,6 +160,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual, abaInicia
           </p>
         </>}
       </div>}
+      {!web && <Tabbar on="ranking" ir={setTelaAtual} />}
     </div>
     <AnimatePresence>{trono && <Trono key={trono} m={MATERIAS.find(m => m.id === trono)} lista={tabela.materias[trono] || []} foto={foto}
       onClose={() => setTrono(null)} onJogar={() => { setTrono(null); setTelaAtual('topicos'); }} />}</AnimatePresence>

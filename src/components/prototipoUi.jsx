@@ -1,10 +1,11 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { animate } from 'framer-motion';
+import { BarChart3, Home, Trophy, UserRound } from 'lucide-react';
 import { Retrato } from './batalhaArte';
 import { FOTOS } from '../utils/fotosCracha';
 import { animar, fmt, iniciais } from '../utils/prototipo';
 
-// Peças visuais do protótipo de movimento compartilhadas por Ranking, Coroas,
+// Peças visuais do protótipo de movimento compartilhadas por menu, Ranking, Coroas,
 // Estatísticas e Crachá. Os estilos estão em src/prototipo.css, sob .cbt.
 export function CountNum({ to, from, ms = 1100 }) {
   const [v, setV] = useState(from ?? to);
@@ -33,13 +34,35 @@ export function FlameIcon({ size = 16 }) {
 
 const matiz = s => [...String(s)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
 // Avatar: a própria pessoa aparece com o retrato do crachá; os demais, com iniciais coloridas.
-export function Avatar({ nome, me, foto = 0, size = 40, tier }) {
+// ring (0 a 1) desenha o progresso do nível em volta da foto.
+export function Avatar({ nome, me, foto = 0, size = 40, tier, ring }) {
   const h = matiz(nome);
   const fundo = `linear-gradient(135deg, hsl(${h} 55% 46%), hsl(${(h + 40) % 360} 60% 30%))`;
+  const C = 2 * Math.PI * (size / 2 + 3);
   return <span className={`av2 ${tier ? 't' + tier : ''} ${me ? 'me' : ''}`} style={{ width: size, height: size, fontSize: size * 0.34 }}>
     {me ? <span className="av2-in photo"><Retrato f={FOTOS[foto] || FOTOS[0]} /></span>
       : <span className="av2-in" style={{ background: fundo, color: '#fff' }}>{iniciais(nome)}</span>}
+    {ring != null && <svg className="av2-ring" viewBox={`0 0 ${size + 8} ${size + 8}`} style={{ width: size + 8, height: size + 8 }}>
+      <circle cx={size / 2 + 4} cy={size / 2 + 4} r={size / 2 + 3} className="t" />
+      <circle cx={size / 2 + 4} cy={size / 2 + 4} r={size / 2 + 3} className="f" strokeDasharray={C} strokeDashoffset={C * (1 - ring)} />
+    </svg>}
   </span>;
+}
+
+// Sequência de cruzadinhas ao lado do nome (o jogo não registra ofensiva diária de login).
+export function StreakChip({ n }) {
+  return <span className="stc" title={`${n} cruzadinhas seguidas`} aria-label={`${n} cruzadinhas seguidas`}>
+    <FlameIcon size={14} /><b key={n} className="mono">{n}</b>
+  </span>;
+}
+
+// Barra de abas do celular: Início, Ranking, Estatísticas e Perfil.
+const ABAS = [['menu', 'Início', Home], ['ranking', 'Ranking', Trophy], ['estatisticas', 'Estatísticas', BarChart3], ['perfil', 'Perfil', UserRound]];
+export function Tabbar({ on, ir }) {
+  return <nav className="tabbar" aria-label="Seções">{ABAS.map(([id, t, icone]) => {
+    const Ic = icone;
+    return <button key={id} className={`tab ${on === id ? 'on' : ''}`} aria-current={on === id ? 'page' : undefined} onClick={() => on !== id && ir(id)}><Ic />{t}</button>;
+  })}</nav>;
 }
 
 const CORES_COROA = {

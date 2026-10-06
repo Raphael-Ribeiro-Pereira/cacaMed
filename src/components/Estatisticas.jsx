@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Award, BookOpen, Brain, Check, ChevronLeft, Clock3, Crosshair, Lock, Medal, RotateCcw, Sparkles, Swords, Target, Ticket, Trophy } from 'lucide-react';
+import { ArrowRight, Award, BookOpen, Brain, Check, Clock3, Crosshair, Lock, Medal, RotateCcw, Sparkles, Swords, Target, Ticket, Trophy } from 'lucide-react';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { AGENTE, DOENCAS, MOVES, PETS } from '../utils/batalha';
 import { MATERIAS, materiaDoTopico } from '../utils/coroas';
 import { progressoGlobal } from '../utils/economia';
+import { MODOS, dadosModo } from '../utils/modosPerfil';
 import { resumirCruzadinhas } from '../utils/progressoCruzadinha';
 import { animar, fmt, useLargo } from '../utils/prototipo';
 import { PetArt, Species } from './batalhaArte';
-import { CountNum, FlameIcon } from './prototipoUi';
+import { CountNum, FlameIcon, Tabbar } from './prototipoUi';
 import '../prototipo.css';
 
 // Dossiê do plantonista, portado do protótipo de movimento. Primeira camada: perfil em memória
@@ -15,39 +16,9 @@ import '../prototipo.css';
 // (erros por tema, semanas e partidas recentes), com skeletons e cache por sessão do app.
 const cacheHistorico = new Map();
 
-const MODOS = [
-  ['cruzadinha', 'Cruzadinhas', 'var(--mint)'], ['quiz', 'Quiz', '#5cc8ff'], ['verdadeMentira', 'Verdadeiro ou mentira', 'var(--amber)'],
-  ['ddx', 'Plantão médico', '#b49cff'], ['erroMedico', 'Erro médico', '#8b5cf6'], ['causaEfeito', 'Causa e efeito', '#6d4bd8'], ['batalha', 'Batalha diagnóstica', '#ff5c8a'],
-];
 const COR_MODO = Object.fromEntries(MODOS.map(([id, , cor]) => [id, cor]));
 const NOME_MODO = Object.fromEntries(MODOS.map(([id, nome]) => [id, nome]));
 const n = v => Number(v) || 0;
-
-function dadosModo(p, id) {
-  if (id === 'cruzadinha') {
-    const r = resumirCruzadinhas(p.estatisticas);
-    const xp = Object.entries(p.xpTopicos || {}).filter(([k]) => !k.startsWith('DDX-')).reduce((t, [, v]) => t + n(v), 0);
-    return { partidas: r.partidas, acertos: r.letras, erros: n(p.estatisticasGerais?.errosTotais), unidade: 'letras', xp,
-      recompensa: r.partidas ? `${fmt(r.partidas * 2)} tickets · maior palavra com ${n(p.estatisticasGerais?.maiorPalavra)} letras` : '2 tickets por cruzadinha' };
-  }
-  if (id === 'quiz' || id === 'verdadeMentira') {
-    const t = p.treinos?.[id] || {};
-    return { partidas: n(t.partidas), acertos: n(t.acertos), erros: Math.max(0, n(t.itens) - n(t.acertos)), unidade: id === 'quiz' ? 'perguntas' : 'frases', xp: n(t.xp),
-      recompensa: `${n(t.medidor)}/2 rodadas para o próximo ticket` };
-  }
-  if (id === 'ddx') {
-    const d = p.ddx || {};
-    return { partidas: n(d.partidas), acertos: n(d.seguros), erros: Math.max(0, n(d.partidas) - n(d.seguros)), unidade: 'plantões', xp: n(d.xp),
-      recompensa: n(d.seguros) ? `${n(d.seguros)} plantão${n(d.seguros) > 1 ? 'ões' : ''} seguro${n(d.seguros) > 1 ? 's' : ''}` : '—' };
-  }
-  if (id === 'batalha') {
-    const b = p.batalha || {};
-    return { partidas: n(b.partidas), acertos: n(b.vitorias), erros: Math.max(0, n(b.partidas) - n(b.vitorias)), unidade: 'batalhas', xp: n(b.xp),
-      recompensa: `${(b.descobertas || []).length}/${DOENCAS.length} doenças descobertas` };
-  }
-  const a = p[id] || {};
-  return { partidas: n(a.partidas), acertos: n(a.acertos), erros: Math.max(0, n(a.etapas) - n(a.acertos)), unidade: 'etapas', xp: n(a.xp), recompensa: '—' };
-}
 
 const nota = v => (v >= 90 ? 'S' : v >= 80 ? 'A' : v >= 70 ? 'B' : v >= 60 ? 'C' : 'D');
 const pct = (a, e) => (a + e ? Math.round((a / (a + e)) * 100) : null);
@@ -173,9 +144,7 @@ export default function Estatisticas({ usuario, dadosUsuario, setTelaAtual, serv
   const modos = MODOS.map(([id, nome, cor]) => ({ id, nome, cor, ...dadosModo(p, id) }));
   const jogos = modos.reduce((s, m) => s + m.partidas, 0);
   const L = progressoGlobal(p);
-  const voltar = () => setTelaAtual('menu');
   const topo = <div className="topbar">
-    <button className="icon-btn" onClick={voltar} aria-label="Voltar ao centro de comando"><ChevronLeft /></button>
     <h1><small>Dossiê do plantonista</small>Estatísticas</h1>
     {jogos > 0 && (erro ? <button className="sync err" onClick={() => { setErro(''); setTentativa(t => t + 1); }}><span className="dot" />Histórico indisponível · tentar de novo</button>
       : <span className={`sync ${hist ? 'ok' : ''}`}><span className="dot" />{hist ? 'Painel atualizado' : 'Buscando histórico'}</span>)}
@@ -192,6 +161,7 @@ export default function Estatisticas({ usuario, dadosUsuario, setTelaAtual, serv
         <button className="primary" onClick={() => setTelaAtual('topicos')}>Jogar a primeira cruzadinha <ArrowRight size={16} /></button>
       </div>
     </div>
+    {!web && <Tabbar on="estatisticas" ir={setTelaAtual} />}
   </div></div>;
 
   const comNota = modos.map(m => ({ ...m, acc: pct(m.acertos, m.erros) })).filter(m => m.acc != null);
@@ -358,5 +328,6 @@ export default function Estatisticas({ usuario, dadosUsuario, setTelaAtual, serv
         <p className="note">Resumo, modos, DDX, Batalha, pets e conquistas saem do seu perfil. Erros por tema, semanas e partidas recentes vêm do histórico salvo no servidor.</p>
       </Sec>
     </div>
+    {!web && <Tabbar on="estatisticas" ir={setTelaAtual} />}
   </div></div>;
 }

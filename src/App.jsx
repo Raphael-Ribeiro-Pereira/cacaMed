@@ -1,4 +1,5 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { motion } from 'framer-motion';
 import { auth, db } from './firebase'; 
 import { getIdTokenResult, onAuthStateChanged } from 'firebase/auth';
 import { sairDaConta } from './services/sairDaConta';
@@ -8,7 +9,6 @@ import { marcarInterfacePronta } from './services/diagnosticoDesempenho';
 import { buscarConteudoSupabase, migrarSessaoFirebase } from './services/perfilSupabase';
 import { doc, getDoc, runTransaction } from 'firebase/firestore';
 import { prepararMissoesDoDia } from './utils/missoes';
-import { Stethoscope } from 'lucide-react';
 import { limparEstatisticasClinicasAntigas, possuiEstatisticasClinicasAntigas } from './utils/estatisticasClinicas';
 import './index.css';
 
@@ -26,8 +26,29 @@ const Cadastro2 = lazy(() => import('./components/Cadastro2'));
 const VincularGoogle = lazy(() => import('./components/VincularGoogle'));
 import { chamarPerfilPlanilha } from './services/perfilPlanilha';
 import { importarBancoCSV } from './utils/importarBancoCSV';
+import { fotoDoPerfil } from './utils/fotosCracha';
+import { animar } from './utils/prototipo';
+import { carregarRanking } from './services/rankingSessao';
+import { BarraLateral } from './components/cascaUi';
+import { Ecg } from './components/entradaUi';
+import './prototipo.css';
 
 const PERFIL_NA_PLANILHA = ['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS);
+
+// Abertura do protótipo de movimento com as etapas reais: sessão, credencial e perfil com as missões do dia.
+const ETAPAS_ABERTURA = ['Conectando ao prontuário', 'Validando credencial', 'Carregando missões do dia', 'Plantão liberado'];
+function Abertura({ etapa }) {
+  return <div className="cbt"><div className="cbt-scr plain" role="status" aria-live="polite">
+    <div className="logo">caco<b>Med</b></div>
+    <Ecg />
+    <div className="boot-steps">{[0, 1, 2].map(i => <span key={i} className={i <= etapa ? 'on' : ''} />)}</div>
+    <div className="boot-line"><motion.span key={etapa} style={{ display: 'inline-block' }} initial={animar() ? { opacity: 0, y: 8 } : false} animate={{ opacity: 1, y: 0 }}>{ETAPAS_ABERTURA[etapa]}</motion.span></div>
+  </div></div>;
+}
+// Telas com a casca do protótipo: barra lateral na web (as de jogo ficam sem ela para não pular
+// as confirmações de progresso não salvo) e barra de abas no celular, dentro de cada tela.
+const TELAS_CASCA = ['menu', 'ranking', 'estatisticas', 'perfil', 'topicos'];
+const espera = ms => new Promise(ok => setTimeout(ok, ms));
 
 const PlantaoMedico = lazy(() => import('./components/PlantaoMedico'));
 const ErroMedico = lazy(() => import('./components/ErroMedico'));
@@ -44,6 +65,9 @@ function App() {
   const [erroPerfil, setErroPerfil] = useState('');
   const [tentativaPerfil, setTentativaPerfil] = useState(0);
   const [recuperandoSenha, setRecuperandoSenha] = useState(false);
+  const [etapaAbertura, setEtapaAbertura] = useState(0);
+  // Cadastro por e-mail em andamento: a sessão nova não troca de tela enquanto o crachá é impresso.
+  const cadastroEmAndamento = useRef(false);
 
   // Estados das Cruzadinhas
   const [bancoDePalavras, setBancoDePalavras] = useState(null);
@@ -99,16 +123,20 @@ function App() {
       ultimaIdentidade = identidade;
       const versaoAtual = ++versaoSessao;
       const sessaoAtual = () => ativo && versaoAtual === versaoSessao;
+      if (user && cadastroEmAndamento.current) { setUsuario(user); return; }
       setCarregandoAuth(true);
+      setEtapaAbertura(user ? 1 : 0);
       if (user) {
         setUsuario(user);
         if (PERFIL_NA_PLANILHA) {
           try {
+            setEtapaAbertura(2);
             const perfil = await chamarPerfilPlanilha(user, 'obterPerfil');
             if (USAR_SUPABASE && perfil && user.source !== 'supabase') {
               await migrarSessaoFirebase(user);
             }
             if (!sessaoAtual()) return;
+            if (perfil && animar()) { setEtapaAbertura(3); await espera(350); if (!sessaoAtual()) return; }
             setDadosUsuario(perfil);
             if (perfil) setTelaAtual('menu');
             else {
@@ -196,6 +224,12 @@ function App() {
     return () => controlador.abort();
   }, [tentativaBanco]);
 
+  const comCasca = Boolean(usuario && dadosUsuario && TELAS_CASCA.includes(telaAtual) && !carregandoAuth);
+  useEffect(() => {
+    document.body.classList.toggle('com-casca', comCasca);
+    return () => document.body.classList.remove('com-casca');
+  }, [comCasca]);
+
   useEffect(() => {
     if (PERFIL_NA_PLANILHA || !usuario || !dadosUsuario) return;
     sincronizarRanking(usuario, dadosUsuario).catch(() => {
@@ -211,14 +245,14 @@ function App() {
 
 
   if (recuperandoSenha) return <Suspense fallback={<div className="stitch-page stitch-loading">Carregando...</div>}><RecuperarSenha /></Suspense>;
-  if (carregandoAuth) {
-    return <div className="stitch-page stitch-loading"><Stethoscope aria-hidden="true" /><span>Acessando prontuários...</span></div>;
-  }
+  if (carregandoAuth) return <Abertura etapa={etapaAbertura} />;
 
   return (
     <Suspense fallback={<div className="stitch-page stitch-loading" role="status">Carregando...</div>}>
       {telaAtual === 'login' && <Login setTelaAtual={setTelaAtual} />}
-      {telaAtual === 'cadastro' && <Cadastro setTelaAtual={setTelaAtual} onConcluido={perfil => { setDadosUsuario(perfil); setTelaAtual('menu'); }} />}
+      {comCasca && <BarraLateral tela={telaAtual} ir={setTelaAtual} p={dadosUsuario} foto={fotoDoPerfil(dadosUsuario)} aoPassarRanking={() => { carregarRanking().catch(() => {}); }} />}
+      {telaAtual === 'cadastro' && <Cadastro setTelaAtual={setTelaAtual} aoCriarConta={ativo => { cadastroEmAndamento.current = ativo; }}
+        onConcluido={perfil => { cadastroEmAndamento.current = false; setDadosUsuario(perfil); setTelaAtual('menu'); }} />}
       {telaAtual === 'vincularGoogle' && usuario && <VincularGoogle usuario={usuario} onConfirmado={() => setTelaAtual('cadastro2')} />}
       {telaAtual === 'cadastro2' && usuario && <Cadastro2 usuario={usuario} onConcluido={perfil => { setDadosUsuario(perfil); setTelaAtual('menu'); }} />}
       {telaAtual === 'erroPerfil' && <main className="stitch-page stitch-loading flex-col p-6 text-center"><p role="alert">{erroPerfil}</p><div className="flex gap-3"><button className="stitch-primary" onClick={() => setTentativaPerfil(valor => valor + 1)}>Tentar novamente</button><button className="stitch-back" onClick={sairDaConta}>Voltar ao login</button></div></main>}

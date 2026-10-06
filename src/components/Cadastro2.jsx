@@ -1,91 +1,141 @@
-import { sairDaConta } from '../services/sairDaConta';
-import { useState } from 'react';
-import { EmailAuthProvider, linkWithCredential } from 'firebase/auth';
+import { useEffect, useState } from 'react';
+import { Check, KeyRound, Lock, LogOut, Printer, UserRound, X } from 'lucide-react';
+import { contaPadrao } from '../services/entradaConta';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
+import { desdeDe, useDisponibilidade } from '../utils/cracha';
+import { fotoPadrao, primeiroNome, sugestoes } from '../utils/entrada';
+import { useLargo } from '../utils/prototipo';
+import { CascaEntrada, Campo, Erro, Escolhas, GoogleG, Impressao, LadoCracha, MiniCracha, Ok, Olho } from './entradaUi';
+import { StatusUser } from './crachaUi';
+import '../prototipo.css';
 
-const MATERIAS = [
-  ['anatomia', 'Anatomia'], ['neurologia', 'Neurologia'],
-  ['farmaco', 'Farmacologia'], ['micro', 'Microbiologia'],
-  ['clinica', 'Clínica Geral'], ['patologia', 'Patologia'],
-];
+// Cadastro 2.0 portado do protótipo de movimento: conta já autenticada (Google ou e-mail confirmado)
+// sem perfil. Username conferido no servidor, sugestões livres e o crachá impresso durante o cadastrar.
+const MENSAGENS = {
+  'auth/email-already-in-use': 'Este e-mail já tem senha em outra conta. Entre pela conta antiga e vincule o Google por lá.',
+  'auth/credential-already-in-use': 'Esta credencial já pertence a outra conta. Entre pela conta antiga para vincular o Google.',
+  'auth/weak-password': 'Escolha uma senha com pelo menos 6 caracteres.',
+};
 
-export default function Cadastro2({ usuario, onConcluido }) {
-  const [titulo, setTitulo] = useState('');
-  const [materiaPreferida, setMateriaPreferida] = useState('');
-  const [usarNomeGoogle, setUsarNomeGoogle] = useState(false);
+// Quando o username está em uso, confere as sugestões do nome e mostra só as livres.
+function useSugestoesLivres(nome, ativo, atual, conferir) {
+  const [r, setR] = useState({ chave: null, lista: [] });
+  const chave = ativo ? `${nome}|${atual}` : null;
+  useEffect(() => {
+    if (!chave) return undefined;
+    let vivo = true;
+    Promise.all(sugestoes(nome).filter(s => s !== atual).map(c => conferir(c).then(x => (x.disponivel ? c : null)).catch(() => null)))
+      .then(l => { if (vivo) setR({ chave, lista: l.filter(Boolean) }); });
+    return () => { vivo = false; };
+  }, [chave, nome, atual, conferir]);
+  return r.chave === chave ? r.lista : [];
+}
+
+export default function Cadastro2({ usuario, onConcluido, conta = contaPadrao, servicoPerfil = chamarPerfilPlanilha }) {
+  const web = useLargo();
+  const google = usuario.providerData?.some(p => p.providerId === 'google.com');
+  const nomeConta = usuario.displayName || usuario.nome || (usuario.email || '').split('@')[0] || 'Plantonista';
+  const primeiro = primeiroNome(nomeConta);
+  const [usarPrimeiro, setUsarPrimeiro] = useState(false);
   const [username, setUsername] = useState('');
+  const [titulo, setTitulo] = useState('');
+  const [materia, setMateria] = useState('');
+  const [foto, setFoto] = useState(null);
   const [senha, setSenha] = useState('');
-  const [confirmacaoSenha, setConfirmacaoSenha] = useState('');
-  const [senhaCriada, setSenhaCriada] = useState(false);
-  const [salvando, setSalvando] = useState(false);
+  const [conf, setConf] = useState('');
+  const [ver, setVer] = useState(false);
+  const [tentou, setTentou] = useState(false);
   const [erro, setErro] = useState('');
-  const precisaCriarSenha = !senhaCriada && !usuario.providerData.some(provedor => provedor.providerId === 'password');
-  const senhaValida = !precisaCriarSenha || (senha.length >= 6 && senha === confirmacaoSenha);
+  const [senhaCriada, setSenhaCriada] = useState(false);
+  const [impressao, setImpressao] = useState(null);
+  const [perfilFinal, setPerfilFinal] = useState(null);
+  const [desde] = useState(() => desdeDe(new Date()));
+  const [conferir] = useState(() => u => servicoPerfil(usuario, 'verificarUsername', { username: u }));
 
-  const concluir = async evento => {
-    evento.preventDefault();
-    if (!titulo || !materiaPreferida || (!usarNomeGoogle && username.trim().length < 2) || !senhaValida || salvando) return;
-    setSalvando(true);
-    setErro('');
+  const precisaSenha = !senhaCriada && !usuario.providerData?.some(p => p.providerId === 'password');
+  const u = usarPrimeiro ? primeiro : username;
+  const check = useDisponibilidade(u, true, conferir);
+  const livres = useSugestoesLivres(nomeConta, check === 'taken', u, conferir);
+  const senhaOk = senha.length >= 6, confOk = conf.length > 0 && conf === senha;
+  const pronto = check === 'ok' && !!titulo && !!materia && (!precisaSenha || (senhaOk && confOk));
+  const fotoAtual = foto ?? fotoPadrao(titulo);
+  const cracha = { p: { uid: usuario.uid, titulo, materiaPreferida: materia, pontuacaoTotal: 0, estatisticas: {} },
+    email: usuario.email, nome: nomeConta, username: u || 'username', foto: fotoAtual, desde };
+
+  const registrar = async (tentativa, passos) => {
+    const comSenha = precisaSenha;
+    setImpressao({ tentativa, passos, etapa: comSenha ? 0 : 1, erro: '' });
     try {
-      if (precisaCriarSenha) {
-        if (usuario.source === 'supabase') {
-          await chamarPerfilPlanilha(usuario, 'definirSenha', { senha });
-        } else await linkWithCredential(usuario, EmailAuthProvider.credential(usuario.email, senha));
-        setSenhaCriada(true);
-        setSenha('');
-        setConfirmacaoSenha('');
+      if (comSenha) {
+        await conta.criarSenha(usuario, senha);
+        setSenhaCriada(true); setSenha(''); setConf('');
+        setImpressao(i => ({ ...i, etapa: 1 }));
       }
-      const perfil = await chamarPerfilPlanilha(usuario, 'cadastrar', { titulo, materiaPreferida, usarNomeGoogle, username: username.trim() });
-      onConcluido(perfil);
+      let perfil = await servicoPerfil(usuario, 'cadastrar', { titulo, materiaPreferida: materia, usarNomeGoogle: false, username: u });
+      setImpressao(i => ({ ...i, etapa: 2 }));
+      if (foto !== null && foto !== fotoPadrao(titulo)) perfil = await servicoPerfil(usuario, 'editarPerfil', { nome: perfil.nome, username: perfil.username, foto });
+      setPerfilFinal(perfil);
+      setImpressao(i => ({ ...i, etapa: passos.length }));
     } catch (falha) {
-      const mensagens = {
-        'auth/email-already-in-use': 'Este e-mail já tem senha em outra conta. Entre pela conta antiga e vincule o Google por lá.',
-        'auth/credential-already-in-use': 'Esta credencial já pertence a outra conta. Entre pela conta antiga para vincular o Google.',
-        'auth/weak-password': 'Escolha uma senha com pelo menos 6 caracteres.',
-      };
-      setErro(mensagens[falha.code] || falha.message || 'Não foi possível salvar o cadastro.');
-    } finally {
-      setSalvando(false);
+      setImpressao(i => ({ ...i, erro: MENSAGENS[falha.code] || falha.message || 'Não foi possível salvar o cadastro.' }));
     }
   };
 
-  return <main className="stitch-integrated stitch-auth min-h-screen bg-[#0B1120] text-slate-300 flex items-center justify-center p-4">
-    <form onSubmit={concluir} className="w-full max-w-[520px] bg-[#151F32] rounded-[24px] border border-cyan-500/20 p-8 space-y-5">
-      <div>
-        <span className="text-cyan-400 text-xs font-bold uppercase tracking-widest">cacoMed · Cadastro 2.0</span>
-        <h1 className="text-white text-2xl font-bold mt-2">Vamos terminar seu cadastro</h1>
-        <p className="text-slate-300 text-sm mt-2">Seu nome e e-mail já vieram da conta. Falta escolher como você aparecerá no plantão.</p>
+  const enviar = e => {
+    e.preventDefault();
+    setTentou(true);
+    if (!pronto) { setErro(check !== 'ok' ? 'Escolha um username disponível.' : 'Preencha todos os campos do prontuário corretamente.'); return; }
+    setErro('');
+    const passos = [precisaSenha ? (google ? 'Vinculando senha à conta Google' : 'Vinculando senha à conta') : (google ? 'Conta Google conferida' : 'Conta conferida'), 'Registrando no prontuário', 'Imprimindo crachá'];
+    registrar((impressao?.tentativa || 0) + 1, passos);
+  };
+
+  const lead = google ? 'Seu nome e e-mail já vieram da conta. Falta escolher como você aparece no plantão.' : 'Seu e-mail foi confirmado. Falta escolher como você aparece no plantão.';
+  return <div className={`cbt ${web ? 'web' : ''}`}><div className="cbt-scr au-scr r-cadgoogle">
+    {!web && <div className="topbar"><h1><small>{google && <GoogleG />}{google ? 'Conta Google conectada' : 'Conta confirmada'}</small>Cadastro 2.0</h1></div>}
+    <CascaEntrada web={web} lado={<LadoCracha cracha={cracha} />}>
+      {web && <div className="au-head"><span className="kicker">cacoMed · Cadastro 2.0</span><h1>Vamos terminar seu cadastro</h1><p>{lead}</p></div>}
+      {!web && <p className="au-lead">{lead}</p>}
+      <div className="au-acct">
+        <span className="au-acct-av" aria-hidden="true">{nomeConta[0]}</span>
+        <span className="au-acct-tx"><b>{nomeConta}</b><small>{usuario.email}</small></span>
+        {google && <span className="au-gtag"><GoogleG />Google</span>}
       </div>
-      <p className="text-slate-300 text-sm">{usuario.displayName || usuario.email} · {usuario.email}</p>
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-2 text-sm" htmlFor="cadastro-usar-google"><input id="cadastro-usar-google" type="checkbox" checked={usarNomeGoogle} onChange={evento => setUsarNomeGoogle(evento.target.checked)} /> Usar primeiro nome do Google como username</label>
-        <label className="flex-1 min-w-[180px] text-sm" htmlFor="cadastro-username">Ou escolha seu username<input id="cadastro-username" value={username} onChange={evento => setUsername(evento.target.value)} disabled={usarNomeGoogle} minLength={2} maxLength={40} required={!usarNomeGoogle} className="mt-1 w-full rounded-xl bg-[#0B1120] border border-cyan-500/30 p-3 text-white disabled:opacity-50" /></label>
-      </div>
-      <label className="block text-sm font-semibold" htmlFor="cadastro-titulo">Título</label>
-      <select id="cadastro-titulo" required value={titulo} onChange={evento => setTitulo(evento.target.value)} className="w-full rounded-xl bg-[#0B1120] border border-cyan-500/30 p-3 text-white">
-        <option value="">Escolha seu título</option>
-        <option value="Doutor">Dr.</option>
-        <option value="Doutora">Dra.</option>
-      </select>
-      <label className="block text-sm font-semibold" htmlFor="cadastro-materia">Matéria preferida</label>
-      <select id="cadastro-materia" required value={materiaPreferida} onChange={evento => setMateriaPreferida(evento.target.value)} className="w-full rounded-xl bg-[#0B1120] border border-cyan-500/30 p-3 text-white">
-        <option value="">Escolha uma matéria</option>
-        {MATERIAS.map(([valor, nome]) => <option key={valor} value={valor}>{nome}</option>)}
-      </select>
-      {precisaCriarSenha && <div className="space-y-3">
-        <p className="text-slate-300 text-sm">Crie uma senha para também entrar pelo formulário de e-mail. Ela é protegida pelo serviço de autenticação.</p>
-        <label className="block text-sm font-semibold" htmlFor="cadastro2-senha">Senha</label>
-        <input id="cadastro2-senha" type="password" autoComplete="new-password" minLength={6} required value={senha} onChange={evento => setSenha(evento.target.value)} className="w-full rounded-xl bg-[#0B1120] border border-cyan-500/30 p-3 text-white" />
-        <label className="block text-sm font-semibold" htmlFor="cadastro2-confirmacao">Confirmar senha</label>
-        <input id="cadastro2-confirmacao" type="password" autoComplete="new-password" minLength={6} required value={confirmacaoSenha} onChange={evento => setConfirmacaoSenha(evento.target.value)} className="w-full rounded-xl bg-[#0B1120] border border-cyan-500/30 p-3 text-white" />
-        {confirmacaoSenha && senha !== confirmacaoSenha && <p role="alert" className="text-red-400 text-sm">As senhas não coincidem.</p>}
-      </div>}
-      {erro && <p role="alert" className="text-red-400 text-sm">{erro}</p>}
-      <button type="submit" disabled={salvando || !titulo || !materiaPreferida || (!usarNomeGoogle && username.trim().length < 2) || !senhaValida} className="w-full rounded-xl bg-cyan-500 p-3 text-[#0B1120] font-bold disabled:opacity-50">
-        {salvando ? 'Salvando...' : 'Concluir cadastro'}
-      </button>
-      <button type="button" onClick={() => sairDaConta()} className="w-full text-slate-300 text-sm underline">Sair da conta</button>
-    </form>
-  </main>;
+      {!web && <MiniCracha cracha={cracha} />}
+      <form className="au-card" onSubmit={enviar} noValidate>
+        <Erro texto={erro} />
+        {primeiro && <label className="au-check" htmlFor="cg-google">
+          <input id="cg-google" type="checkbox" checked={usarPrimeiro} onChange={e => setUsarPrimeiro(e.target.checked)} />
+          <span className="box"><Check size={12} strokeWidth={3} /></span>
+          {google ? 'Usar meu primeiro nome do Google' : 'Usar meu primeiro nome'} <b className="mono">@{primeiro}</b>
+        </label>}
+        <Campo id="cg-user" label={usarPrimeiro ? 'Username (do seu nome)' : 'Ou escolha seu username'} icon={UserRound}
+          estado={check === 'ok' ? 'good' : check === 'taken' || check === 'invalid' || (tentou && !u) ? 'bad' : ''}
+          ajuda={<StatusUser check={check} />}>
+          <span className="at">@</span>
+          <input id="cg-user" autoComplete="off" spellCheck={false} maxLength={20} disabled={usarPrimeiro} placeholder="seu.username" value={u} onChange={e => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))} />
+          {check === 'checking' ? <span className="spin sm" aria-label="Conferindo" /> : check === 'ok' ? <span className="okdot"><Check size={11} strokeWidth={3} /></span> : null}
+        </Campo>
+        {livres.length > 0 && <div className="au-sugs"><span>Livres agora:</span>{livres.map(s => <button key={s} type="button" className="au-sug mono" onClick={() => { setUsarPrimeiro(false); setUsername(s); }}>@{s}</button>)}</div>}
+        <Escolhas titulo={titulo} setTitulo={setTitulo} materia={materia} setMateria={setMateria} foto={fotoAtual} setFoto={setFoto} tentou={tentou} />
+        {precisaSenha && <div className="au-pw">
+          <span className="au-pw-h"><KeyRound size={15} /><b>Crie uma senha</b></span>
+          <p>Para também entrar pelo formulário de e-mail. Ela fica no serviço de autenticação, não no seu perfil.</p>
+          <div className="au-two">
+            <Campo id="cg-senha" label="Senha" icon={Lock} estado={senhaOk ? 'good' : tentou ? 'bad' : ''} ajuda={<Ok on={senhaOk}>6 caracteres ou mais</Ok>}>
+              <input id="cg-senha" type={ver ? 'text' : 'password'} autoComplete="new-password" value={senha} onChange={e => setSenha(e.target.value)} />
+              <Olho ver={ver} set={setVer} />
+            </Campo>
+            <Campo id="cg-conf" label="Confirmar senha" icon={Lock} estado={confOk ? 'good' : (conf && !confOk) || tentou ? 'bad' : ''} ajuda={conf && !confOk ? <span className="cr-st no"><X size={13} />As senhas não coincidem</span> : <Ok on={confOk}>Senhas iguais</Ok>}>
+              <input id="cg-conf" type={ver ? 'text' : 'password'} autoComplete="new-password" value={conf} onChange={e => setConf(e.target.value)} />
+            </Campo>
+          </div>
+        </div>}
+        <button className="primary" type="submit" disabled={Boolean(impressao && !impressao.erro)}><Printer />Concluir e emitir crachá</button>
+      </form>
+      <button className="au-out" onClick={() => conta.sair()}><LogOut size={15} />{google ? 'Sair da conta Google' : 'Sair da conta'}</button>
+    </CascaEntrada>
+    {impressao && <Impressao cracha={cracha} passos={impressao.passos} etapa={impressao.etapa} erro={impressao.erro} tentativa={impressao.tentativa}
+      aoTentar={() => registrar(impressao.tentativa + 1, impressao.passos)} aoRevisar={() => setImpressao(null)} aoEntrar={() => onConcluido(perfilFinal)} />}
+  </div></div>;
 }

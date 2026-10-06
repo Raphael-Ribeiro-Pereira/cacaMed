@@ -1,5 +1,5 @@
 /* Estilos do protótipo de movimento (cacoMed Protótipo de Movimento), gerados por script e isolados sob .cbt
-   para não afetar as demais telas. Batalha, Ranking/Coroas, Estatísticas e Crachá usam esta folha. */
+   para não afetar as demais telas. Entrada, menu, casca, Batalha, Ranking/Coroas, Estatísticas e Crachá usam esta folha. */
 .cbt {--canvas: #0b0f19; --surface: #111827; --elev: #1a2234; --line: rgba(220, 226, 247, .09); --line-strong: #3a4a46; --text: #dce2f7; --muted: #8d9bb3; --mint: #00f5d4; --mint-2: #06d6a0; --mint-ink: #00382f; --amber: #ffb703; --crimson: #ff3366; --violet: #8b5cf6; --sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace; --ease: cubic-bezier(.16, 1, .3, 1); color-scheme: dark; container-type: inline-size; }
 .cbt { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; overflow: hidden; background: var(--canvas); color: var(--text); font: 400 14px/1.45 var(--sans); isolation: isolate; }
 .cbt::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(ellipse 80% 45% at 80% 0%, rgba(0, 245, 212, .10), transparent 70%), radial-gradient(ellipse 70% 40% at 0% 100%, rgba(139, 92, 246, .08), transparent 70%); }
@@ -333,7 +333,24 @@
 .cbt .muted { color: var(--muted); margin: 0; font-size: 13px; }
 .cbt kbd { font: 600 10.5px var(--mono); padding: 1px 6px; border-radius: 5px; background: var(--elev); border: 1px solid var(--line-strong); border-bottom-width: 2px; color: var(--text); }
 .cbt .kbd-hint { font-size: 12px; color: var(--muted); display: block; }
+.cbt .side { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 4px; padding: 18px 12px; border-right: 1px solid var(--line); background: rgba(7, 11, 20, .72); min-height: 0; }
+.cbt .side-brand { font: 800 21px var(--sans); letter-spacing: -.02em; padding: 2px 10px 18px; }
+.cbt .side-brand b { color: var(--mint); }
+.cbt .side-brand small { display: block; font: 600 9.5px var(--mono); letter-spacing: .1em; color: var(--muted); margin-top: 3px; }
+.cbt .side-nav { display: grid; gap: 3px; }
+.cbt .nav-i { display: flex; align-items: center; gap: 11px; width: 100%; padding: 10px 12px; border-radius: 11px; border: 0; background: none; color: var(--muted); font: 600 13.5px var(--sans); text-align: left; transition: background .2s, color .2s; }
+.cbt .nav-i svg { width: 18px; height: 18px; flex: none; }
+.cbt .nav-i:hover { background: rgba(220, 226, 247, .05); color: var(--text); }
+.cbt .nav-i.on { background: rgba(0, 245, 212, .1); color: var(--mint); }
+.cbt .nav-i .badge { margin-left: auto; font: 700 8.5px var(--mono); letter-spacing: .05em; padding: 2px 5px; border-radius: 4px; }
+.cbt .nav-i .badge.new { background: var(--amber); color: #2a1700; }
+.cbt .nav-i .badge.rev { color: #b49cff; border: 1px solid rgba(139, 92, 246, .4); }
+.cbt .side-user { margin-top: auto; padding: 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); display: grid; gap: 9px; }
+.cbt .side-user .row { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.cbt .side-user .row b { display: block; font-size: 14px; }
+.cbt .side-user .row small { font: 600 10px var(--mono); color: var(--mint); letter-spacing: .06em; }
 .cbt .avatar.sm { width: 36px; height: 36px; font-size: 13px; box-shadow: 0 0 0 2px var(--canvas), 0 0 0 3.5px rgba(0, 245, 212, .5); }
+@container (max-width: 900px) { .cbt .side { padding: 16px 10px; align-items: center; } .cbt .side .lbl, .cbt .side .badge, .cbt .side .hide-c, .cbt .side-brand small { display: none; } .cbt .side-brand { font-size: 0; padding: 0 0 14px; } .cbt .side-brand b { font-size: 20px; } .cbt .nav-i { justify-content: center; padding: 11px; } .cbt .side-user { padding: 8px; justify-items: center; } }
 @keyframes cbt-indet { from { left: -40%; } to { left: 100%; } }
 .cbt.web .toast { left: auto; right: 20px; top: 16px; width: min(360px, calc(100% - 40px)); }
 .cbt.web .topbar { padding: 22px 28px 14px; }
@@ -572,7 +589,12 @@
 .cbt .legend span { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .cbt .legend i { width: 8px; height: 8px; border-radius: 2px; flex: none; }
 .cbt .legend b { margin-left: auto; color: var(--text); font-size: 11px; }
+.cbt .side { overflow: visible; }
+.cbt .side-user { padding: 6px; }
+.cbt .side .ubadge { width: 100%; }
+.cbt .nav-sep { height: 1px; background: var(--line); margin: 5px 10px; }
 .cbt .w-head-r { display: flex; align-items: center; gap: 12px; }
+@container (max-width: 900px) { .cbt .side .ub-txt { display: none; } .cbt .side .ubadge { padding: 3px; width: auto; } .cbt .nav-sep { margin: 4px 6px; } }
 .cbt .w-label { grid-column: 1 / -1; font: 700 11px var(--mono); letter-spacing: .1em; color: var(--muted); margin: 4px 0 -6px; display: flex; gap: 10px; align-items: baseline; }
 .cbt .w-label small { font-weight: 500; letter-spacing: 0; }
 .cbt .w-hero { grid-column: span 6; }
@@ -1610,3 +1632,12 @@
 .cbt .rk-crit { position: static; justify-content: center; margin: 0 0 14px; padding: 0; background: none; }
 .cbt.web .rk-crit { margin: 0 0 16px; padding: 0; }
 .cbt .cbt-erro { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 26px 18px; }
+:root { --casca-w: 0px; }
+@media (min-width: 960px) { body.com-casca { --casca-w: 232px; } }
+@media (min-width: 960px) and (max-width: 1099px) { body.com-casca { --casca-w: 68px; } }
+.cbt.cbt-casca { right: auto; width: var(--casca-w); z-index: 40; overflow: visible; container-type: normal; }
+.cbt.cbt-casca .side { height: 100%; }
+body.com-casca .cbt.web:not(.cbt-casca) { left: var(--casca-w); }
+@media (min-width: 960px) { body.com-casca .stitch-page { padding-left: var(--casca-w); } }
+@media (max-width: 959px) { .cbt.cbt-casca { display: none; } }
+@media (min-width: 960px) and (max-width: 1099px) { .cbt-casca .side { padding: 16px 10px; align-items: center; } .cbt-casca .side .lbl, .cbt-casca .side .badge, .cbt-casca .side-brand small, .cbt-casca .side .ub-txt { display: none; } .cbt-casca .side-brand { font-size: 0; padding: 0 0 14px; } .cbt-casca .side-brand b { font-size: 20px; } .cbt-casca .nav-i { justify-content: center; padding: 11px; } .cbt-casca .side-user { padding: 8px; justify-items: center; } .cbt-casca .side .ubadge { padding: 3px; width: auto; } .cbt-casca .nav-sep { margin: 4px 6px; } }

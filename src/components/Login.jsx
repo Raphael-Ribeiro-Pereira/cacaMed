@@ -1,380 +1,180 @@
-import { sairDaConta } from '../services/sairDaConta';
-import React, { useState, useEffect } from "react";
-import { Mail, Lock, Eye, EyeOff, Stethoscope } from "lucide-react";
-import { motion, useAnimation } from "framer-motion";
-import { auth } from '../firebase';
-import { USAR_AUTH_SUPABASE, supabase } from '../supabase';
-import { entrarComSenhaPreservada } from '../services/authSupabase';
-import { signInWithEmailAndPassword, sendPasswordResetEmail, signInWithPopup, GoogleAuthProvider, linkWithCredential } from 'firebase/auth';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Check, KeyRound, Link2, Lock, Mail, Stethoscope } from 'lucide-react';
+import { contaPadrao } from '../services/entradaConta';
+import { USAR_AUTH_SUPABASE } from '../supabase';
+import { emailOk } from '../utils/entrada';
+import { animar, useLargo } from '../utils/prototipo';
+import { CascaEntrada, Campo, Erro, GoogleG, LadoMarca, Marca, Olho } from './entradaUi';
+import '../prototipo.css';
 
-const PERFIL_NA_PLANILHA = ['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS);
+// Tela de entrada portada do protótipo de movimento, com a mesma lógica de antes: senha pelo
+// Firebase ou Supabase, Google (com vínculo de conta antiga) e recuperação de senha.
+const PERFIL_NA_API = ['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS);
+const MENSAGENS_GOOGLE = {
+  'auth/unauthorized-domain': 'Este endereço local não está autorizado para login Google. Abra http://localhost:5173/.',
+  'auth/popup-blocked': 'O navegador bloqueou a janela do Google. Autorize pop-ups e tente novamente.',
+  'auth/operation-not-allowed': 'O login Google ainda não está disponível neste projeto.',
+};
 
-function EcgPulse() {
-  const controls = useAnimation();
+function Folha({ aberta, rotulo, onClose, children }) {
   useEffect(() => {
-    let mounted = true;
-    const run = async () => {
-      while (mounted) {
-        const r = Math.random() * -25 - 15;
-        const s = Math.random() * 15 + 15;
-        const flat = "M 0 15 L 10 15 L 15 15 L 18 15 L 22 15 L 25 15 L 30 15 L 40 15";
-        const beat = `M 0 15 L 10 15 L 12 12 L 15 15 L 18 ${r} L 22 ${s} L 25 12 L 28 15 L 30 15 L 40 15`;
-        await controls.start({ d: beat, transition: { duration: 0.12, ease: "easeOut" } });
-        await controls.start({ d: flat, transition: { duration: 0.2, ease: "easeInOut" } });
-        await new Promise(r => setTimeout(r, Math.random() * 700 + 500));
-      }
-    };
-    run();
-    return () => { mounted = false; };
-  }, [controls]);
-
-  return (
-    <svg viewBox="0 0 40 30" className="w-12 h-6 text-cyan-500 drop-shadow-[0_0_6px_rgba(6,182,212,0.7)]" preserveAspectRatio="none">
-      <motion.path stroke="currentColor" strokeWidth="1.5" fill="none" animate={controls} initial={{ d: "M 0 15 L 40 15" }} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+    if (!aberta) return undefined;
+    const tecla = e => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', tecla);
+    return () => document.removeEventListener('keydown', tecla);
+  }, [aberta, onClose]);
+  return <AnimatePresence>
+    {aberta && <>
+      <motion.div key="bg" className="sheet-bg" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
+      <motion.div key="sh" className="sheet au-sheet" role="dialog" aria-modal="true" aria-label={rotulo} initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 320 }}>{children}</motion.div>
+    </>}
+  </AnimatePresence>;
 }
 
-export default function Login({ setTelaAtual }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [emailFocused, setEmailFocused] = useState(false);
-  const [passwordFocused, setPasswordFocused] = useState(false);
+function Esqueci({ aberto, emailInicial, onClose, conta }) {
+  const [end, setEnd] = useState(emailInicial);
+  const [st, setSt] = useState('idle');
+  const [erro, setErro] = useState('');
+  const enviar = async (e, antigo = false) => {
+    e?.preventDefault();
+    if (!emailOk(end) || st === 'busy') return;
+    setSt('busy'); setErro('');
+    try {
+      await conta.recuperarSenha(end.trim(), { antigo });
+      setSt('ok');
+    } catch (falha) {
+      setSt('idle');
+      setErro(falha.code === 'auth/invalid-email' ? 'Digite um e-mail válido.' : falha.code === 'auth/too-many-requests'
+        ? 'Muitas tentativas. Aguarde alguns minutos e tente novamente.' : 'Não foi possível enviar o link. Tente novamente mais tarde.');
+    }
+  };
+  return <Folha aberta={aberto} rotulo="Recuperar acesso" onClose={onClose}>
+    <span className="cr-key amber"><KeyRound size={20} /></span>
+    <h3>Recuperar acesso</h3>
+    {st === 'ok' ? <>
+      <p className="au-sent"><Check size={16} />Solicitação enviada</p>
+      <p>Se houver uma conta para esse e-mail, você receberá um link em <b>{end.trim()}</b>.</p>
+      <button className="primary" onClick={onClose}>Voltar ao login</button>
+    </> : <form onSubmit={enviar} className="au-sheet-f">
+      <p>Enviaremos as instruções para o seu e-mail.</p>
+      <Campo id="rc-mail" label="E-mail cadastrado" icon={Mail} estado={end && !emailOk(end) ? 'bad' : ''}>
+        <input id="rc-mail" type="email" inputMode="email" autoComplete="email" spellCheck={false} autoFocus value={end} onChange={e => setEnd(e.target.value)} />
+      </Campo>
+      {erro && <p className="cr-err" role="alert">{erro}</p>}
+      <button className="primary amber" type="submit" disabled={!emailOk(end) || st === 'busy'}>{st === 'busy' ? <><span className="spin sm dark" />Enviando</> : 'Enviar link de recuperação'}</button>
+      {USAR_AUTH_SUPABASE && <button type="button" className="w-link" disabled={!emailOk(end) || st === 'busy'} onClick={() => enviar(null, true)}>Ainda não entrei após a atualização: recuperar acesso antigo</button>}
+      <button type="button" className="ghost" onClick={onClose}>Voltar ao login</button>
+    </form>}
+  </Folha>;
+}
+
+export default function Login({ setTelaAtual, conta = contaPadrao }) {
+  const web = useLargo();
+  const comGoogle = PERFIL_NA_API || conta !== contaPadrao;
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [ver, setVer] = useState(false);
   const [erro, setErro] = useState(() => new URLSearchParams(window.location.search).has('error')
     ? 'Não foi possível concluir o login Google. Confira a configuração do provedor e tente novamente.' : '');
-  const [loading, setLoading] = useState(false);
-
-  const [showForgot, setShowForgot] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState("");
-  const [forgotSent, setForgotSent] = useState(false);
-  const [forgotLoading, setForgotLoading] = useState(false);
-  const [forgotError, setForgotError] = useState("");
-  const [credencialGooglePendente, setCredencialGooglePendente] = useState(null);
-  const [emailVinculo, setEmailVinculo] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [google, setGoogle] = useState(false);
+  const [treme, setTreme] = useState(0);
+  const [esqueci, setEsqueci] = useState(false);
+  const [aberturas, setAberturas] = useState(0);
+  const [pendente, setPendente] = useState(null);
   const [senhaVinculo, setSenhaVinculo] = useState('');
+  const [vinculando, setVinculando] = useState(false);
+  const pode = emailOk(email) && senha.length > 0 && !busy && !google;
+
   useEffect(() => {
-    // O retorno pode conter detalhes internos do provedor. Não os mostra nem
-    // deixa códigos OAuth no endereço depois de informar o erro ao jogador.
+    // O retorno pode conter detalhes internos do provedor: não os mostra nem deixa códigos OAuth no endereço.
     if (new URLSearchParams(window.location.search).has('error')) window.history.replaceState(null, '', window.location.pathname);
   }, []);
 
-  const entrarComGoogle = async () => {
-    setErro('');
-    setLoading(true);
-    try {
-      if (USAR_AUTH_SUPABASE) {
-        const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/' } });
-        if (error) throw error;
-        return;
-      }
-      await signInWithPopup(auth, new GoogleAuthProvider());
-    } catch (falha) {
-      if (falha.code === 'auth/account-exists-with-different-credential') {
-        const credencial = GoogleAuthProvider.credentialFromError(falha);
-        setCredencialGooglePendente(credencial);
-        setEmailVinculo(falha.customData?.email || '');
-      } else if (falha.code !== 'auth/popup-closed-by-user') {
-        const mensagens = {
-          'auth/unauthorized-domain': 'Este endereço local não está autorizado para login Google. Abra http://localhost:5173/.',
-          'auth/popup-blocked': 'O navegador bloqueou a janela do Google. Autorize pop-ups e tente novamente.',
-          'auth/operation-not-allowed': 'O login Google ainda não está disponível neste projeto.',
-        };
-        setErro(mensagens[falha.code] || `Não foi possível entrar com Google (${falha.code || 'erro desconhecido'}).`);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const confirmarVinculo = async evento => {
-    evento.preventDefault();
-    if (!credencialGooglePendente || !senhaVinculo || !emailVinculo) return;
-    setLoading(true);
-    setErro('');
-    try {
-      const resultado = await signInWithEmailAndPassword(auth, emailVinculo, senhaVinculo);
-      await linkWithCredential(resultado.user, credencialGooglePendente);
-      setSenhaVinculo('');
-      setCredencialGooglePendente(null);
-    } catch {
-      await sairDaConta();
-      setErro('Senha antiga incorreta ou vínculo indisponível. Confira e tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePasswordReset = async () => {
-    const address = forgotEmail.trim();
-    if (!address || forgotLoading) return;
-
-    setForgotError("");
-    setForgotLoading(true);
-    try {
-      if (USAR_AUTH_SUPABASE) {
-        const { error } = await supabase.auth.resetPasswordForEmail(address, { redirectTo: window.location.origin + '/?recuperar=1' });
-        if (error) throw error;
-      } else await sendPasswordResetEmail(auth, address);
-      setForgotSent(true);
-    } catch (error) {
-      if (error.code === 'auth/invalid-email') {
-        setForgotError('Digite um e-mail válido.');
-      } else if (error.code === 'auth/too-many-requests') {
-        setForgotError('Muitas tentativas. Aguarde alguns minutos e tente novamente.');
-      } else {
-        setForgotError('Não foi possível enviar o link. Tente novamente mais tarde.');
-      }
-    } finally {
-      setForgotLoading(false);
-    }
-  };
-
-  const handleLogin = async (e) => {
+  const falhar = mensagem => { setErro(mensagem); setTreme(t => t + 1); };
+  const enviar = async e => {
     e.preventDefault();
-    setErro("");
-    setLoading(true);
+    if (!pode) return;
+    setErro(''); setBusy(true);
     try {
-      if (USAR_AUTH_SUPABASE) await entrarComSenhaPreservada(email, password);
-      else await signInWithEmailAndPassword(auth, email, password);
+      await conta.entrarComSenha(email.trim(), senha);
     } catch {
-      setErro("Credenciais inválidas ou Doutor não encontrado no sistema.");
+      falhar('Credenciais inválidas ou Doutor não encontrado no sistema.');
     } finally {
-      setLoading(false);
+      setBusy(false);
+    }
+  };
+  const entrarComGoogle = async () => {
+    if (google) return;
+    setErro(''); setGoogle(true);
+    try {
+      const r = await conta.entrarComGoogle();
+      if (r?.pendente) { setPendente(r.pendente); setSenhaVinculo(''); }
+    } catch (falha) {
+      if (falha.code !== 'auth/popup-closed-by-user') falhar(MENSAGENS_GOOGLE[falha.code] || `Não foi possível entrar com Google (${falha.code || 'erro desconhecido'}).`);
+    } finally {
+      setGoogle(false);
+    }
+  };
+  const vincular = async e => {
+    e.preventDefault();
+    if (!pendente || !senhaVinculo || vinculando) return;
+    setVinculando(true);
+    try {
+      await conta.vincularGoogle(pendente.email, senhaVinculo, pendente.credencial);
+      setPendente(null); setSenhaVinculo('');
+    } catch {
+      setPendente(null); setSenhaVinculo('');
+      falhar('Senha antiga incorreta ou vínculo indisponível. Confira e tente novamente.');
+    } finally {
+      setVinculando(false);
     }
   };
 
-  const recuperarContaAntiga = async () => {
-    if (!forgotEmail.trim() || forgotLoading) return;
-    setForgotLoading(true); setForgotError('');
-    try {
-      await sendPasswordResetEmail(auth, forgotEmail.trim());
-      setForgotSent(true);
-    } catch { setForgotError('Não foi possível enviar o link. Tente novamente mais tarde.'); }
-    finally { setForgotLoading(false); }
-  };
-
-  return (
-    <div className="stitch-integrated stitch-auth min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-hidden flex items-center justify-center selection:bg-cyan-500/30">
-      
-      <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)`, backgroundSize: '28px 28px' }} />
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,rgba(0,245,212,0.06)_0%,#0c1322_70%)]" />
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_30%,#0c1322_100%)]" />
-
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03] flex items-center overflow-hidden">
-        <motion.svg width="200%" height="100%" xmlns="http://www.w3.org/2000/svg" initial={{ x: 0 }} animate={{ x: "-50%" }} transition={{ repeat: Infinity, ease: "linear", duration: 20 }}>
-          <pattern id="ekg-login" x="0" y="0" width="500" height="200" patternUnits="userSpaceOnUse">
-            <path d="M0 100 H 150 L 160 90 L 170 100 H 180 L 195 70 L 210 140 L 225 40 L 240 110 L 255 100 H 290 L 310 85 L 330 100 H 500" fill="none" stroke="#00f5d4" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
-          </pattern>
-          <rect x="0" y="0" width="100%" height="100%" fill="url(#ekg-login)" />
-        </motion.svg>
+  return <div className={`cbt ${web ? 'web' : ''}`}><div className="cbt-scr au-scr r-login">
+    {!web && <div className="au-top"><span className="kicker">Bater ponto</span></div>}
+    <CascaEntrada web={web} lado={<LadoMarca />}>
+      <div className="au-head">
+        {!web && <Marca />}
+        <h1>Entrar no plantão</h1>
+        <p>Use o e-mail e a senha do seu crachá.</p>
       </div>
-
-      {/* Cartão Principal REDIMENSIONADO PARA ORIGINAL (max-w-[400px]) */}
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-[600px] mx-4"
-      >
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-4 mb-3">
-            <motion.div
-              whileHover={{ rotate: 180 }}
-              transition={{ duration: 0.5, ease: "backOut" }}
-              className="w-14 h-14 rounded-2xl bg-[#0f1f2e] border border-cyan-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.15)]"
-            >
-              <Stethoscope className="w-7 h-7 text-cyan-400" style={{ filter: 'drop-shadow(0 0 6px rgba(6,182,212,0.6))' }} /> {/* 4. Aumentamos o estetoscópio para w-7 h-7 */}
-            </motion.div>
-            <h1 className="text-white text-4xl md:text-5xl font-black tracking-wide">
-              {/* 5. Subimos de text-2xl para text-4xl/5xl e deixamos a fonte mais grossa (font-black) */}
-              cacoMed<motion.span animate={{ opacity: [1, 0, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>_</motion.span>
-            </h1>
-          </div>
-          <p className="text-cyan-400 text-xs md:text-sm uppercase font-bold tracking-[0.25em]">
-            {/* 6. Aumentamos o subtítulo de 10px para text-sm e afastamos mais as letras (tracking-[0.25em]) */}
-            🩺 Bater Ponto — Entrar no Plantão
-          </p>
-        </div>
-
-        <div className="bg-[#151F32] rounded-[24px] border border-white/[0.04] shadow-[0_20px_60px_rgba(0,0,0,0.6)] p-6 md:p-8 relative overflow-hidden">
-          
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-cyan-500/5 blur-[40px] rounded-full pointer-events-none" />
-
-          <div className="absolute top-4 right-4 opacity-60">
-            <EcgPulse />
-          </div>
-
-          <form onSubmit={handleLogin} className="relative z-10 space-y-4">
-            
-            {erro && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-red-500/10 border border-red-500/30 text-red-400 p-2.5 rounded-lg text-xs text-center font-medium">
-                {erro}
-              </motion.div>
-            )}
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-bold tracking-widest text-slate-500 block">E-mail Profissional</label>
-              <div className={`flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 transition-all duration-300 ${
-                emailFocused ? 'border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.15)]' : 'border-white/[0.05] hover:border-white/[0.1]'
-              }`}>
-                <Mail className={`w-4 h-4 shrink-0 transition-colors ${emailFocused ? 'text-cyan-400' : 'text-slate-600'}`} />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  onFocus={() => { setEmailFocused(true); setPasswordFocused(false); }}
-                  onBlur={() => setEmailFocused(false)}
-                  placeholder="doutor@cacamed.com"
-                  className="flex-1 w-full min-w-0 bg-transparent text-white text-base outline-none placeholder:text-slate-600 font-medium"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-bold tracking-widest text-slate-500 block">Senha de Acesso</label>
-              <div className={`flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 transition-all duration-300 ${
-                passwordFocused ? 'border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.15)]' : 'border-white/[0.05] hover:border-white/[0.1]'
-              }`}>
-                <Lock className={`w-4 h-4 shrink-0 transition-colors ${passwordFocused ? 'text-cyan-400' : 'text-slate-600'}`} />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  onFocus={() => { setPasswordFocused(true); setEmailFocused(false); }}
-                  onBlur={() => setPasswordFocused(false)}
-                  placeholder="Mín. 6 caracteres"
-                  className="flex-1 w-full min-w-0 bg-transparent text-white text-base outline-none placeholder:text-slate-600 font-medium"
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-slate-500 hover:text-slate-300 transition-colors shrink-0">
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button type="button" onClick={() => setShowForgot(true)} className="text-[10px] font-bold text-cyan-500/70 hover:text-cyan-400 transition-colors uppercase tracking-wider">
-                Emergência: Esqueceu a senha?
-              </button>
-            </div>
-
-            <motion.button
-              type="submit"
-              disabled={loading || !email || !password}
-              whileHover={{ y: -1, boxShadow: '0 0 25px rgba(6,182,212,0.4)' }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-[#0B1120] transition-all shadow-[0_0_15px_rgba(6,182,212,0.25)] flex items-center justify-center gap-2 text-sm font-black disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <span className="animate-pulse">Acessando...</span>
-              ) : (
-                <>
-                  <Stethoscope className="w-4 h-4" /> Entrar no Plantão
-                </>
-              )}
-            </motion.button>
-          </form>
-
-          {PERFIL_NA_PLANILHA && <div className="relative z-10 mt-4 border-t border-white/[0.05] pt-4">
-            <button type="button" onClick={entrarComGoogle} disabled={loading} className="w-full py-3 rounded-xl border border-cyan-500/40 text-cyan-400 font-bold hover:bg-cyan-500/10 disabled:opacity-50">Entrar com Google</button>
-            {credencialGooglePendente && <form onSubmit={confirmarVinculo} className="mt-4 space-y-3">
-              <p className="text-slate-300 text-sm">Encontramos uma conta antiga para {emailVinculo}. Você autoriza vinculá-la ao Google? Confirme com a senha antiga.</p>
-              <label htmlFor="senha-antiga-vinculo" className="block text-sm">Senha antiga</label>
-              <input id="senha-antiga-vinculo" type="password" autoComplete="current-password" value={senhaVinculo} onChange={evento => setSenhaVinculo(evento.target.value)} className="w-full rounded-xl bg-[#0B1120] border border-cyan-500/30 p-3 text-white" />
-              <button type="submit" disabled={loading || !senhaVinculo} className="w-full py-3 rounded-xl bg-cyan-500 text-[#0B1120] font-bold disabled:opacity-50">Autorizo vincular</button>
-              <button type="button" onClick={() => { setCredencialGooglePendente(null); setSenhaVinculo(''); }} className="w-full text-slate-300 text-sm underline">Agora não</button>
-            </form>}
-          </div>}
-
-          <div className="mt-6 pt-4 border-t border-white/[0.04] flex justify-center">
-            <div className="flex items-center gap-1.5">
-              <div className="w-8 h-[2px] bg-gradient-to-r from-transparent to-cyan-500/40 rounded-full" />
-              <div className="w-1.5 h-1.5 rounded-full bg-cyan-500/60 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
-              <div className="w-8 h-[2px] bg-gradient-to-l from-transparent to-cyan-500/40 rounded-full" />
-            </div>
-          </div>
-        </div>
-
-        <p className="text-center mt-5 text-slate-500 text-xs font-medium">
-          Ainda não é plantonista?{" "}
-          <button onClick={() => setTelaAtual('cadastro')} type="button" className="text-cyan-400 hover:text-cyan-300 font-bold transition-colors underline underline-offset-4">
-            Cadastre-se na recepção
+      <motion.form key={treme} className="au-card" onSubmit={enviar} noValidate
+        animate={treme && animar() ? { x: [0, -10, 9, -6, 4, 0] } : undefined} transition={{ duration: .45 }}>
+        <Erro texto={erro} />
+        <Campo id="lg-mail" label="E-mail profissional" icon={Mail} estado={email && !emailOk(email) ? 'bad' : ''}>
+          <input id="lg-mail" type="email" inputMode="email" autoComplete="username" spellCheck={false} placeholder="doutor@cacomed.com" value={email} onChange={e => setEmail(e.target.value)} />
+        </Campo>
+        <Campo id="lg-senha" label="Senha de acesso" icon={Lock}>
+          <input id="lg-senha" type={ver ? 'text' : 'password'} autoComplete="current-password" placeholder="Mín. 6 caracteres" value={senha} onChange={e => setSenha(e.target.value)} />
+          <Olho ver={ver} set={setVer} />
+        </Campo>
+        <button type="button" className="au-forgot" onClick={() => { setAberturas(a => a + 1); setEsqueci(true); }}>Esqueceu a senha?</button>
+        <button className="primary" type="submit" disabled={!pode}>
+          {busy ? <><span className="spin sm dark" />Validando credencial</> : <><Stethoscope />Entrar no plantão</>}
+        </button>
+        {comGoogle && <>
+          <div className="au-or"><span>ou</span></div>
+          <button type="button" className="au-google" onClick={entrarComGoogle} disabled={google || busy}>
+            {google ? <><span className="spin sm" />Aguardando o Google</> : <><GoogleG />Continuar com Google</>}
           </button>
-        </p>
-      </motion.div>
-
-      {/* MODAL ESQUECEU A SENHA */}
-      {showForgot && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1120]/90 backdrop-blur-md"
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.93, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="w-full max-w-[380px] bg-[#151F32] rounded-[24px] border border-amber-500/20 shadow-[0_20px_60px_rgba(0,0,0,0.6)] p-6 relative overflow-hidden"
-          >
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-20 bg-amber-500/10 blur-[40px] rounded-full pointer-events-none" />
-
-            <div className="relative z-10">
-              <div className="text-center mb-6">
-                <div className="w-12 h-12 mx-auto rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-3 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
-                  <span className="text-xl">🔑</span>
-                </div>
-                <h2 className="text-white text-xl font-bold">Recuperar Acesso</h2>
-                <p className="text-slate-400 text-xs mt-1.5">Enviaremos as instruções para o seu e-mail.</p>
-              </div>
-
-              {forgotSent ? (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-4">
-                  <div className="w-12 h-12 mx-auto rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(16,185,129,0.25)]">
-                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }} className="text-xl">✅</motion.span>
-                  </div>
-                  <p className="text-emerald-400 text-base font-bold mb-1">Solicitação enviada</p>
-                  <p className="text-slate-400 text-xs">Se houver uma conta para esse e-mail, você receberá um link em <br/><span className="text-white font-bold">{forgotEmail}</span></p>
-                </motion.div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-[10px] uppercase font-bold tracking-widest text-slate-500 mb-1.5 block">E-mail Cadastrado</label>
-                    <div className="flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 border-amber-500/20 focus-within:border-amber-500/60 focus-within:shadow-[0_0_15px_rgba(245,158,11,0.15)] transition-all">
-                      <Mail className="w-4 h-4 text-amber-500/60 shrink-0" />
-                      <input
-                        type="email"
-                        value={forgotEmail}
-                        onChange={e => setForgotEmail(e.target.value)}
-                        placeholder="seu.email@cacamed.com"
-                        className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600 font-medium"
-                        autoFocus
-                      />
-                    </div>
-                  </div>
-
-                  <motion.button
-                    whileHover={{ y: -1, boxShadow: '0 0 20px rgba(245,158,11,0.3)' }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handlePasswordReset}
-                    disabled={forgotLoading || !forgotEmail.includes('@')}
-                    className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#0B1120] font-bold transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {forgotLoading ? 'Enviando...' : 'Enviar link de recuperação'}
-                  </motion.button>
-                  {forgotError && <p role="alert" className="text-rose-400 text-xs text-center">{forgotError}</p>}
-                  {USAR_AUTH_SUPABASE && <button type="button" disabled={forgotLoading || !forgotEmail.includes('@')} onClick={recuperarContaAntiga} className="text-cyan-400 text-xs underline">Ainda não entrei após a atualização: recuperar acesso antigo</button>}
-                </div>
-              )}
-
-              <button
-                onClick={() => { setShowForgot(false); setForgotSent(false); setForgotEmail(""); setForgotError(""); }}
-                className="w-full mt-3 py-2.5 rounded-xl bg-[#0B1120] border border-white/[0.05] text-slate-400 hover:text-white font-bold transition-all text-xs"
-              >
-                Voltar ao Login
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </div>
-  );
+        </>}
+      </motion.form>
+      <p className="au-foot">Ainda não é plantonista? <button className="w-link" onClick={() => setTelaAtual('cadastro')}>Cadastre-se na recepção</button></p>
+    </CascaEntrada>
+    <Esqueci key={aberturas} aberto={esqueci} emailInicial={email} conta={conta} onClose={() => setEsqueci(false)} />
+    <Folha aberta={Boolean(pendente)} rotulo="Vincular conta antiga" onClose={() => !vinculando && setPendente(null)}>
+      <span className="cr-key"><Link2 size={20} /></span>
+      <h3>Vincular conta antiga</h3>
+      <p>Encontramos uma conta antiga para <b>{pendente?.email}</b>. Você autoriza vinculá-la ao Google? Confirme com a senha antiga.</p>
+      <form onSubmit={vincular} className="au-sheet-f">
+        <Campo id="lg-vinculo" label="Senha antiga" icon={Lock}>
+          <input id="lg-vinculo" type="password" autoComplete="current-password" autoFocus value={senhaVinculo} onChange={e => setSenhaVinculo(e.target.value)} />
+        </Campo>
+        <button className="primary" type="submit" disabled={!senhaVinculo || vinculando}>{vinculando ? <><span className="spin sm dark" />Vinculando</> : 'Autorizo vincular'}</button>
+        <button type="button" className="ghost" disabled={vinculando} onClick={() => setPendente(null)}>Agora não</button>
+      </form>
+    </Folha>
+  </div></div>;
 }
