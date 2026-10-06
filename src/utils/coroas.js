@@ -11,7 +11,7 @@ export const MATERIAS = [
   { id: 'clinica', nome: 'Clínica Geral', chave: 'CLÍNICA GERAL', cor: '#ffb95f' },
 ];
 
-const normalizar = valor => String(valor || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+const normalizar = valor => String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
 const REGRAS = [
   ['neurologia', /NEURO/],
   ['farmaco', /FARMACO/],

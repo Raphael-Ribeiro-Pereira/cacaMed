@@ -2,7 +2,7 @@
 
 ## Status
 
-Documento de concepção aprovado em 30/09/2026. Implementação local em 02/10/2026, a pedido do usuário, como piloto do administrador: frontend, motor, operação da API e testes. Em 06/10/2026 os erros da Batalha passaram a alimentar a Revisão Inteligente (pendência 12). A API ainda não foi publicada na Edge Function e o conteúdo ainda não tem revisão médica.
+Documento de concepção aprovado em 30/09/2026. Implementação local em 02/10/2026, a pedido do usuário, como piloto do administrador: frontend, motor, operação da API e testes. Em 06/10/2026 os erros da Batalha passaram a alimentar a Revisão Inteligente (pendência 12). A API foi publicada na Edge Function (versão 11) em 06/10/2026; o conteúdo ainda não tem revisão médica.
 
 ## Implementação de 02/10/2026
 
@@ -47,7 +47,7 @@ O XP soma em `xpTopicos['DDX-BATALHA']`. Missões diárias não contam a Batalha
 
 1. Revisão médica das 12 doenças (exames, diferenciais, terapia, buff, conduta). Várias fontes são de 2008 a 2013; a conduta precisa ser conferida com os protocolos atuais. Exames numéricos são ilustrativos. Depois da revisão, marcar `revisado: true` e aumentar `versao` quando o conteúdo mudar.
 2. Aprovar a economia acima.
-3. Executar `node scripts/sincronizar-supabase.mjs` (já executado nesta etapa) e publicar a Edge Function `cacamed-api`. Até a publicação, a API remota responde "Ação desconhecida" para as operações da Batalha.
+3. ~~Publicar a Edge Function `cacamed-api`~~: versão 11 publicada em 06/10/2026, com as operações da Batalha.
 4. Validar no navegador com o administrador: treinamento, uma batalha de cada capítulo, Duelo, retomada após recarga, falha de rede e reenvio.
 5. A Revisão Inteligente com itens da Batalha segue o mesmo piloto do administrador da revisão; liberar junto com ela.
 

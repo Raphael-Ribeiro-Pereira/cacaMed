@@ -1,6 +1,6 @@
 # Coroas, Estatísticas e Crachá
 
-Portados em 06/10/2026 do "cacoMed Protótipo de Movimento" (artefato de 02/10/2026), com o mesmo design e as mesmas animações, no celular e na web. A API ainda não foi publicada na Edge Function: até a publicação, a aba Coroas, o histórico das Estatísticas e a conferência de username mostram o aviso de indisponível, e o resto das telas funciona com o perfil.
+Portados em 06/10/2026 do "cacoMed Protótipo de Movimento" (artefato de 02/10/2026), com o mesmo design e as mesmas animações, no celular e na web. A API foi publicada na Edge Function `cacamed-api` (versão 11) em 06/10/2026; o frontend novo ainda depende do PR e de uma publicação manual na Vercel.
 
 ## Telas
 
@@ -39,6 +39,6 @@ Conferido em 06/10/2026, no celular (375 px) e na web (1280 px): pódio e lista,
 
 ## Antes de liberar
 
-1. Publicar a Edge Function `cacamed-api` (cópias já sincronizadas por `node scripts/sincronizar-supabase.mjs`).
+1. ~~Publicar a Edge Function `cacamed-api`~~: versão 11 publicada em 06/10/2026. Os 21 arquivos foram conferidos contra as cópias locais; `?acao=coroas` respondeu a semana 2026-S41 e o ranking seguiu igual. A versão 11 continua compatível com o frontend atual de produção.
 2. Conferir no navegador com a conta real: ranking, coroas depois de uma cruzadinha, histórico das estatísticas e troca de username.
 3. As Coroas começam a contar a partir da publicação; a primeira semana fica parcial.
