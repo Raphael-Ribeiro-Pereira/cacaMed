@@ -30,7 +30,7 @@ Documento de concepção aprovado em 30/09/2026. Implementação local em 02/10/
 - Os turnos são gravados em segundo plano; o relatório só aparece depois que o servidor confirma o encerramento. A batalha aberta é retomada após recarregar a página.
 - A Batalha usa só a API Supabase. Com `VITE_FONTE_DADOS=planilha` a tela informa que o modo depende do Supabase; o Apps Script não recebeu essas operações.
 
-### Economia: proposta do protótipo, aguardando aprovação
+### Economia: aprovada pelo usuário em 06/10/2026
 
 | Situação | XP | Tickets |
 | --- | --- | --- |
@@ -41,12 +41,12 @@ Documento de concepção aprovado em 30/09/2026. Implementação local em 02/10/
 | Duelo: derrota | 10, mais 10 se o diagnóstico foi confirmado | 1 por partida |
 | Abandono | 0 | O ticket do Duelo não volta |
 
-O XP soma em `xpTopicos['DDX-BATALHA']`. Missões diárias não contam a Batalha. Antes de liberar para jogadores, o usuário precisa aprovar ou ajustar estes valores.
+O XP soma em `xpTopicos['DDX-BATALHA']`. Missões diárias não contam a Batalha. Valores aprovados como estão em 06/10/2026.
 
 ### Antes de liberar para jogadores
 
 1. Revisão médica das 12 doenças (exames, diferenciais, terapia, buff, conduta). Várias fontes são de 2008 a 2013; a conduta precisa ser conferida com os protocolos atuais. Exames numéricos são ilustrativos. Depois da revisão, marcar `revisado: true` e aumentar `versao` quando o conteúdo mudar.
-2. Aprovar a economia acima.
+2. ~~Aprovar a economia acima~~: aprovada em 06/10/2026.
 3. ~~Publicar a Edge Function `cacamed-api`~~: versão 11 publicada em 06/10/2026, com as operações da Batalha.
 4. Validar no navegador com o administrador: treinamento, uma batalha de cada capítulo, Duelo, retomada após recarga, falha de rede e reenvio.
 5. A Revisão Inteligente com itens da Batalha segue o mesmo piloto do administrador da revisão; liberar junto com ela.

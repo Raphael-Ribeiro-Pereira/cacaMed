@@ -241,7 +241,7 @@ export function executarBatalha(doenca, petId, acoes = []) {
   return estado;
 }
 
-// Regras propostas no protótipo; aguardam aprovação da economia antes da liberação para jogadores.
+// Economia aprovada pelo usuário em 06/10/2026 (valores propostos no protótipo).
 // Tutorial: 50 XP uma vez. História: XP só na primeira vitória de cada doença e versão.
 // Duelo (1 ticket): XP em toda partida concluída.
 export function recompensaBatalha(estado, { modo, primeiraVez = true } = {}) {
