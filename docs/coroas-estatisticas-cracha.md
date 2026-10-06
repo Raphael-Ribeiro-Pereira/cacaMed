@@ -1,6 +1,6 @@
 # Coroas, Estatísticas e Crachá
 
-Portados em 06/10/2026 do "cacoMed Protótipo de Movimento" (artefato de 02/10/2026), com o mesmo design e as mesmas animações, no celular e na web. A API foi publicada na Edge Function `cacamed-api` (versão 11) em 06/10/2026; o frontend novo ainda depende do PR e de uma publicação manual na Vercel.
+Portados em 06/10/2026 do "cacoMed Protótipo de Movimento" (artefato de 02/10/2026), com o mesmo design e as mesmas animações, no celular e na web. A API foi publicada na Edge Function `cacamed-api` (versão 11) e o frontend em produção na Vercel (deploy `dpl_BGGkokiUtgDNhNoHQLmSPuARv8T4`, commit d0bd23e), ambos em 06/10/2026.
 
 ## Telas
 

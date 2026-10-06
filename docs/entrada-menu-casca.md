@@ -38,4 +38,8 @@ Peças: `entradaUi.jsx` (campos, casca da entrada, escolhas e impressão), `crac
 
 `scripts/homologacao.jsx` ganhou Testar menu, Testar login, Testar cadastro, Testar Cadastro 2.0, Simular falha no cadastro e Google com conta antiga, com conta fictícia (senha "plantao2026"; o e-mail homologacao@exemplo.com já tem conta) e a barra lateral nas telas da casca.
 
-Conferido em 06/10/2026, no celular (375 px) e na web (1280 e 1024 px): login com erro e tremor, entrada no menu, menu nos dois layouts, folha e cartão de progresso, abas e barra lateral (inteira e recolhida), Ranking e Crachá sem voltar, cadastro com impressão completa, falha com "Tentar de novo", Cadastro 2.0 com username em uso e sugestões livres conferidas. A abertura e os fluxos com Firebase e Supabase reais não rodam na homologação: conferir com a conta real antes de publicar o frontend.
+Conferido em 06/10/2026, no celular (375 px) e na web (1280 e 1024 px): login com erro e tremor, entrada no menu, menu nos dois layouts, folha e cartão de progresso, abas e barra lateral (inteira e recolhida), Ranking e Crachá sem voltar, cadastro com impressão completa, falha com "Tentar de novo", Cadastro 2.0 com username em uso e sugestões livres conferidas. A abertura e os fluxos com Firebase e Supabase reais não rodam na homologação.
+
+## Publicação
+
+A pedido do usuário, a branch entrou na `main` (fast-forward) e o frontend foi publicado em produção na Vercel em 06/10/2026: deploy `dpl_BGGkokiUtgDNhNoHQLmSPuARv8T4`, commit d0bd23e, em https://caca-med.vercel.app. Conferido no site público: tela de login nova, sem erros no console, e banco de palavras carregado da API (HTTP 200). O login com a conta real ainda não foi testado por mim. Para voltar à versão anterior, promover o deploy `dpl_WYPpugy7pqFLvchJvouCW3nCkb8c` (commit 297fdb7).
