@@ -5,13 +5,14 @@ import { inicioDaSemana } from './coroas.js';
 // próprio jogador (respostas e recibos) e devolve só agregados, sem gabaritos.
 const FONTE_ERRO = { quiz: 'Quiz', verdadeMentira: 'V ou M', batalha: 'Batalha' };
 const TITULO = { quiz: 'Rodada do Quiz', verdadeMentira: 'Baralho de frases', ddx: 'Plantão médico', erroMedico: 'Auditoria de erro médico',
-  causaEfeito: 'Relações de causa e efeito', batalha: 'Batalha diagnóstica', cruzadinha: 'Cruzadinha' };
+  causaEfeito: 'Relações de causa e efeito', batalha: 'Batalha diagnóstica', cruzadinha: 'Cruzadinha', pacienteDdx: 'Paciente DDX' };
 const SEMANA = 7 * 86400000;
 const quando = e => Date.parse(e.data?.data || e.created_at) || 0;
 const capitalizar = t => t.toLocaleLowerCase('pt-BR').replace(/(^|\s)\S/, l => l.toLocaleUpperCase('pt-BR'));
 
 function tituloRecibo(d) {
   if (d.modo === 'cruzadinha' && d.titulo) return String(d.titulo).includes(' · ') ? String(d.titulo) : String(d.titulo).split('-').map(capitalizar).join(' · ');
+  if (d.modo === 'pacienteDdx' && d.titulo) return String(d.titulo);
   if (d.modo === 'batalha' && d.doencaId) {
     const doenca = DOENCAS.find(x => x.id === d.doencaId);
     return `Batalha · ${d.revelada && doenca ? doenca.nome : 'doença desconhecida'}`;

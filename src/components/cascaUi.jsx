@@ -159,7 +159,7 @@ const NAV = [
   ['selecaoDDX', 'DDX · Casos', HeartPulse, 'REVISÃO'], ['batalha', 'Batalha diagnóstica', Swords, 'PILOTO', true], ['revisaoInteligente', 'Revisão inteligente', RotateCcw, 'PILOTO', true], null,
   ['ranking', 'Ranking', Trophy], ['estatisticas', 'Estatísticas', BarChart3], ['perfil', 'Perfil', UserRound],
 ];
-const SECAO = { jogo: 'topicos', erroMedico: 'selecaoDDX', causaEfeito: 'selecaoDDX' };
+const SECAO = { jogo: 'topicos', erroMedico: 'selecaoDDX', causaEfeito: 'selecaoDDX', pacienteDdx: 'selecaoDDX' };
 export function BarraLateral({ tela, ir, p, foto, aoPassarRanking }) {
   const on = SECAO[tela] || tela;
   const admin = p.role === 'admin';
