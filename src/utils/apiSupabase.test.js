@@ -124,6 +124,25 @@ test('Cruzadinha recalcula XP, ignora saldo do cliente e respeita recibos fora d
   assert.deepEqual(executarPedidoSupabase(semCache, { acao: 'registrarPartida', partida }, { recibos: [partida.id] }).perfil, semCache);
 });
 
+test('Cruzadinha só soma dias seguidos em dias consecutivos de Brasília e recomeça depois de uma falta', () => {
+  const jogar = (perfil, agora) => executarPedidoSupabase(perfil, { acao: 'registrarPartida', partida: {
+    id: crypto.randomUUID(), chaveXP: 'ANATOMIA-OSSOS', subMateria: 'Ossos', palavras: 5, letras: 30, tempo: 100, erros: 0, maiorPalavra: 10 } }, { agora: new Date(agora) }).perfil;
+  const dias = perfil => [perfil.estatisticasGerais.diasSeguidos, perfil.estatisticasGerais.ultimoDia];
+  let p = { uid: 'teste', tickets: 0, pontuacaoTotal: 0, estatisticasGerais: { diasSeguidos: 5, ultimoDia: '2026-09-20' } };
+  p = jogar(p, '2026-10-05T15:00:00Z');
+  assert.deepEqual(dias(p), [1, '2026-10-05'], 'contador antigo inflado recomeça');
+  p = jogar(p, '2026-10-06T02:30:00Z');
+  assert.deepEqual(dias(p), [1, '2026-10-05'], '23:30 em Brasília ainda é o mesmo dia');
+  p = jogar(p, '2026-10-06T15:00:00Z');
+  assert.deepEqual(dias(p), [2, '2026-10-06']);
+  p = jogar(p, '2026-10-07T12:00:00Z');
+  assert.deepEqual(dias(p), [3, '2026-10-07']);
+  p = jogar(p, '2026-10-09T12:00:00Z');
+  assert.deepEqual(dias(p), [1, '2026-10-09'], 'um dia sem jogar zera a sequência');
+  p = jogar({ ...p, estatisticasGerais: { diasSeguidos: 4, ultimoDia: '2026-09-30' } }, '2026-10-01T12:00:00Z');
+  assert.deepEqual(dias(p), [5, '2026-10-01'], 'virada de mês continua a sequência');
+});
+
 test('API bloqueia credencial inválida, origem desconhecida e corpo excessivo; GET público funciona', async () => {
   const { api, call } = fixture();
   assert.equal((await call({ acao: 'obterPerfil' }, 'invalido')).status, 401);

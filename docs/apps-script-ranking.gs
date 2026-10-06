@@ -182,7 +182,11 @@ function registrarPartidaPlanilha(aba, local, partida) {
   gerais.maiorStreak = Math.max(Number(gerais.maiorStreak) || 0, gerais.streakAtual);
   const dia = Utilities.formatDate(new Date(), 'America/Sao_Paulo', 'yyyy-MM-dd');
   if (gerais.ultimoDia !== dia) {
-    gerais.diasSeguidos = (Number(gerais.diasSeguidos) || 0) + 1;
+    // Só continua a sequência se a última partida foi no dia anterior; senão recomeça em 1.
+    const ontem = new Date(dia + 'T12:00:00Z');
+    ontem.setUTCDate(ontem.getUTCDate() - 1);
+    gerais.diasSeguidos = gerais.ultimoDia === ontem.toISOString().slice(0, 10)
+      ? (Number(gerais.diasSeguidos) || 0) + 1 : 1;
     gerais.ultimoDia = dia;
   }
   gerais.historico = [...(gerais.historico || []), {

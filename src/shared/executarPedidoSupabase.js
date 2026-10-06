@@ -29,7 +29,7 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
     perfil = operarTreinoSupabase(perfil, pedido, recibos);
     eventos = eventosTreino(perfil, pedido.modo);
   } else if (pedido.acao === 'registrarPartida') {
-    perfil = registrarPartidaSupabase(perfil, pedido.partida, recibos);
+    perfil = registrarPartidaSupabase(perfil, pedido.partida, recibos, agora);
     eventos = [{ id: `recibo:${pedido.partida.id}`, kind: 'recibo', data: { modo: 'cruzadinha', rodadaId: pedido.partida.id, titulo: tituloCruzadinha(pedido.partida) } }];
   } else if (pedido.acao === 'tutorial') perfil = { ...perfil, tutorialCruzadinhasConcluido: true };
   else if (pedido.acao === 'editarPerfil') {
