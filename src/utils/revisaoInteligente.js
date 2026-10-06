@@ -4,7 +4,12 @@ import { avaliarRespostaTreino } from './treinos.js';
 const DIA_REVISAO = 86400000;
 export const chaveItemRevisao = item => JSON.stringify([item.modo, item.itemId || item.id, Number(item.versao)]);
 const tempoRevisao = valor => Number.isFinite(Date.parse(valor)) ? Date.parse(valor) : 0;
-const originalRevisao = item => (item.modo === 'quiz' ? BANCO_QUIZ : item.modo === 'verdadeMentira' ? BANCO_FRASES : [])
+const BANCOS_REVISAO = { quiz: BANCO_QUIZ, verdadeMentira: BANCO_FRASES };
+const AVALIADORES_REVISAO = {};
+// Bancos de outros modos (como a Batalha) se registram ao serem importados pela API
+// Supabase. O motor do Apps Script legado continua só com Quiz e Verdade ou mentira.
+export function registrarBancoRevisao(modo, banco, avaliar) { BANCOS_REVISAO[modo] = banco; AVALIADORES_REVISAO[modo] = avaliar; }
+const originalRevisao = item => (BANCOS_REVISAO[item.modo] || [])
   .find(q => q.id === (item.itemId || item.id) && q.versao === Number(item.versao));
 
 function limitarFrequenciaRevisao(proxima, anteriores, agora) {
@@ -79,7 +84,7 @@ export function responderRevisaoPerfil(perfil, id, resposta, historico = [], ago
   }
   const item = entrada.itens[entrada.resultados.length];
   if (entrada.encerrada || !item || item.id !== resposta.itemId || item.versao !== resposta.versao) throw new Error('A sessão mudou. Consulte a revisão salva.');
-  const avaliacao = avaliarRespostaTreino({ modo: item.modo, itens: [item] }, resposta, 0);
+  const avaliacao = AVALIADORES_REVISAO[item.modo] ? AVALIADORES_REVISAO[item.modo](item, resposta) : avaliarRespostaTreino({ modo: item.modo, itens: [item] }, resposta, 0);
   const sequencia = avaliacao.acertou ? item.sequenciaAnterior + 1 : 0;
   const dias = avaliacao.acertou ? (sequencia === 1 ? 1 : sequencia === 2 ? 3 : 7) : 0;
   const anteriores = historico.filter(r => chaveItemRevisao(r) === chaveItemRevisao(item));

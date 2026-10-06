@@ -1,4 +1,5 @@
-import { executarPedidoSupabase, ACOES_REVISAO } from './executarPedidoSupabase.js';
+import { executarPedidoSupabase, ACOES_REVISAO, usernameValido } from './executarPedidoSupabase.js';
+import { resumirHistorico } from '../utils/estatisticasPainel.js';
 import { criarMissoesDiarias, dataLocalHoje } from '../utils/missoes.js';
 
 export const ORIGENS_SUPABASE = new Set(['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'https://caca-med.vercel.app']);
@@ -24,7 +25,14 @@ async function lerPedido(req) {
   } catch { throw Object.assign(new Error('Pedido inválido.'), { status: 400 }); }
 }
 
-export function criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, palavras, log = () => {} }) {
+// Username comparado sem diferenciar maiúsculas; outro jogador (fora da homologação) já usando bloqueia a troca.
+async function usernameEmUso(database, username, uid) {
+  const padrao = username.replace(/[\\%_*]/g, c => '\\' + c);
+  const rows = await database('cacamed_player_state?select=player_id&limit=5&profile->>username=ilike.' + encodeURIComponent(padrao));
+  return rows.some(r => r.player_id !== uid && !String(r.player_id).startsWith('homologacao:'));
+}
+
+export function criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras, log = () => {} }) {
   return async req => {
     const inicio = performance.now();
     let acao = 'desconhecida';
@@ -44,6 +52,7 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
       if (req.method === 'GET') {
         acao = new URL(req.url).searchParams.get('acao');
         if (acao === 'ranking') return answer({ sucesso: true, ranking: await ranking() });
+        if (acao === 'coroas' && coroas) return answer({ sucesso: true, coroas: await coroas() });
         if (acao === 'palavras') return answer({ resultado: await palavras() }, 200, { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400' });
         return answer({ erro: 'Consulta inválida.' }, 400);
       }
@@ -62,6 +71,16 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         user = { ...user, uid: 'homologacao:' + user.uid, authId: undefined, nome: 'Homologação isolada' };
       } else if (acao === 'prepararHomologacao') return answer({ erro: 'Ambiente de homologação obrigatório.' }, 400);
       const filter = 'player_id=eq.' + encodeURIComponent(user.uid);
+      // Leituras do painel e do crachá: não alteram o perfil.
+      if (acao === 'obterEstatisticas') {
+        const eventos = await database('cacamed_events?' + filter + '&kind=in.(resposta,recibo)&select=kind,data,created_at&order=created_at.desc&limit=1500');
+        return answer({ resultado: resumirHistorico(eventos) });
+      }
+      if (acao === 'verificarUsername') {
+        const username = String(pedido.username || '').trim();
+        if (!usernameValido(username)) return answer({ resultado: { disponivel: false, motivo: 'invalido' } });
+        return answer({ resultado: { disponivel: !(await usernameEmUso(database, username, user.uid)) } });
+      }
       // Um conflito de versão pode ser reavaliado com o estado confirmado. O motor
       // rejeita edição de respostas e trata reenvio sem pagar novamente.
       for (let tentativa = 0; tentativa < 3; tentativa++) {
@@ -95,6 +114,9 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
           } catch (erro) { if (['PT409', '40001'].includes(erro.code)) continue; throw erro; }
         }
         if (acao === 'cadastrar') return answer({ resultado: row.profile });
+        const novoUsername = String(pedido.username || '').trim();
+        if (acao === 'editarPerfil' && novoUsername !== row.profile.username && usernameValido(novoUsername)
+            && await usernameEmUso(database, novoUsername, user.uid)) return answer({ erro: 'Este username já está em uso por outro plantonista.' }, 409);
         let historico = [];
         if (ACOES_REVISAO.includes(acao)) {
           if (row.profile.role !== 'admin') return answer({ erro: 'Revisão inteligente em piloto para administrador.' }, 403);

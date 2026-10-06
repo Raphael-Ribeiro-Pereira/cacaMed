@@ -1,506 +1,348 @@
-import { sairDaConta } from '../services/sairDaConta';
-import React, { useState, useEffect, useRef } from "react";
-import { resumirCruzadinhas } from '../utils/progressoCruzadinha';
-import { progressoGlobal } from '../utils/economia';
-import { ArrowLeft, Check, KeyRound, LogOut, Pencil, Save, Shield, Stethoscope, Trophy, X, User, Mail, Calendar, Award } from "lucide-react";
-import { motion, AnimatePresence, useAnimation, useReducedMotion } from "framer-motion";
-import { db } from '../firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { BadgeCheck, BarChart3, Brain, Check, ChevronLeft, ClipboardCheck, Crown as CoroaIco, Grid3x3, HeartPulse, KeyRound, Lock, LogOut, Mail, Pencil, RotateCw, Save, ScanLine, Shield, Stethoscope, Swords, Trophy, Award, UserRound, X } from 'lucide-react';
 import { EmailAuthProvider, linkWithCredential, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
-import StitchBrand from './ui/StitchBrand';
-import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { supabase } from '../supabase';
+import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
+import { DOENCAS } from '../utils/batalha';
+import { tituloEpico } from '../utils/coroas';
+import { progressoGlobal } from '../utils/economia';
+import { FOTOS, fotoDoPerfil } from '../utils/fotosCracha';
+import { resumirCruzadinhas } from '../utils/progressoCruzadinha';
+import { animar, fmt, useLargo } from '../utils/prototipo';
+import { Retrato } from './batalhaArte';
+import { FlameIcon, MiniEcg } from './prototipoUi';
+import '../prototipo.css';
 
-// --- COMPONENTES VISUAIS ---
-function AvatarRing({ level }) {
-  const circumference = 2 * Math.PI * 58;
-  const progress = Math.min((level / 50) * 100, 100); 
-  const offset = circumference - (progress / 100) * circumference;
+// Crachá do plantonista, portado do protótipo de movimento: frente e verso, prévia ao vivo,
+// username conferido no servidor e salvamento otimista que volta atrás se a gravação falhar.
+// Firestore e saída da conta carregam sob demanda: a tela abre sem inicializar o Firebase.
+const sairDaContaReal = async () => (await import('../services/sairDaConta')).sairDaConta();
+const PLANILHA_OU_SUPABASE = ['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS);
+const usernameValido = u => /^[a-z0-9._]{3,20}$/.test(u);
+const MATERIA_CADASTRO = { anatomia: 'ANATOMIA', neurologia: 'NEUROLOGIA', farmaco: 'FARMACOLOGIA', micro: 'MICROBIOLOGIA', clinica: 'CLÍNICA GERAL', patologia: 'PATOLOGIA' };
+const hash = s => [...String(s)].reduce((h, c) => (h * 131 + c.charCodeAt(0)) >>> 0, 7);
+const matriculaDe = uid => { let h = hash(uid), t = ''; for (let i = 0; i < 8; i++) { h = (h * 1103515245 + 12345) >>> 0; t += 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[(h >>> 16) % 32]; } return `CM-${t}`; };
 
-  return (
-    <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 128 128">
-      <defs>
-        <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#00f5d4" />
-          <stop offset="50%" stopColor="#00dfc1" />
-          <stop offset="100%" stopColor="#8b5cf6" />
-        </linearGradient>
-        <filter id="ring-glow">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-      <circle cx="64" cy="64" r="58" stroke="#3a4a46" strokeWidth="3" fill="none" />
-      <motion.circle
-        cx="64" cy="64" r="58"
-        stroke="url(#ring-grad)"
-        strokeWidth="3"
-        fill="none"
-        strokeLinecap="round"
-        strokeDasharray={circumference}
-        initial={{ strokeDashoffset: circumference }}
-        animate={{ strokeDashoffset: offset }}
-        transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
-        filter="url(#ring-glow)"
-      />
-      {Array.from({ length: 24 }).map((_, i) => {
-        const angle = (i / 24) * 360;
-        const rad = (angle * Math.PI) / 180;
-        const x1 = 64 + 52 * Math.cos(rad);
-        const y1 = 64 + 52 * Math.sin(rad);
-        const x2 = 64 + 55 * Math.cos(rad);
-        const y2 = 64 + 55 * Math.sin(rad);
-        return (
-          <line key={`tick-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={i % 6 === 0 ? "#00f5d4" : "#3a4a46"} strokeWidth="1" opacity={i % 6 === 0 ? 0.8 : 0.3} />
-        );
-      })}
-    </svg>
-  );
+// Especialização: a matéria com mais XP por tema; recém-cadastrado usa a matéria escolhida no cadastro.
+function especialidade(p) {
+  const [chave, xp] = Object.entries(p?.xpTopicos || {}).sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0))[0] || [];
+  if (chave && Number(xp) > 0) return [chave.split('-')[0], Number(xp)];
+  return [MATERIA_CADASTRO[p?.materiaPreferida] || 'CLÍNICA GERAL', 0];
 }
 
-function MiniEcg() {
-  const controls = useAnimation();
-  const reduceMotion = useReducedMotion();
+function Barcode({ v }) {
+  let h = hash(v), x = 0;
+  const barras = [];
+  while (x < 118) { h = (h * 1103515245 + 12345) >>> 0; const w = 1 + (h % 3); barras.push([x, w]); x += w + 1 + ((h >> 5) % 2); }
+  return <svg className="cr-bar" viewBox="0 0 120 24" aria-hidden="true">{barras.map(([bx, w], i) => <rect key={i} x={bx} width={w} height="24" />)}</svg>;
+}
+function QR({ v }) {
+  let h = hash(v);
+  const cells = [];
+  const finder = (r, c) => (r < 7 && c < 7) || (r < 7 && c > 13) || (r > 13 && c < 7);
+  for (let r = 0; r < 21; r++) for (let c = 0; c < 21; c++) { h = (h * 1664525 + 1013904223) >>> 0; if (!finder(r, c) && h % 5 < 2) cells.push([r, c]); }
+  const f = (x, y) => <g key={`${x}${y}`}><rect x={x} y={y} width="7" height="7" rx="1.4" fill="none" stroke="currentColor" strokeWidth="1" /><rect x={x + 2} y={y + 2} width="3" height="3" rx=".6" /></g>;
+  return <svg className="cr-qr" viewBox="-1 -1 23 23" aria-hidden="true"><g fill="currentColor">{cells.map(([r, c]) => <rect key={`${r}-${c}`} x={c} y={r} width="1" height="1" />)}{f(0, 0)}{f(14, 0)}{f(0, 14)}</g></svg>;
+}
+
+function Ring({ pct }) {
+  const C = 2 * Math.PI * 58;
+  const [off, setOff] = useState(C);
+  useEffect(() => { const t = setTimeout(() => setOff(C * (1 - pct / 100)), 80); return () => clearTimeout(t); }, [C, pct]);
+  return <svg className="cr-ring" viewBox="0 0 128 128" aria-hidden="true">
+    <defs><linearGradient id="crg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#00f5d4" /><stop offset=".55" stopColor="#00dfc1" /><stop offset="1" stopColor="#8b5cf6" /></linearGradient></defs>
+    <circle cx="64" cy="64" r="58" className="t" />
+    <circle cx="64" cy="64" r="58" className="f" stroke="url(#crg)" strokeDasharray={C} strokeDashoffset={off} />
+    {Array.from({ length: 24 }, (_, i) => { const a = (i / 24) * Math.PI * 2; return <line key={i} x1={64 + 51 * Math.cos(a)} y1={64 + 51 * Math.sin(a)} x2={64 + 54 * Math.cos(a)} y2={64 + 54 * Math.sin(a)} className={i % 6 ? 'tk' : 'tk on'} />; })}
+  </svg>;
+}
+
+// Username: regra local na hora e confirmação no servidor depois de 450 ms sem digitar.
+function useDisponibilidade(username, ativo, conferir) {
+  const [resposta, setResposta] = useState({ username: null });
+  const valido = usernameValido(username);
   useEffect(() => {
-    if (reduceMotion) {
-      controls.stop();
-      controls.set({ d: "M 0 10 L 20 10" });
-      return;
-    }
-    let m = true;
-    const run = async () => {
-      while (m) {
-        const flat = "M 0 10 L 8 10 L 10 10 L 12 10 L 20 10";
-        const beat = "M 0 10 L 8 10 L 10 3 L 12 17 L 14 8 L 16 10 L 20 10";
-        await controls.start({ d: beat, transition: { duration: 0.1, ease: "easeOut" } });
-        await controls.start({ d: flat, transition: { duration: 0.15, ease: "easeInOut" } });
-        await new Promise(r => setTimeout(r, Math.random() * 800 + 600));
-      }
-    };
-    run();
-    return () => { m = false; controls.stop(); };
-  }, [controls, reduceMotion]);
-
-  return (
-    <svg viewBox="0 0 20 20" className="w-5 h-3 text-cyan-500 drop-shadow-[0_0_4px_rgba(56,189,248,0.6)]">
-      <motion.path stroke="currentColor" strokeWidth="1.5" fill="none" animate={controls} initial={{ d: "M 0 10 L 20 10" }} strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+    if (!ativo || !valido || !conferir) return undefined;
+    let vivo = true;
+    const t = setTimeout(() => conferir(username).then(r => { if (vivo) setResposta({ username, ok: r.disponivel }); })
+      .catch(() => { if (vivo) setResposta({ username, erro: true }); }), 450);
+    return () => { vivo = false; clearTimeout(t); };
+  }, [username, ativo, valido, conferir]);
+  if (!ativo || !username) return 'idle';
+  if (!valido) return 'invalid';
+  if (!conferir) return 'ok';
+  if (resposta.username !== username) return 'checking';
+  return resposta.erro ? 'falha' : resposta.ok ? 'ok' : 'taken';
+}
+function StatusUser({ check }) {
+  return { idle: null, checking: <span className="cr-st chk"><span className="spin" />Conferindo no servidor</span>, ok: <span className="cr-st ok"><Check size={13} />Disponível</span>,
+    taken: <span className="cr-st no"><X size={13} />Já usado por outro plantonista</span>, falha: <span className="cr-st no"><X size={13} />Não foi possível conferir agora</span>,
+    invalid: <span className="cr-st no"><X size={13} />Use 3 a 20 letras minúsculas, números, ponto ou _</span> }[check];
 }
 
-const obterTituloEpico = (materia) => {
-  const mat = (materia || '').toUpperCase();
-  if (mat.includes('NEURO')) return { titulo: 'Devorador de Cérebros', emoji: '🧠', cor: '#8b5cf6' };
-  if (mat.includes('OSSO') || mat.includes('ESQUELETICO')) return { titulo: 'Devorador de Ossos', emoji: '🦴', cor: '#dce2f7' };
-  if (mat.includes('MUSCUL') || mat.includes('ANATOMIA')) return { titulo: 'Escultor de Corpos', emoji: '💪', cor: '#d4004b' };
-  if (mat.includes('FARMACO')) return { titulo: 'O Alquimista Químico', emoji: '💊', cor: '#00f5d4' };
-  if (mat.includes('MICRO') || mat.includes('VIRUS') || mat.includes('BACTERIA')) return { titulo: 'Caçador de Vírus', emoji: '🦠', cor: '#00dfc1' };
-  if (mat.includes('IMUNO')) return { titulo: 'Lorde dos Anticorpos', emoji: '🛡️', cor: '#8b5cf6' };
-  if (mat.includes('PATO') || mat.includes('DOENCA')) return { titulo: 'Detetive de Lâminas', emoji: '🔬', cor: '#8b5cf6' };
-  if (mat.includes('HISTO') || mat.includes('CELULA')) return { titulo: 'Mestre Celular', emoji: '🧬', cor: '#d4004b' };
-  return { titulo: 'Bisturi de Ouro', emoji: '🛡️', cor: '#ffb95f' };
-};
+function CrachaFrente({ p, email, nome, username, foto, desde, oculto }) {
+  const L = progressoGlobal(p);
+  const [esp] = especialidade(p);
+  const [titulo, emoji, corTitulo] = tituloEpico(esp);
+  const matricula = matriculaDe(p.uid || username);
+  const cruz = resumirCruzadinhas(p.estatisticas).partidas;
+  const concluidos = ['ddx', 'erroMedico', 'causaEfeito'].reduce((t, k) => t + (Number(p[k]?.partidas) || 0), 0);
+  const stats = [
+    ['Cruzadinhas', String(cruz), Stethoscope, 'var(--mint)'],
+    ['Plantões seguros', String(Number(p.ddx?.seguros) || 0), Trophy, 'var(--amber)'],
+    ['Plantões concluídos', String(concluidos), ClipboardCheck, 'var(--mint)'],
+    ['XP total', L.xp >= 1000 ? `${(L.xp / 1000).toFixed(1).replace('.', ',')}k` : String(L.xp), Award, '#b49cff'],
+  ];
+  return <div className="cr-face cr-front" aria-hidden={oculto}>
+    <div className="cr-slot" />
+    <div className="cr-top"><span className="cr-org">caco<b>Med</b><small>HOSPITAL-ESCOLA</small></span><span className="cr-chipcard" /><span className="cr-access">ACESSO<br /><b>UTI CENTRAL</b></span></div>
+    <div className="cr-photo">
+      <Ring pct={L.percentual} />
+      <span className="cr-pic"><Retrato f={FOTOS[foto] || FOTOS[0]} title={`Foto de ${nome}`} /></span>
+      <span className="cr-lvl mono"><small>LVL</small>{L.nivel}</span>
+    </div>
+    <b className="cr-name">{p.titulo && <small className="cr-tt">{String(p.titulo).toLowerCase().includes('doutora') ? 'Dra.' : 'Dr.'}</small>}{nome}</b>
+    <span className="cr-user">@{username}<BadgeCheck size={14} /></span>
+    <span className="cr-mail"><Mail size={11} />{email}</span>
+    <div className="cr-pills">
+      <span className="cr-pill lv"><Stethoscope size={13} />Nível {L.nivel}</span>
+      <span className="cr-pill ti" style={{ '--tc': corTitulo }}><span aria-hidden="true">{emoji}</span>{titulo}</span>
+    </div>
+    <div className="cr-xp">
+      <div><span>PRÓXIMO NÍVEL</span><b className="mono">{fmt(L.xp)}/{fmt(L.proximo)}</b></div>
+      <span className="cr-xpbar"><span style={{ width: `${L.percentual}%` }} /></span>
+    </div>
+    <div className="cr-stats">{stats.map(([t, v, icone, c]) => { const Ic = icone; return <div key={t}><Ic size={14} style={{ color: c }} /><b className="mono">{v}</b><small>{t}</small></div>; })}</div>
+    <div className="cr-foot">
+      <span className="cr-id mono">ID</span>
+      <div><small>MATRÍCULA</small><b className="mono">{matricula}</b></div>
+      <div className="r"><small>DESDE</small><b className="mono">{desde}</b></div>
+    </div>
+    <Barcode v={matricula + username} />
+    <span className="cr-holo" />
+  </div>;
+}
 
-// ==========================================
-// COMPONENTE PRINCIPAL DO PERFIL
-// ==========================================
-export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual }) {
-  const [username, setUsername] = useState(dadosUsuario?.username || "");
-  const [fullName, setFullName] = useState(dadosUsuario?.nome || dadosUsuario?.username || "");
-  const email = usuario?.email || "email_indisponivel@cacoMed.com";
-  
-  const [focusedField, setFocusedField] = useState(null);
-  const [saved, setSaved] = useState(false);
+export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil = chamarPerfilPlanilha, aoSair = sairDaContaReal }) {
+  const web = useLargo();
+  const p = dadosUsuario || {};
+  const email = usuario?.email || p.email || '—';
+  const fotoAtual = fotoDoPerfil(p);
+  const [username, setUsername] = useState(p.username || '');
+  const [nome, setNome] = useState(p.nome || p.username || '');
+  const [foto, setFoto] = useState(fotoAtual);
+  const [save, setSave] = useState('idle');
   const [erroSalvar, setErroSalvar] = useState('');
-  const [salvandoPerfil, setSalvandoPerfil] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [currentPw, setCurrentPw] = useState("");
-  const [newPw, setNewPw] = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
+  const [flip, setFlip] = useState(false);
+  const [sheet, setSheet] = useState(null);
+  const card = useRef(null);
+  const ultimoPedido = useRef(null);
+
+  const [senhaAtual, setSenhaAtual] = useState('');
+  const [senhaNova, setSenhaNova] = useState('');
+  const [senhaConfirma, setSenhaConfirma] = useState('');
   const [senhaErro, setSenhaErro] = useState('');
   const [salvandoSenha, setSalvandoSenha] = useState(false);
   const [senhaVinculada, setSenhaVinculada] = useState(false);
-  const botaoSenhaRef = useRef(null);
-  const entradaSenhaRef = useRef(null);
+  const [saindo, setSaindo] = useState(false);
   const possuiSenha = senhaVinculada || usuario?.providerData?.some(provedor => provedor.providerId === 'password');
 
+  const [esp, espXp] = especialidade(p);
+  const [titulo, , corTitulo] = tituloEpico(esp);
+  const userMudou = username !== (p.username || '');
+  const dirty = userMudou || nome !== (p.nome || p.username || '') || foto !== fotoAtual;
+  // Firestore antigo não confere username; com a API (ou um serviço injetado na homologação), confere.
+  const viaServico = PLANILHA_OU_SUPABASE || servicoPerfil !== chamarPerfilPlanilha;
+  const conferir = viaServico ? u => servicoPerfil(usuario, 'verificarUsername', { username: u }) : null;
+  const [conferirEstavel] = useState(() => conferir);
+  const check = useDisponibilidade(username, userMudou, conferirEstavel);
+  const podeSalvar = dirty && nome.trim().length >= 2 && (!userMudou || check === 'ok') && save !== 'saving';
+  const desde = (p.criadoEm || usuario?.metadata?.creationTime) ? new Date(p.criadoEm || usuario.metadata.creationTime).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }) : '—';
+  const matricula = matriculaDe(p.uid || username);
+
   useEffect(() => {
-    if (!showPasswordModal) return;
-    entradaSenhaRef.current?.focus();
-    const aoTeclar = evento => {
-      if (evento.key === 'Escape' && !salvandoSenha) {
-        setShowPasswordModal(false);
-        botaoSenhaRef.current?.focus();
-      }
-    };
-    document.addEventListener('keydown', aoTeclar);
-    return () => document.removeEventListener('keydown', aoTeclar);
-  }, [showPasswordModal, salvandoSenha]);
+    if (!sheet) return undefined;
+    const tecla = e => { if (e.key === 'Escape' && !salvandoSenha && !saindo) setSheet(null); };
+    document.addEventListener('keydown', tecla);
+    return () => document.removeEventListener('keydown', tecla);
+  }, [sheet, salvandoSenha, saindo]);
 
-  const infoPerfil = String(dadosUsuario?.titulo || dadosUsuario?.genero || dadosUsuario?.sexo || '').toLowerCase().trim();
-  const ehFeminino = infoPerfil.includes('doutora') || infoPerfil.includes('dra') || infoPerfil.includes('fem') || infoPerfil === 'f';
-  const imagemPerfil = ehFeminino ? '/fem.png' : '/masc.png';
-
-  let maxXp = -1;
-  let materiaEspecialista = 'Clínico Geral';
-  
-  const xpTopicos = dadosUsuario?.xpTopicos || {};
-  Object.keys(xpTopicos).forEach(chave => {
-    const xpDaMateria = xpTopicos[chave];
-    if (xpDaMateria > maxXp) {
-      maxXp = xpDaMateria;
-      materiaEspecialista = chave.split('-')[0];
-    }
-  });
-
-  const progresso = progressoGlobal(dadosUsuario);
-  const level = progresso.nivel;
-  const xpCurrent = progresso.xp;
-  const xpNext = progresso.proximo;
-  const xpPercent = progresso.percentual;
-
-  const totalCruzadinhas = resumirCruzadinhas(dadosUsuario?.estatisticas).partidas;
-  const dataCadastro = usuario?.metadata?.creationTime
-    ? new Date(usuario.metadata.creationTime).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
-    : '—';
-
-  const stats = [
-    { label: "Cruzadinhas", value: totalCruzadinhas.toString(), icon: Stethoscope, color: "#00f5d4" },
-    { label: "Plantões seguros", value: String(dadosUsuario?.ddx?.seguros || 0), icon: Trophy, color: "#ffb95f" },
-    { label: "Plantões concluídos", value: String(dadosUsuario?.ddx?.partidas || 0), icon: Stethoscope, color: "#00f5d4" },
-    { label: "XP Total", value: xpCurrent > 1000 ? `${(xpCurrent/1000).toFixed(1)}k` : xpCurrent, icon: Award, color: "#8b5cf6" },
-  ];
-
-  const tituloData = obterTituloEpico(materiaEspecialista);
-
-  const handleSave = async () => {
-    if (!usuario?.uid || salvandoPerfil) return;
-    setSalvandoPerfil(true);
+  const salvar = async () => {
+    if (!podeSalvar || !usuario?.uid) return;
+    const novo = { username, nome: nome.trim(), foto };
+    const antes = { username: p.username, nome: p.nome, foto: p.foto };
+    ultimoPedido.current = novo;
     setErroSalvar('');
+    // Otimista: crachá e prévias já mostram os dados novos enquanto o servidor grava.
+    setDadosUsuario(prev => ({ ...prev, ...novo }));
+    setSave('saving');
     try {
-        if (['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS)) {
-          const perfil = await chamarPerfilPlanilha(usuario, 'editarPerfil', { username, nome: fullName });
-          setDadosUsuario(perfil);
-        } else {
-          await updateDoc(doc(db, "usuarios", usuario.uid), { username, nome: fullName });
-          setDadosUsuario(prev => ({...prev, username, nome: fullName}));
-        }
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
-    } catch (e) {
-        console.error("Erro ao salvar perfil:", e);
-        setErroSalvar(e.message || 'Não foi possível salvar o perfil. Tente novamente.');
-    } finally {
-        setSalvandoPerfil(false);
+      if (viaServico) {
+        const perfil = await servicoPerfil(usuario, 'editarPerfil', novo);
+        if (ultimoPedido.current === novo) setDadosUsuario(perfil);
+      } else {
+        const [{ db }, { doc, updateDoc }] = await Promise.all([import('../firebase'), import('firebase/firestore')]);
+        await updateDoc(doc(db, 'usuarios', usuario.uid), novo);
+      }
+      setSave('ok');
+      setTimeout(() => setSave(s => (s === 'ok' ? 'idle' : s)), 2400);
+    } catch (falha) {
+      setSave('err');
+      setErroSalvar(falha.message || 'O servidor não respondeu.');
+      setDadosUsuario(prev => ({ ...prev, ...antes }));
     }
   };
 
-  const handleLogout = async () => {
-    try {
-        await sairDaConta();
-        setTelaAtual('login');
-    } catch (error) {
-        console.error("Erro ao sair:", error);
-    }
+  const tilt = e => {
+    if (!web || !animar() || !card.current) return;
+    const r = card.current.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    card.current.style.setProperty('--rx', `${(0.5 - y) * 10}deg`);
+    card.current.style.setProperty('--ry', `${(x - 0.5) * 12}deg`);
+    card.current.style.setProperty('--mx', `${x * 100}%`);
+    card.current.style.setProperty('--my', `${y * 100}%`);
   };
+  const solta = () => { card.current?.style.setProperty('--rx', '0deg'); card.current?.style.setProperty('--ry', '0deg'); };
 
-  const handlePasswordChange = async () => {
-    if ((possuiSenha && !currentPw) || newPw.length < 6 || salvandoSenha) return;
-    if (!possuiSenha && newPw !== confirmPw) {
-      setSenhaErro('As senhas não coincidem.');
-      return;
-    }
-    if (possuiSenha && currentPw === newPw) {
-      setSenhaErro('A nova senha precisa ser diferente da atual.');
-      return;
-    }
+  const trocarSenha = async () => {
+    if ((possuiSenha && !senhaAtual) || senhaNova.length < 6 || salvandoSenha) return;
+    if (!possuiSenha && senhaNova !== senhaConfirma) { setSenhaErro('As senhas não coincidem.'); return; }
+    if (possuiSenha && senhaAtual === senhaNova) { setSenhaErro('A nova senha precisa ser diferente da atual.'); return; }
     setSenhaErro('');
     setSalvandoSenha(true);
     try {
-        if (usuario.source === 'supabase') {
-          if (possuiSenha) {
-            const verificacao = await supabase.auth.signInWithPassword({ email: usuario.email, password: currentPw });
-            if (verificacao.error || verificacao.data.user?.id !== usuario.authId) throw new Error('Senha atual inválida.');
-          }
-          await chamarPerfilPlanilha(usuario, 'definirSenha', { senha: newPw });
-          setSenhaVinculada(true);
-        } else if (possuiSenha) {
-          const credential = EmailAuthProvider.credential(usuario.email, currentPw);
-          await reauthenticateWithCredential(usuario, credential);
-          await updatePassword(usuario, newPw);
-        } else {
-          await linkWithCredential(usuario, EmailAuthProvider.credential(usuario.email, newPw));
-          setSenhaVinculada(true);
+      if (usuario.source === 'supabase') {
+        if (possuiSenha) {
+          const verificacao = await supabase.auth.signInWithPassword({ email: usuario.email, password: senhaAtual });
+          if (verificacao.error || verificacao.data.user?.id !== usuario.authId) throw new Error('Senha atual inválida.');
         }
-        setShowPasswordModal(false);
-        setCurrentPw("");
-        setNewPw("");
-        setConfirmPw("");
+        await chamarPerfilPlanilha(usuario, 'definirSenha', { senha: senhaNova });
+        setSenhaVinculada(true);
+      } else if (possuiSenha) {
+        await reauthenticateWithCredential(usuario, EmailAuthProvider.credential(usuario.email, senhaAtual));
+        await updatePassword(usuario, senhaNova);
+      } else {
+        await linkWithCredential(usuario, EmailAuthProvider.credential(usuario.email, senhaNova));
+        setSenhaVinculada(true);
+      }
+      setSheet(null); setSenhaAtual(''); setSenhaNova(''); setSenhaConfirma('');
     } catch (falha) {
-        setSenhaErro(falha.code === 'auth/email-already-in-use'
-          ? 'Este e-mail já possui uma conta por senha. Entre nela e vincule o Google antes de criar outra senha.'
-          : possuiSenha ? 'Não foi possível trocar a senha. Confira a senha atual e tente novamente.' : 'Não foi possível criar a senha. Entre novamente com Google e tente outra vez.');
+      setSenhaErro(falha.code === 'auth/email-already-in-use'
+        ? 'Este e-mail já possui uma conta por senha. Entre nela e vincule o Google antes de criar outra senha.'
+        : possuiSenha ? 'Não foi possível trocar a senha. Confira a senha atual e tente novamente.' : 'Não foi possível criar a senha. Entre novamente com Google e tente outra vez.');
     } finally {
-        setSalvandoSenha(false);
+      setSalvandoSenha(false);
     }
   };
+  const sair = async () => {
+    setSaindo(true);
+    try { await aoSair(); setTelaAtual('login'); } catch (falha) { console.error('Erro ao sair:', falha); setSaindo(false); }
+  };
 
-  return (
-    <div className="stitch-integrated stitch-profile min-h-screen bg-[#0B1120] text-slate-300 font-sans relative overflow-x-hidden flex flex-col items-center selection:bg-cyan-500/30">
-      <StitchBrand secao="PERFIL DO PLANTONISTA" />
-      
-      <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)`, backgroundSize: '28px 28px' }} />
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,rgba(56,189,248,0.05)_0%,#0B1120_70%)]" />
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_30%,#0B1120_100%)]" />
+  const nomeCard = nome.trim() || p.nome || '';
+  const revisao = p.revisao?.resumo;
+  const admin = p.role === 'admin';
+  const acessos = [
+    ['Cruzadinhas', 'Livre · 2 tickets por partida', Grid3x3, true],
+    ['Quiz e Verdadeiro ou mentira', 'Livre', ScanLine, true],
+    ['DDX · Casos clínicos', `1 ticket por caso · você tem ${Number(p.tickets) || 0}`, HeartPulse, true],
+    ['Batalha diagnóstica', admin ? `Piloto · ${(p.batalha?.descobertas || []).length}/${DOENCAS.length} doenças` : 'Em revisão médica', Swords, admin],
+    ['Revisão Inteligente', admin ? (revisao ? `${revisao.disponiveis} itens disponíveis` : 'Fila consultada ao abrir') : 'Em piloto', Brain, admin],
+    ['Coroas por matéria', 'Ranking semanal · fecha no domingo', CoroaIco, true],
+  ];
 
-      {/* Painel com as medidas compactas originais do Figma */}
-      <motion.div
-        initial={{ opacity: 0, y: 15, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-[1300px] mx-4"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <button
-              aria-label="Voltar ao centro de comando"
-              onClick={() => setTelaAtual('menu')}
-              className="w-9 h-9 rounded-xl bg-[#151F32] border border-white/[0.05] flex items-center justify-center text-slate-400 hover:text-white hover:border-cyan-500/30 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <div>
-              <h1 className="text-white text-lg tracking-tight flex items-center gap-2">
-                <Shield className="w-4 h-4 text-cyan-400" style={{ filter: 'drop-shadow(0 0 6px rgba(56,189,248,0.5))' }} />
-                Identificação do Plantonista
-              </h1>
-              <p className="text-slate-500 text-[10px]">Crachá de Acesso — UTI Central</p>
-            </div>
-          </div>
-          <MiniEcg />
-        </div>
-
-        <div className="bg-[#151F32] rounded-[24px] border border-white/[0.04] shadow-[0_20px_60px_rgba(0,0,0,0.5)] relative overflow-hidden">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-cyan-500/5 blur-[50px] rounded-full pointer-events-none" />
-          <div className="absolute inset-0 pointer-events-none opacity-[0.015]" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(56,189,248,0.1) 2px, rgba(56,189,248,0.1) 4px)' }} />
-
-          <div className="relative z-10 flex flex-col md:flex-row">
-
-            {/* ESQUERDA: Medida de 280px fiel ao Figma */}
-            <div className="w-full md:w-[400px] shrink-0 border-b md:border-b-0 md:border-r border-white/[0.04] p-6 flex flex-col items-center justify-center bg-gradient-to-b from-[#0f172a]/50 to-transparent">
-              <div className="stitch-avatar-glow relative w-[128px] h-[128px] mb-4 rounded-full">
-                <AvatarRing level={level} />
-                <img src={imagemPerfil} alt="Avatar" className="absolute inset-[8px] rounded-full object-cover border-2 border-[#0f172a]" />
-                
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.5 }} className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#0B1120] border border-cyan-500/40 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-[0_0_10px_rgba(56,189,248,0.2)]">
-                  <span className="text-cyan-400 text-[10px] font-mono">LVL</span>
-                  <span className="text-white text-xs font-mono">{level}</span>
-                </motion.div>
-                
-              </div>
-
-              <h2 className="text-white text-base text-center mb-1">{fullName}</h2>
-              <p className="text-slate-500 text-[10px] mb-3 flex items-center gap-1">
-                <Mail className="w-2.5 h-2.5" /> {email}
-              </p>
-
-              <div className="flex flex-col gap-1.5 w-full">
-                <div className="flex items-center justify-center gap-2 bg-[#0B1120] border border-cyan-500/15 rounded-lg px-3 py-1.5">
-                  <Stethoscope className="w-3 h-3 text-cyan-400" />
-                  <span className="text-cyan-300 text-[10px]">Nível {level}</span>
-                </div>
-                <div className="flex items-center justify-center gap-2 bg-[#0B1120] border border-amber-500/15 rounded-lg px-3 py-1.5">
-                  <span className="text-sm">{tituloData.emoji}</span>
-                  <span className="text-amber-300 text-[10px] italic">{tituloData.titulo}</span>
-                </div>
-              </div>
-
-              <div className="w-full mt-3">
-                <div className="flex justify-between text-[8px] uppercase tracking-widest mb-1">
-                  <span className="text-slate-600">Próximos 1.000 XP globais</span>
-                  <span className="text-cyan-400 font-mono text-[9px]">{xpCurrent.toLocaleString()}/{xpNext.toLocaleString()}</span>
-                </div>
-                <div className="w-full h-1.5 bg-[#0B1120] rounded-full overflow-hidden border border-white/[0.03]">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${xpPercent}%` }}
-                    transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
-                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400"
-                    style={{ boxShadow: '0 0 10px rgba(56,189,248,0.4)' }}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-1.5 mt-3 w-full">
-                {stats.map(s => (
-                  <div key={s.label} className="bg-[#0B1120] border border-white/[0.03] rounded-lg p-2 flex flex-col items-center">
-                    <s.icon className="w-3 h-3 mb-0.5" style={{ color: s.color, filter: `drop-shadow(0 0 4px ${s.color}60)` }} />
-                    <span className="text-white text-xs font-mono">{s.value}</span>
-                    <span className="text-slate-600 text-[8px] uppercase tracking-wider">{s.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-3 w-full bg-[#0B1120] border border-white/[0.03] rounded-lg p-2 flex items-center gap-2">
-                <div className="w-6 h-8 bg-gradient-to-b from-cyan-500/20 to-blue-500/10 rounded border border-cyan-500/20 flex items-center justify-center">
-                  <span className="text-[7px] text-cyan-400 font-mono">ID</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-[8px] text-slate-600 uppercase tracking-widest block">Matrícula</span>
-                  <span className="text-slate-400 text-[10px] font-mono">{usuario?.uid?.slice(0, 12) || '—'}</span>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-[8px] text-slate-600 uppercase tracking-widest">Desde</span>
-                  <span className="text-slate-400 text-[10px] font-mono flex items-center gap-0.5">
-                    <Calendar className="w-2.5 h-2.5" /> {dataCadastro}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* DIREITA: Espaçamentos compactos fieis ao Figma */}
-            <div className="flex-1 p-6 flex flex-col justify-between">
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Pencil className="w-3.5 h-3.5 text-cyan-400" />
-                  <h3 className="text-white text-sm uppercase tracking-wider">Dados do Prontuário</h3>
-                </div>
-                <div className="h-[1px] bg-gradient-to-r from-cyan-500/20 via-white/[0.03] to-transparent" />
-              </div>
-
-              <div className="space-y-3 flex-1">
-                <div>
-                  <label htmlFor="perfil-username" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block flex items-center gap-1">
-                    <User className="w-2.5 h-2.5" /> Username
-                  </label>
-                  <div className={`flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 transition-all duration-300 ${focusedField === 'username' ? 'border-cyan-500/60 shadow-[0_0_15px_rgba(56,189,248,0.12)]' : 'border-white/[0.05] hover:border-white/[0.1]'}`}>
-                    <span className="text-slate-600 text-sm">@</span>
-                    <input id="perfil-username" type="text" value={username} onChange={e => setUsername(e.target.value)} onFocus={() => setFocusedField('username')} onBlur={() => setFocusedField(null)} className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
-                    {username.length >= 3 && (
-                      <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/40">
-                        <Check className="w-2.5 h-2.5 text-emerald-400" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="perfil-nome" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block flex items-center gap-1">
-                    <Stethoscope className="w-2.5 h-2.5" /> Nome Completo
-                  </label>
-                  <div className={`flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 transition-all duration-300 ${focusedField === 'fullname' ? 'border-cyan-500/60 shadow-[0_0_15px_rgba(56,189,248,0.12)]' : 'border-white/[0.05] hover:border-white/[0.1]'}`}>
-                    <input id="perfil-nome" type="text" value={fullName} onChange={e => setFullName(e.target.value)} onFocus={() => setFocusedField('fullname')} onBlur={() => setFocusedField(null)} className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="perfil-email" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block flex items-center gap-1">
-                    <Mail className="w-2.5 h-2.5" /> E-mail (imutável)
-                  </label>
-                  <div className="flex items-center gap-3 bg-[#0B1120]/60 rounded-xl px-4 py-2.5 border-2 border-white/[0.03]">
-                    <input id="perfil-email" type="email" value={email} readOnly className="flex-1 bg-transparent text-slate-500 text-sm outline-none cursor-not-allowed" />
-                    <div className="text-[8px] uppercase tracking-widest text-slate-600 bg-[#151F32] px-2 py-0.5 rounded-full border border-white/[0.04]">Fixo</div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-3">
-                  <div>
-                    <label className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">Especialização</label>
-                    <div className="bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 border-white/[0.05] flex items-center gap-2">
-                      <span className="text-sm">🩺</span>
-                      <span className="text-white text-sm">{materiaEspecialista}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-white/[0.04] space-y-2">
-                <motion.button whileHover={{ y: -1, boxShadow: '0 0 25px rgba(59,130,246,0.3)' }} whileTap={{ scale: 0.98 }} onClick={handleSave} disabled={salvandoPerfil} className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-[0_0_15px_rgba(59,130,246,0.15)] flex items-center justify-center gap-2 text-sm relative overflow-hidden disabled:opacity-50">
-                  <AnimatePresence mode="wait">
-                    {saved ? (
-                      <motion.span key="saved" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex items-center gap-2"><Check className="w-4 h-4" /> Salvo com Sucesso!</motion.span>
-                    ) : (
-                      <motion.span key="save" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex items-center gap-2"><Save className="w-4 h-4" /> Salvar Alterações</motion.span>
-                    )}
-                  </AnimatePresence>
-                </motion.button>
-                {erroSalvar && <p role="alert" className="text-rose-400 text-xs">{erroSalvar}</p>}
-
-                <div className="grid grid-cols-2 gap-2">
-                  <motion.button ref={botaoSenhaRef} whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }} onClick={() => { setSenhaErro(''); setShowPasswordModal(true); }} className="py-2.5 rounded-xl bg-[#0B1120] border border-white/[0.08] hover:border-blue-500/30 text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 text-xs">
-                    <KeyRound className="w-3.5 h-3.5 text-blue-400" /> {possuiSenha ? 'Mudar Senha' : 'Criar Senha'}
-                  </motion.button>
-                  <motion.button whileHover={{ y: -1, boxShadow: '0 0 20px rgba(239,68,68,0.15)' }} whileTap={{ scale: 0.98 }} onClick={handleLogout} className="py-2.5 rounded-xl bg-red-950/40 border border-red-500/20 hover:border-red-500/50 text-red-400 hover:text-red-300 transition-all flex items-center justify-center gap-2 text-xs">
-                    <LogOut className="w-3.5 h-3.5" /> Sair da Conta
-                  </motion.button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-center mt-3">
-          <div className="flex items-center gap-1.5">
-            <div className="w-10 h-[1px] bg-gradient-to-r from-transparent to-cyan-500/20" />
-            <MiniEcg />
-            <span className="text-[8px] text-slate-600 uppercase tracking-widest">cacoMed · Terminal de Plantão</span>
-            <MiniEcg />
-            <div className="w-10 h-[1px] bg-gradient-to-l from-transparent to-cyan-500/20" />
-          </div>
-        </div>
-      </motion.div>
-
-      {/* MODAL DE SENHA */}
-      <AnimatePresence>
-        {showPasswordModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0B1120]/90 backdrop-blur-md">
-            <motion.div role="dialog" aria-modal="true" aria-labelledby="perfil-titulo-senha" initial={{ opacity: 0, scale: 0.93, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.93, y: 10 }} transition={{ duration: 0.3 }} className="w-full max-w-[400px] bg-[#151F32] rounded-[24px] border border-white/[0.05] shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-6 relative overflow-hidden">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-20 bg-blue-500/5 blur-[40px] rounded-full pointer-events-none" />
-              <button aria-label="Fechar alteração de senha" onClick={() => setShowPasswordModal(false)} className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"><X className="w-4 h-4" /></button>
-
-              <div className="relative z-10">
-                <div className="text-center mb-5">
-                  <div className="w-11 h-11 mx-auto rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(59,130,246,0.15)]"><KeyRound className="w-5 h-5 text-blue-400" /></div>
-                  <h2 id="perfil-titulo-senha" className="text-white text-base">{possuiSenha ? 'Alterar Senha de Acesso' : 'Criar Senha de Acesso'}</h2>
-                  <p className="text-slate-500 text-[10px] mt-0.5">{possuiSenha ? 'Insira a senha atual e defina uma nova.' : 'Depois você poderá entrar também com e-mail e senha.'}</p>
-                </div>
-
-                <div className="space-y-3 mb-4">
-                  {possuiSenha && <div>
-                    <label htmlFor="perfil-senha-atual" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">Senha Atual</label>
-                    <div className="flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 border-white/[0.05] focus-within:border-blue-500/50 focus-within:shadow-[0_0_12px_rgba(59,130,246,0.1)] transition-all">
-                      <KeyRound className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                      <input ref={entradaSenhaRef} id="perfil-senha-atual" type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} placeholder="••••••••" className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
-                    </div>
-                  </div>}
-                  <div>
-                    <label htmlFor="perfil-senha-nova" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">{possuiSenha ? 'Nova Senha' : 'Senha'}</label>
-                    <div className="flex items-center gap-3 bg-[#0B1120] rounded-xl px-4 py-2.5 border-2 border-white/[0.05] focus-within:border-emerald-500/50 focus-within:shadow-[0_0_12px_rgba(16,185,129,0.1)] transition-all">
-                      <KeyRound className="w-3.5 h-3.5 text-slate-600 shrink-0" />
-                      <input ref={possuiSenha ? undefined : entradaSenhaRef} id="perfil-senha-nova" type="password" autoComplete="new-password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="Mín. 6 caracteres" className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-600" />
-                      {newPw.length >= 6 && <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/40"><Check className="w-2.5 h-2.5 text-emerald-400" /></div>}
-                    </div>
-                  </div>
-                  {!possuiSenha && <div>
-                    <label htmlFor="perfil-senha-confirmar" className="text-[9px] uppercase tracking-widest text-slate-500 mb-1 block">Confirmar senha</label>
-                    <input id="perfil-senha-confirmar" type="password" autoComplete="new-password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className="w-full rounded-xl bg-[#0B1120] border border-white/[0.05] px-4 py-2.5 text-white text-sm" />
-                  </div>}
-                </div>
-
-                {senhaErro && <p role="alert" className="text-rose-400 text-xs mb-3">{senhaErro}</p>}
-                <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }} disabled={(possuiSenha && currentPw.length < 4) || newPw.length < 6 || (!possuiSenha && newPw !== confirmPw) || salvandoSenha} onClick={handlePasswordChange} className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-[0_0_12px_rgba(59,130,246,0.15)] flex items-center justify-center gap-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed">
-                  <Save className="w-4 h-4" /> {possuiSenha ? 'Confirmar Alteração' : 'Criar Senha'}
-                </motion.button>
-                <button onClick={() => setShowPasswordModal(false)} className="w-full mt-2 py-2 rounded-xl bg-[#0B1120] border border-white/[0.05] text-slate-400 hover:text-white transition-all text-xs">Cancelar</button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+  return <div className={`cbt ${web ? 'web' : ''}`}><div className="cbt-scr">
+    <div className="topbar">
+      <button className="icon-btn" onClick={() => setTelaAtual('menu')} aria-label="Voltar ao centro de comando"><ChevronLeft /></button>
+      <h1><small><Shield size={11} style={{ display: 'inline', verticalAlign: '-1px', marginRight: 5 }} />Crachá de acesso · UTI Central</small>Identificação do plantonista</h1>
+      <span className="cr-ecg"><MiniEcg /></span>
     </div>
-  );
+    <div className="scroll cr-grid">
+      <div className="cr-left">
+        <div className="cr-lanyard" aria-hidden="true"><span className="cr-strap" /><span className="cr-clip" /></div>
+        <div ref={card} className={`cr-card ${flip ? 'flip' : ''}`} onPointerMove={tilt} onPointerLeave={solta}>
+          <div className="cr-inner">
+            <CrachaFrente p={p} email={email} nome={nomeCard} username={username || p.username} foto={foto} desde={desde} oculto={flip} />
+            <div className="cr-face cr-back" aria-hidden={!flip}>
+              <div className="cr-slot" />
+              <div className="cr-top"><span className="cr-org">caco<b>Med</b><small>VERSO DO CRACHÁ</small></span><span className="cr-access">VALIDADE<br /><b>TEMPORADA {new Date().getFullYear()}</b></span></div>
+              <span className="cr-sec">AUTORIZAÇÕES DE ACESSO</span>
+              <div className="cr-acc">{acessos.map(([t, d, icone, ok]) => { const Ic = icone; return <div key={t} className={ok ? 'ok' : 'no'}><span className="ic"><Ic size={14} /></span><span><b>{t}</b><small>{d}</small></span>{ok ? <Check size={15} className="st" /> : <Lock size={13} className="st" />}</div>; })}</div>
+              <div className="cr-back-row">
+                <QR v={matricula} />
+                <div><span className="cr-sec">PLANTONISTA</span><b>{nomeCard}</b><small className="mono">{matricula}</small><span className="cr-streak"><FlameIcon size={14} />{Number(p.estatisticasGerais?.streakAtual) || 0} cruzadinhas seguidas</span></div>
+              </div>
+              <p className="cr-legal">Uso pessoal e intransferível. Em caso de perda, devolver à preceptoria do cacoMed.</p>
+              <span className="cr-holo" />
+            </div>
+          </div>
+        </div>
+        <button className="cr-flipbtn" onClick={() => setFlip(v => !v)}><RotateCw size={14} />{flip ? 'Ver a frente' : 'Virar o crachá'}</button>
+      </div>
+
+      <section className="cr-form">
+        <div className="cr-fh"><Pencil size={15} /><h2>Dados do prontuário</h2>{dirty && <span className="cr-prev">Prévia no crachá</span>}</div>
+        <label className="cr-f" htmlFor="pf-user"><span className="cr-l"><UserRound size={12} />Username</span>
+          <span className={`cr-in ${check === 'taken' || check === 'invalid' ? 'bad' : check === 'ok' ? 'good' : ''}`}>
+            <span className="at">@</span>
+            <input id="pf-user" value={username} maxLength={20} autoComplete="off" spellCheck={false} onChange={e => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))} />
+            {check === 'checking' ? <span className="spin sm" aria-label="Conferindo" /> : (check === 'ok' || (!userMudou && username)) ? <span className="okdot"><Check size={11} strokeWidth={3} /></span> : null}
+          </span>
+          <span className="cr-help" aria-live="polite"><StatusUser check={check} /></span>
+        </label>
+        <label className="cr-f" htmlFor="pf-nome"><span className="cr-l"><Stethoscope size={12} />Nome completo</span>
+          <span className="cr-in"><input id="pf-nome" value={nome} maxLength={80} onChange={e => setNome(e.target.value)} /></span>
+        </label>
+        <label className="cr-f" htmlFor="pf-mail"><span className="cr-l"><Mail size={12} />E-mail (imutável)</span>
+          <span className="cr-in ro"><input id="pf-mail" value={email} readOnly /><span className="tag mono">FIXO</span></span>
+        </label>
+        <div className="cr-f"><span className="cr-l">Especialização</span>
+          <span className="cr-in ro esp"><Stethoscope size={16} /><b>{esp}</b><small>{fmt(espXp)} XP · título <em style={{ color: corTitulo }}>{titulo}</em></small></span>
+        </div>
+        <div className="cr-f"><span className="cr-l">Foto do crachá</span>
+          <div className="cr-fotos" role="radiogroup" aria-label="Foto do crachá">
+            {FOTOS.map((ft, i) => <button key={ft.id} role="radio" aria-checked={foto === i} className={foto === i ? 'on' : ''} onClick={() => setFoto(i)} title={ft.nome}><Retrato f={ft} /></button>)}
+          </div>
+        </div>
+        <div className="cr-actions">
+          <button className={`primary cr-save s-${save}`} disabled={!podeSalvar && save !== 'saving'} onClick={salvar}>
+            {save === 'saving' ? <><MiniEcg />Registrando no prontuário</> : save === 'ok' && !dirty ? <><Check size={17} />Salvo no prontuário</> : <><Save size={17} />Salvar alterações</>}
+          </button>
+          {save === 'err' && <p className="cr-err" role="alert">{erroSalvar} O crachá voltou ao que estava. <button className="w-link" onClick={salvar}>Tentar de novo</button></p>}
+          <div className="cr-two">
+            <button className="cr-btn" onClick={() => { setSenhaErro(''); setSheet('senha'); }}><KeyRound size={15} />{possuiSenha ? 'Mudar senha' : 'Criar senha'}</button>
+            <button className="cr-btn danger" onClick={() => setSheet('sair')}><LogOut size={15} />Sair da conta</button>
+          </div>
+          <button className="w-link" style={{ justifySelf: 'center' }} onClick={() => setTelaAtual('estatisticas')}><BarChart3 size={15} />Ver estatísticas completas</button>
+        </div>
+      </section>
+    </div>
+    <div className="cr-brand mono" aria-hidden="true">— cacoMed · terminal de plantão —</div>
+    <AnimatePresence>
+      {sheet && <>
+        <motion.div key="bg" className="sheet-bg" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => !salvandoSenha && !saindo && setSheet(null)} />
+        <motion.div key="sh" className="sheet" role="dialog" aria-modal="true" aria-labelledby="pf-sheet-t" initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 30, stiffness: 320 }}>
+          {sheet === 'senha' ? <>
+            <span className="cr-key"><KeyRound size={20} /></span>
+            <h3 id="pf-sheet-t">{possuiSenha ? 'Alterar senha de acesso' : 'Criar senha de acesso'}</h3>
+            <p>{possuiSenha ? 'Confirme a senha atual e defina uma nova, com pelo menos 6 caracteres.' : 'Depois você poderá entrar também com e-mail e senha.'}</p>
+            {possuiSenha && <label className="cr-f" htmlFor="pf-senha-atual"><span className="cr-l">Senha atual</span><span className="cr-in"><input id="pf-senha-atual" type="password" autoComplete="current-password" autoFocus value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} /></span></label>}
+            <label className="cr-f" htmlFor="pf-senha-nova"><span className="cr-l">{possuiSenha ? 'Nova senha' : 'Senha'}</span><span className={`cr-in ${senhaNova.length >= 6 ? 'good' : ''}`}><input id="pf-senha-nova" type="password" autoComplete="new-password" autoFocus={!possuiSenha} placeholder="Mínimo de 6 caracteres" value={senhaNova} onChange={e => setSenhaNova(e.target.value)} />{senhaNova.length >= 6 && <span className="okdot"><Check size={11} strokeWidth={3} /></span>}</span></label>
+            {!possuiSenha && <label className="cr-f" htmlFor="pf-senha-conf"><span className="cr-l">Confirmar senha</span><span className="cr-in"><input id="pf-senha-conf" type="password" autoComplete="new-password" value={senhaConfirma} onChange={e => setSenhaConfirma(e.target.value)} /></span></label>}
+            {senhaErro && <p className="cr-err" role="alert">{senhaErro}</p>}
+            <button className="primary" disabled={(possuiSenha && senhaAtual.length < 4) || senhaNova.length < 6 || (!possuiSenha && senhaNova !== senhaConfirma) || salvandoSenha} onClick={trocarSenha}>
+              {salvandoSenha ? <><MiniEcg />Gravando senha</> : <><Save size={17} />{possuiSenha ? 'Confirmar alteração' : 'Criar senha'}</>}
+            </button>
+            <button className="ghost" disabled={salvandoSenha} onClick={() => setSheet(null)}>Cancelar</button>
+          </> : <>
+            <h3 id="pf-sheet-t">Sair do plantão?</h3>
+            <p>Seu progresso já está salvo no prontuário. Você volta para a tela de entrada.</p>
+            <button className="primary cr-danger" disabled={saindo} onClick={sair}><LogOut size={17} />{saindo ? 'Saindo…' : 'Sair da conta'}</button>
+            <button className="ghost" disabled={saindo} onClick={() => setSheet(null)}>Continuar no plantão</button>
+          </>}
+        </motion.div>
+      </>}
+    </AnimatePresence>
+  </div></div>;
 }

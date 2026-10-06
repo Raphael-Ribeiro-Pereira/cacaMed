@@ -5,23 +5,12 @@ import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { USAR_SUPABASE } from '../supabase';
 import { Blob, PetArt, Retrato, Species } from './batalhaArte';
 import BatalhaArena from './BatalhaArena';
-import '../batalha.css';
+import { useLargo } from '../utils/prototipo';
+import '../prototipo.css';
 
 const ICONE_CAP = [Stethoscope, MapPin, Siren];
 const COR_CAP = ['#00f5d4', '#ffb703', '#ff5c8a'];
 const AVISO = 'Simulação educacional. Doenças escritas a partir das fontes listadas, com exames numéricos ilustrativos. Conteúdo ainda sem revisão médica: piloto do administrador.';
-
-function useLargo() {
-  const consulta = '(min-width: 960px)';
-  const [largo, setLargo] = useState(() => window.matchMedia(consulta).matches);
-  useEffect(() => {
-    const m = window.matchMedia(consulta);
-    const mudar = () => setLargo(m.matches);
-    m.addEventListener('change', mudar);
-    return () => m.removeEventListener('change', mudar);
-  }, []);
-  return largo;
-}
 
 function Topo({ voltar, kicker, titulo, children }) {
   return <div className="topbar"><button className="icon-btn" onClick={voltar} aria-label="Voltar"><ChevronLeft /></button><h1><small>{kicker}</small>{titulo}</h1>{children}</div>;

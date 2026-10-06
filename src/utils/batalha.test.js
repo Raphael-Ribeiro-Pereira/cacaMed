@@ -108,7 +108,8 @@ test('servidor: História grava ações, confirma XP uma vez e emite recibo', ()
   assert.ok(final.batalha.entrada.xpConcedido > 0);
   assert.equal(final.pontuacaoTotal, final.batalha.entrada.xpConcedido);
   assert.equal(final.batalha.concluidos.includes('dengue:1'), true);
-  assert.deepEqual(eventos.map(e => e.id), [`recibo:${ID}`]);
+  assert.deepEqual(eventos.map(e => e.id), [`recibo:${ID}`, ...['diagnostico', 'conduta', 'complicacao'].map(t => `resposta:${ID}:batalha-dengue-${t}`)]);
+  assert.ok(eventos.slice(1).every(e => e.data.acertou), 'vitória limpa registra três acertos');
   assert.equal(pedir(final, { acao: 'acaoBatalha', entradaId: ID, acoes }), final, 'reenvio do final não paga de novo');
   // Repetir a mesma doença não concede XP de novo.
   let repetido = pedir(final, { acao: 'iniciarBatalha', modo: 'historia', doencaId: 'dengue', pet: 'pulsa', entradaId: ID2 });

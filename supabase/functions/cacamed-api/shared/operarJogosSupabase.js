@@ -91,8 +91,9 @@ export function operarAdminSupabase(perfil, pedido) {
   } else if (operacao === 'resetarProgresso') {
     atualizado = { ...perfil, pontuacaoTotal: 0, xpTopicos: {}, tickets: 0, economia: { versao: VERSAO_ECONOMIA, ultimoNivelPremiado: 1 },
       medidorTicketsCruzadinha: 0, missoesDiarias: criarMissoesCruzadinha(),
-      estatisticas: {}, estatisticasGerais: {}, cruzadinhasRegistradas: [], treinos: {}, revisao: { reiniciadoEm: new Date().toISOString() }, erroMedico: {}, causaEfeito: {}, ddx: { concluidos: [], historico: [], partidas: 0 } };
+      estatisticas: {}, estatisticasGerais: {}, cruzadinhasRegistradas: [], treinos: {}, revisao: { reiniciadoEm: new Date().toISOString() }, erroMedico: {}, causaEfeito: {}, ddx: { concluidos: [], historico: [], partidas: 0 }, batalha: {} };
     delete atualizado.nivelGlobalAdmin;
+    delete atualizado.coroas;
   } else {
     throw new Error('Operação administrativa desconhecida.');
   }
@@ -325,13 +326,19 @@ export function operarBatalhaSupabase(perfil, pedido, recibos = [], aleatorio = 
   const encerradoEm = new Date().toISOString();
   entrada = { ...entrada, acoes, relatorio: relatorioBatalha(estado, doenca, entrada.pet), linhas, xpConcedido: xp, encerradoEm };
   const indice = DOENCAS.indexOf(doenca);
+  // Contadores do painel de estatísticas: habilidades, pets e buffs enfrentados.
+  const golpes = { ...stats.golpes };
+  for (const acao of acoes) if (acao.t === 'golpe') golpes[acao.id] = (Number(golpes[acao.id]) || 0) + 1;
+  const pet = { esc: 0, ativ: 0, suc: 0, ...stats.pets?.[entrada.pet] };
+  const pets = { ...stats.pets, [entrada.pet]: { esc: pet.esc + 1, ativ: pet.ativ + Number(estado.petUsed), suc: pet.suc + Number(estado.petUsed && venceu) } };
+  const buffs = estado.evolved ? { ...stats.buffs, [doenca.id]: (Number(stats.buffs?.[doenca.id]) || 0) + 1 } : stats.buffs;
   return { ...concederRecompensa(perfil, xp),
     xpTopicos: { ...perfil.xpTopicos, 'DDX-BATALHA': (Number(perfil.xpTopicos?.['DDX-BATALHA']) || 0) + xp },
     batalha: { ...stats, entrada, descobertas,
       tutorial: stats.tutorial || entrada.modo === 'tutorial',
       historia: entrada.modo === 'historia' && venceu && indice === stats.historia ? stats.historia + 1 : stats.historia,
       concluidos: entrada.modo === 'historia' && venceu ? [...new Set([...stats.concluidos, chave])] : stats.concluidos,
-      partidas: stats.partidas + 1, vitorias: stats.vitorias + Number(venceu), xp: stats.xp + xp,
+      partidas: stats.partidas + 1, vitorias: stats.vitorias + Number(venceu), xp: stats.xp + xp, golpes, pets, ...(buffs ? { buffs } : {}),
       historico: [...stats.historico, { id: entrada.id, modo: entrada.modo, doencaId: doenca.id, versao: doenca.versao, resultado: estado.fim, xp, data: encerradoEm }].slice(-30),
     } };
 }

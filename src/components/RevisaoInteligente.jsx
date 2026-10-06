@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, RotateCcw, Stethoscope, XCircle } from 'lucide-react';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 
+const ROTULO_MODO = { quiz: 'QUIZ', verdadeMentira: 'VERDADE OU MENTIRA', batalha: 'BATALHA DIAGNÓSTICA' };
 const quandoRevisar = data => !data ? 'Sem data prevista' : Date.parse(data) <= Date.now() ? 'Na próxima sessão disponível'
   : new Date(data).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
@@ -46,13 +47,13 @@ export default function RevisaoInteligente({ usuario, dadosUsuario, setDadosUsua
     setTelaAtual('menu');
   };
   const feedback = (resultado, q, i) => {
-    const texto = valor => q.modo === 'quiz' ? q.opcoes.find(o => o.id === valor)?.texto : valor ? 'Verdadeira' : 'Falsa';
+    const texto = valor => q.modo !== 'verdadeMentira' ? q.opcoes.find(o => o.id === valor)?.texto : valor ? 'Verdadeira' : 'Falsa';
     return <section className="stitch-panel treino-feedback" key={`${resultado.modo}-${resultado.itemId}`}>
       <h3>{resultado.acertou ? <CheckCircle2 size={20} /> : <XCircle size={20} />}{i + 1}. {q.enunciado || q.texto}</h3>
       <p>Sua resposta: <strong>{texto(resultado.escolha)}</strong> · {resultado.acertou ? 'Correta' : 'Para revisar'}</p>
       {!resultado.acertou && <p>Resposta correta: <strong>{texto(resultado.correta)}</strong></p>}
       <p>{resultado.explicacao}</p><p>Próxima revisão: {quandoRevisar(resultado.proximaRevisao)}</p>
-      <a href={resultado.fonte} target="_blank" rel="noreferrer">Consultar referência</a>
+      {/^https?:\/\//.test(resultado.fonte) ? <a href={resultado.fonte} target="_blank" rel="noreferrer">Consultar referência</a> : resultado.fonte && <p>Fonte: {resultado.fonte}</p>}
     </section>;
   };
 
@@ -72,8 +73,8 @@ export default function RevisaoInteligente({ usuario, dadosUsuario, setDadosUsua
       </section>}
       {ativa && item && <>
         <section className="stitch-panel treino-question">
-          <div className="treino-question-header"><span className="stitch-kicker">ITEM {entrada.resultados.length + 1}/{entrada.itens.length} · {item.modo === 'quiz' ? 'QUIZ' : 'VERDADE OU MENTIRA'}</span><span>{item.tema}</span></div>
-          <fieldset disabled={bloqueado}><legend>{item.enunciado || item.texto}</legend><div className="treino-options">{(item.modo === 'quiz' ? item.opcoes : [{ id: true, texto: 'Verdadeira' }, { id: false, texto: 'Falsa' }]).map((opcao, i) => <label key={String(opcao.id)} className={escolha === opcao.id ? 'is-selected' : ''}><input type="radio" name={item.id} checked={escolha === opcao.id} onChange={() => setEscolha(opcao.id)} /><span className="treino-option-letter">{'ABCD'[i]}</span><span>{opcao.texto}</span></label>)}</div></fieldset>
+          <div className="treino-question-header"><span className="stitch-kicker">ITEM {entrada.resultados.length + 1}/{entrada.itens.length} · {ROTULO_MODO[item.modo] || 'REVISÃO'}</span><span>{item.tema}</span></div>
+          <fieldset disabled={bloqueado}><legend>{item.enunciado || item.texto}</legend><div className="treino-options">{(item.modo !== 'verdadeMentira' ? item.opcoes : [{ id: true, texto: 'Verdadeira' }, { id: false, texto: 'Falsa' }]).map((opcao, i) => <label key={String(opcao.id)} className={escolha === opcao.id ? 'is-selected' : ''}><input type="radio" name={item.id} checked={escolha === opcao.id} onChange={() => setEscolha(opcao.id)} /><span className="treino-option-letter">{'ABCD'[i]}</span><span>{opcao.texto}</span></label>)}</div></fieldset>
           <button className="stitch-primary treino-submit" disabled={bloqueado || escolha === null} onClick={() => enviar({ acao: 'responderRevisao', revisaoId: entrada.id, itemId: item.id, versao: item.versao, escolha })}>Confirmar resposta <ArrowRight size={18} /></button>
         </section>
         {ultimo && feedback(ultimo, entrada.itens[entrada.resultados.length - 1], entrada.resultados.length - 1)}

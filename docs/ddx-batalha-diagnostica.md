@@ -2,7 +2,7 @@
 
 ## Status
 
-Documento de concepção aprovado em 30/09/2026. Implementação local em 02/10/2026, a pedido do usuário, como piloto do administrador: frontend, motor, operação da API e testes. A API ainda não foi publicada na Edge Function e o conteúdo ainda não tem revisão médica.
+Documento de concepção aprovado em 30/09/2026. Implementação local em 02/10/2026, a pedido do usuário, como piloto do administrador: frontend, motor, operação da API e testes. Em 06/10/2026 os erros da Batalha passaram a alimentar a Revisão Inteligente (pendência 12). A API ainda não foi publicada na Edge Function e o conteúdo ainda não tem revisão médica.
 
 ## Implementação de 02/10/2026
 
@@ -19,7 +19,8 @@ Documento de concepção aprovado em 30/09/2026. Implementação local em 02/10/
 | `src/utils/batalhaConteudo.js` | 12 doenças, capítulos, hipóteses extras e fontes. Cada fato tem fonte e página do PDF, conferidas contra o texto dos arquivos em 02/10/2026. `versao` por doença; `revisado: false` mantém o modo restrito ao administrador. |
 | `src/utils/batalha.js` | Motor determinístico: `aplicarAcao`, `executarBatalha`, `recompensaBatalha`. O navegador usa para a resposta imediata; o servidor reexecuta a lista de ações para validar. |
 | `src/shared/operarJogosSupabase.js` | `operarBatalhaSupabase`: `iniciarBatalha`, `acaoBatalha`, `abandonarBatalha` e `pularTutorialBatalha`. Recibo ao encerrar, na mesma transação do XP. |
-| `src/components/BatalhaDiagnostica.jsx`, `BatalhaArena.jsx`, `batalhaArte.jsx`, `src/batalha.css` | Hub, mapa, fontes, escolha do pet, arena, treinamento guiado e relatório. Estilos isolados sob `.cbt`. |
+| `src/components/BatalhaDiagnostica.jsx`, `BatalhaArena.jsx`, `batalhaArte.jsx`, `src/prototipo.css` | Hub, mapa, fontes, escolha do pet, arena, treinamento guiado e relatório. Estilos do protótipo isolados sob `.cbt`, na mesma folha usada por Ranking, Estatísticas e Crachá. |
+| `src/utils/batalhaRevisao.js` | Banco de revisão gerado das 12 doenças (diagnóstico, conduta e complicação) e as respostas registradas ao encerrar cada batalha. |
 | `scripts/homologacao.jsx` | Botões Testar Batalha, Reiniciar Batalha e Simular falha no próximo turno. Usa `executarPedidoSupabase` local sobre dados fictícios. |
 
 ### Contrato com o servidor
@@ -48,12 +49,27 @@ O XP soma em `xpTopicos['DDX-BATALHA']`. Missões diárias não contam a Batalha
 2. Aprovar a economia acima.
 3. Executar `node scripts/sincronizar-supabase.mjs` (já executado nesta etapa) e publicar a Edge Function `cacamed-api`. Até a publicação, a API remota responde "Ação desconhecida" para as operações da Batalha.
 4. Validar no navegador com o administrador: treinamento, uma batalha de cada capítulo, Duelo, retomada após recarga, falha de rede e reenvio.
-5. Pendência 12 continua aberta: os erros da Batalha ainda não alimentam a Revisão Inteligente.
+5. A Revisão Inteligente com itens da Batalha segue o mesmo piloto do administrador da revisão; liberar junto com ela.
+
+### Erros da Batalha na Revisão Inteligente (pendência 12, 06/10/2026)
+
+Cada batalha encerrada na História ou no Duelo registra até três respostas (`kind: 'resposta'`, `modo: 'batalha'`), na mesma transação do recibo:
+
+| Item | Acerto quando | Pergunta na revisão |
+| --- | --- | --- |
+| `batalha-{doença}-diagnostico` | Diagnóstico confirmado na primeira hipótese | Paciente, queixa, dois sinais e os achados do exame-chave e da anamnese; quatro hipóteses (a certa e três diferenciais da fonte) |
+| `batalha-{doença}-conduta` | Usou a terapia certa e nenhuma terapia ineficaz | Diagnóstico confirmado; três condutas (antibacteriano, antiparasitário, suporte) |
+| `batalha-{doença}-complicacao` | Só existe se o buff apareceu; acerto se foi neutralizado | Complicação da doença; a resposta crítica certa e três de outras doenças |
+
+O treinamento, o abandono e partidas de uma versão antiga da doença não geram itens. O tema mostrado antes da resposta é o capítulo (por exemplo, "Batalha · Primeiro plantão"), para não entregar o diagnóstico; nenhum enunciado de diagnóstico contém o nome da doença (teste). Explicação e fonte vêm da própria doença (`aprendizado`, `conduta`, `buff.explica` e a citação com página). Os itens herdam a `versao` da doença: alterar uma doença tira as versões antigas da fila sem apagar o histórico.
+
+O banco entra na revisão por `registrarBancoRevisao` (em `revisaoInteligente.js`), chamado ao importar `batalhaRevisao.js`. Assim o motor gerado para o Apps Script legado continua só com Quiz e Verdade ou mentira. A tela da revisão mostra o rótulo "Batalha diagnóstica" e a fonte em texto quando não é um link.
 
 ### Verificação
 
 - 9 testes novos em `src/utils/batalha.test.js`: conteúdo, vitória possível nas 12 doenças, determinismo, ações inválidas, buffs, recompensas, restrição ao administrador, idempotência, recibo único, repetição sem XP, ticket do Duelo e abandono.
 - Lint e build passaram. Homologação local (navegador, dados fictícios): treinamento completo (+50 XP), História com Chagas (+90 XP confirmado), Duelo com cobrança de ticket, falha simulada com reenvio e retomada após recarga.
+- 06/10/2026: 3 testes em `src/utils/batalhaRevisao.test.js` (banco, erros que entram na fila e são revisados sem XP, treinamento e abandono fora da fila). Na homologação, dois erros da Batalha viraram uma sessão de revisão com rótulo, explicação e fonte com página.
 
 ## Visão do modo
 

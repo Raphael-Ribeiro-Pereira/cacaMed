@@ -10,6 +10,10 @@ A fila é automática, sem filtro por tema nesta versão. Cada sessão tem até 
 
 O gabarito só aparece depois de confirmar a resposta. Durante a sessão, a tela mostra o feedback anterior; ao terminar, mostra o relatório completo. É possível sair e retomar, ou encerrar antes do final; itens não respondidos continuam na fila. Sem erros, a tela orienta jogar. Sem itens disponíveis agora, informa a próxima data. O menu mostra sessão em andamento ou quantidade da última consulta, sem varrer o histórico ao entrar no app.
 
+## Itens da Batalha diagnóstica (06/10/2026)
+
+Os erros da Batalha também entram na fila: diagnóstico, conduta e complicação de cada doença, revisados como pergunta de quatro (ou três) alternativas. O banco é gerado das 12 doenças em `src/utils/batalhaRevisao.js` e só existe na API Supabase. Regras, critérios de acerto e versão estão em [ddx-batalha-diagnostica.md](ddx-batalha-diagnostica.md#erros-da-batalha-na-revisão-inteligente-pendência-12-06102026).
+
 ## Seleção e frequência
 
 Cada unidade é identificada por `uid + modo + itemId + versao`. Edições de enunciado ou gabarito precisam incrementar a versão. Itens removidos ou versões ausentes do banco atual ficam fora da fila, preservando o histórico.

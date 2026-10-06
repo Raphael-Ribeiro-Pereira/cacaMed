@@ -78,3 +78,9 @@ export function buscarRankingPublico({ documentRef = document, timeoutMs = 45000
     documentRef.head.appendChild(script);
   });
 }
+
+// Coroas da semana por matéria (só na API Supabase; o Apps Script antigo não soma XP semanal).
+export function buscarCoroasPublicas({ timeoutMs = 15000 } = {}) {
+  if (!USAR_SUPABASE) return Promise.reject(new Error('As coroas por matéria dependem da API Supabase.'));
+  return buscarConteudoSupabase('coroas', { signal: AbortSignal.timeout(timeoutMs) }).then(body => body.coroas);
+}

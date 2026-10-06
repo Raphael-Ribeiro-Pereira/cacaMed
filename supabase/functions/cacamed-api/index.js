@@ -5,6 +5,7 @@ import { criarApiSupabase } from './shared/apiSupabase.js';
 import { criarMigracaoSenha } from './shared/migrarSenhaSupabase.js';
 import { nivelPorXP } from './utils/economia.js';
 import { importarBancoCSV } from './utils/importarBancoCSV.js';
+import { montarCoroas, semanaCoroas } from './utils/coroas.js';
 
 const keys = createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 const base = Deno.env.get('SUPABASE_URL');
@@ -93,6 +94,16 @@ async function ranking() {
       tempoMedio: r.tempo_medio == null ? null : Number(r.tempo_medio), atualizadoEm: r.atualizado_em };
   }));
 }
+// Coroas da semana: lê só o campo semanal dos perfis (sem tabela nova) e expõe o ID público, nunca o UID.
+async function coroas() {
+  const semana = semanaCoroas();
+  const rows = await database('cacamed_player_state?select=player_id,nome:profile->>nome,username:profile->>username,coroas:profile->coroas'
+    + '&profile->coroas->>semana=eq.' + encodeURIComponent(semana) + '&player_id=not.like.homologacao:*');
+  return montarCoroas(await Promise.all(rows.map(async r => {
+    const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(r.player_id));
+    return { idPublico: Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2,'0')).join(''), nome: r.nome || r.username || 'Plantonista', coroas: r.coroas };
+  })));
+}
 let bancoCache;
 async function palavras() {
   if (bancoCache && Date.now() - bancoCache.instante < 300000) return bancoCache.resultado;
@@ -136,5 +147,5 @@ async function definePassword(user, pedido) {
   if (error) throw new Error('Não foi possível atualizar a senha.');
   return { sucesso: true };
 }
-Deno.serve(criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, palavras,
+Deno.serve(criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras,
   log: info => console.info(JSON.stringify(info)) }));
