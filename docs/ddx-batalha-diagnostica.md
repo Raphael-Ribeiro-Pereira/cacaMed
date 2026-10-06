@@ -2,7 +2,58 @@
 
 ## Status
 
-Documento de concepção aprovado em 30/09/2026. O modo ainda não está implementado. Ele será desenvolvido depois da conclusão e validação da Revisão Inteligente e entrará como uma expansão secreta do DDX.
+Documento de concepção aprovado em 30/09/2026. Implementação local em 02/10/2026, a pedido do usuário, como piloto do administrador: frontend, motor, operação da API e testes. A API ainda não foi publicada na Edge Function e o conteúdo ainda não tem revisão médica.
+
+## Implementação de 02/10/2026
+
+### Escopo decidido com o usuário
+
+- A Batalha só recebe doenças que cabem no duelo: agente infeccioso (bactéria, vírus, protozoário ou helminto) e uma terapia que o controla (antibacteriano, antiparasitário ou suporte). Casos que pedem consulta completa (dor torácica, pré-natal, AIDPI, animais peçonhentos) ficam para o futuro modo Paciente DDX, avaliado à parte.
+- História com 12 doenças em 3 capítulos, organizados por tema: Primeiro plantão (pneumonia pneumocócica, dengue, malária vivax, leptospirose), Vigilância no território (tuberculose, hanseníase, esquistossomose, Chagas aguda) e Do mato ao pronto-socorro (febre maculosa, leishmaniose visceral, febre amarela, doença meningocócica).
+- Respostas às pendências de design: Duelo clínico como nome provisório do X1; três pets (Cocobi, Capsi, Pulsa) escolhidos antes da doença; quatro habilidades com recarga em turnos; diagnóstico informado em uma lista de 5 hipóteses (a certa e 4 diferenciais da fonte); vitória quando a carga da doença chega a zero; derrota quando a estabilidade do paciente chega a zero; evolução com buff de um de três efeitos (golpes 50% mais fortes, −6 de estabilidade por turno ou escudo que segura a carga em 25%).
+
+### Arquivos
+
+| Arquivo | Papel |
+| --- | --- |
+| `src/utils/batalhaConteudo.js` | 12 doenças, capítulos, hipóteses extras e fontes. Cada fato tem fonte e página do PDF, conferidas contra o texto dos arquivos em 02/10/2026. `versao` por doença; `revisado: false` mantém o modo restrito ao administrador. |
+| `src/utils/batalha.js` | Motor determinístico: `aplicarAcao`, `executarBatalha`, `recompensaBatalha`. O navegador usa para a resposta imediata; o servidor reexecuta a lista de ações para validar. |
+| `src/shared/operarJogosSupabase.js` | `operarBatalhaSupabase`: `iniciarBatalha`, `acaoBatalha`, `abandonarBatalha` e `pularTutorialBatalha`. Recibo ao encerrar, na mesma transação do XP. |
+| `src/components/BatalhaDiagnostica.jsx`, `BatalhaArena.jsx`, `batalhaArte.jsx`, `src/batalha.css` | Hub, mapa, fontes, escolha do pet, arena, treinamento guiado e relatório. Estilos isolados sob `.cbt`. |
+| `scripts/homologacao.jsx` | Botões Testar Batalha, Reiniciar Batalha e Simular falha no próximo turno. Usa `executarPedidoSupabase` local sobre dados fictícios. |
+
+### Contrato com o servidor
+
+- O cliente envia somente a lista de ações (`{ t: 'exame' | 'hipotese' | 'golpe' | 'pet', id }`). O servidor reexecuta o motor, aceita apenas listas que estendem a anterior e calcula resultado e XP. Reenvio idêntico devolve o perfil sem pagar de novo.
+- A doença do Duelo é sorteada no servidor, depois da escolha do pet. O treinamento usa pneumonia e Cocobi.
+- Os turnos são gravados em segundo plano; o relatório só aparece depois que o servidor confirma o encerramento. A batalha aberta é retomada após recarregar a página.
+- A Batalha usa só a API Supabase. Com `VITE_FONTE_DADOS=planilha` a tela informa que o modo depende do Supabase; o Apps Script não recebeu essas operações.
+
+### Economia: proposta do protótipo, aguardando aprovação
+
+| Situação | XP | Tickets |
+| --- | --- | --- |
+| Treinamento | 50 na primeira conclusão | Gratuito |
+| História: vitória | 60 + diagnóstico (20 na primeira hipótese, 10 com hipóteses erradas) + 20 se neutralizar o buff − 5 por terapia ineficaz; só na primeira vitória de cada doença e versão | Gratuita |
+| História: derrota ou repetição | 0 | Gratuita |
+| Duelo: vitória | Mesma fórmula da História, em toda partida | 1 por partida |
+| Duelo: derrota | 10, mais 10 se o diagnóstico foi confirmado | 1 por partida |
+| Abandono | 0 | O ticket do Duelo não volta |
+
+O XP soma em `xpTopicos['DDX-BATALHA']`. Missões diárias não contam a Batalha. Antes de liberar para jogadores, o usuário precisa aprovar ou ajustar estes valores.
+
+### Antes de liberar para jogadores
+
+1. Revisão médica das 12 doenças (exames, diferenciais, terapia, buff, conduta). Várias fontes são de 2008 a 2013; a conduta precisa ser conferida com os protocolos atuais. Exames numéricos são ilustrativos. Depois da revisão, marcar `revisado: true` e aumentar `versao` quando o conteúdo mudar.
+2. Aprovar a economia acima.
+3. Executar `node scripts/sincronizar-supabase.mjs` (já executado nesta etapa) e publicar a Edge Function `cacamed-api`. Até a publicação, a API remota responde "Ação desconhecida" para as operações da Batalha.
+4. Validar no navegador com o administrador: treinamento, uma batalha de cada capítulo, Duelo, retomada após recarga, falha de rede e reenvio.
+5. Pendência 12 continua aberta: os erros da Batalha ainda não alimentam a Revisão Inteligente.
+
+### Verificação
+
+- 9 testes novos em `src/utils/batalha.test.js`: conteúdo, vitória possível nas 12 doenças, determinismo, ações inválidas, buffs, recompensas, restrição ao administrador, idempotência, recibo único, repetição sem XP, ticket do Duelo e abandono.
+- Lint e build passaram. Homologação local (navegador, dados fictícios): treinamento completo (+50 XP), História com Chagas (+90 XP confirmado), Duelo com cobrança de ticket, falha simulada com reenvio e retomada após recarga.
 
 ## Visão do modo
 

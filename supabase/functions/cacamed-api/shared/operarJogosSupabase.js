@@ -3,6 +3,7 @@ import { aplicarProgressoMissoes, lerMissoes, criarMissoesDiarias, dataLocalHoje
 import { obterCasoPlantao, executarPlantao } from '../utils/plantao.js';
 import { obterAuditoria, avaliarAuditoria } from '../utils/erroMedico.js';
 import { obterRelacao, avaliarRelacao } from '../utils/causaEfeito.js';
+import { DOENCAS, executarBatalha, obterDoenca, obterPet, recompensaBatalha, relatorioBatalha } from '../utils/batalha.js';
 const criarMissoesCruzadinha = criarMissoesDiarias;
 
 export function registrarPartidaSupabase(perfil, partida, recibos = [], agora = new Date().toISOString()) {
@@ -253,4 +254,84 @@ export function operarRelacaoSupabase(perfil, pedido, recibos = []) {
     } };
 
   return atualizado;
+}
+
+// Batalha diagnóstica: piloto do administrador enquanto o conteúdo não tiver revisão clínica.
+// O cliente envia apenas a lista de ações; o servidor reexecuta o motor e calcula o resultado e o XP.
+export function operarBatalhaSupabase(perfil, pedido, recibos = [], aleatorio = Math.random) {
+  const stats = { tutorial: false, historia: 0, descobertas: [], concluidos: [], partidas: 0, vitorias: 0, xp: 0, historico: [], ...perfil.batalha };
+  const admin = perfil.role === 'admin';
+  let entrada = stats.entrada;
+  const aberta = Boolean(entrada && !entrada.relatorio);
+  if (pedido.acao === 'pularTutorialBatalha') {
+    if (!admin) throw new Error('Batalha diagnóstica em piloto para administrador.');
+    return stats.tutorial ? perfil : { ...perfil, batalha: { ...stats, tutorial: true } };
+  }
+  if (pedido.acao === 'iniciarBatalha') {
+    const modo = String(pedido.modo || '');
+    if (!['tutorial', 'historia', 'x1'].includes(modo)) throw new Error('Modo de batalha inválido.');
+    const pet = obterPet(String(pedido.pet || '')).id;
+    const id = String(pedido.entradaId || '');
+    if (aberta) {
+      if (entrada.id === id) return perfil;
+      throw new Error('Conclua ou abandone a batalha atual antes de iniciar outra.');
+    }
+    if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error('Identificador de entrada inválido.');
+    if (entrada?.id === id) return perfil;
+    if (recibos.includes(id) || stats.historico.some(item => item.id === id)) throw new Error('Entrada já encerrada.');
+    let doenca;
+    if (modo === 'tutorial') {
+      if (pet !== 'cocobi') throw new Error('O treinamento usa o Cocobi.');
+      doenca = obterDoenca('pneumo');
+    } else {
+      if (!stats.tutorial) throw new Error('Conclua o treinamento antes.');
+      if (modo === 'historia') {
+        doenca = obterDoenca(String(pedido.doencaId || ''));
+        if (DOENCAS.indexOf(doenca) > stats.historia && !admin) throw new Error('Esta batalha ainda está bloqueada.');
+      } else {
+        if ((Number(perfil.tickets) || 0) < 1) throw new Error('Tickets insuficientes. Conclua Cruzadinhas, Quiz ou Verdade ou mentira para ganhar tickets.');
+        // Sorteada no servidor: o jogador escolhe o pet sem saber a doença.
+        doenca = DOENCAS[Math.floor(aleatorio() * DOENCAS.length) % DOENCAS.length];
+      }
+    }
+    if (!doenca.revisado && !admin) throw new Error('Batalha diagnóstica em piloto para administrador.');
+    entrada = { id, modo, doencaId: doenca.id, versao: doenca.versao, pet, acoes: [], iniciadoEm: new Date().toISOString() };
+    return { ...perfil, ...(modo === 'x1' ? { tickets: perfil.tickets - 1 } : {}), batalha: { ...stats, entrada } };
+  }
+  if (!entrada || entrada.id !== pedido.entradaId) throw new Error('Batalha não encontrada. Atualize o perfil.');
+  const doenca = obterDoenca(entrada.doencaId);
+  if (pedido.acao === 'abandonarBatalha') {
+    if (!aberta) return perfil;
+    const encerradoEm = new Date().toISOString();
+    entrada = { ...entrada, relatorio: { resultado: 'abandono', doencaId: doenca.id, pet: entrada.pet }, linhas: [], xpConcedido: 0, encerradoEm };
+    return { ...perfil, batalha: { ...stats, entrada,
+      historico: [...stats.historico, { id: entrada.id, modo: entrada.modo, doencaId: doenca.id, versao: entrada.versao, resultado: 'abandono', xp: 0, data: encerradoEm }].slice(-30) } };
+  }
+  if (doenca.versao !== entrada.versao) throw new Error('O conteúdo desta batalha mudou. Abandone a partida e comece outra.');
+  const anteriores = entrada.acoes;
+  const acoes = pedido.acoes;
+  if (!Array.isArray(acoes)) throw new Error('Registro de ações inválido.');
+  if (JSON.stringify(acoes) === JSON.stringify(anteriores)) return perfil;
+  if (!aberta || acoes.length <= anteriores.length || anteriores.some((acao, i) => JSON.stringify(acoes[i]) !== JSON.stringify(acao))) {
+    throw new Error('A batalha mudou em outra aba. Atualize o perfil antes de continuar.');
+  }
+  const estado = executarBatalha(doenca, entrada.pet, acoes);
+  const descobertas = estado.revealed ? [...new Set([...stats.descobertas, doenca.id])] : stats.descobertas;
+  if (!estado.fim) return { ...perfil, batalha: { ...stats, descobertas, entrada: { ...entrada, acoes } } };
+  const chave = doenca.id + ':' + doenca.versao;
+  const primeiraVez = entrada.modo === 'tutorial' ? !stats.tutorial : entrada.modo === 'historia' ? !stats.concluidos.includes(chave) : true;
+  const { linhas, xp } = recompensaBatalha(estado, { modo: entrada.modo, primeiraVez });
+  const venceu = estado.fim === 'vitoria';
+  const encerradoEm = new Date().toISOString();
+  entrada = { ...entrada, acoes, relatorio: relatorioBatalha(estado, doenca, entrada.pet), linhas, xpConcedido: xp, encerradoEm };
+  const indice = DOENCAS.indexOf(doenca);
+  return { ...concederRecompensa(perfil, xp),
+    xpTopicos: { ...perfil.xpTopicos, 'DDX-BATALHA': (Number(perfil.xpTopicos?.['DDX-BATALHA']) || 0) + xp },
+    batalha: { ...stats, entrada, descobertas,
+      tutorial: stats.tutorial || entrada.modo === 'tutorial',
+      historia: entrada.modo === 'historia' && venceu && indice === stats.historia ? stats.historia + 1 : stats.historia,
+      concluidos: entrada.modo === 'historia' && venceu ? [...new Set([...stats.concluidos, chave])] : stats.concluidos,
+      partidas: stats.partidas + 1, vitorias: stats.vitorias + Number(venceu), xp: stats.xp + xp,
+      historico: [...stats.historico, { id: entrada.id, modo: entrada.modo, doencaId: doenca.id, versao: doenca.versao, resultado: estado.fim, xp, data: encerradoEm }].slice(-30),
+    } };
 }

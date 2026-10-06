@@ -1,6 +1,6 @@
 import { operarTreinoSupabase, eventosTreino } from './operarTreinoSupabase.js';
 import { operarRevisaoSupabase, eventosRevisao } from './operarRevisaoSupabase.js';
-import { registrarPartidaSupabase, operarAdminSupabase, operarPlantaoSupabase, operarAuditoriaSupabase, operarRelacaoSupabase } from './operarJogosSupabase.js';
+import { registrarPartidaSupabase, operarAdminSupabase, operarPlantaoSupabase, operarAuditoriaSupabase, operarRelacaoSupabase, operarBatalhaSupabase } from './operarJogosSupabase.js';
 import { migrarEconomia } from '../utils/economia.js';
 import { prepararMissoesDoDia } from '../utils/missoes.js';
 
@@ -26,7 +26,8 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
     const username = String(pedido.username || '').trim();
     if (nome.length < 2 || nome.length > 80 || username.length < 2 || username.length > 40 || /^[=+\-@]/.test(nome) || /^[=+\-@]/.test(username)) throw new Error('Nome inválido.');
     perfil = { ...perfil, nome, username };
-  } else if (pedido.acao === 'admin') {
+  } else if (pedido.acao === 'pularTutorialBatalha') perfil = operarBatalhaSupabase(perfil, pedido);
+  else if (pedido.acao === 'admin') {
     if (perfil.role !== 'admin') throw new Error('Acesso restrito ao administrador.');
     perfil = operarAdminSupabase(perfil, pedido);
   } else {
@@ -34,6 +35,7 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
       { acoes: ['iniciarPlantao', 'acaoPlantao'], operar: operarPlantaoSupabase, campo: 'ddx', encerrada: e => e.relatorio?.encerrado },
       { acoes: ['iniciarAuditoria', 'responderAuditoria'], operar: operarAuditoriaSupabase, campo: 'erroMedico', encerrada: e => Boolean(e.relatorio) },
       { acoes: ['iniciarRelacao', 'responderRelacao'], operar: operarRelacaoSupabase, campo: 'causaEfeito', encerrada: e => Boolean(e.relatorio) },
+      { acoes: ['iniciarBatalha', 'acaoBatalha', 'abandonarBatalha'], operar: operarBatalhaSupabase, campo: 'batalha', encerrada: e => Boolean(e.relatorio) },
     ].find(c => c.acoes.includes(pedido.acao));
     if (!configuracao) throw new Error('Ação desconhecida.');
     perfil = configuracao.operar(perfil, pedido, recibos);

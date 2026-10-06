@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import TreinoMedico from '../src/components/TreinoMedico';
 import RevisaoInteligente from '../src/components/RevisaoInteligente';
+import BatalhaDiagnostica from '../src/components/BatalhaDiagnostica';
+import { executarPedidoSupabase } from '../src/shared/executarPedidoSupabase';
 import { BANCO_QUIZ, BANCO_FRASES } from '../src/utils/bancoTreinos';
 import { selecionarFilaRevisao, criarEntradaRevisao, responderRevisaoPerfil, encerrarRevisaoPerfil, chaveItemRevisao } from '../src/utils/revisaoInteligente';
 import { criarEntradaTreino, responderTreinoPerfil } from '../src/utils/treinos';
@@ -65,11 +67,19 @@ async function servicoPerfil(_, acao, pedido) {
   }
   guardarHistorico(); return salvo;
 }
+// Batalha: roda a mesma regra do servidor (executarPedidoSupabase) sobre o perfil fictício, com atraso de rede simulado.
+let simularFalhaBatalha = false;
+async function servicoBatalha(_, acao, pedido = {}) {
+  await new Promise(ok => setTimeout(ok, 350));
+  if (acao === 'obterPerfil') return salvo;
+  if (acao === 'acaoBatalha' && simularFalhaBatalha) { simularFalhaBatalha = false; throw new Error('Falha simulada ao salvar o turno.'); }
+  return guardar(executarPedidoSupabase(salvo, { ...pedido, acao }).perfil);
+}
 export function Homologacao() {
   const [modo, setModo] = useState(localStorage.getItem('cacoMed-homologacao-modo') || 'quiz');
   const [dados, setDados] = useState(salvo);
   const trocarModo = valor => { setModo(valor); localStorage.setItem('cacoMed-homologacao-modo', valor); };
-  return <><aside style={{ padding: 12, background: '#ffb95f', color: '#0c1322', position: 'relative', zIndex: 100 }}><strong>HOMOLOGAÇÃO ISOLADA · dados fictícios locais · sem gravação no perfil real</strong><nav style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginTop: 8 }}><button onClick={() => trocarModo('quiz')}>Testar Quiz</button><button onClick={() => trocarModo('verdadeMentira')}>Testar Verdade ou mentira</button><button onClick={() => trocarModo('revisao')}>Testar Revisão</button><button onClick={() => { historico = { tentativas: [], revisoes: [] }; guardarHistorico(); setDados(guardar(inicial)); trocarModo('quiz'); }}>Reiniciar dados de teste</button><button onClick={() => { setDados(semearErrosRevisao()); trocarModo('revisao'); }}>Criar cinco erros fictícios</button><button onClick={() => { simularFalhaRevisao = true; }}>Simular falha na próxima resposta</button></nav></aside>{modo === 'revisao' ? <RevisaoInteligente usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('quiz')} servicoPerfil={servicoPerfil} /> : <TreinoMedico key={modo} modo={modo} usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('revisao')} servicoPerfil={servicoPerfil} />}</>;
+  return <><aside style={{ padding: 12, background: '#ffb95f', color: '#0c1322', position: 'relative', zIndex: 100 }}><strong>HOMOLOGAÇÃO ISOLADA · dados fictícios locais · sem gravação no perfil real</strong><nav style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginTop: 8 }}><button onClick={() => trocarModo('quiz')}>Testar Quiz</button><button onClick={() => trocarModo('verdadeMentira')}>Testar Verdade ou mentira</button><button onClick={() => trocarModo('revisao')}>Testar Revisão</button><button onClick={() => { historico = { tentativas: [], revisoes: [] }; guardarHistorico(); setDados(guardar(inicial)); trocarModo('quiz'); }}>Reiniciar dados de teste</button><button onClick={() => { setDados(semearErrosRevisao()); trocarModo('revisao'); }}>Criar cinco erros fictícios</button><button onClick={() => { simularFalhaRevisao = true; }}>Simular falha na próxima resposta</button><button onClick={() => trocarModo('batalha')}>Testar Batalha</button><button onClick={() => { setDados(guardar({ ...salvo, tickets: 3, batalha: {} })); trocarModo('batalha'); }}>Reiniciar Batalha (3 tickets)</button><button onClick={() => { simularFalhaBatalha = true; }}>Simular falha no próximo turno</button></nav></aside>{modo === 'batalha' && <style>{'.cbt { top: 86px; }'}</style>}{modo === 'batalha' ? <BatalhaDiagnostica usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('quiz')} servicoPerfil={servicoBatalha} /> : modo === 'revisao' ? <RevisaoInteligente usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('quiz')} servicoPerfil={servicoPerfil} /> : <TreinoMedico key={modo} modo={modo} usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('revisao')} servicoPerfil={servicoPerfil} />}</>;
 }
 const root = import.meta.hot?.data.root || createRoot(document.getElementById('root'));
 if (import.meta.hot) import.meta.hot.data.root = root;

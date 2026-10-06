@@ -34,6 +34,7 @@ const ErroMedico = lazy(() => import('./components/ErroMedico'));
 const CausaEfeito = lazy(() => import('./components/CausaEfeito'));
 const TreinoMedico = lazy(() => import('./components/TreinoMedico'));
 const RevisaoInteligente = lazy(() => import('./components/RevisaoInteligente'));
+const BatalhaDiagnostica = lazy(() => import('./components/BatalhaDiagnostica'));
 
 function App() {
   const [usuario, setUsuario] = useState(null); 
@@ -239,6 +240,7 @@ function App() {
       {telaAtual === 'selecaoDDX' && usuario && <PlantaoMedico usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'erroMedico' && usuario && <ErroMedico usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       {telaAtual === 'causaEfeito' && usuario && <CausaEfeito usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
+      {telaAtual === 'batalha' && usuario && <BatalhaDiagnostica usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
 
     </Suspense>
   );
