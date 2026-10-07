@@ -9,6 +9,8 @@ import Estatisticas from '../src/components/Estatisticas';
 import PerfilUsuario from '../src/components/PerfilUsuario';
 import MenuPrincipal from '../src/components/MenuPrincipal';
 import PacienteDdx from '../src/components/PacienteDdx';
+import SelecaoTopicos from '../src/components/SelecaoTopicos';
+import Jogo from '../src/components/Jogo';
 import Login from '../src/components/Login';
 import Cadastro from '../src/components/Cadastro';
 import Cadastro2 from '../src/components/Cadastro2';
@@ -191,15 +193,45 @@ async function servicoPaciente(_, acao, pedido = {}) {
   registrarEventos(eventos);
   return guardar(perfil);
 }
-const TELAS_PROTOTIPO = ['batalha', 'ranking', 'estatisticas', 'perfil', 'menu', 'login', 'cadastro', 'cadastro2', 'pacienteDdx'];
-const TELAS_CASCA = ['menu', 'ranking', 'estatisticas', 'perfil'];
+// Cruzadinhas: banco fictício pequeno; a gravação roda a regra do servidor (registrarPartida) sobre o perfil fictício.
+const termo = (palavra, dicaBasica) => ({ palavra, palavraComEspaco: palavra, dificuldade: 0, dicaBasica });
+const BANCO_FICTICIO = {
+  'ANATOMIA-SISTEMA ESQUELETICO': [['FEMUR', 'Osso mais longo do corpo, na coxa.'], ['TIBIA', 'Osso medial da perna.'], ['FIBULA', 'Osso lateral e fino da perna.'], ['UMERO', 'Osso do braço.'], ['RADIO', 'Osso lateral do antebraço.'], ['ULNA', 'Osso medial do antebraço.'], ['PATELA', 'Osso sesamoide do joelho.'], ['ESTERNO', 'Osso plano no centro do tórax.'], ['CLAVICULA', 'Une o esterno à escápula.'], ['SACRO', 'Osso formado por vértebras fundidas na pelve.']].map(([p, d]) => termo(p, d)),
+  'ANATOMIA-SISTEMA MUSCULAR': [['BICEPS', 'Flexor do cotovelo com duas cabeças.'], ['TRICEPS', 'Extensor do cotovelo.'], ['DELTOIDE', 'Músculo que arredonda o ombro.'], ['TRAPEZIO', 'Músculo do dorso que eleva o ombro.'], ['SARTORIO', 'Músculo mais longo do corpo.'], ['DIAFRAGMA', 'Principal músculo da respiração.'], ['MASSETER', 'Músculo da mastigação.']].map(([p, d]) => termo(p, d)),
+  'FARMACOLOGIA-ANTIBIOTICOS': [['AMOXICILINA', 'Penicilina de amplo espectro por via oral.'], ['AZITROMICINA', 'Macrolídeo de dose única diária.'], ['DOXICICLINA', 'Tetraciclina usada na leptospirose.'], ['CEFTRIAXONA', 'Cefalosporina de terceira geração.'], ['VANCOMICINA', 'Glicopeptídeo contra MRSA.'], ['GENTAMICINA', 'Aminoglicosídeo nefrotóxico.']].map(([p, d]) => termo(p, d)),
+};
+let simularFalhaCruzadinha = false;
+async function registrarFicticio(_, partida) {
+  await espera(1100);
+  if (simularFalhaCruzadinha) { simularFalhaCruzadinha = false; throw new Error('Falha simulada ao gravar a cruzadinha.'); }
+  const { perfil, eventos } = executarPedidoSupabase(salvo, { acao: 'registrarPartida', partida });
+  registrarEventos(eventos);
+  return guardar(perfil);
+}
+async function servicoGenerico(_, acao, pedido = {}) {
+  await espera(600);
+  const { perfil, eventos } = executarPedidoSupabase(salvo, { ...pedido, acao });
+  registrarEventos(eventos);
+  return guardar(perfil);
+}
+// Dicas da IA fictícias (nível 3 ou mais do tópico), no mesmo formato JSON que a IA devolve.
+async function iaFicticia(prompt) {
+  await espera(700);
+  const dica = p => ({ laudo: `Laudo fictício: termo de ${p.length} letras.`, residente: `Residente: aparece no plantão com frequência (${p[0]}...).`, paciente: `Paciente: é aquele de ${p.length} letras.` });
+  const lista = prompt.includes('Lista: ') ? prompt.split('Lista: ')[1].split(',').map(p => p.trim()).filter(Boolean) : null;
+  return JSON.stringify(lista ? Object.fromEntries(lista.map(p => [p, dica(p)])) : dica(prompt.match(/\[([^\]]+)\]/)?.[1] || 'TERMO'));
+}
+const TELAS_PROTOTIPO = ['batalha', 'ranking', 'estatisticas', 'perfil', 'menu', 'login', 'cadastro', 'cadastro2', 'pacienteDdx', 'topicos', 'jogo'];
+const TELAS_CASCA = ['menu', 'ranking', 'estatisticas', 'perfil', 'topicos'];
 
 export function Homologacao() {
   const [modo, setModo] = useState(localStorage.getItem('cacoMed-homologacao-modo') || 'quiz');
   const [dados, setDados] = useState(salvo);
   const trocarModo = valor => { setModo(valor); localStorage.setItem('cacoMed-homologacao-modo', valor); };
   // Navegação das telas como no App: telas sem equivalente aqui (cruzadinhas, DDX) voltam ao menu.
-  const navegar = tela => trocarModo({ revisaoInteligente: 'revisao', topicos: 'menu', selecaoDDX: 'menu', jogo: 'menu' }[tela] || tela);
+  const navegar = tela => trocarModo({ revisaoInteligente: 'revisao', selecaoDDX: 'menu' }[tela] || tela);
+  const [partidaCruzadinha, setPartidaCruzadinha] = useState(() => JSON.parse(localStorage.getItem('cacoMed-homologacao-cruzadinha') || 'null') || ['Anatomia', 'Sistema Esqueletico']);
+  const iniciarCruzadinha = (materia, sub) => { setPartidaCruzadinha([materia, sub]); localStorage.setItem('cacoMed-homologacao-cruzadinha', JSON.stringify([materia, sub])); trocarModo('jogo'); };
   useEffect(() => { navegarFicticio = navegar; });
   const comCasca = TELAS_CASCA.includes(modo);
   useEffect(() => { document.body.classList.toggle('com-casca', comCasca); }, [comCasca]);
@@ -209,10 +241,13 @@ export function Homologacao() {
   useLayoutEffect(() => {
     const medir = () => setAlturaFaixa(faixa.current?.offsetHeight || 86);
     medir();
-    window.addEventListener('resize', medir);
-    return () => window.removeEventListener('resize', medir);
+    const observador = new ResizeObserver(medir);
+    observador.observe(faixa.current);
+    return () => observador.disconnect();
   }, []);
-  return <><aside ref={faixa} style={{ padding: 12, background: '#ffb95f', color: '#0c1322', position: 'relative', zIndex: 100 }}><strong>HOMOLOGAÇÃO ISOLADA · dados fictícios locais · sem gravação no perfil real</strong><nav style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginTop: 8 }}><button onClick={() => trocarModo('quiz')}>Testar Quiz</button><button onClick={() => trocarModo('verdadeMentira')}>Testar Verdade ou mentira</button><button onClick={() => trocarModo('revisao')}>Testar Revisão</button><button onClick={() => { historico = { tentativas: [], revisoes: [] }; guardarHistorico(); setDados(guardar(inicial)); trocarModo('quiz'); }}>Reiniciar dados de teste</button><button onClick={() => { setDados(semearErrosRevisao()); trocarModo('revisao'); }}>Criar cinco erros fictícios</button><button onClick={() => { simularFalhaRevisao = true; }}>Simular falha na próxima resposta</button><button onClick={() => trocarModo('batalha')}>Testar Batalha</button><button onClick={() => { setDados(guardar({ ...salvo, tickets: 3, batalha: {} })); trocarModo('batalha'); }}>Reiniciar Batalha (3 tickets)</button><button onClick={() => { simularFalhaBatalha = true; }}>Simular falha no próximo turno</button><button onClick={() => trocarModo('ranking')}>Testar Ranking e Coroas</button><button onClick={() => trocarModo('estatisticas')}>Testar Estatísticas</button><button onClick={() => trocarModo('perfil')}>Testar Crachá</button><button onClick={() => { setDados(semearPainel()); }}>Semear painel, coroas e histórico</button><button onClick={() => { simularFalhaPerfil = true; }}>Simular falha ao salvar o crachá</button><button onClick={() => trocarModo('menu')}>Testar menu</button><button onClick={() => trocarModo('login')}>Testar login</button><button onClick={() => trocarModo('cadastro')}>Testar cadastro</button><button onClick={() => trocarModo('cadastro2')}>Testar Cadastro 2.0</button><button onClick={() => { simularFalhaCadastro = true; }}>Simular falha no cadastro</button><button onClick={() => { simularContaAntigaGoogle = true; }}>Google com conta antiga</button><button onClick={() => trocarModo('pacienteDdx')}>Testar Paciente DDX</button><button onClick={() => { simularFalhaPaciente = true; }}>Simular falha ao gravar o caso</button></nav></aside>{TELAS_PROTOTIPO.includes(modo) && <style>{`.cbt { top: ${alturaFaixa}px; }`}</style>}{comCasca && <BarraLateral tela={modo} ir={navegar} p={dados} foto={fotoDoPerfil(dados)} />}{modo === 'pacienteDdx' ? <PacienteDdx usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoPaciente} />
+  return <><aside ref={faixa} style={{ padding: 12, background: '#ffb95f', color: '#0c1322', position: 'relative', zIndex: 100 }}><details open={(localStorage.getItem('cacoMed-homologacao-faixa') || (window.innerWidth >= 960 ? 'aberta' : 'fechada')) === 'aberta'} onToggle={e => localStorage.setItem('cacoMed-homologacao-faixa', e.currentTarget.open ? 'aberta' : 'fechada')}><summary style={{ cursor: 'pointer' }}><strong>HOMOLOGAÇÃO ISOLADA · dados fictícios locais · sem gravação no perfil real</strong></summary><nav style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginTop: 8 }}><button onClick={() => trocarModo('quiz')}>Testar Quiz</button><button onClick={() => trocarModo('verdadeMentira')}>Testar Verdade ou mentira</button><button onClick={() => trocarModo('revisao')}>Testar Revisão</button><button onClick={() => { historico = { tentativas: [], revisoes: [] }; guardarHistorico(); setDados(guardar(inicial)); trocarModo('quiz'); }}>Reiniciar dados de teste</button><button onClick={() => { setDados(semearErrosRevisao()); trocarModo('revisao'); }}>Criar cinco erros fictícios</button><button onClick={() => { simularFalhaRevisao = true; }}>Simular falha na próxima resposta</button><button onClick={() => trocarModo('batalha')}>Testar Batalha</button><button onClick={() => { setDados(guardar({ ...salvo, tickets: 3, batalha: {} })); trocarModo('batalha'); }}>Reiniciar Batalha (3 tickets)</button><button onClick={() => { simularFalhaBatalha = true; }}>Simular falha no próximo turno</button><button onClick={() => trocarModo('ranking')}>Testar Ranking e Coroas</button><button onClick={() => trocarModo('estatisticas')}>Testar Estatísticas</button><button onClick={() => trocarModo('perfil')}>Testar Crachá</button><button onClick={() => { setDados(semearPainel()); }}>Semear painel, coroas e histórico</button><button onClick={() => { simularFalhaPerfil = true; }}>Simular falha ao salvar o crachá</button><button onClick={() => trocarModo('menu')}>Testar menu</button><button onClick={() => trocarModo('login')}>Testar login</button><button onClick={() => trocarModo('cadastro')}>Testar cadastro</button><button onClick={() => trocarModo('cadastro2')}>Testar Cadastro 2.0</button><button onClick={() => { simularFalhaCadastro = true; }}>Simular falha no cadastro</button><button onClick={() => { simularContaAntigaGoogle = true; }}>Google com conta antiga</button><button onClick={() => trocarModo('pacienteDdx')}>Testar Paciente DDX</button><button onClick={() => { simularFalhaPaciente = true; }}>Simular falha ao gravar o caso</button><button onClick={() => trocarModo('topicos')}>Testar cruzadinhas</button><button onClick={() => { simularFalhaCruzadinha = true; }}>Simular falha ao gravar a cruzadinha</button><button onClick={() => { setDados(guardar({ ...salvo, tutorialCruzadinhasConcluido: false, estatisticas: {}, estatisticasGerais: {} })); }}>Rever tutorial da cruzadinha</button></nav></details></aside>{TELAS_PROTOTIPO.includes(modo) && <style>{`.cbt { top: ${alturaFaixa}px; }`}</style>}{comCasca && <BarraLateral tela={modo} ir={navegar} p={dados} foto={fotoDoPerfil(dados)} />}{modo === 'topicos' ? <SelecaoTopicos setTelaAtual={navegar} iniciarJogo={iniciarCruzadinha} dadosUsuario={dados} bancoDePalavras={BANCO_FICTICIO} usuario={inicial} setDadosUsuario={setDados} servicoPerfil={servicoGenerico} />
+  : modo === 'jogo' ? <Jogo key={partidaCruzadinha.join('-')} bancoDePalavras={BANCO_FICTICIO} materia={partidaCruzadinha[0]} subMateria={partidaCruzadinha[1]} setTelaAtual={navegar} usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} registrar={registrarFicticio} servicoPerfil={servicoGenerico} consultarIA={iaFicticia} />
+  : modo === 'pacienteDdx' ? <PacienteDdx usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoPaciente} />
   : modo === 'menu' ? <MenuPrincipal usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} buscarRanking={rankingFicticio} />
   : modo === 'login' ? <Login setTelaAtual={navegar} conta={contaFicticia} />
   : modo === 'cadastro' ? <Cadastro setTelaAtual={navegar} conta={contaFicticia} servicoPerfil={servicoEntrada} onConcluido={perfil => { setDados(perfil); navegar('menu'); }} />
