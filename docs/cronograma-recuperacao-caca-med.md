@@ -1,5 +1,96 @@
 # Caça-Med — diagnóstico e cronograma de recuperação
 
+## Plano de 07/10/2026 — economia v3, Revisão Inteligente v2 e app offline
+
+Em produção desde 07/10/2026: telas do protótipo em todos os modos e app instalável (deploy `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa`, API v12). Nesse dia o usuário tomou as decisões abaixo e pediu que fossem só documentadas e colocadas no cronograma, **sem código**.
+
+Decisões e especificações:
+- [Economia v3](economia-v3.md):
+  - cruzadinha, Quiz e V ou M pagam 100 XP + bônus (na cruzadinha, o bônus é de tempo);
+  - missão de login paga 25 × dias de ofensiva;
+  - as outras missões são classificadas de 0 a 5 por dificuldade;
+  - DDX paga 300 XP + bônus;
+  - Paciente DDX tem XP progressivo por nível;
+  - Quiz e V ou M continuam sem cronômetro.
+- [Revisão Inteligente v2](revisao-inteligente.md#versão-2-decidida-em-07102026-ainda-não-implementada):
+  - uma carta por modo, sem os erros da cruzadinha;
+  - sessões de 7 itens (os erros mais itens parecidos);
+  - tela de revisão com as duas respostas do jogador e a explicação de cada alternativa;
+  - refazer casos do Erro médico e do Paciente DDX;
+  - LLM gratuita (Qwen 3.8 pelo opencode) para ajudar no conteúdo.
+- [App offline](app-offline.md):
+  - todo o conteúdo funciona offline;
+  - detecção de rede e fila que sincroniza quando a rede volta;
+  - tickets do DDX consumidos offline;
+  - sessão de 15 dias sem rede.
+
+A ordem segue as dependências:
+- a economia vem antes do offline, porque o aparelho calcula o XP com os mesmos motores do servidor;
+- o conteúdo da Revisão pode começar em paralelo;
+- a Revisão v2 vem antes do offline, porque também precisa funcionar sem rede.
+
+### Fase 0 — Arrumação
+
+- [ ] Juntar a limpeza de CSS da outra sessão:
+  - commit `4c7f0b8` na branch `claude/vigorous-vaughan-957477`, ainda não enviado;
+  - remove os estilos `stitch-*` e `treino-*` sem uso e reduz `src/index.css` de 414 para 168 linhas;
+  - sem diferença de estilo calculado nas telas conferidas;
+  - foi feita sobre o commit `2679e9f`, antes do PWA, mas `git merge-tree` não mostrou conflito com `9a7396a` em 07/10/2026;
+  - antes de juntar, conferir que `color-scheme: dark` e o fundo de `html, body` continuam em `src/index.css`.
+- [ ] Apagar `src/components/ui/StitchBrand.jsx`, que não é importado, junto com os estilos `stitch-header` e `stitch-brand`, que só ele usa.
+
+### Fase 1 — Economia v3
+
+- [ ] Responder as 10 [perguntas em aberto](economia-v3.md#perguntas-em-aberto): 100 XP fixos ou proporcionais, bônus do Quiz e do V ou M, bônus de tempo da cruzadinha, teto e quebra da ofensiva, XP e tickets por nível de missão, modos e bônus do DDX, "nível" do Paciente DDX, ticket do Paciente DDX e curva de nível.
+- [ ] Criar o contador de ofensiva de login, no fuso America/Sao_Paulo.
+- [ ] Criar as missões classificadas de 0 a 5 e o sorteio diário.
+- [ ] Implementar `VERSAO_ECONOMIA = 3` nos motores compartilhados, com migração sem recompensa retroativa. Partidas iniciadas na v2 terminam na v2.
+- [ ] Publicar a Edge Function em versão nova e atualizar os textos de XP e tickets nas telas.
+- [ ] Testes de economia, migração e idempotência; homologação com dados fictícios.
+
+### Fase 2 — Conteúdo da Revisão v2 (em paralelo à Fase 1)
+
+- [ ] Montar o fluxo da LLM (Qwen pelo opencode): conferir a versão e os termos, e garantir que só vai conteúdo do banco, nunca dados de jogador.
+- [ ] Gerar rascunhos marcados `origem: 'rascunho-llm'` e `revisado: false`:
+  - explicação de cada alternativa errada do Quiz;
+  - explicação de cada frase do V ou M;
+  - marcação de conceito para escolher itens parecidos;
+  - perguntas suficientes por conceito para completar sessões de 7;
+  - explicação completa dos casos do Erro médico;
+  - revisão detalhada dos casos do Paciente DDX, com fonte e página.
+- [ ] Revisão médica de todo rascunho antes de qualquer jogador vê-lo; aumentar a `versao` dos itens alterados.
+
+### Fase 3 — Revisão Inteligente v2
+
+- [ ] Responder as 6 [perguntas em aberto](revisao-inteligente.md#perguntas-em-aberto): quinta carta, mais de 7 erros, falta de itens parecidos, o que é "errou" no Paciente DDX, recompensa e liberação, e LLM no app ou na produção.
+- [ ] Registrar os erros do Erro médico e do Paciente DDX como itens da Revisão.
+- [ ] Tela de cartas por modo, com ícone e quantidade de erros pendentes.
+- [ ] Sessões de 7 itens no Quiz e no V ou M; tela de revisão com as duas respostas (mostrando uma só se forem iguais), a correta e a explicação de cada alternativa.
+- [ ] Erro médico: refazer o mesmo caso e, se errar de novo, mostrar a explicação completa.
+- [ ] Paciente DDX: refazer os casos errados, mostrar a revisão detalhada e indicar a fonte.
+- [ ] Manter a repetição espaçada (1, 3 e 7 dias; teto de duas por semana) para todos os modos.
+
+### Fase 4 — App offline
+
+- [ ] Detecção de rede, fila em IndexedDB e ação `sincronizarFila` idempotente na Edge Function, começando pelo Quiz.
+- [ ] Pacote de conteúdo versionado no aparelho, medindo o tamanho antes de escolher entre baixar tudo de uma vez ou por modo.
+- [ ] V ou M e Revisão offline; depois a cruzadinha (sem dicas de IA offline); depois o DDX.
+- [ ] Tickets do DDX offline com saldo local. Decidir se o saldo pode ficar negativo (proposta: dívida paga pelos próximos tickets).
+- [ ] Sessão válida por 15 dias sem rede; fila presa ao UID; aviso ao sair com itens pendentes.
+- [ ] Regras de data e de conflito entre aparelhos; pedir armazenamento persistente.
+
+### Fase 5 — Validação e publicação
+
+- [ ] Testes automatizados de fila, ordem, reenvio, recusa, saldo e datas.
+- [ ] iPhone e Android reais: modo avião, partidas de todos os modos, rede de volta, sincronização com o app aberto e com o app fechado.
+- [ ] Publicar a Edge Function e o frontend; registrar deploy e rollback.
+
+### Pendências anteriores que continuam
+
+- Testar em aparelho físico e rede celular ([roteiro](roteiro-smartphone.md)), inclusive a instalação do app e o login com conta real.
+- SMTP público, vínculo do segundo perfil e a ponte Firebase (ver o bloco de 30/09 abaixo).
+- Revisão clínica de Batalha, Paciente DDX e dos casos do DDX.
+
 ## Estado atual — 30/09/2026, produção Supabase
 
 Este bloco substitui pendências históricas abaixo. Produção Vercel ativada com fonte e autenticação Supabase; login Google no domínio público validado pelo agente e pelo usuário.

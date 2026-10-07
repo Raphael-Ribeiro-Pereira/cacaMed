@@ -2,6 +2,85 @@
 
 Implementada em 28/09/2026, como piloto para administrador. Backend publicado na **versão 19** da implantação existente, mantendo URL e permissões. Código.gs e Treinos.gs comparados integralmente com os arquivos locais, normalizando quebras de linha. Interface local em http://localhost:5173/; publicação no Vercel depende da validação do piloto. Deploy automático continua desativado.
 
+## Versão 2: decidida em 07/10/2026, ainda não implementada
+
+O usuário redefiniu o modo. As seções seguintes descrevem o piloto em vigor, que continua valendo até esta versão ser construída. O andamento fica no [cronograma](cronograma-recuperacao-caca-med.md#plano-de-07102026--economia-v3-revisão-inteligente-v2-e-app-offline).
+
+### Entrada por cartas
+
+A Revisão reúne todos os erros do jogador num só lugar. A tela inicial mostra uma carta por modo, com o ícone do modo e quantos erros estão pendentes:
+- Quiz;
+- Verdade ou mentira;
+- DDX Erro médico;
+- Paciente DDX;
+- uma quinta carta, ainda em aberto (ver abaixo).
+
+**Os erros da cruzadinha ficam de fora.**
+
+Exemplo do usuário: o jogador errou as perguntas alfa, beta e gama do Quiz, o caso teta do Erro médico, o caso tau do Paciente DDX e uma frase do V ou M. A carta do Quiz abre uma sessão com alfa, beta e gama mais quatro perguntas parecidas.
+
+### Quiz
+
+- **Sessão de 7 perguntas:** os erros pendentes, completados com perguntas parecidas (mesmo conceito ou tema) até chegar a 7.
+- **Acertou tudo:** volta para as cartas.
+- **Errou alguma:** abre a tela de revisão. Para cada pergunta errada, ela mostra:
+  - a pergunta;
+  - a alternativa que ele marcou na partida e a que marcou na revisão. Se as duas forem iguais, aparece só uma. Numa pergunta parecida, que não veio de partida, aparece só a da revisão;
+  - a alternativa correta;
+  - abaixo de cada alternativa, a explicação de por que ela não é a resposta.
+- **Repetição espaçada:** a pergunta errada continua guardada para repetir. Vale a regra atual de 1, 3 e 7 dias, com teto de duas revisões por semana. Uma pergunta parecida que ele errar também entra na fila.
+
+### Verdade ou mentira
+
+Igual ao Quiz: 7 frases (os erros mais frases parecidas) e a mesma tela de revisão, com a explicação de cada frase.
+
+### DDX Erro médico
+
+- O jogador refaz **o mesmo caso**.
+- Se errar de novo, recebe a explicação completa do caso, dizendo por que a alternativa escolhida estava errada em cada etapa.
+
+### Paciente DDX
+
+É o mais complexo.
+- O jogador refaz os casos que errou.
+- Depois, recebe uma revisão detalhada de cada caso: o que deixou de investigar, a hipótese e a conduta, com o que marcou de errado e o que deixou de marcar.
+- Por fim, recebe a indicação de uma fonte para estudar, com a página.
+
+### Conteúdo necessário
+
+O banco de hoje não tem tudo isso:
+- **Quiz:** uma explicação para cada alternativa errada de cada pergunta.
+- **V ou M:** a explicação de cada frase.
+- **Perguntas e frases parecidas:** uma marcação de conceito ou tema para escolhê-las. Também é preciso ter perguntas suficientes por conceito.
+- **Erro médico:** a explicação completa de cada caso.
+- **Paciente DDX:** o texto de revisão detalhada de cada caso.
+- **Erros do Erro médico e do Paciente DDX:** passam a ser registrados como itens da Revisão. Hoje só Quiz, V ou M e a Batalha alimentam a fila.
+
+### LLM gratuita para o conteúdo
+
+O usuário quer usar uma LLM gratuita (Qwen 3.8 pelo opencode) para ajudar no conteúdo da revisão.
+
+Proposta: usar a LLM **na produção do conteúdo**, não dentro do app:
+- ela escreve rascunhos das explicações por alternativa, das perguntas parecidas e das revisões de caso;
+- cada rascunho entra no banco marcado `origem: 'rascunho-llm'` e `revisado: false`;
+- o jogador só vê o texto depois da revisão médica.
+
+Motivos para não usar a LLM dentro do app:
+- o app precisa funcionar offline ([app offline](app-offline.md));
+- uma explicação médica gerada na hora não passa por revisão e pode estar errada;
+- rodar a LLM para os jogadores exige servidor e custo.
+
+A versão do modelo e os termos de uso são conferidos quando o fluxo for montado. Para a LLM vai só o conteúdo do banco, nunca dados de jogadores.
+
+### Perguntas em aberto
+
+1. **A quinta carta:** Batalha diagnóstica (que já gera itens de revisão), Causa e efeito ou Plantão?
+2. **Mais de 7 erros pendentes:** proposta de pegar os 7 de maior prioridade e deixar o resto para a próxima sessão.
+3. **Faltam perguntas parecidas** para completar 7: a sessão fica menor, ou completa com perguntas do mesmo tema geral?
+4. **O que conta como "errou" no Paciente DDX:** nota abaixo de um corte (por exemplo 70) ou qualquer item errado?
+5. **Recompensa e liberação:** a Revisão continua sem XP e sem ticket? Ela sai do piloto do administrador e é liberada para todos com esta versão?
+6. **LLM no app ou na produção:** a ideia é a LLM ajudar na produção do conteúdo, como proposto acima, ou responder ao jogador dentro do app?
+
 ## Experiência e decisões
 
 O modo é gratuito e não consome nem concede tickets. Não concede XP, não avança missões e não modifica nível ou ranking. O benefício é responder novamente, receber correção com explicação e fonte e acompanhar o próprio progresso.

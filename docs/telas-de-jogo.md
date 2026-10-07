@@ -30,7 +30,7 @@ Homologação: "Testar cruzadinhas" usa um banco fictício pequeno e grava com a
 
 ## Quiz e Verdade ou mentira
 
-Arquivo: `TreinoMedico.jsx`. No protótipo, os dois modos eram sugestões de regra (relógio por pergunta, combo, 8 perguntas, 12 cartões em 60 segundos). O jogo já tem regras próprias, conferidas pelo servidor, e elas ficaram; o visual é o do protótipo.
+Arquivo: `TreinoMedico.jsx`. No protótipo, os dois modos eram sugestões de regra (relógio por pergunta, combo, 8 perguntas, 12 cartões em 60 segundos). O jogo já tem regras próprias, conferidas pelo servidor, e elas ficaram; o visual é o do protótipo. Em 07/10/2026 o usuário confirmou que os dois modos continuam sem cronômetro. O XP muda na [economia v3](economia-v3.md).
 
 - **Abertura:** ícone, regras numeradas e o botão que enche no tempo previsto. A previsão aprende com a latência real das respostas da API nesta sessão (`registrarLatencia` em `utils/prototipo.js`). O protótipo carregava a rodada ao abrir a tela; aqui ela só é criada ao tocar em "Começar", porque `iniciarTreino` grava a rodada (e, no Quiz, depende da escolha entre Teoria, 20 XP, e Casos clínicos, 25 XP). Depois vem a contagem 3, 2, 1.
 - **Quiz:** sem relógio e sem multiplicador de combo, que não existem no jogo. O HUD mostra acertos seguidos e o XP da rodada (20 ou 25 por acerto). Tocar na alternativa responde, como no protótipo; o gabarito fica no servidor, então a cor certa/errada aparece quando ele confere. Depois vêm a explicação e a fonte. "Próxima pergunta" (ou Enter) avança em vez do avanço automático do protótipo, para dar tempo de ler. Na web, as teclas 1 a 4 respondem.
