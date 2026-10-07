@@ -43,7 +43,10 @@
   --stitch-amber: #ffb95f;
   --stitch-red: #d4004b;
   --stitch-violet: #8b5cf6;
+  color-scheme: dark;
 }
+/* Fundo escuro desde o primeiro quadro: o app instalado não pisca branco antes da abertura. */
+html, body { background: #0b0f19; }
 
 .stitch-page { position: relative; isolation: isolate; min-height: 100vh; background: var(--stitch-bg); color: var(--stitch-text); font: 400 14px 'Plus Jakarta Sans', sans-serif; }
 .stitch-page::before, .stitch-page::after { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; }
