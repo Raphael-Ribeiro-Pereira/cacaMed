@@ -12,7 +12,7 @@ Casos em consulta para o que não cabe na Batalha (dor no peito, pré-natal, cri
 ## Dados e servidor
 
 - Conteúdo em `src/utils/pacienteDdxConteudo.js`, gerado do `casos.json` do protótipo (versão 2026-10-01). Os trechos dos PDFs usados na conferência das citações ficaram fora do jogo; cada caso tem `versao: 1` e `revisado: false`.
-- Motor em `src/utils/pacienteDdx.js` (nota, validação das escolhas e mapa), o mesmo no navegador e na API.
+- Motor do navegador em `src/utils/pacienteDdx.js` (mapa e nota). A nota usa `src/utils/pacienteDdxNota.js`, o mesmo cálculo da API, que só recebe o gabarito (`pacienteDdxGabarito.js`: versão, nome e as marcações de cada lista). O texto dos casos não vai para a Edge Function. Depois de mudar um caso, rodar `node scripts/gerar-gabarito-paciente.mjs`; o teste acusa gabarito desatualizado.
 - Nova ação `concluirCasoPaciente` (só administrador): recebe `entradaId`, `casoId`, `versao` e as escolhas, recalcula a nota e guarda em `perfil.pacienteDdx` a melhor nota de cada caso, o número de partidas e os últimos 30 resultados. Reenvio com o mesmo `entradaId` não conta de novo. O recibo entra no histórico das Estatísticas como "Paciente DDX · nome do caso".
 - Sem ticket e sem XP, como no protótipo.
 - A tela grava ao abrir o resultado; se falhar, o selo vira "Não gravou. Toque para reenviar".

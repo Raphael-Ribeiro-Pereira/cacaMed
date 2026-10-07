@@ -4,7 +4,7 @@ import { obterCasoPlantao, executarPlantao } from '../utils/plantao.js';
 import { obterAuditoria, avaliarAuditoria } from '../utils/erroMedico.js';
 import { obterRelacao, avaliarRelacao } from '../utils/causaEfeito.js';
 import { DOENCAS, executarBatalha, obterDoenca, obterPet, recompensaBatalha, relatorioBatalha } from '../utils/batalha.js';
-import { avaliarCaso, obterCaso } from '../utils/pacienteDdx.js';
+import { avaliarRespostas, obterGabarito } from '../utils/pacienteDdxNota.js';
 const criarMissoesCruzadinha = criarMissoesDiarias;
 
 export function registrarPartidaSupabase(perfil, partida, recibos = [], agora = new Date().toISOString()) {
@@ -270,12 +270,13 @@ export function operarPacienteSupabase(perfil, pedido, recibos = [], agora = new
   const id = String(pedido.entradaId || '');
   if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error('Identificador de entrada inválido.');
   if (recibos.includes(id) || stats.historico.some(item => item.id === id)) return perfil;
-  const caso = obterCaso(String(pedido.casoId || ''));
-  if (caso.versao !== Number(pedido.versao)) throw new Error('A versão deste caso mudou. Abra o caso de novo.');
-  const { nota } = avaliarCaso(caso, pedido.respostas);
+  const casoId = String(pedido.casoId || '');
+  const gabarito = obterGabarito(casoId);
+  if (gabarito.versao !== Number(pedido.versao)) throw new Error('A versão deste caso mudou. Abra o caso de novo.');
+  const { nota } = avaliarRespostas(gabarito, pedido.respostas);
   return { ...perfil, pacienteDdx: { ...stats, partidas: (Number(stats.partidas) || 0) + 1,
-    casos: { ...stats.casos, [caso.id]: Math.max(nota, Number(stats.casos[caso.id]) || 0) },
-    historico: [...stats.historico, { id, casoId: caso.id, versao: caso.versao, nota, data: agora }].slice(-30) } };
+    casos: { ...stats.casos, [casoId]: Math.max(nota, Number(stats.casos[casoId]) || 0) },
+    historico: [...stats.historico, { id, casoId, versao: gabarito.versao, nota, data: agora }].slice(-30) } };
 }
 
 // Batalha diagnóstica: piloto do administrador enquanto o conteúdo não tiver revisão clínica.

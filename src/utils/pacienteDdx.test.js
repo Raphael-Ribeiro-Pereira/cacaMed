@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { CASOS, FONTES, MODULOS, avaliarCaso, casosDe, estadoMapa, obterCaso, proximoCaso } from './pacienteDdx.js';
 import { executarPedidoSupabase } from '../shared/executarPedidoSupabase.js';
 import { resumirHistorico } from './estatisticasPainel.js';
+import { GABARITO_PACIENTE } from './pacienteDdxGabarito.js';
+import { gabaritoDe } from './pacienteDdxNota.js';
 
 const perfeito = c => ({
   perguntas: c.perguntas.map((q, i) => (q.chave ? i : -1)).filter(i => i >= 0),
@@ -25,6 +27,11 @@ test('conteúdo do Paciente DDX: ids únicos, uma hipótese certa, conduta com a
     assert.equal(c.revisado, false);
   }
   assert.equal(proximoCaso(casosDe(MODULOS[0].id)[0].id).ordem, 2);
+});
+
+test('gabarito da API igual ao conteúdo (rode node scripts/gerar-gabarito-paciente.mjs se mudar um caso)', () => {
+  assert.deepEqual(Object.keys(GABARITO_PACIENTE).sort(), CASOS.map(c => c.id).sort());
+  for (const c of CASOS) assert.deepEqual(GABARITO_PACIENTE[c.id], gabaritoDe(c), c.id);
 });
 
 test('nota do caso: 100 no caminho certo, desconta erros e recusa escolhas inválidas', () => {
