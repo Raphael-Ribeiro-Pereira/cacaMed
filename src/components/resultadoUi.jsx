@@ -3,12 +3,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Play } from 'lucide-react';
 import { CountNum, MiniEcg } from './prototipoUi';
 import { progressoGlobal } from '../utils/economia';
-import { animar, fmt } from '../utils/prototipo';
+import { animar, fmt, latenciaPrevista } from '../utils/prototipo';
 
 // Resultado do protótipo de movimento (Cruzadinha, Quiz, Verdade ou mentira e DDX): o XP calculado no
 // aparelho aparece linha a linha enquanto a gravação corre; o que só o servidor sabe entra depois.
 // fase: 'salvando' | 'ok' | 'erro'. linhas e extras: [rótulo, valor, 'pos' | 'mul' | 'neg' | 'mut'].
-export function Resultado({ stamp, tom, sub, linhas, total, extras = [], bonus = 0, fase, aoTentar, principal, aoVoltar, rotuloVoltar = 'Voltar ao início', detalhes, aviso, recibo }) {
+export function Resultado({ stamp, tom, sub, linhas, total, unidade = 'XP', extras = [], bonus = 0, fase, aoTentar, principal, aoVoltar, rotuloVoltar = 'Voltar ao início', detalhes, aviso, recibo }) {
   const [masked] = useState(animar);
   const [mostradas, setMostradas] = useState(masked ? 0 : linhas.length);
   const [cerimonia, setCerimonia] = useState(!masked);
@@ -37,7 +37,7 @@ export function Resultado({ stamp, tom, sub, linhas, total, extras = [], bonus =
           {linhas.map(([l, v, c], i) => <div key={i} className={`lrow ${i < mostradas ? 'show' : ''}`}><span>{l}</span><b className={c}>{v}</b></div>)}
           {confirmado && extras.map(([l, v, c], i) => <div key={'x' + i} className="lrow srv show"><span>{l}</span><b className={c}>{v}</b></div>)}
         </div>
-        <div className="total" aria-live="polite">{totalVisivel ? <CountNum from={0} to={total + (confirmado ? bonus : 0)} ms={1000} /> : '0'}<small>XP</small></div>
+        <div className="total" aria-live="polite">{totalVisivel ? <CountNum from={0} to={total + (confirmado ? bonus : 0)} ms={1000} /> : '0'}<small>{unidade}</small></div>
         {aviso && <div className="pid" style={{ marginTop: 6 }}>{aviso}</div>}
         <div className={`save ${fase === 'ok' ? 'ok' : fase === 'erro' ? 'err' : ''}`} role="status">
           {fase === 'salvando' && <><MiniEcg /><span>Registrando no prontuário</span></>}
@@ -54,6 +54,50 @@ export function Resultado({ stamp, tom, sub, linhas, total, extras = [], bonus =
         : principal.node || <button className="primary" disabled={fase !== 'ok'} onClick={principal.aoClicar}><Play size={18} fill="currentColor" />{principal.rotulo}</button>}
       <button className="ghost" disabled={fase !== 'ok'} onClick={aoVoltar}>{rotuloVoltar}</button>
     </div>
+  </div>;
+}
+
+// Botão que enche no ritmo da espera prevista enquanto o pedido corre (até 90% no tempo previsto e,
+// se passar, se arrasta até ~98% com "Quase lá…", sem parecer travado).
+export function BotaoCarregar({ rotulo, icone, carregando, aoClicar, desabilitado }) {
+  const [masked] = useState(animar);
+  const [prog, setProg] = useState(0);
+  const [atrasado, setAtrasado] = useState(false);
+  const [resta, setResta] = useState(0);
+  useEffect(() => {
+    if (!carregando || !masked) return undefined;
+    const inicio = performance.now(), previsto = latenciaPrevista();
+    let raf = 0;
+    const passo = () => {
+      const e = performance.now() - inicio, k = e / previsto;
+      setProg(k < 1 ? 0.9 * (1 - (1 - k) ** 2) : 0.9 + 0.08 * (1 - Math.exp(-(k - 1) * 1.4)));
+      setAtrasado(k > 1.05);
+      setResta(Math.max(0, (previsto - e) / 1000));
+      raf = requestAnimationFrame(passo);
+    };
+    raf = requestAnimationFrame(passo);
+    return () => cancelAnimationFrame(raf);
+  }, [carregando, masked]);
+  if (!masked) return <button className="primary" disabled={carregando || desabilitado} onClick={aoClicar}>{carregando ? 'Carregando...' : <>{icone}{rotulo}</>}</button>;
+  const texto = !carregando ? <>{icone}{rotulo}</> : atrasado ? 'Quase lá…' : `Preparando rodada · ~${(prog ? resta : latenciaPrevista() / 1000).toFixed(1).replace('.', ',')} s`;
+  return <button className={`loadbtn ${carregando ? '' : 'ready'}`} disabled={carregando || desabilitado} onClick={aoClicar} aria-busy={carregando}>
+    <span className="lb-txt">{texto}</span>
+    <span className="lb-fill" style={{ clipPath: `inset(0 ${carregando ? 100 - prog * 100 : 0}% 0 0)` }}><span className="lb-txt dark">{texto}</span></span>
+  </button>;
+}
+
+// Contagem 3, 2, 1 antes da rodada.
+export function Contagem({ aoTerminar }) {
+  const [n, setN] = useState(animar() ? 3 : 0);
+  const fim = useRef(aoTerminar);
+  useEffect(() => { fim.current = aoTerminar; });
+  useEffect(() => {
+    if (n === 0) { fim.current(); return undefined; }
+    const t = setTimeout(() => setN(n - 1), 650);
+    return () => clearTimeout(t);
+  }, [n]);
+  return <div className="plain" role="status" aria-label={n ? `Começa em ${n}` : 'Começando'} style={{ position: 'absolute', inset: 0, zIndex: 30, display: 'flex', background: 'var(--canvas)' }}>
+    <AnimatePresence mode="popLayout"><motion.b key={n} className="mono" style={{ fontSize: 88, color: 'var(--mint)', textShadow: '0 0 40px rgba(0,245,212,.5)' }} initial={{ scale: 2, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: .4, opacity: 0 }} transition={{ duration: .4, ease: [0.16, 1, 0.3, 1] }}>{n || ''}</motion.b></AnimatePresence>
   </div>;
 }
 

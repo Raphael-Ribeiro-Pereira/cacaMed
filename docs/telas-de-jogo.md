@@ -27,3 +27,27 @@ Homologação: "Testar cruzadinhas" usa um banco fictício pequeno e grava com a
 - subida de nível;
 - abandono com confirmação;
 - nível do tópico pelo admin.
+
+## Quiz e Verdade ou mentira
+
+Arquivo: `TreinoMedico.jsx`. No protótipo, os dois modos eram sugestões de regra (relógio por pergunta, combo, 8 perguntas, 12 cartões em 60 segundos). O jogo já tem regras próprias, conferidas pelo servidor, e elas ficaram; o visual é o do protótipo.
+
+- **Abertura:** ícone, regras numeradas e o botão que enche no tempo previsto. A previsão aprende com a latência real das respostas da API nesta sessão (`registrarLatencia` em `utils/prototipo.js`). O protótipo carregava a rodada ao abrir a tela; aqui ela só é criada ao tocar em "Começar", porque `iniciarTreino` grava a rodada (e, no Quiz, depende da escolha entre Teoria, 20 XP, e Casos clínicos, 25 XP). Depois vem a contagem 3, 2, 1.
+- **Quiz:** sem relógio e sem multiplicador de combo, que não existem no jogo. O HUD mostra acertos seguidos e o XP da rodada (20 ou 25 por acerto). Tocar na alternativa responde, como no protótipo; o gabarito fica no servidor, então a cor certa/errada aparece quando ele confere. Depois vêm a explicação e a fonte. "Próxima pergunta" (ou Enter) avança em vez do avanço automático do protótipo, para dar tempo de ler. Na web, as teclas 1 a 4 respondem.
+- **Verdade ou mentira:** os cartões de arrastar do protótipo (direita é verdade, esquerda é mentira, setas do teclado também) para as 5 frases reais, sem relógio. A correção não vem a cada cartão, porque o servidor confere as cinco juntas. No fim há uma tela de revisão para trocar marcações e confirmar; ela exige de 1 a 4 verdades, como a regra do jogo.
+- **Resultado:** o extrato do protótipo com XP por acerto, missões, medidor de tickets (2 rodadas válidas valem 1 ticket) e tickets de missões e nível. Abaixo, ou ao lado na web, vem a revisão de cada item, com a resposta, o gabarito, a explicação e a fonte.
+- **Sair:** uma folha substitui o `window.confirm`, com três opções: continuar, sair e retomar depois, ou abandonar a rodada sem recompensa.
+
+## Revisão Inteligente
+
+Arquivo: `RevisaoInteligente.jsx`. O protótipo não tinha tela própria ("Revisar agora" abria o Quiz), então ela usa o layout do Quiz. As regras não mudaram: só para administrador, até cinco itens dos erros (Quiz, Verdade ou mentira e Batalha), intervalos de 1, 3 e 7 dias, sem XP e sem ticket.
+
+- A abertura mostra a situação da fila (itens disponíveis, revisão em dia ou sem erros ainda) e as regras.
+- Itens de Verdade ou mentira aparecem com duas alternativas.
+- O resultado conta acertos em vez de XP (`unidade` no `Resultado`) e diz quando cada item volta.
+- Sair pela folha: continuar, sair e retomar depois, ou encerrar a sessão.
+
+Conferido em 07/10/2026 na homologação, no celular e na web:
+- Quiz completo nas duas variantes, com as teclas 1 a 4 e Enter, e o abandono pela folha;
+- Verdade ou mentira com cartões, revisão das marcações e resultado 5/5 com missões;
+- Revisão com cinco erros fictícios e a falha simulada, que retoma do item seguinte depois de consultar a revisão salva.

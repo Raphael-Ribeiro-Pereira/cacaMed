@@ -51,6 +51,7 @@ function semearErrosRevisao() {
 }
 async function servicoPerfil(_, acao, pedido) {
   if (acao === 'obterPerfil') { repararRevisaoLocal(); return salvo; }
+  await espera(900);
   if (['consultarRevisao', 'iniciarRevisao', 'responderRevisao', 'encerrarRevisao'].includes(acao)) {
     repararRevisaoLocal();
     if (acao === 'consultarRevisao') return guardar({ ...salvo, revisao: { ...salvo.revisao, resumo: selecionarFilaRevisao(historico.tentativas, historico.revisoes).resumo } });
@@ -221,7 +222,7 @@ async function iaFicticia(prompt) {
   const lista = prompt.includes('Lista: ') ? prompt.split('Lista: ')[1].split(',').map(p => p.trim()).filter(Boolean) : null;
   return JSON.stringify(lista ? Object.fromEntries(lista.map(p => [p, dica(p)])) : dica(prompt.match(/\[([^\]]+)\]/)?.[1] || 'TERMO'));
 }
-const TELAS_PROTOTIPO = ['batalha', 'ranking', 'estatisticas', 'perfil', 'menu', 'login', 'cadastro', 'cadastro2', 'pacienteDdx', 'topicos', 'jogo'];
+const TELAS_PROTOTIPO = ['batalha', 'ranking', 'estatisticas', 'perfil', 'menu', 'login', 'cadastro', 'cadastro2', 'pacienteDdx', 'topicos', 'jogo', 'quiz', 'verdadeMentira', 'revisao'];
 const TELAS_CASCA = ['menu', 'ranking', 'estatisticas', 'perfil', 'topicos'];
 
 export function Homologacao() {

@@ -18,6 +18,11 @@ export function useLargo() {
   return largo;
 }
 
+// Previsão de espera dos botões de carregamento: média móvel das respostas da API nesta sessão, com 15% de folga.
+let mediaLatencia = 0;
+export const registrarLatencia = ms => { mediaLatencia = mediaLatencia ? mediaLatencia * 0.6 + ms * 0.4 : ms; };
+export const latenciaPrevista = () => Math.round((mediaLatencia || 2500) * 1.15);
+
 // Lê e grava no aparelho sem quebrar quando o armazenamento estiver bloqueado.
 export const lerLocal = chave => { try { return JSON.parse(localStorage.getItem(chave) || 'null'); } catch { return null; } };
 export const gravarLocal = (chave, valor) => { try { localStorage.setItem(chave, JSON.stringify(valor)); } catch { /* armazenamento indisponível */ } };
