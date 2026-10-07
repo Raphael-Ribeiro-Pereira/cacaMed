@@ -4,33 +4,38 @@
 
 Em produção desde 07/10/2026: telas do protótipo em todos os modos e app instalável (deploy `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa`, API v12). Nesse dia o usuário tomou as decisões abaixo e pediu que fossem só documentadas e colocadas no cronograma, **sem código**.
 
-Decisões e especificações:
+Decisões e especificações (perguntas respondidas pelo usuário no mesmo dia):
 - [Economia v3](economia-v3.md):
-  - cruzadinha, Quiz e V ou M pagam 100 XP + bônus (na cruzadinha, o bônus é de tempo);
-  - missão de login paga 25 × dias de ofensiva;
+  - cruzadinha, Quiz e V ou M pagam 100 XP fixos + bônus de performance;
+  - no Quiz e no V ou M, o tempo é contado em segundo plano, sem aparecer na tela nem no relatório;
+  - missão de login paga 25 × dias de ofensiva, sem teto por enquanto;
   - as outras missões são classificadas de 0 a 5 por dificuldade;
-  - DDX paga 300 XP + bônus;
-  - Paciente DDX tem XP progressivo por nível;
-  - Quiz e V ou M continuam sem cronômetro.
+  - todos os modos do DDX pagam 300 XP + bônus, inclusive o Paciente DDX, que continua sem cobrar ticket e sem multiplicador por nível;
+  - a Batalha paga 500 XP fixos na vitória e nada na derrota;
+  - tickets nunca ficam negativos: com saldo zero, os modos do DDX que cobram ticket ficam indisponíveis.
 - [Revisão Inteligente v2](revisao-inteligente.md#versão-2-decidida-em-07102026-ainda-não-implementada):
-  - uma carta por modo, sem os erros da cruzadinha;
+  - quatro cartas (Quiz, V ou M, Erro médico e Paciente DDX), sem os erros da cruzadinha;
   - sessões de 7 itens (os erros mais itens parecidos);
-  - tela de revisão com as duas respostas do jogador e a explicação de cada alternativa;
+  - tela de revisão com as duas respostas do jogador e a explicação;
   - refazer casos do Erro médico e do Paciente DDX;
-  - LLM gratuita (Qwen 3.8 pelo opencode) para ajudar no conteúdo.
+  - a explicação é escrita na hora por uma LLM gratuita (Qwen pela OpenRouter, por API), com cache e fallback para a explicação revisada.
 - [App offline](app-offline.md):
   - todo o conteúdo funciona offline;
   - detecção de rede e fila que sincroniza quando a rede volta;
-  - tickets do DDX consumidos offline;
+  - tickets do DDX consumidos offline, sem saldo negativo;
   - sessão de 15 dias sem rede.
 
 A ordem segue as dependências:
 - a economia vem antes do offline, porque o aparelho calcula o XP com os mesmos motores do servidor;
-- o conteúdo da Revisão pode começar em paralelo;
+- a rota de IA e o conteúdo da Revisão podem começar em paralelo;
 - a Revisão v2 vem antes do offline, porque também precisa funcionar sem rede.
 
 ### Fase 0 — Arrumação
 
+- [ ] **Dicas de IA da cruzadinha quebradas em produção:**
+  - `/api/ia` só existe no servidor local (`server/index.js`) e respondeu 404 em `https://caca-med.vercel.app` em 07/10/2026;
+  - mover a chamada à OpenRouter para a Edge Function, com a chave nos segredos do Supabase;
+  - a mesma rota atende a Revisão v2.
 - [ ] Juntar a limpeza de CSS da outra sessão:
   - commit `4c7f0b8` na branch `claude/vigorous-vaughan-957477`, ainda não enviado;
   - remove os estilos `stitch-*` e `treino-*` sem uso e reduz `src/index.css` de 414 para 168 linhas;
@@ -41,41 +46,49 @@ A ordem segue as dependências:
 
 ### Fase 1 — Economia v3
 
-- [ ] Responder as 10 [perguntas em aberto](economia-v3.md#perguntas-em-aberto): 100 XP fixos ou proporcionais, bônus do Quiz e do V ou M, bônus de tempo da cruzadinha, teto e quebra da ofensiva, XP e tickets por nível de missão, modos e bônus do DDX, "nível" do Paciente DDX, ticket do Paciente DDX e curva de nível.
-- [ ] Criar o contador de ofensiva de login, no fuso America/Sao_Paulo.
+- [ ] Responder as 5 [perguntas em aberto](economia-v3.md#perguntas-em-aberto): rodada com zero acerto, valores dos bônus, quebra da ofensiva, XP e tickets por nível de missão, e curva de nível.
+- [ ] 100 XP fixos + bônus de performance na cruzadinha, no Quiz e no V ou M; tempo do Quiz e do V ou M medido pelo servidor, fora da tela e do relatório.
+- [ ] 300 XP + bônus em Plantão, Erro médico, Causa e efeito e Paciente DDX (este sem ticket).
+- [ ] Batalha: 500 XP fixos na vitória e zero na derrota.
+- [ ] Bloquear os modos do DDX que cobram ticket quando o saldo é zero.
+- [ ] Criar o contador de ofensiva de login, no fuso America/Sao_Paulo, e a missão de login sem teto.
 - [ ] Criar as missões classificadas de 0 a 5 e o sorteio diário.
 - [ ] Implementar `VERSAO_ECONOMIA = 3` nos motores compartilhados, com migração sem recompensa retroativa. Partidas iniciadas na v2 terminam na v2.
 - [ ] Publicar a Edge Function em versão nova e atualizar os textos de XP e tickets nas telas.
 - [ ] Testes de economia, migração e idempotência; homologação com dados fictícios.
 
-### Fase 2 — Conteúdo da Revisão v2 (em paralelo à Fase 1)
+### Fase 2 — LLM e conteúdo da Revisão v2 (em paralelo à Fase 1)
 
-- [ ] Montar o fluxo da LLM (Qwen pelo opencode): conferir a versão e os termos, e garantir que só vai conteúdo do banco, nunca dados de jogador.
-- [ ] Gerar rascunhos marcados `origem: 'rascunho-llm'` e `revisado: false`:
-  - explicação de cada alternativa errada do Quiz;
-  - explicação de cada frase do V ou M;
+- [ ] Ação na Edge Function que pede a explicação à OpenRouter (`qwen/qwen3.8-27b:free`, o modelo já usado nas dicas):
+  - prompt ancorado no item, no gabarito, na explicação revisada e nas respostas do jogador;
+  - sem dados pessoais e sem citar fontes.
+- [ ] Cache das explicações por item, versão e escolha; fallback para a explicação revisada sem rede, sem cota ou com falha.
+- [ ] Aviso "Explicação gerada por IA. Confira a fonte." e botão para reportar erro, que leva à revisão médica.
+- [ ] Medir o limite da cota gratuita da OpenRouter com o cache, antes de liberar para todos.
+- [ ] Conteúdo:
   - marcação de conceito para escolher itens parecidos;
-  - perguntas suficientes por conceito para completar sessões de 7;
-  - explicação completa dos casos do Erro médico;
-  - revisão detalhada dos casos do Paciente DDX, com fonte e página.
-- [ ] Revisão médica de todo rascunho antes de qualquer jogador vê-lo; aumentar a `versao` dos itens alterados.
+  - perguntas e frases suficientes por conceito para completar sessões de 7;
+  - conferir a explicação revisada dos casos do Erro médico.
 
 ### Fase 3 — Revisão Inteligente v2
 
-- [ ] Responder as 6 [perguntas em aberto](revisao-inteligente.md#perguntas-em-aberto): quinta carta, mais de 7 erros, falta de itens parecidos, o que é "errou" no Paciente DDX, recompensa e liberação, e LLM no app ou na produção.
+- [ ] Responder as 5 [perguntas em aberto](revisao-inteligente.md#perguntas-em-aberto): mais de 7 erros, falta de itens parecidos, o que é "errou" no Paciente DDX, recompensa e liberação, e destino dos itens da Batalha.
 - [ ] Registrar os erros do Erro médico e do Paciente DDX como itens da Revisão.
-- [ ] Tela de cartas por modo, com ícone e quantidade de erros pendentes.
-- [ ] Sessões de 7 itens no Quiz e no V ou M; tela de revisão com as duas respostas (mostrando uma só se forem iguais), a correta e a explicação de cada alternativa.
+- [ ] Tela com as quatro cartas, cada uma com o ícone do modo e a quantidade de erros pendentes.
+- [ ] Sessões de 7 itens no Quiz e no V ou M; tela de revisão com as duas respostas (mostrando uma só se forem iguais), a correta e a explicação.
 - [ ] Erro médico: refazer o mesmo caso e, se errar de novo, mostrar a explicação completa.
-- [ ] Paciente DDX: refazer os casos errados, mostrar a revisão detalhada e indicar a fonte.
+- [ ] Paciente DDX: refazer os casos errados, mostrar a revisão detalhada e indicar a fonte da biblioteca do caso.
 - [ ] Manter a repetição espaçada (1, 3 e 7 dias; teto de duas por semana) para todos os modos.
 
 ### Fase 4 — App offline
 
 - [ ] Detecção de rede, fila em IndexedDB e ação `sincronizarFila` idempotente na Edge Function, começando pelo Quiz.
-- [ ] Pacote de conteúdo versionado no aparelho, medindo o tamanho antes de escolher entre baixar tudo de uma vez ou por modo.
+- [ ] Pacote de conteúdo versionado no aparelho, incluindo o cache das explicações da LLM, medindo o tamanho antes de escolher entre baixar tudo de uma vez ou por modo.
 - [ ] V ou M e Revisão offline; depois a cruzadinha (sem dicas de IA offline); depois o DDX.
-- [ ] Tickets do DDX offline com saldo local. Decidir se o saldo pode ficar negativo (proposta: dívida paga pelos próximos tickets).
+- [ ] Tickets do DDX offline:
+  - saldo local igual ao confirmado menos os consumos na fila, sem contar ganhos provisórios;
+  - bloqueio com saldo zero;
+  - recusa da admissão que chegar ao servidor com saldo zero, sem saldo negativo.
 - [ ] Sessão válida por 15 dias sem rede; fila presa ao UID; aviso ao sair com itens pendentes.
 - [ ] Regras de data e de conflito entre aparelhos; pedir armazenamento persistente.
 

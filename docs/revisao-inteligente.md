@@ -8,14 +8,13 @@ O usuário redefiniu o modo. As seções seguintes descrevem o piloto em vigor, 
 
 ### Entrada por cartas
 
-A Revisão reúne todos os erros do jogador num só lugar. A tela inicial mostra uma carta por modo, com o ícone do modo e quantos erros estão pendentes:
+A Revisão reúne todos os erros do jogador num só lugar. A tela inicial mostra **quatro cartas**, uma por modo, com o ícone do modo e quantos erros estão pendentes:
 - Quiz;
 - Verdade ou mentira;
 - DDX Erro médico;
-- Paciente DDX;
-- uma quinta carta, ainda em aberto (ver abaixo).
+- Paciente DDX.
 
-**Os erros da cruzadinha ficam de fora.**
+**Os erros da cruzadinha ficam de fora.** Plantão e Causa e efeito também não têm carta.
 
 Exemplo do usuário: o jogador errou as perguntas alfa, beta e gama do Quiz, o caso teta do Erro médico, o caso tau do Paciente DDX e uma frase do V ou M. A carta do Quiz abre uma sessão com alfa, beta e gama mais quatro perguntas parecidas.
 
@@ -27,59 +26,57 @@ Exemplo do usuário: o jogador errou as perguntas alfa, beta e gama do Quiz, o c
   - a pergunta;
   - a alternativa que ele marcou na partida e a que marcou na revisão. Se as duas forem iguais, aparece só uma. Numa pergunta parecida, que não veio de partida, aparece só a da revisão;
   - a alternativa correta;
-  - abaixo de cada alternativa, a explicação de por que ela não é a resposta.
+  - abaixo das alternativas, a explicação de por que cada alternativa marcada não é a resposta. Essa explicação é escrita pela LLM ([abaixo](#llm-na-tela-de-revisão)).
 - **Repetição espaçada:** a pergunta errada continua guardada para repetir. Vale a regra atual de 1, 3 e 7 dias, com teto de duas revisões por semana. Uma pergunta parecida que ele errar também entra na fila.
 
 ### Verdade ou mentira
 
-Igual ao Quiz: 7 frases (os erros mais frases parecidas) e a mesma tela de revisão, com a explicação de cada frase.
+Igual ao Quiz: 7 frases (os erros mais frases parecidas) e a mesma tela de revisão, com a explicação da LLM para cada frase errada.
 
 ### DDX Erro médico
 
 - O jogador refaz **o mesmo caso**.
-- Se errar de novo, recebe a explicação completa do caso, dizendo por que a alternativa escolhida estava errada em cada etapa.
+- Se errar de novo, recebe a explicação completa do caso, escrita pela LLM a partir do conteúdo do caso, dizendo por que a alternativa escolhida estava errada em cada etapa.
 
 ### Paciente DDX
 
 É o mais complexo.
 - O jogador refaz os casos que errou.
-- Depois, recebe uma revisão detalhada de cada caso: o que deixou de investigar, a hipótese e a conduta, com o que marcou de errado e o que deixou de marcar.
-- Por fim, recebe a indicação de uma fonte para estudar, com a página.
+- Depois, recebe uma revisão detalhada de cada caso, escrita pela LLM a partir do conteúdo e do gabarito: o que deixou de investigar, a hipótese e a conduta, com o que marcou de errado e o que deixou de marcar.
+- Por fim, recebe a indicação de uma fonte para estudar, com a página. A fonte vem da biblioteca do caso, nunca da LLM, para não citar uma fonte inventada.
+
+### Itens da Batalha já na fila
+
+Desde 06/10/2026, os erros da Batalha diagnóstica geram itens de revisão de múltipla escolha. Como só há quatro cartas, a proposta é eles entrarem na carta do Quiz (ver perguntas em aberto).
+
+### LLM na tela de revisão
+
+Decidido em 07/10/2026: a LLM **escreve a revisão para o jogador dentro do app**, por API. Não é usada para escrever rascunhos de conteúdo.
+
+O projeto já usa a OpenRouter com o modelo `qwen/qwen3.8-27b:free` nas dicas de IA da cruzadinha, via `server/index.js` (rota `/api/ia`). **Essa rota só existe no servidor local:** em produção, `https://caca-med.vercel.app/api/ia` respondeu 404 em 07/10/2026. As dicas de IA não funcionam no site publicado, e a revisão não pode usar essa rota como está.
+
+Como deve funcionar:
+- **Chamada pelo servidor.** O pedido vai para a Edge Function `cacamed-api` (por exemplo, a ação `explicarRevisao`), e a chave da OpenRouter fica nos segredos do Supabase. Nunca no aparelho. A mesma rota passa a atender as dicas da cruzadinha.
+- **Ancorada no conteúdo.** O prompt leva o enunciado, as alternativas, o gabarito, a explicação revisada do banco, a fonte e as respostas do jogador. A LLM é instruída a explicar só com base nisso e a não citar fontes.
+- **Nada pessoal.** Vão só o item e as escolhas, nunca nome, e-mail ou UID.
+- **Cache.** A resposta é guardada por item, versão e escolha. Dois jogadores que erraram a mesma alternativa recebem a mesma explicação, o que poupa a cota gratuita e deixa o texto consistente. O cache também vai para o pacote offline.
+- **Sem rede, sem cota ou com falha:** a tela mostra a explicação revisada do banco, e a da LLM aparece quando estiver disponível.
+- **Aviso na tela:** "Explicação gerada por IA. Confira a fonte." e um botão para reportar erro. Os reportes vão para revisão médica e podem apagar a explicação do cache.
+- **Limites:** o plano gratuito da OpenRouter tem limite de pedidos. Com o cache por item, a escolha e o limite devem ser medidos antes de liberar para todos.
 
 ### Conteúdo necessário
 
-O banco de hoje não tem tudo isso:
-- **Quiz:** uma explicação para cada alternativa errada de cada pergunta.
-- **V ou M:** a explicação de cada frase.
-- **Perguntas e frases parecidas:** uma marcação de conceito ou tema para escolhê-las. Também é preciso ter perguntas suficientes por conceito.
-- **Erro médico:** a explicação completa de cada caso.
-- **Paciente DDX:** o texto de revisão detalhada de cada caso.
+- **Perguntas e frases parecidas:** uma marcação de conceito ou tema para escolhê-las, e perguntas suficientes por conceito para completar sessões de 7.
+- **Explicação revisada de cada item e de cada caso:** a base que ancora a LLM e o texto que aparece quando ela não está disponível. Quiz, V ou M e Paciente DDX já têm explicação e fonte; falta conferir o Erro médico.
 - **Erros do Erro médico e do Paciente DDX:** passam a ser registrados como itens da Revisão. Hoje só Quiz, V ou M e a Batalha alimentam a fila.
-
-### LLM gratuita para o conteúdo
-
-O usuário quer usar uma LLM gratuita (Qwen 3.8 pelo opencode) para ajudar no conteúdo da revisão.
-
-Proposta: usar a LLM **na produção do conteúdo**, não dentro do app:
-- ela escreve rascunhos das explicações por alternativa, das perguntas parecidas e das revisões de caso;
-- cada rascunho entra no banco marcado `origem: 'rascunho-llm'` e `revisado: false`;
-- o jogador só vê o texto depois da revisão médica.
-
-Motivos para não usar a LLM dentro do app:
-- o app precisa funcionar offline ([app offline](app-offline.md));
-- uma explicação médica gerada na hora não passa por revisão e pode estar errada;
-- rodar a LLM para os jogadores exige servidor e custo.
-
-A versão do modelo e os termos de uso são conferidos quando o fluxo for montado. Para a LLM vai só o conteúdo do banco, nunca dados de jogadores.
 
 ### Perguntas em aberto
 
-1. **A quinta carta:** Batalha diagnóstica (que já gera itens de revisão), Causa e efeito ou Plantão?
-2. **Mais de 7 erros pendentes:** proposta de pegar os 7 de maior prioridade e deixar o resto para a próxima sessão.
-3. **Faltam perguntas parecidas** para completar 7: a sessão fica menor, ou completa com perguntas do mesmo tema geral?
-4. **O que conta como "errou" no Paciente DDX:** nota abaixo de um corte (por exemplo 70) ou qualquer item errado?
-5. **Recompensa e liberação:** a Revisão continua sem XP e sem ticket? Ela sai do piloto do administrador e é liberada para todos com esta versão?
-6. **LLM no app ou na produção:** a ideia é a LLM ajudar na produção do conteúdo, como proposto acima, ou responder ao jogador dentro do app?
+1. **Mais de 7 erros pendentes:** proposta de pegar os 7 de maior prioridade e deixar o resto para a próxima sessão.
+2. **Faltam perguntas parecidas** para completar 7: a sessão fica menor, ou completa com perguntas do mesmo tema geral?
+3. **O que conta como "errou" no Paciente DDX:** nota abaixo de um corte (por exemplo 70) ou qualquer item errado?
+4. **Recompensa e liberação:** a Revisão continua sem XP e sem ticket? Ela sai do piloto do administrador e é liberada para todos com esta versão?
+5. **Itens da Batalha:** entram na carta do Quiz, ou deixam de ser gerados?
 
 ## Experiência e decisões
 

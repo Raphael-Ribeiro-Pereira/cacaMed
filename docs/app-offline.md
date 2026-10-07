@@ -71,13 +71,17 @@ Cada modo corrige e pontua no aparelho com os motores de `src/utils` e `src/shar
 
 - **Dicas de IA da cruzadinha (nível 3 em diante):** ficam indisponíveis offline. Só as dicas estáticas funcionam.
 - **Ranking:** mostra a última versão guardada, com a data.
+- **Explicações por IA da Revisão Inteligente:** dependem de rede. Offline, a tela de revisão mostra a explicação guardada de cada item, que é revisada. Ao voltar a rede, o jogador pode pedir a explicação da IA ([Revisão v2](revisao-inteligente.md#llm-na-tela-de-revisão)).
 
 ### Tickets do DDX offline
 
-- O aparelho guarda o saldo confirmado pelo servidor e calcula um saldo local: confirmado, menos os consumos na fila, mais os ganhos provisórios na fila.
+Decidido em 07/10/2026: **o saldo nunca fica negativo.** Com saldo zero, os modos do DDX que cobram ticket ficam indisponíveis, online ou offline.
+
+- O aparelho guarda o saldo confirmado pelo servidor e calcula o saldo local: o confirmado menos os consumos que estão na fila.
+- **Tickets ganhos offline não entram nessa conta** até o servidor confirmar. Um ganho provisório pode ser recusado, e contar com ele faria o saldo ficar negativo.
 - A admissão offline só é permitida com saldo local de pelo menos 1. Ela usa o `entradaId` de sempre, então o reenvio não cobra duas vezes.
-- O servidor processa a fila na ordem. Os tickets ganhos antes da admissão entram antes do consumo.
-- **Em aberto:** o saldo pode ficar negativo, por exemplo porque outro aparelho gastou tickets ou porque um ganho provisório foi recusado. Proposta: o servidor aceita o caso e registra a dívida, que é paga pelos próximos tickets ganhos. O XP do caso é mantido.
+- Com saldo local zero, o hub mostra os modos que cobram ticket como bloqueados. Se houver tickets ganhos offline esperando confirmação, avisa que eles liberam o modo quando a rede voltar.
+- **Dois aparelhos offline gastando o último ticket:** o servidor processa a fila na ordem. Se o saldo já estiver em zero quando a admissão chegar, ela é recusada: o caso não paga XP e aparece em "não enviados" com o motivo "sem ticket na sincronização". O saldo nunca vai abaixo de zero. Esse é o único caso de recusa por ticket, porque o aparelho já bloqueia sozinho com saldo zero.
 
 ### Sessão de 15 dias
 
