@@ -1,6 +1,6 @@
 # Migração para Supabase — 30/09/2026
 
-Status atual (06/10/2026): API `cacamed-api` versão 11 publicada, com Batalha, Coroas, histórico das Estatísticas e username único. Situação de 30/09: banco e API versão 4 publicados no projeto separado `caca-med` (`lruzndfqfivlvcckvgbw`), região São Paulo (`sa-east-1`). Frontend local ativado e todos os modos homologados contra a API real. Custo de criação informado e confirmado: US$ 0/mês. Nenhuma tabela do projeto `eu-jogo-tu-jogas` foi modificada.
+Status atual (06/10/2026): API `cacamed-api` versão 12 publicada, com Batalha, Coroas, histórico das Estatísticas, username único e Paciente DDX (`concluirCasoPaciente`, só administrador). Situação de 30/09: banco e API versão 4 publicados no projeto separado `caca-med` (`lruzndfqfivlvcckvgbw`), região São Paulo (`sa-east-1`). Frontend local ativado e todos os modos homologados contra a API real. Custo de criação informado e confirmado: US$ 0/mês. Nenhuma tabela do projeto `eu-jogo-tu-jogas` foi modificada.
 
 ## Situação consolidada
 
