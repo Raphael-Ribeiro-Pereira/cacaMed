@@ -27,3 +27,13 @@ Desde 07/10/2026 o cacoMed pode ser instalado na tela inicial do celular, sem lo
 ## Conferido
 
 Em 07/10/2026, na build de produção servida localmente: service worker ativo e controlando a página, manifesto válido, ícones nos tamanhos certos, 16 arquivos da build guardados e o app abrindo a tela de login com o servidor desligado. A instalação num aparelho real depende da publicação.
+
+## Publicação
+
+Publicado em produção em 07/10/2026, a pedido do usuário: deploy `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa`, commit 8e08a63, em https://caca-med.vercel.app. Esse deploy também levou as telas de jogo portadas (ver `docs/telas-de-jogo.md`). Conferido no site público:
+- manifesto, `sw.js` e ícones respondendo 200, com os tipos certos;
+- `sw.js` com `Cache-Control: no-cache`;
+- service worker ativo e controlando a página;
+- tela de login abrindo, sem erros no console.
+
+A instalação num aparelho real e o login com a conta real ainda não foram testados por mim. Para voltar à versão anterior, promover `dpl_3SHAdbbc2VasNiycApMEBExtFKeF` (commit d028855). O service worker continua instalado nos aparelhos, mas as páginas vêm da rede primeiro, então a versão promovida aparece normalmente.

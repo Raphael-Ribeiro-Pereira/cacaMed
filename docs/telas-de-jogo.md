@@ -68,3 +68,7 @@ Homologação: "Testar DDX", "Garantir 3 tickets" e "Simular falha no próximo p
 - Erro médico com falha e reenvio na etapa 2;
 - Causa e efeito com a cadeia acendendo;
 - hub com "Concluído" e "Retomar".
+
+## Publicação
+
+Publicado em produção em 07/10/2026 junto com o app instalável: deploy `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa`, commit 8e08a63. A API não mudou (Edge Function continua na versão 12).
