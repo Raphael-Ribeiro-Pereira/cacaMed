@@ -51,3 +51,20 @@ Conferido em 07/10/2026 na homologação, no celular e na web:
 - Quiz completo nas duas variantes, com as teclas 1 a 4 e Enter, e o abandono pela folha;
 - Verdade ou mentira com cartões, revisão das marcações e resultado 5/5 com missões;
 - Revisão com cinco erros fictícios e a falha simulada, que retoma do item seguinte depois de consultar a revisão salva.
+
+## DDX: hub, admissão, Plantão, Erro médico e Causa e efeito
+
+Arquivos: `PlantaoMedico.jsx` (hub, admissão, Plantão e resultado), `EtapasDdx.jsx` (Erro médico e Causa e efeito, que viraram invólucros dele), `ddxUi.jsx` (monitor e cadeia) e `src/utils/ddxVisual.js` (com testes).
+
+- **Hub:** o monitor da paciente com os sinais vitais lidos do texto do caso e os três modos. As regras vêm dos dados: o caminho completo do Plantão é calculado com o motor real (250 XP), e Erro médico e Causa e efeito valem até 100 XP. Cada modo mostra se já foi concluído (repetir não dá XP) e se há uma partida em andamento ("Retomar", sem cobrar ticket). Para quem não é administrador, os botões ficam travados "Em revisão clínica" enquanto o conteúdo não tiver revisão. Batalha e Paciente DDX aparecem como os cartões "secretos" do protótipo, só para o administrador.
+- **Admissão:** o ticket é cobrado em `iniciarPlantao`, `iniciarAuditoria` ou `iniciarRelacao` enquanto o monitor liga, por pelo menos 1,7 s. Se falhar, "Tentar de novo" reenvia o mesmo id, sem cobrar outro ticket. Corrigido em relação ao protótipo: lá a temperatura nunca acendia, porque a contagem parava antes do quinto valor.
+- **Plantão:** as três colunas do protótipo na web (monitor, ações por grupo e prontuário); no celular, uma coluna. As ações respondem no aparelho com o mesmo motor do servidor. A reavaliação e o encerramento gravam com um selo ("Salvando", "Salvo", "Falhou. Toque para reenviar") em vez de travar a tela. Depois de reavaliar, o monitor mostra os sinais novos. Sair com ações não gravadas abre uma folha com três opções: salvar e sair, sair sem salvar ou continuar. O antigo botão "Salvar progresso" saiu.
+- **Erro médico e Causa e efeito:** o prontuário auditado (com a hora de cada registro) ou o cenário com a cadeia causal fica ao lado da etapa na web. A etapa seguinte abre na hora e as alternativas entram no ritmo previsto da gravação. A confirmação seguinte espera a anterior gravar; se ela falhar, aparece "Etapa N não gravou. Toque para reenviar". Os nomes curtos das etapas e os rótulos da cadeia ("Poeira", "Broncoespasmo"...) são só de exibição e resumem as perguntas, sem gabarito.
+- **Resultado:** o extrato do protótipo. No Plantão: raciocínio, segurança, eficiência e desconto, com o relatório de segurança, as omissões e a referência. Nas etapas: uma linha por etapa, a cadeia colorida e a explicação de cada uma. O XP mostrado é o confirmado pelo servidor; a repetição aparece como ×0.
+
+Homologação: "Testar DDX", "Garantir 3 tickets" e "Simular falha no próximo pedido". Conferido em 07/10/2026 no celular e na web:
+- Plantão completo e seguro (210 XP), com a reavaliação gravando e o monitor trocando os sinais;
+- confirmação de alta e saída com "Salvar e sair";
+- Erro médico com falha e reenvio na etapa 2;
+- Causa e efeito com a cadeia acendendo;
+- hub com "Concluído" e "Retomar".
