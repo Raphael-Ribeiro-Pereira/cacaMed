@@ -8,7 +8,7 @@ O usuário redefiniu o modo. As seções seguintes descrevem o piloto em vigor, 
 
 ### Entrada por cartas
 
-A Revisão reúne todos os erros do jogador num só lugar. A tela inicial mostra **quatro cartas**, uma por modo, com o ícone do modo e quantos erros estão pendentes:
+A Revisão reúne todos os erros do jogador num só lugar. A tela inicial mostra cartas de **quatro modos**, cada uma com o ícone do modo e quantos erros estão pendentes:
 - Quiz;
 - Verdade ou mentira;
 - DDX Erro médico;
@@ -16,11 +16,20 @@ A Revisão reúne todos os erros do jogador num só lugar. A tela inicial mostra
 
 **Os erros da cruzadinha ficam de fora.** Plantão e Causa e efeito também não têm carta.
 
+**Mais de 7 erros viram mais cartas.** No Quiz e no V ou M, cada carta leva até 7 erros. Exemplo: com 10 erros no Quiz, aparecem duas cartas com o ícone do Quiz. A primeira tem os 7 erros de maior prioridade. A segunda tem os 3 restantes e mais 4 perguntas parecidas.
+
+No Erro médico e no Paciente DDX, a proposta é uma carta por modo, com os casos errados em sequência.
+
+**Liberação no nível 10.** A Revisão só abre a partir do nível 10, para filtrar quem está só testando o jogo. Abaixo disso, a entrada aparece bloqueada com "Libera no nível 10". O administrador continua com acesso. Os erros são registrados desde o nível 1, então a fila já está pronta quando o jogador chega ao nível 10.
+
 Exemplo do usuário: o jogador errou as perguntas alfa, beta e gama do Quiz, o caso teta do Erro médico, o caso tau do Paciente DDX e uma frase do V ou M. A carta do Quiz abre uma sessão com alfa, beta e gama mais quatro perguntas parecidas.
 
 ### Quiz
 
-- **Sessão de 7 perguntas:** os erros pendentes, completados com perguntas parecidas (mesmo conceito ou tema) até chegar a 7.
+- **Sessão de 7 perguntas:** os erros da carta, completados com perguntas parecidas até chegar a 7. As parecidas são escolhidas nesta ordem:
+  1. mesmo conceito;
+  2. mesmo tema;
+  3. **palavras iguais** no enunciado, quando faltam perguntas dos dois critérios anteriores. A comparação ignora palavras curtas e comuns ("de", "o", "com" etc.).
 - **Acertou tudo:** volta para as cartas.
 - **Errou alguma:** abre a tela de revisão. Para cada pergunta errada, ela mostra:
   - a pergunta;
@@ -31,7 +40,7 @@ Exemplo do usuário: o jogador errou as perguntas alfa, beta e gama do Quiz, o c
 
 ### Verdade ou mentira
 
-Igual ao Quiz: 7 frases (os erros mais frases parecidas) e a mesma tela de revisão, com a explicação da LLM para cada frase errada.
+Igual ao Quiz: cartas de até 7 frases (os erros mais frases parecidas, escolhidas pelos mesmos critérios) e a mesma tela de revisão, com a explicação da LLM para cada frase errada.
 
 ### DDX Erro médico
 
@@ -41,13 +50,51 @@ Igual ao Quiz: 7 frases (os erros mais frases parecidas) e a mesma tela de revis
 ### Paciente DDX
 
 É o mais complexo.
-- O jogador refaz os casos que errou.
+- O jogador refaz os casos em que cometeu **erro grave** (definição abaixo).
 - Depois, recebe uma revisão detalhada de cada caso, escrita pela LLM a partir do conteúdo e do gabarito: o que deixou de investigar, a hipótese e a conduta, com o que marcou de errado e o que deixou de marcar.
 - Por fim, recebe a indicação de uma fonte para estudar, com a página. A fonte vem da biblioteca do caso, nunca da LLM, para não citar uma fonte inventada.
 
-### Itens da Batalha já na fila
+#### O que é erro grave no Paciente DDX
 
-Desde 06/10/2026, os erros da Batalha diagnóstica geram itens de revisão de múltipla escolha. Como só há quatro cartas, a proposta é eles entrarem na carta do Quiz (ver perguntas em aberto).
+Decidido em 07/10/2026: o caso entra na Revisão quando o jogador comete um **erro grave**, e não por causa da nota. Uma nota alta não livra o caso de um erro grave, e uma nota baixa sem erro grave não entra.
+
+Proposta de definição, a confirmar na revisão médica. É erro grave:
+1. escolher a **hipótese errada**;
+2. marcar uma **conduta errada que causa dano ou atraso**;
+3. deixar de marcar uma **conduta essencial**.
+
+Não é erro grave:
+- deixar de fazer uma pergunta ou pedir um exame-chave;
+- deixar de marcar uma conduta complementar.
+
+Esses itens continuam baixando a nota, como hoje, e aparecem no resultado do caso.
+
+Exemplo com o caso real "Infarto com supra de ST" (`iamcsst`). As notas foram calculadas com `avaliarRespostas`:
+
+| Jogador | O que fez | Nota | Entra na Revisão? |
+| --- | --- | --- | --- |
+| A | Pulou 2 das 4 perguntas-chave (fatores de risco e se a dor muda ao respirar). Hipótese certa. Marcou ECG, AAS e reperfusão, mas não marcou a morfina | 78 | **Não**: os erros dele são de investigação e de conduta complementar |
+| B | Investigação completa, hipótese certa, todas as condutas certas, mas marcou também "Aguardar a troponina para decidir o tratamento" | 94 | **Sim**: esperar a troponina atrasa a reperfusão do infarto |
+| C | Investigação completa e todas as condutas certas, mas escolheu "Dissecção de aorta" como hipótese | 75 | **Sim**: hipótese errada |
+
+Para isso funcionar, cada conduta do gabarito ganha a marcação `grave`:
+- conduta certa e essencial: deixar de marcar é grave. No exemplo: ECG em 10 minutos, AAS e reperfusão;
+- conduta errada e perigosa: marcar é grave. No exemplo: aguardar a troponina e o teste ergométrico.
+
+Essas marcações entram em `pacienteDdxGabarito.js`, gerado por `scripts/gerar-gabarito-paciente.mjs`, e precisam de revisão médica caso a caso.
+
+### Itens da Batalha: pendência
+
+Desde 06/10/2026, os erros da Batalha diagnóstica geram itens de revisão de múltipla escolha no piloto atual. A Revisão v2 não tem carta para eles, e o usuário decidiu em 07/10/2026 **deixar isso como pendência**.
+
+Até a decisão:
+- os itens continuam sendo gerados e guardados, sem perder histórico;
+- eles não aparecem nas cartas da v2.
+
+Opções para decidir depois:
+- entrar nas cartas do Quiz;
+- ganhar uma carta própria;
+- deixar de ser gerados.
 
 ### LLM na tela de revisão
 
@@ -69,14 +116,25 @@ Como deve funcionar:
 - **Perguntas e frases parecidas:** uma marcação de conceito ou tema para escolhê-las, e perguntas suficientes por conceito para completar sessões de 7.
 - **Explicação revisada de cada item e de cada caso:** a base que ancora a LLM e o texto que aparece quando ela não está disponível. Quiz, V ou M e Paciente DDX já têm explicação e fonte; falta conferir o Erro médico.
 - **Erros do Erro médico e do Paciente DDX:** passam a ser registrados como itens da Revisão. Hoje só Quiz, V ou M e a Batalha alimentam a fila.
+- **Marcação `grave`** nas condutas do Paciente DDX, com revisão médica.
+
+### XP da Revisão: opções para o usuário escolher
+
+Hoje a Revisão não dá XP nem ticket. Opções:
+
+1. **Sem XP, como hoje.** O ganho é estudar. É simples e não tem como explorar, mas o jogador tem menos motivo para voltar.
+2. **XP fixo por carta concluída**, por exemplo 50. É fácil de entender, mas premia repetir cartas, não aprender.
+3. **XP por erro recuperado:** +15 por item que o jogador errou no jogo e acertou na revisão. As perguntas parecidas não pagam. Premia a correção, mas o jogador pode errar de propósito no jogo para ganhar depois (o jogo pagaria menos, então o ganho é pequeno).
+4. **XP por item dominado:** +40 quando o item completa o ciclo de repetição (o acerto seguido no intervalo de 7 dias). Premia memória de verdade. Como há o teto de duas revisões por semana, não tem como explorar.
+5. **Missões:** a Revisão não paga XP direto, mas uma das missões diárias pode ser "conclua uma carta da Revisão".
+
+Recomendação: **4 + 5**. Premia o que a Revisão quer ensinar, não pode ser explorado e liga a Revisão à rotina diária. Ticket continua sem ganho e sem custo.
 
 ### Perguntas em aberto
 
-1. **Mais de 7 erros pendentes:** proposta de pegar os 7 de maior prioridade e deixar o resto para a próxima sessão.
-2. **Faltam perguntas parecidas** para completar 7: a sessão fica menor, ou completa com perguntas do mesmo tema geral?
-3. **O que conta como "errou" no Paciente DDX:** nota abaixo de um corte (por exemplo 70) ou qualquer item errado?
-4. **Recompensa e liberação:** a Revisão continua sem XP e sem ticket? Ela sai do piloto do administrador e é liberada para todos com esta versão?
-5. **Itens da Batalha:** entram na carta do Quiz, ou deixam de ser gerados?
+1. **XP da Revisão:** escolher entre as opções acima.
+2. **Itens da Batalha:** pendência registrada acima.
+3. **Erro grave:** confirmar a definição e o exemplo acima, e fazer a revisão médica das marcações.
 
 ## Experiência e decisões
 

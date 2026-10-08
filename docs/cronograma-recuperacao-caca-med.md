@@ -4,18 +4,21 @@
 
 Em produção desde 07/10/2026: telas do protótipo em todos os modos e app instalável (deploy `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa`, API v12). Nesse dia o usuário tomou as decisões abaixo e pediu que fossem só documentadas e colocadas no cronograma, **sem código**.
 
-Decisões e especificações (perguntas respondidas pelo usuário no mesmo dia):
+Decisões e especificações (perguntas respondidas pelo usuário no mesmo dia, em duas rodadas):
 - [Economia v3](economia-v3.md):
-  - cruzadinha, Quiz e V ou M pagam 100 XP fixos + bônus de performance;
+  - cruzadinha, Quiz e V ou M pagam 100 XP fixos (mesmo com zero acerto) + bônus de até 50;
   - no Quiz e no V ou M, o tempo é contado em segundo plano, sem aparecer na tela nem no relatório;
-  - missão de login paga 25 × dias de ofensiva, sem teto por enquanto;
-  - as outras missões são classificadas de 0 a 5 por dificuldade;
-  - todos os modos do DDX pagam 300 XP + bônus, inclusive o Paciente DDX, que continua sem cobrar ticket e sem multiplicador por nível;
+  - missão de login paga 25 × dias de ofensiva, sem teto; pular um dia volta o multiplicador a 1;
+  - mais 4 missões por dia, de níveis 1 a 5, de 50 a 400 XP;
+  - a curva de nível continua `500 × (N − 1)²`, que já é escalonada;
+  - todos os modos do DDX pagam 300 XP + bônus de até 100, inclusive o Paciente DDX, que continua sem cobrar ticket e sem multiplicador por nível;
   - a Batalha paga 500 XP fixos na vitória e nada na derrota;
   - tickets nunca ficam negativos: com saldo zero, os modos do DDX que cobram ticket ficam indisponíveis.
 - [Revisão Inteligente v2](revisao-inteligente.md#versão-2-decidida-em-07102026-ainda-não-implementada):
-  - quatro cartas (Quiz, V ou M, Erro médico e Paciente DDX), sem os erros da cruzadinha;
-  - sessões de 7 itens (os erros mais itens parecidos);
+  - cartas de quatro modos (Quiz, V ou M, Erro médico e Paciente DDX), sem os erros da cruzadinha; mais de 7 erros viram mais cartas;
+  - sessões de 7 itens (os erros mais itens parecidos por conceito, tema ou palavras iguais);
+  - Paciente DDX entra na Revisão por erro grave, não pela nota;
+  - liberada a partir do nível 10;
   - tela de revisão com as duas respostas do jogador e a explicação;
   - refazer casos do Erro médico e do Paciente DDX;
   - a explicação é escrita na hora por uma LLM gratuita (Qwen pela OpenRouter, por API), com cache e fallback para a explicação revisada.
@@ -46,13 +49,13 @@ A ordem segue as dependências:
 
 ### Fase 1 — Economia v3
 
-- [ ] Responder as 5 [perguntas em aberto](economia-v3.md#perguntas-em-aberto): rodada com zero acerto, valores dos bônus, quebra da ofensiva, XP e tickets por nível de missão, e curva de nível.
-- [ ] 100 XP fixos + bônus de performance na cruzadinha, no Quiz e no V ou M; tempo do Quiz e do V ou M medido pelo servidor, fora da tela e do relatório.
+- [ ] Responder as 2 [perguntas em aberto](economia-v3.md#perguntas-em-aberto): limite contra abuso dos 100 XP fixos, e a tabela de missões.
+- [ ] 100 XP fixos + bônus de até 50 na cruzadinha, no Quiz e no V ou M; tempo do Quiz e do V ou M medido pelo servidor, fora da tela e do relatório.
 - [ ] 300 XP + bônus em Plantão, Erro médico, Causa e efeito e Paciente DDX (este sem ticket).
 - [ ] Batalha: 500 XP fixos na vitória e zero na derrota.
 - [ ] Bloquear os modos do DDX que cobram ticket quando o saldo é zero.
-- [ ] Criar o contador de ofensiva de login, no fuso America/Sao_Paulo, e a missão de login sem teto.
-- [ ] Criar as missões classificadas de 0 a 5 e o sorteio diário.
+- [ ] Criar o contador de ofensiva de login, no fuso America/Sao_Paulo, e a missão de login sem teto; pular um dia volta o multiplicador a 1.
+- [ ] Criar as missões de níveis 1 a 5 e o sorteio diário (níveis 1, 2 e 3, mais um de nível 4 ou 5).
 - [ ] Implementar `VERSAO_ECONOMIA = 3` nos motores compartilhados, com migração sem recompensa retroativa. Partidas iniciadas na v2 terminam na v2.
 - [ ] Publicar a Edge Function em versão nova e atualizar os textos de XP e tickets nas telas.
 - [ ] Testes de economia, migração e idempotência; homologação com dados fictícios.
@@ -72,10 +75,13 @@ A ordem segue as dependências:
 
 ### Fase 3 — Revisão Inteligente v2
 
-- [ ] Responder as 5 [perguntas em aberto](revisao-inteligente.md#perguntas-em-aberto): mais de 7 erros, falta de itens parecidos, o que é "errou" no Paciente DDX, recompensa e liberação, e destino dos itens da Batalha.
-- [ ] Registrar os erros do Erro médico e do Paciente DDX como itens da Revisão.
-- [ ] Tela com as quatro cartas, cada uma com o ícone do modo e a quantidade de erros pendentes.
-- [ ] Sessões de 7 itens no Quiz e no V ou M; tela de revisão com as duas respostas (mostrando uma só se forem iguais), a correta e a explicação.
+- [ ] Escolher o [XP da Revisão](revisao-inteligente.md#xp-da-revisão-opções-para-o-usuário-escolher) (recomendação: XP por item dominado + missão) e confirmar a definição de erro grave.
+- [ ] **Pendência registrada: itens da Batalha na Revisão.** Continuam sendo gerados e guardados, mas ficam fora das cartas até a decisão: cartas do Quiz, carta própria ou deixar de gerar.
+- [ ] Liberar a Revisão a partir do nível 10 (administrador sempre), registrando os erros desde o nível 1.
+- [ ] Registrar os erros do Erro médico e do Paciente DDX como itens da Revisão. No Paciente DDX, só os casos com erro grave: hipótese errada, conduta perigosa marcada ou conduta essencial esquecida.
+- [ ] Marcação `grave` nas condutas do gabarito do Paciente DDX, com revisão médica.
+- [ ] Tela de cartas: cada carta com o ícone do modo e a quantidade de erros; no Quiz e no V ou M, uma carta a cada 7 erros.
+- [ ] Sessões de 7 itens no Quiz e no V ou M, completadas por conceito, tema e, na falta, palavras iguais; tela de revisão com as duas respostas (mostrando uma só se forem iguais), a correta e a explicação.
 - [ ] Erro médico: refazer o mesmo caso e, se errar de novo, mostrar a explicação completa.
 - [ ] Paciente DDX: refazer os casos errados, mostrar a revisão detalhada e indicar a fonte da biblioteca do caso.
 - [ ] Manter a repetição espaçada (1, 3 e 7 dias; teto de duas por semana) para todos os modos.

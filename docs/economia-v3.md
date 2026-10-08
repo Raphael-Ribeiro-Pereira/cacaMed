@@ -9,12 +9,19 @@ Decidida pelo usuário em 07/10/2026. **Ainda não implementada.** A regra em vi
 | Cruzadinha | Fórmula de letras, palavras, dificuldade, tempo e dicas | 100 XP fixos + bônus de tempo | Sem mudança (2 por grade) |
 | Quiz | 20 ou 25 por acerto, até 100 ou 125 | 100 XP fixos + bônus de performance | Sem mudança |
 | Verdade ou mentira | 20 por classificação correta, até 100 | 100 XP fixos + bônus de performance | Sem mudança |
-| Missão de login diário | Não existe | 25 × dias de ofensiva, **sem teto** por enquanto | A definir |
-| Outras missões | 3 missões fixas, 50 XP e 1 ticket cada | Classificadas de 0 a 5 por dificuldade | A definir |
+| Missão de login diário | Não existe | 25 × dias de ofensiva, **sem teto** por enquanto | Não dá ticket |
+| Outras missões | 3 missões fixas, 50 XP e 1 ticket cada | 4 por dia, de 50 a 400 XP conforme o nível da missão | 1 ou 2 por missão |
 | Plantão, Erro médico e Causa e efeito | Plantão até 250; os outros dois até 100 | 300 XP + bônus | 1 por caso, como hoje |
 | Paciente DDX | Sem XP e sem ticket | 300 XP + bônus, como os outros modos do DDX | **Não cobra** |
 | Batalha diagnóstica | Fórmula aprovada em 06/10/2026 | **500 XP fixos na vitória; derrota não paga** | Sem mudança |
 | Revisão Inteligente | Sem XP e sem ticket | Sem mudança decidida | Gratuita |
+
+### 100 XP fixos e bônus
+
+- Os 100 XP são pagos em toda rodada concluída, **mesmo com zero acerto**. O usuário respondeu "sim" em 07/10/2026; ver o risco de abuso em [perguntas em aberto](#perguntas-em-aberto).
+- Bônus aceitos como propostos:
+  - **jogos:** até +50 XP. No Quiz e no V ou M, metade vem dos acertos e metade do tempo. Na cruzadinha, vem do tempo, com a penalidade de dicas;
+  - **DDX:** até +100 XP, por acertar de primeira e seguir o caminho seguro.
 
 ### Bônus de performance e cronômetro escondido
 
@@ -33,13 +40,51 @@ Com saldo zero, os modos do DDX que cobram ticket ficam indisponíveis. A tela m
 
 Interpretação registrada: o Paciente DDX e as partes gratuitas da Batalha (Treinamento e História) não cobram ticket, então continuam disponíveis com saldo zero.
 
-### Missões classificadas de 0 a 5
+### Missões diárias
 
-- **0:** login diário. Paga 25 XP × dias de ofensiva, sem teto.
-- **5:** as mais difíceis, como concluir uma partida dentro de um tempo específico, ou concluir um jogo de cada modo em menos de X tempo.
-- **1 a 4:** níveis intermediários, ainda a definir.
+São **5 por dia**: a de login e mais 4 novas, sorteadas assim:
+- uma de nível 1;
+- uma de nível 2;
+- uma de nível 3;
+- uma de nível 4 ou 5 (a de nível 5 sai em 1 a cada 3 dias).
 
-A ofensiva é um contador novo: dias seguidos com login, no fuso America/Sao_Paulo. O jogo hoje só conta dias seguidos de cruzadinha (`diasSeguidos` em `src/shared/operarJogosSupabase.js`), e esse contador não serve para a missão de login.
+O usuário deixou o balanceamento de XP comigo. Proposta:
+
+| Nível | Exemplos | XP | Ticket |
+| --- | --- | --- | --- |
+| 0 | Login diário | 25 × dias de ofensiva | — |
+| 1 | Concluir 1 rodada de qualquer jogo | 50 | 1 |
+| 2 | Concluir 3 rodadas; acertar 10 itens no Quiz ou no V ou M | 100 | 1 |
+| 3 | Concluir 1 caso do DDX; cruzadinha sem dica; rodada perfeita | 150 | 1 |
+| 4 | 3 rodadas perfeitas no dia; caso do DDX sem erro e com bônus máximo | 250 | 1 |
+| 5 | Um jogo de cada (cruzadinha, Quiz, V ou M e caso do DDX) em menos de 30 min; cruzadinha em menos de X minutos sem dica | 400 | 2 |
+
+Por dia, as missões somam 550 XP e 4 tickets, ou 700 XP e 5 tickets no dia de nível 5, além da ofensiva. Para comparar: um jogo paga de 100 a 150 XP, um caso do DDX de 300 a 400 e uma vitória na Batalha 500. A Batalha continua fora das missões, como na v2. Os tempos das missões de nível 5 usam o tempo medido pelo servidor.
+
+### Ofensiva
+
+- A ofensiva é um contador novo: dias seguidos com login, no fuso America/Sao_Paulo. O jogo hoje só conta dias seguidos de cruzadinha (`diasSeguidos` em `src/shared/operarJogosSupabase.js`), e esse contador não serve para a missão de login.
+- Quando o jogador pula um dia, o multiplicador volta a 1. **O resto continua normal:** XP, nível, tickets e as outras missões não mudam.
+
+### Curva de nível
+
+Mantida: `500 × (N − 1)²`. Ela já é escalonada, ou seja, cada nível pede mais XP que o anterior. O usuário considera que isso equilibra o XP maior da v3.
+
+| Nível | XP total | XP para chegar desde o nível anterior |
+| --- | --- | --- |
+| 2 | 500 | 500 |
+| 3 | 2.000 | 1.500 |
+| 4 | 4.500 | 2.500 |
+| 5 | 8.000 | 3.500 |
+| 6 | 12.500 | 4.500 |
+| 7 | 18.000 | 5.500 |
+| 8 | 24.500 | 6.500 |
+| 9 | 32.000 | 7.500 |
+| 10 | 40.500 | 8.500 |
+
+O nível 10 libera a Revisão Inteligente ([Revisão v2](revisao-inteligente.md#versão-2-decidida-em-07102026-ainda-não-implementada)). Estimativa para chegar lá jogando todo dia:
+- **Rotina diária considerada:** 2 rodadas de Quiz, 1 de V ou M, 1 cruzadinha, 1 caso novo do DDX e as missões. Isso dá cerca de 1.450 XP por dia, mais a ofensiva.
+- **Resultado:** cerca de **24 dias** até o nível 10.
 
 ### Regras mantidas da v2
 
@@ -51,16 +96,18 @@ As regras abaixo não foram discutidas e continuam como estão:
 
 ## Perguntas em aberto
 
-1. **Rodada com zero acerto paga os 100 fixos?** Proposta: não. Manter a regra de rodada válida (pelo menos um acerto), para ninguém acumular XP respondendo ao acaso.
-2. **Valores dos bônus.** Proposta: até +50 XP nos jogos e até +100 no DDX. No Quiz e no V ou M, metade vem dos acertos e metade do tempo. Na cruzadinha, vem do tempo, com a penalidade de dicas. No DDX, vem de acertar de primeira e seguir o caminho seguro.
-3. **Quebra da ofensiva.** Proposta: volta a 1. Alternativa: um "congelamento" de ofensiva comprado com ticket.
-4. **XP e tickets por nível de missão (1 a 5)** e quantas missões aparecem por dia. Proposta para discutir: 1 = 50, 2 = 75, 3 = 100, 4 = 150 e 5 = 200 XP, com 1 ticket nos níveis 1 a 3 e 2 tickets nos níveis 4 e 5.
-5. **Curva de nível.** Continua `500 × (N − 1)²`? Com mais XP por partida e a ofensiva sem teto, o jogador sobe de nível bem mais rápido, e cada nível novo dá N tickets.
+1. **Limite contra abuso.** Com 100 XP fixos mesmo com zero acerto e rodadas ilimitadas, dá para clicar sem ler. Cada rodada leva uns 30 segundos, então dá para chegar ao nível 10 em cerca de 4 horas. Isso fura o filtro de "nível 10 para quem não está só testando". Opções:
+   - os 100 fixos valem nas 5 primeiras rodadas de cada jogo por dia, e depois só o bônus;
+   - rodada com zero acerto não paga, que era a proposta anterior.
+
+   Recomendação: as duas juntas.
+2. **Missões:** confirmar a tabela de XP e os exemplos acima, e o tempo X da cruzadinha no nível 5.
 
 ## Implementação prevista
 
 - Regras novas em `src/utils/economia.js`, `missoes.js`, `treinos.js`, `batalha.js` e `pacienteDdx.js`, com `VERSAO_ECONOMIA = 3`. Os motores são compartilhados, então a Edge Function `cacamed-api` usa o mesmo cálculo e precisa ser publicada em versão nova.
 - A migração preserva XP, tickets e níveis já ganhos, sem recompensa retroativa. Partidas iniciadas na v2 terminam com a regra v2.
+- Sorteio das 4 missões diárias e a ofensiva no servidor, com o dia no fuso America/Sao_Paulo.
 - Atualizar os textos das telas que mostram valores:
   - XP estimado na seleção de tópicos;
   - regras dos cards do DDX;
