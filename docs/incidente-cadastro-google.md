@@ -37,3 +37,12 @@ Estado da conta depois das tentativas: e-mail confirmado, senha gravada, `senha_
 - A troca de senha pelo Supabase Auth não foi exercitada de ponta a ponta antes da publicação: isso exigiria criar uma conta real em produção. A confirmação é o jogador concluir o cadastro depois do deploy.
 - O cadastro por formulário de **qualquer jogador novo** depende do e-mail de confirmação. O SMTP padrão do Supabase só entrega para a equipe do projeto e tem limite baixo. Até configurar o SMTP público (pendência no [cronograma](cronograma-recuperacao-caca-med.md)), o caminho que funciona para jogadores de fora é o Google.
 - O jogador afetado tem uma senha gravada numa das tentativas. Se não lembrar qual foi, a recuperação por e-mail também depende do SMTP público.
+
+## Publicação (07/10/2026)
+
+- **Edge Function `cacamed-api` versão 13.** Os 23 arquivos publicados foram comparados com as cópias locais e são idênticos. Só os escapes `\u` de `coroas.js` e `importarBancoCSV.js` chegaram decodificados, o que dá o mesmo resultado (igual à v12). Ranking, coroas e palavras responderam 200. POST sem login e POST com token inválido responderam 401.
+- **Frontend na Vercel:** deploy `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx`, commit `75a82fa`.
+- **Para voltar atrás:**
+  - frontend: promover `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa` (commit `9a7396a`);
+  - API: a v12 tem a mesma interface, então o frontend anterior funciona com a v13.
+- **Confirmação final:** o jogador afetado entrar com o Google e concluir o cadastro. Como a conta dele já tem `senha_migrada`, o Cadastro 2.0 publicado não pede a senha de novo e segue direto para o registro.

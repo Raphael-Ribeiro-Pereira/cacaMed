@@ -36,7 +36,7 @@ A ordem segue as dependências:
 
 ### Fase 0 — Arrumação
 
-- [ ] **Publicar a correção do cadastro com Google** ([incidente de 07/10/2026](incidente-cadastro-google.md)): a senha criada no Cadastro 2.0 derrubava a sessão e o cadastro parava em "Entre novamente na conta". Precisa de Edge Function nova e frontend.
+- [x] **Publicar a correção do cadastro com Google** (API v13 e frontend `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx`, publicados em 07/10/2026; falta o jogador confirmar) ([incidente de 07/10/2026](incidente-cadastro-google.md)): a senha criada no Cadastro 2.0 derrubava a sessão e o cadastro parava em "Entre novamente na conta". Precisa de Edge Function nova e frontend.
 - [ ] **SMTP público:** sem ele, o cadastro por formulário e a recuperação de senha não entregam e-mail para jogadores de fora da equipe.
 - [ ] **Dicas de IA da cruzadinha quebradas em produção:**
   - `/api/ia` só existe no servidor local (`server/index.js`) e respondeu 404 em `https://caca-med.vercel.app` em 07/10/2026;
