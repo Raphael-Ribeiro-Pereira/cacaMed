@@ -52,11 +52,17 @@ async function identity(token) {
 }
 // Conversão gradual, somente após provar a identidade antiga. Não vincula por
 // um email enviado pelo cliente e não envia email de login automaticamente.
+// E-mail não verificado no Firebase só migra quando o administrador grava
+// profile.migracaoAprovada = true no perfil do jogador (o cliente não altera esse campo).
+async function migracaoAprovada(user) {
+  const rows = await database('cacamed_player_state?player_id=eq.' + encodeURIComponent(user.uid) + '&select=aprovada:profile->migracaoAprovada');
+  return rows[0]?.aprovada === true;
+}
 async function migrateIdentity(user) {
   if (user.source !== 'firebase') throw Object.assign(new Error('Esta conta já está no Supabase.'), { status: 400 });
-  if (!user.emailVerified) return { migrada: false, motivo: 'email_nao_verificado' };
   const filter = 'player_id=eq.' + encodeURIComponent(user.uid);
-  const rows = await database('cacamed_player_state?' + filter + '&select=auth_user_id');
+  const rows = await database('cacamed_player_state?' + filter + '&select=auth_user_id,aprovada:profile->migracaoAprovada');
+  if (!user.emailVerified && rows[0]?.aprovada !== true) return { migrada: false, motivo: 'email_nao_verificado' };
   if (!rows.length) return { migrada: false, motivo: 'cadastro_pendente' };
   let id = rows[0].auth_user_id;
   if (!id) {
@@ -115,6 +121,7 @@ async function palavras() {
 }
 const migratePassword = criarMigracaoSenha({
   vincular: migrateIdentity,
+  aprovada: migracaoAprovada,
   verificarSenha: async (email, password) => {
     const key = Deno.env.get('FIREBASE_WEB_API_KEY');
     if (!key) throw new Error('Migração de senha ainda não configurada.');

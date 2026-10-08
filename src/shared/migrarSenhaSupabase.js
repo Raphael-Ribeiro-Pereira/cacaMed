@@ -1,6 +1,7 @@
 // A senha nunca é persistida pelo jogo nem incluída em logs. O Firebase é a
 // autoridade para a primeira migração; senhas já migradas não são sobrescritas.
-export function criarMigracaoSenha({ verificarSenha, vincular, obterConta, atualizarConta }) {
+// E-mail não verificado no Firebase só migra com aprovação do administrador (aprovada).
+export function criarMigracaoSenha({ verificarSenha, vincular, obterConta, atualizarConta, aprovada = async () => false }) {
   return async (user, pedido) => {
     if (user.source !== 'firebase') {
       throw Object.assign(new Error('Esta conta já usa o Supabase.'), { status: 400 });
@@ -11,7 +12,7 @@ export function criarMigracaoSenha({ verificarSenha, vincular, obterConta, atual
     }
     const identidade = await verificarSenha(user.email, senha);
     if (identidade.uid !== user.uid) throw Object.assign(new Error('Credenciais inválidas.'), { status: 401 });
-    if (!user.emailVerified || !identidade.emailVerified) return { migrada: false, motivo: 'email_nao_verificado' };
+    if ((!user.emailVerified || !identidade.emailVerified) && !(await aprovada(user))) return { migrada: false, motivo: 'email_nao_verificado' };
     const vinculo = await vincular(user);
     if (!vinculo.migrada) return vinculo;
     const conta = await obterConta(user);

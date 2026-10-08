@@ -48,3 +48,10 @@ test('conta antiga não verificada continua no provedor antigo sem confirmar e-m
   assert.deepEqual(await migrar({ ...user, emailVerified: false }, { senha: 'senha-de-teste' }), { migrada: false, motivo: 'email_nao_verificado' });
   assert.equal(atualizacoes.length, 0);
 });
+test('conta não verificada migra com a senha quando o administrador aprova', async () => {
+  const consultas = [];
+  const { migrar, atualizacoes } = preparar({ aprovada: async u => { consultas.push(u.uid); return true; } });
+  assert.equal((await migrar({ ...user, emailVerified: false }, { senha: 'senha-de-teste' })).migrada, true);
+  assert.deepEqual(consultas, [user.uid]);
+  assert.equal(atualizacoes.length, 1);
+});
