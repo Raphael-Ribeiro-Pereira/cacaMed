@@ -104,7 +104,7 @@ export default function Cadastro({ setTelaAtual, onConcluido, aoCriarConta = () 
         setContaCriada(user);
       } catch (falha) {
         aoCriarConta(false);
-        setErro(falha.code === 'auth/email-already-in-use' ? 'Este e-mail já está escalado para outro plantão.' : 'Erro no sistema hospitalar. Tente novamente.');
+        setErro(falha.code === 'auth/email-already-in-use' ? 'Este e-mail já está escalado para outro plantão. Entre pela tela de login ou com o Google.' : 'Erro no sistema hospitalar. Tente novamente.');
         return;
       } finally {
         setBusy(false);

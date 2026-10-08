@@ -155,3 +155,16 @@ test('API bloqueia credencial inválida, origem desconhecida e corpo excessivo; 
   assert.equal((await api(new Request('https://test/api?acao=palavras'))).status, 200);
   assert.equal((await api(new Request('https://test/api', { method: 'OPTIONS', headers: { Origin: 'https://caca-med.vercel.app' } }))).status, 204);
 });
+
+test('definirSenha recebe o token da sessão para trocar a senha sem encerrá-la', async () => {
+  // Incidente de 07/10/2026: a troca pelo admin encerrava todas as sessões e o cadastro caía em seguida.
+  let recebido;
+  const api = criarApiSupabase({ database: async () => [], identity: async token => ({ uid: 'u1', authId: 'a1', source: 'supabase', token: undefined, tokenVisto: token }),
+    definePassword: async (user, pedido, token) => { recebido = { user, pedido, token }; return { sucesso: true }; },
+    palavras: async () => ({ banco: {} }), ranking: async () => [], migrateIdentity: async () => ({ migrada: false }) });
+  const r = await api(new Request('https://test/api', { method: 'POST', headers: { Authorization: 'Bearer sessao-atual', Origin: 'http://localhost:5174' },
+    body: JSON.stringify({ acao: 'definirSenha', senha: 'segredo1' }) }));
+  assert.equal(r.status, 200);
+  assert.equal(recebido.token, 'sessao-atual');
+  assert.equal(recebido.pedido.senha, 'segredo1');
+});

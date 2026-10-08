@@ -137,14 +137,29 @@ const migratePassword = criarMigracaoSenha({
     if (error) throw new Error('Não foi possível preservar a senha.');
   },
 });
-async function definePassword(user, pedido) {
-  if (user.source !== 'supabase' || !user.authId) throw Object.assign(new Error('Entre novamente para atualizar a senha.'), { status: 401 });
+// A senha muda pela sessão do próprio jogador: o Auth encerra as outras sessões e mantém a atual.
+// Pelo admin (updateUserById com password) o Auth encerrava todas, e o cadastro caía logo em seguida
+// com "Entre novamente na conta" (incidente de 07/10/2026).
+async function definePassword(user, pedido, token) {
+  if (user.source !== 'supabase' || !user.authId || !token) throw Object.assign(new Error('Entre novamente para atualizar a senha.'), { status: 401 });
   if (typeof pedido.senha !== 'string' || pedido.senha.length < 6 || pedido.senha.length > 4096) throw Object.assign(new Error('Senha inválida.'), { status: 400 });
+  const response = await fetch(base + '/auth/v1/user', { method: 'PUT', signal: AbortSignal.timeout(10000),
+    headers: { apikey: Deno.env.get('SUPABASE_ANON_KEY') || secret, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pedido.senha }) });
+  if (!response.ok) {
+    const { error_code: codigo } = await response.json().catch(() => ({}));
+    if (codigo === 'weak_password') throw Object.assign(new Error('Senha fraca. Use pelo menos 6 caracteres.'), { status: 400 });
+    if (codigo === 'reauthentication_needed') throw Object.assign(new Error('Entre novamente com o Google e tente outra vez.'), { status: 401 });
+    // same_password: a senha pedida já é a atual, então o objetivo foi cumprido.
+    if (codigo !== 'same_password') throw new Error('Não foi possível atualizar a senha.');
+  }
   const existing = await admin.auth.admin.getUserById(user.authId);
   if (existing.error) throw new Error('Conta indisponível.');
-  const { error } = await admin.auth.admin.updateUserById(user.authId, { password: pedido.senha,
-    app_metadata: { ...existing.data.user.app_metadata, senha_migrada: true } });
-  if (error) throw new Error('Não foi possível atualizar a senha.');
+  // Só metadados, sem senha: não encerra sessões.
+  if (!existing.data.user.app_metadata?.senha_migrada) {
+    const { error } = await admin.auth.admin.updateUserById(user.authId, { app_metadata: { ...existing.data.user.app_metadata, senha_migrada: true } });
+    if (error) throw new Error('Não foi possível atualizar a senha.');
+  }
   return { sucesso: true };
 }
 Deno.serve(criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras,

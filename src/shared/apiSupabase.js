@@ -63,7 +63,7 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
       const pedido = await lerPedido(req);
       acao = pedido.acao;
       if (acao === 'migrarSenha') return answer({ resultado: await migratePassword(user, pedido) });
-      if (acao === 'definirSenha') return answer({ resultado: await definePassword(user, pedido) });
+      if (acao === 'definirSenha') return answer({ resultado: await definePassword(user, pedido, token) });
       if (acao === 'migrarIdentidade') return answer({ resultado: await migrateIdentity(user, pedido) });
       if (pedido.ambiente === 'homologacao') {
         const real = await database('cacamed_player_state?player_id=eq.' + encodeURIComponent(user.uid) + '&select=profile,version');

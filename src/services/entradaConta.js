@@ -1,5 +1,6 @@
 import { USAR_AUTH_SUPABASE } from '../supabase';
 import { chamarPerfilPlanilha } from './perfilPlanilha';
+import { emailJaCadastrado } from '../utils/contaSupabase';
 
 // Ações de conta das telas de entrada (login, cadastro e Cadastro 2.0). Firebase e Supabase
 // carregam sob demanda: a homologação monta as mesmas telas com uma conta fictícia, sem o Firebase.
@@ -58,8 +59,9 @@ export const contaPadrao = {
   async criarConta({ nome, email, senha }) {
     if (USAR_AUTH_SUPABASE) {
       const supabase = await clienteSupabase();
-      const { error } = await supabase.auth.signUp({ email, password: senha, options: { emailRedirectTo: window.location.origin + '/', data: { name: nome } } });
+      const { data, error } = await supabase.auth.signUp({ email, password: senha, options: { emailRedirectTo: window.location.origin + '/', data: { name: nome } } });
       if (error) throw error;
+      if (emailJaCadastrado(data)) throw Object.assign(new Error('E-mail já cadastrado.'), { code: 'auth/email-already-in-use' });
       return { confirmarEmail: true };
     }
     const f = await firebase();

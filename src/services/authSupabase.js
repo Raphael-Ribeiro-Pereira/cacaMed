@@ -2,15 +2,13 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import { supabase, SUPABASE_URL, SUPABASE_CHAVE_PUBLICA } from '../supabase';
 import { criarTransporteSupabase } from './transporteSupabase';
+import { provedoresDaConta } from '../utils/contaSupabase';
 
 export function usuarioSupabase(user) {
   if (!user) return null;
   return { uid: user.app_metadata?.firebase_uid || user.id, authId: user.id, source: 'supabase',
     email: user.email, displayName: user.user_metadata?.name || user.user_metadata?.full_name || '',
-    metadata: { creationTime: user.created_at },
-    providerData: (user.identities || []).filter(i => i.provider !== 'email' || !user.app_metadata?.firebase_uid || user.app_metadata?.senha_migrada)
-      .map(i => ({ providerId: i.provider === 'email' ? 'password' : i.provider + '.com' })),
-  };
+    metadata: { creationTime: user.created_at }, providerData: provedoresDaConta(user) };
 }
 
 export async function entrarComSenhaPreservada(email, senha) {
