@@ -109,3 +109,20 @@ Google: no Google Cloud do projeto `caca-med`, abrir Google Auth Platform → Cl
 
 Correção de segurança: a chave não é mais gerada nem versionada em `firebasePublic.js`. Ela foi cadastrada como segredo criptografado `FIREBASE_WEB_API_KEY` na Edge Function `cacamed-api`; o arquivo local foi removido e o sincronizador não copia valores do `.env` para o código publicado. A chave continua sendo uma chave Web pública do Firebase, sem privilégios administrativos, mas deve permanecer restrita no Google Cloud (APIs e origens autorizadas).
 
+
+## Contas Firebase com e-mail não verificado (08/10/2026)
+
+As duas migrações automáticas (ao abrir o app com sessão Firebase e ao entrar com senha) exigem e-mail verificado no Firebase. Quem nunca verificou o e-mail ficava para sempre na ponte Firebase. Em 08/10/2026 eram duas contas.
+
+- **Aprovação do administrador (API v14):** gravar `profile.migracaoAprovada = true` no perfil libera a migração dessa conta. O jogador não consegue gravar esse campo; só o banco e o servidor.
+
+  ```sql
+  update public.cacamed_player_state
+  set profile = jsonb_set(profile, '{migracaoAprovada}', 'true'::jsonb), version = version + 1
+  where player_id = '<uid do Firebase>' and auth_user_id is null;
+  ```
+
+  Aumentar a `version` evita que uma gravação do jogo feita ao mesmo tempo apague a marca.
+- **O que acontece depois:** ao abrir o app, o servidor cria o usuário no Supabase (mesmo e-mail, `firebase_uid` no `app_metadata`), vincula o perfil e abre a sessão. A senha passa para o Supabase na primeira vez que o jogador entrar com e-mail e senha.
+- **caroline.scotton@outlook.com.br** (`e7xfpDoIbkcJFY4dHunGboU9vQ32`, 2.271 XP): aprovada em 08/10/2026. A migração conclui no próximo acesso dela.
+- **gfire0009@gmail.com** (`SeAvLD6yD1bdiQrDdCfbcMo5xQb2`, 434 XP, 1 evento): perfil e evento apagados do Supabase em 08/10/2026, a pedido do usuário. A conta de login continua no Firebase e precisa ser apagada no console do Firebase.
