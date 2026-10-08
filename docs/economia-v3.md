@@ -18,7 +18,7 @@ Decidida pelo usuário em 07/10/2026. **Ainda não implementada.** A regra em vi
 
 ### 100 XP fixos e bônus
 
-- Os 100 XP são pagos em toda rodada concluída, **mesmo com zero acerto**. O usuário respondeu "sim" em 07/10/2026; ver o risco de abuso em [perguntas em aberto](#perguntas-em-aberto).
+- Os 100 XP são pagos em toda rodada concluída com **pelo menos um acerto**. Rodada com zero acerto não paga XP nem conta para missões, como na v2. Decidido em 07/10/2026 como trava contra quem clica sem ler (ver [risco conhecido](#risco-conhecido)).
 - Bônus aceitos como propostos:
   - **jogos:** até +50 XP. No Quiz e no V ou M, metade vem dos acertos e metade do tempo. Na cruzadinha, vem do tempo, com a penalidade de dicas;
   - **DDX:** até +100 XP, por acertar de primeira e seguir o caminho seguro.
@@ -48,7 +48,7 @@ São **5 por dia**: a de login e mais 4 novas, sorteadas assim:
 - uma de nível 3;
 - uma de nível 4 ou 5 (a de nível 5 sai em 1 a cada 3 dias).
 
-O usuário deixou o balanceamento de XP comigo. Proposta:
+Balanceamento proposto pelo agente e aprovado pelo usuário em 07/10/2026:
 
 | Nível | Exemplos | XP | Ticket |
 | --- | --- | --- | --- |
@@ -57,9 +57,9 @@ O usuário deixou o balanceamento de XP comigo. Proposta:
 | 2 | Concluir 3 rodadas; acertar 10 itens no Quiz ou no V ou M | 100 | 1 |
 | 3 | Concluir 1 caso do DDX; cruzadinha sem dica; rodada perfeita | 150 | 1 |
 | 4 | 3 rodadas perfeitas no dia; caso do DDX sem erro e com bônus máximo | 250 | 1 |
-| 5 | Um jogo de cada (cruzadinha, Quiz, V ou M e caso do DDX) em menos de 30 min; cruzadinha em menos de X minutos sem dica | 400 | 2 |
+| 5 | Um jogo de cada (cruzadinha, Quiz, V ou M e caso do DDX) em menos de 30 min; cruzadinha sem dica abaixo do tempo esperado da grade | 400 | 2 |
 
-Por dia, as missões somam 550 XP e 4 tickets, ou 700 XP e 5 tickets no dia de nível 5, além da ofensiva. Para comparar: um jogo paga de 100 a 150 XP, um caso do DDX de 300 a 400 e uma vitória na Batalha 500. A Batalha continua fora das missões, como na v2. Os tempos das missões de nível 5 usam o tempo medido pelo servidor.
+Por dia, as missões somam 550 XP e 4 tickets, ou 700 XP e 5 tickets no dia de nível 5, além da ofensiva. Para comparar: um jogo paga de 100 a 150 XP, um caso do DDX de 300 a 400 e uma vitória na Batalha 500. A Batalha continua fora das missões, como na v2. Os tempos das missões de nível 5 usam o tempo medido pelo servidor. O tempo esperado da grade é a mesma referência do bônus de tempo da cruzadinha.
 
 ### Ofensiva
 
@@ -94,14 +94,9 @@ As regras abaixo não foram discutidas e continuam como estão:
 - Reenvio da mesma partida não paga duas vezes.
 - Subir de nível dá N tickets ao chegar no nível N.
 
-## Perguntas em aberto
+## Risco conhecido
 
-1. **Limite contra abuso.** Com 100 XP fixos mesmo com zero acerto e rodadas ilimitadas, dá para clicar sem ler. Cada rodada leva uns 30 segundos, então dá para chegar ao nível 10 em cerca de 4 horas. Isso fura o filtro de "nível 10 para quem não está só testando". Opções:
-   - os 100 fixos valem nas 5 primeiras rodadas de cada jogo por dia, e depois só o bônus;
-   - rodada com zero acerto não paga, que era a proposta anterior.
-
-   Recomendação: as duas juntas.
-2. **Missões:** confirmar a tabela de XP e os exemplos acima, e o tempo X da cruzadinha no nível 5.
+Com 100 XP fixos por rodada e rodadas ilimitadas, quem clica sem ler ainda ganha XP: ao acaso, cerca de 3 em cada 4 rodadas do Quiz e quase todas as do V ou M têm pelo menos um acerto. O limite diário de rodadas com XP cheio foi oferecido e não foi adotado. Depois da publicação, vale acompanhar quanto tempo os jogadores levam até o nível 10 e rever o limite, se preciso.
 
 ## Implementação prevista
 

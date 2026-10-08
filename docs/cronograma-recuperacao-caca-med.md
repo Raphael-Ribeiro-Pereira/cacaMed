@@ -6,10 +6,10 @@ Em produção desde 07/10/2026: telas do protótipo em todos os modos e app inst
 
 Decisões e especificações (perguntas respondidas pelo usuário no mesmo dia, em duas rodadas):
 - [Economia v3](economia-v3.md):
-  - cruzadinha, Quiz e V ou M pagam 100 XP fixos (mesmo com zero acerto) + bônus de até 50;
+  - cruzadinha, Quiz e V ou M pagam 100 XP fixos + bônus de até 50; rodada com zero acerto não paga;
   - no Quiz e no V ou M, o tempo é contado em segundo plano, sem aparecer na tela nem no relatório;
   - missão de login paga 25 × dias de ofensiva, sem teto; pular um dia volta o multiplicador a 1;
-  - mais 4 missões por dia, de níveis 1 a 5, de 50 a 400 XP;
+  - mais 4 missões por dia, de níveis 1 a 5, de 50 a 400 XP (tabela aprovada);
   - a curva de nível continua `500 × (N − 1)²`, que já é escalonada;
   - todos os modos do DDX pagam 300 XP + bônus de até 100, inclusive o Paciente DDX, que continua sem cobrar ticket e sem multiplicador por nível;
   - a Batalha paga 500 XP fixos na vitória e nada na derrota;
@@ -19,6 +19,7 @@ Decisões e especificações (perguntas respondidas pelo usuário no mesmo dia, 
   - sessões de 7 itens (os erros mais itens parecidos por conceito, tema ou palavras iguais);
   - Paciente DDX entra na Revisão por erro grave, não pela nota;
   - liberada a partir do nível 10;
+  - +40 XP por item dominado (o terceiro acerto seguido), uma vez por item e versão;
   - tela de revisão com as duas respostas do jogador e a explicação;
   - refazer casos do Erro médico e do Paciente DDX;
   - a explicação é escrita na hora por uma LLM gratuita (Qwen pela OpenRouter, por API), com cache e fallback para a explicação revisada.
@@ -49,8 +50,7 @@ A ordem segue as dependências:
 
 ### Fase 1 — Economia v3
 
-- [ ] Responder as 2 [perguntas em aberto](economia-v3.md#perguntas-em-aberto): limite contra abuso dos 100 XP fixos, e a tabela de missões.
-- [ ] 100 XP fixos + bônus de até 50 na cruzadinha, no Quiz e no V ou M; tempo do Quiz e do V ou M medido pelo servidor, fora da tela e do relatório.
+- [ ] 100 XP fixos + bônus de até 50 na cruzadinha, no Quiz e no V ou M, só em rodada com pelo menos um acerto; tempo do Quiz e do V ou M medido pelo servidor, fora da tela e do relatório.
 - [ ] 300 XP + bônus em Plantão, Erro médico, Causa e efeito e Paciente DDX (este sem ticket).
 - [ ] Batalha: 500 XP fixos na vitória e zero na derrota.
 - [ ] Bloquear os modos do DDX que cobram ticket quando o saldo é zero.
@@ -75,7 +75,7 @@ A ordem segue as dependências:
 
 ### Fase 3 — Revisão Inteligente v2
 
-- [ ] Escolher o [XP da Revisão](revisao-inteligente.md#xp-da-revisão-opções-para-o-usuário-escolher) (recomendação: XP por item dominado + missão) e confirmar a definição de erro grave.
+- [ ] [XP da Revisão](revisao-inteligente.md#xp-da-revisão): +40 por item dominado, uma vez por item e versão.
 - [ ] **Pendência registrada: itens da Batalha na Revisão.** Continuam sendo gerados e guardados, mas ficam fora das cartas até a decisão: cartas do Quiz, carta própria ou deixar de gerar.
 - [ ] Liberar a Revisão a partir do nível 10 (administrador sempre), registrando os erros desde o nível 1.
 - [ ] Registrar os erros do Erro médico e do Paciente DDX como itens da Revisão. No Paciente DDX, só os casos com erro grave: hipótese errada, conduta perigosa marcada ou conduta essencial esquecida.

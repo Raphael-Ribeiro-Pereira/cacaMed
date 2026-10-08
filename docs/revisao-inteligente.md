@@ -58,7 +58,7 @@ Igual ao Quiz: cartas de até 7 frases (os erros mais frases parecidas, escolhid
 
 Decidido em 07/10/2026: o caso entra na Revisão quando o jogador comete um **erro grave**, e não por causa da nota. Uma nota alta não livra o caso de um erro grave, e uma nota baixa sem erro grave não entra.
 
-Proposta de definição, a confirmar na revisão médica. É erro grave:
+Definição confirmada pelo usuário em 07/10/2026; as marcações de cada caso ainda dependem de revisão médica. É erro grave:
 1. escolher a **hipótese errada**;
 2. marcar uma **conduta errada que causa dano ou atraso**;
 3. deixar de marcar uma **conduta essencial**.
@@ -118,23 +118,22 @@ Como deve funcionar:
 - **Erros do Erro médico e do Paciente DDX:** passam a ser registrados como itens da Revisão. Hoje só Quiz, V ou M e a Batalha alimentam a fila.
 - **Marcação `grave`** nas condutas do Paciente DDX, com revisão médica.
 
-### XP da Revisão: opções para o usuário escolher
+### XP da Revisão
 
-Hoje a Revisão não dá XP nem ticket. Opções:
+Decidido em 07/10/2026: **+40 XP por item dominado.**
+- Um item fica dominado quando completa o ciclo de repetição: o terceiro acerto seguido, já no intervalo de 7 dias.
+- Paga uma vez por item e versão. Se o jogador errar o item de novo e voltar a dominá-lo, não ganha outra vez, para não valer a pena errar de propósito.
+- Itens parecidos que entram na fila também pagam quando são dominados.
+- Concluir uma carta não paga XP direto, e a Revisão não entra nas missões diárias.
+- Ticket continua sem ganho e sem custo.
+- O teto de duas revisões por item na semana impede acumular XP depressa.
 
-1. **Sem XP, como hoje.** O ganho é estudar. É simples e não tem como explorar, mas o jogador tem menos motivo para voltar.
-2. **XP fixo por carta concluída**, por exemplo 50. É fácil de entender, mas premia repetir cartas, não aprender.
-3. **XP por erro recuperado:** +15 por item que o jogador errou no jogo e acertou na revisão. As perguntas parecidas não pagam. Premia a correção, mas o jogador pode errar de propósito no jogo para ganhar depois (o jogo pagaria menos, então o ganho é pequeno).
-4. **XP por item dominado:** +40 quando o item completa o ciclo de repetição (o acerto seguido no intervalo de 7 dias). Premia memória de verdade. Como há o teto de duas revisões por semana, não tem como explorar.
-5. **Missões:** a Revisão não paga XP direto, mas uma das missões diárias pode ser "conclua uma carta da Revisão".
+Opções descartadas: sem XP, XP fixo por carta, XP por erro recuperado e missão da Revisão.
 
-Recomendação: **4 + 5**. Premia o que a Revisão quer ensinar, não pode ser explorado e liga a Revisão à rotina diária. Ticket continua sem ganho e sem custo.
+### Pendências
 
-### Perguntas em aberto
-
-1. **XP da Revisão:** escolher entre as opções acima.
-2. **Itens da Batalha:** pendência registrada acima.
-3. **Erro grave:** confirmar a definição e o exemplo acima, e fazer a revisão médica das marcações.
+1. **Itens da Batalha:** ver acima.
+2. **Marcações `grave`:** revisão médica caso a caso no gabarito do Paciente DDX.
 
 ## Experiência e decisões
 
