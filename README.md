@@ -46,4 +46,6 @@ Causa e efeito relaciona mecanismo, consequência, compensação e intervenção
 
 Erro médico usa o mesmo paciente do Plantão numa variante de atendimento auditado. Cada análise custa um ticket e tem quatro etapas, com até 100 XP apenas na primeira conclusão de cada versão. O progresso fica separado em `erroMedico` na planilha. A API está publicada na versão 13 da implantação existente; consulte [o roteiro de Erro médico](docs/ddx-erro-medico.md). O frontend atualizado segue local enquanto a revisão do fluxo é concluída.
 
+**Pendências e como retomar o trabalho:** [docs/pendencias.md](docs/pendencias.md).
+
 O [cronograma de recuperação](docs/cronograma-recuperacao-caca-med.md) contém o inventário de problemas, o andamento e as verificações de aceitação. A referência visual enviada pelo usuário está em `docs/stitch-reference/`.

@@ -1,5 +1,7 @@
 # Caça-Med — diagnóstico e cronograma de recuperação
 
+> **Lista mestra de pendências, decisões abertas e como retomar o trabalho: [pendencias.md](pendencias.md)** (09/10/2026). Quando ela e um bloco antigo deste cronograma discordarem, vale a lista mestra.
+
 ## Plano de 09/10/2026 — cadastro, bancos separados, Batalha e DDX público
 
 Em 09/10/2026 o usuário trouxe novas pendências e respondeu as dúvidas. Este bloco **acrescenta e reordena** o [plano de 07/10](#plano-de-07102026--economia-v3-revisão-inteligente-v2-e-app-offline), cujas fases 0 a 5 continuam valendo (economia v3, Revisão v2 e app offline).
