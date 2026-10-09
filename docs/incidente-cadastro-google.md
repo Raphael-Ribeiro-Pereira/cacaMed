@@ -46,3 +46,16 @@ Estado da conta depois das tentativas: e-mail confirmado, senha gravada, `senha_
   - frontend: promover `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa` (commit `9a7396a`);
   - API: a v12 tem a mesma interface, então o frontend anterior funciona com a v13.
 - **Confirmação final:** o jogador afetado entrar com o Google e concluir o cadastro. Como a conta dele já tem `senha_migrada`, o Cadastro 2.0 publicado não pede a senha de novo e segue direto para o registro.
+
+## Cadastro por e-mail (09/10/2026)
+
+Relato: "ao clicar em Emitir meu crachá, a senha some, o campo fica vermelho e a inscrição cancela".
+
+**O que os logs mostram:** não houve cancelamento. O servidor criou a conta, enviou o e-mail de confirmação (22:19) e a conta foi confirmada (22:32). O fluxo do Supabase pede a confirmação por e-mail antes de o jogador entrar.
+
+**Causa:** a tela, ao receber "confirmação pendente", limpava os campos de senha (que ficavam vermelhos, porque a tela já considerava o envio tentado) e mostrava só um aviso pequeno no topo do formulário. O botão "Emitir meu crachá" continuava visível, como se nada tivesse acontecido.
+
+**Correção:** o formulário é substituído por uma tela "Confirme seu e-mail", com o endereço, a explicação do próximo passo, "Reenviar e-mail" (espera de 60 segundos) e "Usei o e-mail errado" (volta ao formulário com os dados preenchidos). Conferido na homologação em 09/10/2026.
+
+**Limite que continua:** o envio padrão do Supabase só entrega para a equipe do projeto. Jogadores de fora precisam de um e-mail próprio (SMTP), que depende de um domínio.
+

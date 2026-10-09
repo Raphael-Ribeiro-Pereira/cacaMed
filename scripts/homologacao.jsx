@@ -168,8 +168,11 @@ const contaFicticia = {
   async criarConta({ nome, email }) {
     await espera(900);
     if (email.toLowerCase() === 'homologacao@exemplo.com') throw Object.assign(new Error('Em uso.'), { code: 'auth/email-already-in-use' });
+    // Como o Supabase de verdade: pede a confirmação por e-mail em vez de devolver a conta.
+    if (email.toLowerCase() === 'confirmar@exemplo.com') return { confirmarEmail: true };
     return { user: { uid: 'cadastro-' + email.toLowerCase(), email, displayName: nome, providerData: [{ providerId: 'password' }] } };
   },
+  async reenviarConfirmacao() { await espera(600); },
   async criarSenha() { await espera(700); },
   async gravarPerfilAntigo() { await espera(700); },
   async sair() { await espera(300); navegarFicticio('login'); },

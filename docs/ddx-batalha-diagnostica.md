@@ -2,6 +2,8 @@
 
 ## Status
 
+Em 09/10/2026 o usuário definiu o **modo história v2** (mapa estilo conquistas, cutscenes, pergaminho) e o **texto estilo Pokémon**: veja [modo-historia-v2.md](modo-historia-v2.md). Ainda não implementado.
+
 Documento de concepção aprovado em 30/09/2026. Implementação local em 02/10/2026, a pedido do usuário, como piloto do administrador: frontend, motor, operação da API e testes. Em 06/10/2026 os erros da Batalha passaram a alimentar a Revisão Inteligente (pendência 12). A API foi publicada na Edge Function (versão 11) em 06/10/2026; o conteúdo ainda não tem revisão médica.
 
 ## Implementação de 02/10/2026

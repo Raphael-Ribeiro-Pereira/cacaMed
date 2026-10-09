@@ -70,6 +70,13 @@ export const contaPadrao = {
     await user.getIdToken(true);
     return { user };
   },
+  // Reenvia o e-mail de confirmação do cadastro (só existe com a autenticação Supabase).
+  async reenviarConfirmacao(email) {
+    if (!USAR_AUTH_SUPABASE) return;
+    const supabase = await clienteSupabase();
+    const { error } = await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: window.location.origin + '/' } });
+    if (error) throw error;
+  },
   // Conta do Google sem senha: cria a senha para também entrar pelo formulário de e-mail.
   async criarSenha(usuario, senha) {
     if (usuario.source === 'supabase') return chamarPerfilPlanilha(usuario, 'definirSenha', { senha });

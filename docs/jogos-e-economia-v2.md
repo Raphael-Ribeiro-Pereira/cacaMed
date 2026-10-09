@@ -22,6 +22,19 @@ Quiz tem cinco questões por rodada, uma alternativa por questão. A confirmaç�
 
 Verdade ou mentira tem uma rodada com cinco frases. São sorteadas de uma a quatro verdades, sempre com pelo menos uma mentira. O usuário marca somente as verdadeiras e confirma o conjunto uma vez. Marcar uma verdade ou deixar uma mentira desmarcada conta como acerto; os opostos contam como erro. É necessário selecionar entre uma e quatro frases.
 
+## Bancos separados: Quiz e Verdade ou mentira (09/10/2026)
+
+**Problema** (relato de uma jogadora): o Quiz pergunta X e responde Y, e o Verdade ou mentira mostra a frase correspondente, então o aluno vê o mesmo assunto nos dois modos seguidos. Isso vem do banco atual: as 32 frases são a versão verdadeira e a falsa dos mesmos 16 conceitos das perguntas do Quiz.
+
+**Decisão:** os dois modos passam a ter **bancos de conteúdo separados**, com conceitos diferentes.
+- O Quiz mantém o banco atual.
+- O Verdade ou mentira ganha um banco novo, com conceitos que **não** estão no Quiz. Cada conceito tem 2 frases (uma verdadeira e uma falsa), e a rodada só sorteia conceitos diferentes.
+- O conteúdo novo é escrito por ChatGPT com o [prompt pronto](prompts/prompt-vou-m-frases.md) (40 conceitos por lote), entra como não revisado e só vai para os jogadores depois da revisão médica.
+- As 32 frases antigas saem do sorteio quando o banco novo tiver conceitos suficientes. O histórico e a fila de revisão dos itens antigos ficam preservados (a regra de versão já tira itens removidos da fila sem apagar o histórico).
+- Um teste passa a garantir que nenhum conceito do V ou M coincide com um assunto do Quiz.
+
+**Depois:** a Revisão v2 completa sessões com itens parecidos por conceito, então cada banco precisa de vários itens por conceito.
+
 ## Nível e missões
 
 O nível global considera todo o XP. Começa no nível 1, com zero XP. A dificuldade por tópico da cruzadinha continua separada, preservando o gerador.

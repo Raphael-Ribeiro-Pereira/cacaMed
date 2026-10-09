@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check, ChevronLeft, Lock, Mail, Printer, UserRound, X } from 'lucide-react';
 import { contaPadrao } from '../services/entradaConta';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
@@ -29,7 +29,9 @@ export default function Cadastro({ setTelaAtual, onConcluido, aoCriarConta = () 
   const [tentou, setTentou] = useState(false);
   const [busy, setBusy] = useState(false);
   const [erro, setErro] = useState('');
-  const [aviso, setAviso] = useState('');
+  // E-mail para o qual a confirmação foi enviada: troca o formulário por uma tela de espera.
+  const [aguardando, setAguardando] = useState('');
+  const [reenvio, setReenvio] = useState({ espera: 0, msg: '' });
   const [contaCriada, setContaCriada] = useState(null);
   const [usernameFinal, setUsernameFinal] = useState('');
   const [impressao, setImpressao] = useState(null);
@@ -43,6 +45,17 @@ export default function Cadastro({ setTelaAtual, onConcluido, aoCriarConta = () 
   const fotoAtual = foto ?? fotoPadrao(titulo);
   const cracha = { p: { uid: contaCriada?.uid, titulo, materiaPreferida: materia, pontuacaoTotal: 0, estatisticas: {} },
     email: email.trim().toLowerCase() || 'seu.email@exemplo.com', nome: nome.trim() || 'Seu nome', username: usernameFinal || sugerido || 'username', foto: fotoAtual, desde };
+  useEffect(() => {
+    if (reenvio.espera <= 0) return undefined;
+    const t = setTimeout(() => setReenvio(r => ({ ...r, espera: r.espera - 1 })), 1000);
+    return () => clearTimeout(t);
+  }, [reenvio.espera]);
+  const reenviar = async () => {
+    if (reenvio.espera > 0) return;
+    setReenvio({ espera: 60, msg: '' });
+    try { await conta.reenviarConfirmacao?.(aguardando); setReenvio({ espera: 60, msg: 'E-mail reenviado. Confira também a caixa de spam.' }); }
+    catch { setReenvio({ espera: 60, msg: 'Não foi possível reenviar agora. Tente de novo em instantes.' }); }
+  };
   const est = (k, v) => (ok[k] ? 'good' : (tentou && !ok[k]) || (k === 'conf' && v && !ok.conf) ? 'bad' : '');
 
   // O primeiro username livre entre as sugestões do nome; sem conferência possível, fica a primeira.
@@ -97,7 +110,7 @@ export default function Cadastro({ setTelaAtual, onConcluido, aoCriarConta = () 
         if (r.confirmarEmail) {
           aoCriarConta(false);
           setSenha(''); setConf('');
-          setAviso('Confira seu e-mail para confirmar a conta. Depois entre para concluir seu cadastro.');
+          setAguardando(email.trim());
           return;
         }
         user = r.user;
@@ -139,9 +152,14 @@ export default function Cadastro({ setTelaAtual, onConcluido, aoCriarConta = () 
       {web && <button className="w-link au-back" onClick={voltar}><ChevronLeft size={16} />Voltar ao login</button>}
       {web && <div className="au-head"><span className="kicker">Recepção · novo plantonista</span><h1>Faça seu crachá</h1><p>Leva um minuto. O crachá ao lado muda enquanto você preenche.</p></div>}
       {!web && <MiniCracha cracha={cracha} />}
-      <form className="au-card" onSubmit={enviar} noValidate>
+      {aguardando ? <div className="au-card" role="status">
+        <p className="au-sent"><Mail size={16} />Confirme seu e-mail</p>
+        <p className="au-lead">Enviamos um link para <b>{aguardando}</b>. Abra o e-mail e toque no link: você volta para o cacoMed e termina o crachá. Se não achar, olhe a caixa de spam.</p>
+        <button className="primary" type="button" onClick={reenviar} disabled={reenvio.espera > 0}>{reenvio.espera > 0 ? `Reenviar em ${reenvio.espera}s` : 'Reenviar e-mail'}</button>
+        {reenvio.msg && <p className="au-lead" aria-live="polite">{reenvio.msg}</p>}
+        <button type="button" className="w-link" onClick={() => { setAguardando(''); setReenvio({ espera: 0, msg: '' }); }}>Usei o e-mail errado</button>
+      </div> : <form className="au-card" onSubmit={enviar} noValidate>
         <Erro texto={erro} />
-        {aviso && <p className="au-sent" role="status"><Check size={16} />{aviso}</p>}
         <Campo id="cd-nome" label="Nome completo" icon={UserRound} estado={est('nome', nome)} ajuda={sugerido || usernameFinal ? <span className="cr-st chk">Seu username: <b className="mono">@{usernameFinal || sugerido}</b></span> : null}>
           <input id="cd-nome" autoComplete="name" maxLength={60} placeholder="Como aparece no crachá" value={nome} onChange={e => setNome(e.target.value)} />
           {ok.nome && <span className="okdot"><Check size={11} strokeWidth={3} /></span>}
@@ -167,7 +185,7 @@ export default function Cadastro({ setTelaAtual, onConcluido, aoCriarConta = () 
             {google ? <><span className="spin sm" />Aguardando o Google</> : <><GoogleG />Cadastrar com Google</>}
           </button>
         </>}
-      </form>
+      </form>}
       <p className="au-foot">Já tem crachá? <button className="w-link" onClick={voltar}>Entrar no plantão</button></p>
     </CascaEntrada>
     {impressao && <Impressao cracha={cracha} passos={PASSOS} etapa={impressao.etapa} erro={impressao.erro} tentativa={impressao.tentativa}

@@ -1,5 +1,64 @@
 # Caça-Med — diagnóstico e cronograma de recuperação
 
+## Plano de 09/10/2026 — cadastro, bancos separados, Batalha e DDX público
+
+Em 09/10/2026 o usuário trouxe novas pendências e respondeu as dúvidas. Este bloco **acrescenta e reordena** o [plano de 07/10](#plano-de-07102026--economia-v3-revisão-inteligente-v2-e-app-offline), cujas fases 0 a 5 continuam valendo (economia v3, Revisão v2 e app offline).
+
+**Ordem decidida:**
+1. cadastro;
+2. ajustes rápidos (bancos separados, texto da Batalha);
+3. DDX para o público;
+4. economia v3 e Revisão v2 (plano de 07/10);
+5. modo história novo da Batalha;
+6. app offline (plano de 07/10);
+7. modo bio, só quando os itens acima estiverem bons.
+
+### Fase A — Cadastro por e-mail
+
+O cadastro por e-mail **funcionava**: o servidor criou a conta, enviou o e-mail de confirmação (22:19) e a conta foi confirmada (22:32). O problema era a tela: ao enviar, ela limpava a senha, pintava os campos de vermelho e mostrava só um aviso pequeno no topo, o que parecia um cancelamento. Ver [incidente](incidente-cadastro-google.md#cadastro-por-e-mail-09102026).
+
+- [x] Tela "Confirme seu e-mail" no lugar do formulário, com reenvio (espera de 60 s) e "usei o e-mail errado". Feita e conferida na homologação em 09/10/2026.
+- [ ] Publicar o frontend.
+- [ ] Jogador real conferir em aparelho (confirmar o e-mail e terminar o crachá).
+- [ ] **E-mail próprio (SMTP):** o envio padrão do Supabase só entrega para a equipe do projeto e tem limite baixo, então jogadores de fora não recebem o e-mail de confirmação nem o de recuperação de senha. Precisa de um domínio ([proposta](proposta-email-autenticacao.md)). Pergunta aberta: o usuário tem um domínio?
+- [ ] Depois da confirmação, o Cadastro 2.0 pede de novo título e matéria; avaliar guardar o que o jogador já escolheu.
+
+### Fase B — Ajustes rápidos
+
+- [ ] **Bancos separados do Quiz e do V ou M** ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)). O [prompt](prompts/prompt-vou-m-frases.md) para o ChatGPT está pronto. Falta o usuário trazer o JSON, eu validar e checar duplicatas, e a revisão médica.
+- [ ] **Texto da Batalha estilo Pokémon** (digitação, parada esperando o toque, toque completa o texto) — [especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon). Vale para treinamento, história e Duelo.
+- [x] **"A Batalha não aparece no PC":** não era defeito. A Batalha é piloto só do administrador, e o teste foi com conta comum. Passa a aparecer quando a Batalha for liberada.
+
+### Fase C — DDX para o público
+
+- [ ] **Liberar o conteúdo já validado.** O usuário confirmou em 09/10/2026 que validou o que existe. Confirmar a lista: Plantão, Erro médico, Causa e efeito e Paciente DDX (e a Batalha?). Passos: marcar `revisado: true`, tirar a restrição de administrador do Paciente DDX e dos modos liberados, ajustar o teste que hoje exige `revisado: false` nos 17 casos, publicar API e frontend.
+- [ ] Decidir se libera **antes ou depois da economia v3**. O Paciente DDX hoje não paga XP nem ticket; a v3 define 300 XP + bônus.
+- [ ] **Mais casos do Paciente DDX.** O [prompt](prompts/prompt-paciente-ddx-casos.md) está pronto. Fluxo: ChatGPT escreve → eu valido o formato → eu confiro as páginas das fontes contra os PDFs que o usuário enviar → revisão médica → publicação.
+
+### Fase D — Economia v3 e Revisão v2
+
+Sem mudança: fases 1 a 3 do [plano de 07/10](#plano-de-07102026--economia-v3-revisão-inteligente-v2-e-app-offline). Pendência registrada: onde os itens da Batalha entram na Revisão.
+
+### Fase E — Modo história v2 da Batalha
+
+Especificação completa em [modo-historia-v2.md](modo-historia-v2.md). Cada etapa visual passa pelo ciclo protótipo → aprovação do usuário → porte, com arte original.
+
+- [ ] Protótipo do **mapa** estilo conquistas (3 ramos de 4 doenças, silhuetas, linhas verdes). Decidir a pergunta da silhueta (forma real ou genérica).
+- [ ] Protótipo da **cutscene de entrada** (médico anda até a cama) e da transição para a batalha.
+- [ ] Porte do mapa e da cutscene de entrada para o app, com as regras reais de desbloqueio.
+- [ ] **5 cutscenes de transmissão** (ar, inseto, água, carrapato, alimento) e a animação de descoberta.
+- [ ] Fluxo completo: mapa → entrada → batalha → descoberta → transmissão → continua → vitória → relatório → resumo; derrota só com relatório.
+- [ ] **Pergaminho:** campos novos no JSON das doenças, rascunho a partir do que já existe, revisão médica e tela.
+- [ ] Enciclopédia ("Diagnósticos descobertos") abre o pergaminho.
+
+### Fase F — App offline
+
+Sem mudança: fase 4 do plano de 07/10.
+
+### Fase G — Modo bio (por último)
+
+Ideia do usuário: um **liga/desliga no Quiz e no Verdade ou mentira** para jogar um modo de biologia direto, com conteúdo próprio. Só depois que as fases A a F estiverem boas. Falta definir conteúdo, regras e economia; o item entra como pendência, sem especificação.
+
 ## Plano de 07/10/2026 — economia v3, Revisão Inteligente v2 e app offline
 
 Em produção desde 07/10/2026: telas do protótipo em todos os modos e app instalável (deploy `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa`, API v12). Nesse dia o usuário tomou as decisões abaixo e pediu que fossem só documentadas e colocadas no cronograma, **sem código**.
