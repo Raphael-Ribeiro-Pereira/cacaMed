@@ -38,9 +38,10 @@ export default function Cadastro2({ usuario, onConcluido, conta = contaPadrao, s
   const primeiro = primeiroNome(nomeConta);
   const [usarPrimeiro, setUsarPrimeiro] = useState(false);
   const [username, setUsername] = useState('');
-  const [titulo, setTitulo] = useState('');
-  const [materia, setMateria] = useState('');
-  const [foto, setFoto] = useState(null);
+  // Quem veio do cadastro por e-mail já escolheu título, matéria e foto antes de confirmar a conta.
+  const [titulo, setTitulo] = useState(usuario.escolhas?.titulo || '');
+  const [materia, setMateria] = useState(usuario.escolhas?.materia || '');
+  const [foto, setFoto] = useState(usuario.escolhas?.foto ?? null);
   const [senha, setSenha] = useState('');
   const [conf, setConf] = useState('');
   const [ver, setVer] = useState(false);

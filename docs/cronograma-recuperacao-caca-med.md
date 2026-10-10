@@ -23,7 +23,7 @@ O cadastro por e-mail **funcionava**: o servidor criou a conta, enviou o e-mail 
 - [ ] Publicar o frontend.
 - [ ] Jogador real conferir em aparelho (confirmar o e-mail e terminar o crachá).
 - [ ] **E-mail próprio (SMTP):** o envio padrão do Supabase só entrega para a equipe do projeto e tem limite baixo, então jogadores de fora não recebem o e-mail de confirmação nem o de recuperação de senha. Precisa de um domínio ([proposta](proposta-email-autenticacao.md)). Pergunta aberta: o usuário tem um domínio?
-- [ ] Depois da confirmação, o Cadastro 2.0 pede de novo título e matéria; avaliar guardar o que o jogador já escolheu.
+- [x] Depois da confirmação, o Cadastro 2.0 pedia de novo título e matéria. Desde 10/10/2026 o cadastro por e-mail guarda título, matéria e foto nos metadados da conta (`user_metadata`), e o Cadastro 2.0 abre com eles marcados, mesmo em outro aparelho. Só valores conhecidos passam (`escolhasDoCadastro`). Conferido na homologação ("Cadastro 2.0 após confirmar e-mail"). Falta publicar.
 
 ### Fase B — Ajustes rápidos
 

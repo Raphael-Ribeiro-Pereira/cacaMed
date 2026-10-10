@@ -26,7 +26,7 @@ Legenda: **[U]** com o usuário, **[A]** com o agente, **[U+A]** precisa dos doi
 | Item | Estado |
 | --- | --- |
 | Site | https://caca-med.vercel.app, deploy `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx` (commit `75a82fa`) |
-| Código ainda **não publicado** | tela "Confirme seu e-mail" do cadastro por e-mail (commit `824c8e2` na `main`) |
+| Código ainda **não publicado** | tela "Confirme seu e-mail" do cadastro por e-mail (commit `824c8e2`) e Cadastro 2.0 com título, matéria e foto já escolhidos (10/10) |
 | API | Edge Function `cacamed-api`, **versão 14**, no projeto Supabase `lruzndfqfivlvcckvgbw` (São Paulo, plano Free). Inclui a correção da senha no cadastro Google e a aprovação de migração |
 | Vercel | equipe `team_nkI26shDp4jqQSE5MaIZduEE`, projeto `prj_XAluhsTRRiiEuiGabCvqNzaVrWsv` |
 | Voltar o site | promover `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa` (commit `9a7396a`); a API v14 é compatível |
@@ -69,7 +69,7 @@ Registros: [PWA](app-instalavel.md), [cadastro Google e e-mail](incidente-cadast
 
 Detalhe e caixas de seleção no [cronograma de 09/10](cronograma-recuperacao-caca-med.md#plano-de-09102026--cadastro-bancos-separados-batalha-e-ddx-público) e no [de 07/10](cronograma-recuperacao-caca-med.md#plano-de-07102026--economia-v3-revisão-inteligente-v2-e-app-offline).
 
-1. **Cadastro:** publicar a tela de confirmação; guardar título e matéria já escolhidos para o Cadastro 2.0; configurar o e-mail próprio quando houver domínio.
+1. **Cadastro:** publicar a tela de confirmação e o Cadastro 2.0 com as escolhas guardadas (feito na `main` em 10/10, falta publicar); configurar o e-mail próprio quando houver domínio.
 2. **Ajustes rápidos:**
    - bancos separados do Quiz e do V ou M ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)), validando o JSON do ChatGPT e checando duplicatas;
    - texto da Batalha estilo Pokémon ([especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon)).
@@ -90,7 +90,7 @@ Detalhe e caixas de seleção no [cronograma de 09/10](cronograma-recuperacao-ca
 6. **Retirar o Firebase:** depois da decisão 10, remover o fallback Firebase do frontend e a aceitação de tokens legados na API, publicar, testar e só então desligar o serviço. Preservar backup. Ver [reconciliação](reconciliacao-producao-2026-09-30.md).
 7. **Apps Script e planilhas:** reavaliar se ainda servem como fonte de retorno ou podem ser desligados.
 8. **Desempenho:** aviso de bundle acima de 500 kB; medir abertura a frio no celular e carga com usuários distintos (precisa de contas de teste).
-9. **Cadastro:** o Cadastro 2.0 pede título e matéria de novo depois da confirmação do e-mail.
+9. ~~**Cadastro:** o Cadastro 2.0 pede título e matéria de novo depois da confirmação do e-mail.~~ Resolvido em 10/10/2026 (falta publicar).
 
 ## 7. Backlog histórico: triagem necessária
 

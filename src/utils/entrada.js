@@ -23,3 +23,13 @@ export function sugestoes(nome) {
 
 // Foto padrão do crachá para quem ainda não escolheu.
 export const fotoPadrao = titulo => fotoDoPerfil({ titulo });
+
+// Título, matéria e foto escolhidos no cadastro por e-mail viajam nos metadados da conta até o
+// Cadastro 2.0, que abre depois da confirmação (às vezes em outro aparelho). Os metadados podem
+// ser editados pelo próprio jogador, então só valores conhecidos passam; o resto fica em branco.
+export function escolhasDoCadastro(meta) {
+  const titulo = ['Doutor', 'Doutora'].includes(meta?.titulo) ? meta.titulo : '';
+  const materia = MATERIAS_CADASTRO.some(([v]) => v === meta?.materia) ? meta.materia : '';
+  const foto = Number.isInteger(meta?.foto) && fotoDoPerfil({ foto: meta.foto }) === meta.foto ? meta.foto : null;
+  return { titulo, materia, foto };
+}

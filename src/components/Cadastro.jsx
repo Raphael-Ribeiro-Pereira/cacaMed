@@ -106,7 +106,7 @@ export default function Cadastro({ setTelaAtual, onConcluido, aoCriarConta = () 
       setBusy(true);
       aoCriarConta(true);
       try {
-        const r = await conta.criarConta({ nome: nome.trim(), email: email.trim(), senha });
+        const r = await conta.criarConta({ nome: nome.trim(), email: email.trim(), senha, escolhas: { titulo, materia, foto } });
         if (r.confirmarEmail) {
           aoCriarConta(false);
           setSenha(''); setConf('');

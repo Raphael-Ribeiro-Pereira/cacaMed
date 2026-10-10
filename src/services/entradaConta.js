@@ -56,10 +56,11 @@ export const contaPadrao = {
     await f.sendPasswordResetEmail(f.auth, email);
   },
   // Supabase pede confirmação por e-mail: devolve { confirmarEmail }. Firebase devolve o usuário já com o nome no token.
-  async criarConta({ nome, email, senha }) {
+  // escolhas (título, matéria e foto) ficam nos metadados da conta para o Cadastro 2.0 não pedir de novo.
+  async criarConta({ nome, email, senha, escolhas = {} }) {
     if (USAR_AUTH_SUPABASE) {
       const supabase = await clienteSupabase();
-      const { data, error } = await supabase.auth.signUp({ email, password: senha, options: { emailRedirectTo: window.location.origin + '/', data: { name: nome } } });
+      const { data, error } = await supabase.auth.signUp({ email, password: senha, options: { emailRedirectTo: window.location.origin + '/', data: { name: nome, ...escolhas } } });
       if (error) throw error;
       if (emailJaCadastrado(data)) throw Object.assign(new Error('E-mail já cadastrado.'), { code: 'auth/email-already-in-use' });
       return { confirmarEmail: true };
