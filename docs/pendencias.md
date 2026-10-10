@@ -26,7 +26,7 @@ Legenda: **[U]** com o usuário, **[A]** com o agente, **[U+A]** precisa dos doi
 | Item | Estado |
 | --- | --- |
 | Site | https://caca-med.vercel.app, deploy `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx` (commit `75a82fa`) |
-| Código ainda **não publicado** | tela "Confirme seu e-mail" do cadastro por e-mail (commit `824c8e2`) e Cadastro 2.0 com título, matéria e foto já escolhidos (10/10) |
+| Código ainda **não publicado** | tela "Confirme seu e-mail" do cadastro por e-mail (commit `824c8e2`), Cadastro 2.0 com título, matéria e foto já escolhidos (10/10) e texto da Batalha estilo Pokémon (10/10). Só frontend: a API v14 não muda |
 | API | Edge Function `cacamed-api`, **versão 14**, no projeto Supabase `lruzndfqfivlvcckvgbw` (São Paulo, plano Free). Inclui a correção da senha no cadastro Google e a aprovação de migração |
 | Vercel | equipe `team_nkI26shDp4jqQSE5MaIZduEE`, projeto `prj_XAluhsTRRiiEuiGabCvqNzaVrWsv` |
 | Voltar o site | promover `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa` (commit `9a7396a`); a API v14 é compatível |
@@ -72,7 +72,7 @@ Detalhe e caixas de seleção no [cronograma de 09/10](cronograma-recuperacao-ca
 1. **Cadastro:** publicar a tela de confirmação e o Cadastro 2.0 com as escolhas guardadas (feito na `main` em 10/10, falta publicar); configurar o e-mail próprio quando houver domínio.
 2. **Ajustes rápidos:**
    - bancos separados do Quiz e do V ou M ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)), validando o JSON do ChatGPT e checando duplicatas;
-   - texto da Batalha estilo Pokémon ([especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon)).
+   - ~~texto da Batalha estilo Pokémon~~: feito na `main` em 10/10, falta publicar ([especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon)).
 3. **DDX para o público:** liberar o conteúdo validado (marcar `revisado`, tirar a restrição de administrador, ajustar o teste que exige `revisado: false` nos 17 casos, publicar) e incorporar os casos novos depois da conferência.
 4. **Economia v3** ([especificação](economia-v3.md)): 100 XP fixos nos jogos, bônus de tempo escondido, ofensiva de login, 4 missões novas por dia, DDX com 300 XP, Batalha com 500 XP, tickets sem saldo negativo, `VERSAO_ECONOMIA = 3`.
 5. **Revisão Inteligente v2** ([especificação](revisao-inteligente.md)): quatro cartas, sessões de 7 itens, erro grave no Paciente DDX, liberação no nível 10, +40 XP por item dominado, explicações da LLM.

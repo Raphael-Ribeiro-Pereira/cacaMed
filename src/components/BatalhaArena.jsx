@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, ChevronLeft, FlaskConical, PawPrint, Pointer, Search, Shield, Stethoscope, X, Zap } from 'lucide-react';
 import { AGENTE, MOVES, PET_QUANDO, aplicarAcao, executarBatalha, examesDe, hipotesesDe, obterPet } from '../utils/batalha';
@@ -25,15 +25,22 @@ const passos = web => [
   { k: 'tap', el: '.b-moves', t: 'Cada habilidade usada fica um turno em recarga. Agora é com você: termine de controlar a doença.' },
 ];
 
-function Digitando({ t }) {
-  const [n, setN] = useState(SEM_ANIMACAO ? t.length : 0);
+// Velocidade única da digitação das falas (ms por letra); o ajuste pelo jogador fica para depois.
+const MS_POR_LETRA = 20;
+
+// Fala letra por letra. cheio mostra o texto inteiro na hora (toque durante a digitação ou
+// "reduzir movimento"); onCompleto avisa quando a última letra apareceu.
+function Digitando({ id, t, cheio, onCompleto }) {
+  const [n, setN] = useState(0);
+  const visivel = SEM_ANIMACAO || cheio ? t.length : n;
   useEffect(() => {
-    if (SEM_ANIMACAO) return;
+    if (SEM_ANIMACAO || cheio) return;
     const t0 = performance.now();
-    const id = setInterval(() => { const k = Math.min(t.length, Math.floor((performance.now() - t0) / 17)); setN(k); if (k >= t.length) clearInterval(id); }, 30);
+    const id = setInterval(() => { const k = Math.min(t.length, Math.floor((performance.now() - t0) / MS_POR_LETRA)); setN(k); if (k >= t.length) clearInterval(id); }, 30);
     return () => clearInterval(id);
-  }, [t]);
-  return <span className="typer">{t.slice(0, n)}<span className="ghost">{t.slice(n)}</span></span>;
+  }, [t, cheio]);
+  useEffect(() => { if (visivel >= t.length) onCompleto(id); }, [visivel, t.length, onCompleto, id]);
+  return <span className="typer">{t.slice(0, visivel)}<span className="ghost">{t.slice(visivel)}</span></span>;
 }
 
 function SeloGravacao({ estado, onReenviar }) {
@@ -50,7 +57,7 @@ export default function BatalhaArena({ entrada, doenca, web, usuario, servicoPer
   const tutorial = entrada.modo === 'tutorial';
   const [estado, setEstado] = useState(() => executarBatalha(d, entrada.pet, entrada.acoes));
   const [vis, setVis] = useState(null);
-  const [msg, setMsg] = useState({ t: '', k: 0 });
+  const [msg, setMsg] = useState({ t: '', k: 0, cheio: true, espera: false });
   const [menu, setMenu] = useState(null);
   const [fx, setFx] = useState('');
   const [proj, setProj] = useState(null);
@@ -70,18 +77,32 @@ export default function BatalhaArena({ entrada, doenca, web, usuario, servicoPer
   const acoesRef = useRef(entrada.acoes);
   const vivo = useRef(true);
   const pular = useRef(null);
+  const falaAtual = useRef(null);
   const gravando = useRef({ voo: false, de: 0, pendente: false });
 
   const tk = k => { if (passo && passo.k === k) setTi(i => i + 1); };
   const livre = k => !passo || passo.k === k;
 
   const pausa = ms => new Promise((ok, falha) => { setTimeout(() => (vivo.current ? ok() : falha(MORTO)), SEM_ANIMACAO ? Math.min(ms, 40) : ms); });
-  const dizer = (t, segurar = 750) => new Promise((ok, falha) => {
-    setMsg({ t, k: Math.random() });
-    const fim = () => { clearTimeout(id); pular.current = null; if (vivo.current) ok(); else falha(MORTO); };
-    const id = setTimeout(fim, SEM_ANIMACAO ? 400 : Math.min(1500, t.length * 17) + segurar);
-    pular.current = fim;
+  // Falas estilo Pokémon: digita, para com a seta piscando e espera um toque (ou Enter/Espaço).
+  // Tocar durante a digitação completa o texto; o toque seguinte apaga a fala e segue.
+  const aoCompletar = useCallback(k => {
+    if (falaAtual.current?.k === k) falaAtual.current.cheio = true;
+    setMsg(m => (m.k === k && !m.cheio ? { ...m, cheio: true } : m));
+  }, []);
+  const dizer = t => new Promise((ok, falha) => {
+    const fala = { k: Math.random(), cheio: false };
+    falaAtual.current = fala;
+    setMsg({ t, k: fala.k, cheio: false, espera: true });
+    pular.current = () => {
+      if (!fala.cheio) { aoCompletar(fala.k); return; }
+      pular.current = null; falaAtual.current = null;
+      setMsg({ t: '', k: Math.random(), cheio: true, espera: false });
+      if (vivo.current) ok(); else falha(MORTO);
+    };
   });
+  // Texto que acompanha o menu ou a espera do servidor: digita, mas não pede toque.
+  const anunciar = t => { pular.current = null; falaAtual.current = null; setMsg({ t, k: Math.random(), cheio: false, espera: false }); };
   const tiro = async (c, erro) => { setProj({ k: Math.random(), c, erro }); await pausa(560); setProj(null); };
 
   async function efeito(codigo) {
@@ -143,7 +164,7 @@ export default function BatalhaArena({ entrada, doenca, web, usuario, servicoPer
     setMenu(null);
     let r;
     try { r = aplicarAcao(estadoRef.current, acao, d, entrada.pet); }
-    catch (erro) { await dizer(erro.message, 400).catch(() => {}); setMenu('main'); return; }
+    catch (erro) { await dizer(erro.message).catch(() => {}); setMenu('main'); return; }
     acoesRef.current = [...acoesRef.current, acao];
     let pistasAntes = estadoRef.current.clues.length;
     try {
@@ -151,13 +172,13 @@ export default function BatalhaArena({ entrada, doenca, web, usuario, servicoPer
         setVis(ev);
         if (ev.pistas > pistasAntes) { setNovaPista(n => n + 1); pistasAntes = ev.pistas; }
         await efeito(ev.fx);
-        if (ev.msg) await dizer(ev.msg, ev.msg.length > 60 ? 1200 : 500);
+        if (ev.msg) await dizer(ev.msg);
       }
       estadoRef.current = r.estado;
       setEstado(r.estado); setVis(null);
-      if (r.estado.fim) { setMsg({ t: 'Confirmando o resultado…', k: Math.random() }); await confirmarFim(); return; }
+      if (r.estado.fim) { anunciar('Confirmando o resultado…'); await confirmarFim(); return; }
       gravar().catch(() => {});
-      await dizer('O que você vai fazer?', 0);
+      anunciar('O que você vai fazer?');
       setMenu('main');
     } catch (erro) { if (erro !== MORTO) throw erro; }
   }
@@ -167,17 +188,17 @@ export default function BatalhaArena({ entrada, doenca, web, usuario, servicoPer
     vivo.current = true;
     (async () => {
       try {
-        if (entrada.acoes.length) { setPetFx(''); await dizer('Batalha retomada do último turno salvo.', 400); }
+        if (entrada.acoes.length) { setPetFx(''); await dizer('Batalha retomada do último turno salvo.'); }
         else {
-          if (tutorial) await dizer('Treinamento guiado com a Dra. Íris, sua preceptora.', 600);
-          await dizer('Uma doença desconhecida apareceu!', 650);
-          await dizer(`Paciente: ${d.paciente}. ${d.queixa}`, 1000);
+          if (tutorial) await dizer('Treinamento guiado com a Dra. Íris, sua preceptora.');
+          await dizer('Uma doença desconhecida apareceu!');
+          await dizer(`Paciente: ${d.paciente}. ${d.queixa}`);
           setPetFx('enter');
-          await dizer(`Vai, ${pet.nome}! ${pet.esp} no plantão.`, 450);
+          await dizer(`Vai, ${pet.nome}! ${pet.esp} no plantão.`);
           setPetFx('');
         }
-        if (estadoRef.current.fim) { await confirmarFim(); return; }
-        await dizer('O que você vai fazer?', 0);
+        if (estadoRef.current.fim) { anunciar('Confirmando o resultado…'); await confirmarFim(); return; }
+        anunciar('O que você vai fazer?');
         setMenu('main');
       } catch (erro) { if (erro !== MORTO) throw erro; }
     })();
@@ -268,7 +289,7 @@ export default function BatalhaArena({ entrada, doenca, web, usuario, servicoPer
           {fx === 'scan' && <span className="ar-scan" />}
         </div>
         <div className="bt-bottom">
-          <button className="msgbox" onClick={() => pular.current?.()} aria-live="polite"><Digitando key={msg.k} t={msg.t} />{!menu && <span className="nxt" aria-hidden="true">▼</span>}</button>
+          <button className="msgbox" onClick={() => pular.current?.()} aria-live="polite"><Digitando key={msg.k} id={msg.k} t={msg.t} cheio={msg.cheio} onCompleto={aoCompletar} />{msg.espera && msg.cheio && <span className="nxt" aria-hidden="true">▼</span>}</button>
           {erroFinal && <div className="card" role="alert" style={{ display: 'grid', gap: 8 }}><p>{erroFinal}</p><p className="muted" style={{ fontSize: 12 }}>O XP só é confirmado pelo servidor. Reenviar não duplica a recompensa.</p><button className="primary" onClick={confirmarFim}>Reenviar resultado</button></div>}
           {menu && <motion.div key={menu} className={`bmenu m-${menu}`} initial={SEM_ANIMACAO ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .16 }}>
             {menu === 'main' && <>

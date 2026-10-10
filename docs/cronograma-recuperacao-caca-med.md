@@ -28,7 +28,7 @@ O cadastro por e-mail **funcionava**: o servidor criou a conta, enviou o e-mail 
 ### Fase B — Ajustes rápidos
 
 - [ ] **Bancos separados do Quiz e do V ou M** ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)). O [prompt](prompts/prompt-vou-m-frases.md) para o ChatGPT está pronto. Falta o usuário trazer o JSON, eu validar e checar duplicatas, e a revisão médica.
-- [ ] **Texto da Batalha estilo Pokémon** (digitação, parada esperando o toque, toque completa o texto) — [especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon). Vale para treinamento, história e Duelo.
+- [x] **Texto da Batalha estilo Pokémon** (digitação, parada esperando o toque, toque completa o texto) — [especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon). Vale para treinamento, história e Duelo. Feito em 10/10/2026 em `BatalhaArena.jsx`: 20 ms por letra (`MS_POR_LETRA`), seta só com o texto completo, Enter e Espaço iguais ao toque, e "O que você vai fazer?" e "Confirmando o resultado…" sem esperar toque, porque acompanham o menu ou o servidor. Conferido na homologação (abertura e um turno do treinamento). **Não conferido:** "reduzir movimento" no aparelho (o código mostra o texto inteiro e mantém a espera do toque). Falta publicar.
 - [x] **"A Batalha não aparece no PC":** não era defeito. A Batalha é piloto só do administrador, e o teste foi com conta comum. Passa a aparecer quando a Batalha for liberada.
 
 ### Fase C — DDX para o público
