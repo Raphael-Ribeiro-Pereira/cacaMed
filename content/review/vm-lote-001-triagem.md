@@ -1,5 +1,7 @@
 # Triagem do lote `vm-lote-001` (Verdade ou mentira)
 
+> **Substituído em 11/10/2026 pelo [`vm-lote-002`](vm-lote-002-fontes.md)**, refeito pelo agente com fontes lidas e trechos conferidos. Este lote não será usado. Também ficou fora das regras novas: os temas agora são por área ampla.
+
 Feita pelo agente em 10/10/2026, sobre `content/inbox/vm-lote-001.json`. É uma triagem de formato, de duplicatas e de fontes. **Não é revisão médica.** O lote continua na caixa de entrada e **não está pronto**.
 
 ## Resumo

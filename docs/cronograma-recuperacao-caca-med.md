@@ -2,6 +2,14 @@
 
 > **Lista mestra de pendências, decisões abertas e como retomar o trabalho: [pendencias.md](pendencias.md)** (09/10/2026). Quando ela e um bloco antigo deste cronograma discordarem, vale a lista mestra.
 
+## Ajustes de 11/10/2026 — deploys às quintas, conteúdo com fontes e casos antes do DDX
+
+Respostas do usuário às pendências de 10/10. Mudam a ordem do plano de 09/10 abaixo:
+- **Deploys sempre às quintas-feiras.** Nos outros dias, o trabalho é arrumar o jogo; o que fica pronto entra na lista "Código ainda não publicado" das [pendências](pendencias.md).
+- **Fase C (DDX público) adiada.** Antes, arrumar os modos, principalmente **os casos, que hoje são poucos**. Falta o usuário dizer por qual modo começar.
+- **Conteúdo com fontes conferidas.** O agente refez o lote do V ou M (`vm-lote-002`, 40 conceitos) em duas etapas: fontes lidas, depois frases. Os trechos foram conferidos literalmente (`npm run content:fontes`, 40 de 40). Fontes só de governo ou de domínio público. O prompt do ChatGPT também ficou em duas partes.
+- **Banco do V ou M:** a troca acontece com 40 conceitos revisados; os temas são por área ampla (lista fixa `TEMAS_VM`).
+
 ## Plano de 09/10/2026 — cadastro, bancos separados, Batalha e DDX público
 
 Em 09/10/2026 o usuário trouxe novas pendências e respondeu as dúvidas. Este bloco **acrescenta e reordena** o [plano de 07/10](#plano-de-07102026--economia-v3-revisão-inteligente-v2-e-app-offline), cujas fases 0 a 5 continuam valendo (economia v3, Revisão v2 e app offline).
@@ -28,11 +36,11 @@ O cadastro por e-mail **funcionava**: o servidor criou a conta, enviou o e-mail 
 ### Fase B — Ajustes rápidos
 
 - [ ] **Bancos separados do Quiz e do V ou M** ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)). O [prompt](prompts/prompt-vou-m-frases.md) para o ChatGPT está pronto.
-  - [x] Sorteio preparado para o banco novo, com testes (10/10/2026). Troca com 16 conceitos revisados (valor provisório).
+  - [x] Sorteio preparado para o banco novo, com testes (10/10/2026). Troca com 40 conceitos revisados (decisão de 11/10/2026).
   - [x] Triagem do primeiro lote, `vm-lote-001` ([relatório](../content/review/vm-lote-001-triagem.md)): nenhum conceito repete o Quiz, mas **pelo menos 12 das 36 fontes são de outro assunto**, falta 1 conceito e há IDs a corrigir.
-  - [ ] Corrigir as fontes do lote (usuário escolhe: ChatGPT refaz ou busca à mão).
-  - [ ] Revisão médica e integração do lote aprovado com `revisado: true`.
-  - [ ] Publicar a API e o frontend quando houver conceitos revisados suficientes.
+  - [x] Corrigir as fontes: lote refeito pelo agente como `vm-lote-002` (11/10/2026), com o [dossiê de fontes](../content/review/vm-lote-002-fontes.md).
+  - [ ] Revisão médica do `vm-lote-002` e integração com `revisado: true`.
+  - [ ] Publicar a API e o frontend numa quinta, quando houver 40 conceitos revisados.
 - [x] **Texto da Batalha estilo Pokémon** (digitação, parada esperando o toque, toque completa o texto) — [especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon). Vale para treinamento, história e Duelo. Feito em 10/10/2026 em `BatalhaArena.jsx`: 20 ms por letra (`MS_POR_LETRA`), seta só com o texto completo, Enter e Espaço iguais ao toque, e "O que você vai fazer?" e "Confirmando o resultado…" sem esperar toque, porque acompanham o menu ou o servidor. Conferido na homologação (abertura e um turno do treinamento). **Não conferido:** "reduzir movimento" no aparelho (o código mostra o texto inteiro e mantém a espera do toque). Falta publicar.
 - [x] **"A Batalha não aparece no PC":** não era defeito. A Batalha é piloto só do administrador, e o teste foi com conta comum. Passa a aparecer quando a Batalha for liberada.
 

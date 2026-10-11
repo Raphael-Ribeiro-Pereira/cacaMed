@@ -1,0 +1,284 @@
+{
+  "fontes": [
+    {
+      "conceito": "arterias-pulmonares",
+      "url": "https://training.seer.cancer.gov/anatomy/cardiovascular/blood/classification.html",
+      "titulo": "SEER Training Modules: Classification & Structure of Blood Vessels",
+      "orgao": "NCI/NIH",
+      "trecho": "Pulmonary arteries transport blood that has a low oxygen content from the right ventricle to the lungs."
+    },
+    {
+      "conceito": "vesicula-biliar",
+      "url": "https://training.seer.cancer.gov/anatomy/digestive/regions/accessory.html",
+      "titulo": "SEER Training Modules: Accessory Organs",
+      "orgao": "NCI/NIH",
+      "trecho": "The principal function of the gallbladder is to serve as a storage reservoir for bile. Bile is a yellowish-green fluid produced by liver cells."
+    },
+    {
+      "conceito": "arvore-bronquica",
+      "url": "https://training.seer.cancer.gov/anatomy/respiratory/passages/bronchi.html",
+      "titulo": "SEER Training Modules: Bronchi, Bronchial Tree, & Lungs",
+      "orgao": "NCI/NIH",
+      "trecho": "the amount of hyaline cartilage in the walls decreases until it is absent in the smallest bronchioles. As the cartilage decreases, the amount of smooth muscle increases."
+    },
+    {
+      "conceito": "no-sinoatrial",
+      "url": "https://training.seer.cancer.gov/anatomy/cardiovascular/heart/physiology.html",
+      "titulo": "SEER Training Modules: Physiology of the Heart",
+      "orgao": "NCI/NIH",
+      "trecho": "Without any neural stimulation, the sinoatrial node rhythmically initiates impulses 70 to 80 times per minute."
+    },
+    {
+      "conceito": "ocitocina-prolactina",
+      "url": "https://training.seer.cancer.gov/anatomy/endocrine/glands/pituitary.html",
+      "titulo": "SEER Training Modules: Pituitary & Pineal Glands",
+      "orgao": "NCI/NIH",
+      "trecho": "Oxytocin causes contraction of the smooth muscle in the wall of the uterus. It also stimulates the ejection of milk from the lactating breast."
+    },
+    {
+      "conceito": "inspiracao-diafragma",
+      "url": "https://training.seer.cancer.gov/anatomy/respiratory/mechanics.html",
+      "titulo": "SEER Training Modules: Mechanics of Ventilation",
+      "orgao": "NCI/NIH",
+      "trecho": "During inspiration, the diaphragm contracts and the thoracic cavity increases in volume. This decreases the intraalveolar pressure so that air flows into the lungs."
+    },
+    {
+      "conceito": "musculo-liso",
+      "url": "https://training.seer.cancer.gov/anatomy/cells_tissues_membranes/tissues/muscle.html",
+      "titulo": "SEER Training Modules: Muscle Tissue",
+      "orgao": "NCI/NIH",
+      "trecho": "Smooth muscle cells are spindle shaped, have a single, centrally located nucleus, and lack striations. They are called involuntary muscles."
+    },
+    {
+      "conceito": "epitelio-alveolar",
+      "url": "https://training.seer.cancer.gov/anatomy/respiratory/passages/bronchi.html",
+      "titulo": "SEER Training Modules: Bronchi, Bronchial Tree, & Lungs",
+      "orgao": "NCI/NIH",
+      "trecho": "The alveolar ducts and alveoli consist primarily of simple squamous epithelium, which permits rapid diffusion of oxygen and carbon dioxide."
+    },
+    {
+      "conceito": "adrenal-origem",
+      "url": "https://training.seer.cancer.gov/anatomy/endocrine/glands/adrenal.html",
+      "titulo": "SEER Training Modules: Adrenal (Suprarenal) Gland",
+      "orgao": "NCI/NIH",
+      "trecho": "The cortex and medulla of the adrenal gland ... develop from different embryonic tissues and secrete different hormones."
+    },
+    {
+      "conceito": "fenilcetonuria",
+      "url": "https://www.gov.br/saude/pt-br/composicao/saes/triagem-neonatal",
+      "titulo": "Triagem Neonatal (Programa Nacional de Triagem Neonatal)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Doença genética com padrão de herança autossômica recessiva. Na maioria dos casos, é resultante da deficiência de uma enzima hepática, a fenilalanina hidroxilase."
+    },
+    {
+      "conceito": "ciclo-ureia",
+      "url": "https://medlineplus.gov/genetics/condition/ornithine-transcarbamylase-deficiency/",
+      "titulo": "MedlinePlus Genetics: Ornithine transcarbamylase deficiency",
+      "orgao": "NLM/NIH",
+      "trecho": "The urea cycle is a sequence of reactions that occurs in liver cells. It processes excess nitrogen ... to make a compound called urea that is excreted by the kidneys."
+    },
+    {
+      "conceito": "lactase-colon",
+      "url": "https://www.niddk.nih.gov/health-information/digestive-diseases/lactose-intolerance/symptoms-causes",
+      "titulo": "Symptoms & Causes of Lactose Intolerance",
+      "orgao": "NIDDK/NIH",
+      "trecho": "your small intestine makes low levels of lactase ... The undigested lactose passes into your colon. Bacteria in your colon break down the lactose and create fluid and gas."
+    },
+    {
+      "conceito": "legionella-transmissao",
+      "url": "https://www.cdc.gov/legionella/about/index.html",
+      "titulo": "About Legionnaires' Disease",
+      "orgao": "CDC",
+      "trecho": "People can get Legionnaires' disease by breathing in mist containing Legionella bacteria. In general, it isn't spread person to person."
+    },
+    {
+      "conceito": "tetano-esporos",
+      "url": "https://www.cdc.gov/tetanus/causes/index.html",
+      "titulo": "Tetanus: Causes and How It Spreads",
+      "orgao": "CDC",
+      "trecho": "Tetanus spores from the environment enter the body through cuts or wounds. Tetanus doesn't spread from person to person."
+    },
+    {
+      "conceito": "tuberculose-aerossois",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/t/tuberculose",
+      "titulo": "Tuberculose",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A transmissão da tuberculose acontece por via respiratória, pela eliminação de aerossóis (partículas muito pequenas) produzidos pela tosse, fala ou espirro"
+    },
+    {
+      "conceito": "hiv-linfocitos-cd4",
+      "url": "https://www.gov.br/aids/pt-br/assuntos/hiv-aids",
+      "titulo": "HIV e aids: o que é?",
+      "orgao": "Ministério da Saúde",
+      "trecho": "As células mais atingidas são os linfócitos T CD4+. E é alterando o DNA dessa célula que o HIV faz cópias de si mesmo."
+    },
+    {
+      "conceito": "timo-linfocitos-t",
+      "url": "https://training.seer.cancer.gov/anatomy/lymphatic/components/thymus.html",
+      "titulo": "SEER Training Modules: Thymus",
+      "orgao": "NCI/NIH",
+      "trecho": "While in the thymus, the lymphocytes do not respond to pathogens and foreign agents. After the lymphocytes have matured, they enter the blood and go to other lymphatic organs"
+    },
+    {
+      "conceito": "oxiuro-prurido",
+      "url": "https://www.cdc.gov/pinworm/about/index.html",
+      "titulo": "About Pinworm",
+      "orgao": "CDC",
+      "trecho": "If you do have symptoms, it is typically itching around the anus. Female pinworms lay their eggs at night on the skin around the anus"
+    },
+    {
+      "conceito": "malaria-anopheles",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/m/malaria",
+      "titulo": "Malária",
+      "orgao": "Ministério da Saúde",
+      "trecho": "transmitido para humanos pela picada de fêmeas infectadas dos mosquitos Anopheles (mosquito-prego)"
+    },
+    {
+      "conceito": "esquistossomose-caramujo",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/e/esquistossomose",
+      "titulo": "Esquistossomose",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Destaca-se que a transmissão da esquistossomose não ocorre por meio do contato direto com o doente."
+    },
+    {
+      "conceito": "chagas-fezes-barbeiro",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/doenca-de-chagas",
+      "titulo": "Doença de Chagas",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Vetorial: quando as fezes do barbeiro infectado entram em contato com feridas na pele ou mucosas após a picada."
+    },
+    {
+      "conceito": "metformina-figado",
+      "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/insulin-medicines-treatments",
+      "titulo": "Insulin, Medicines, & Other Diabetes Treatments",
+      "orgao": "NIDDK/NIH",
+      "trecho": "Metformin helps your liver make less glucose and helps your body use insulin better."
+    },
+    {
+      "conceito": "naloxona-antagonista",
+      "url": "https://nida.nih.gov/publications/drugfacts/naloxone",
+      "titulo": "Naloxone DrugFacts",
+      "orgao": "NIDA/NIH",
+      "trecho": "It is an opioid antagonist. This means that it attaches to opioid receptors and reverses and blocks the effects of other opioids."
+    },
+    {
+      "conceito": "naloxona-duracao",
+      "url": "https://nida.nih.gov/publications/drugfacts/naloxone",
+      "titulo": "Naloxone DrugFacts",
+      "orgao": "NIDA/NIH",
+      "trecho": "Naloxone works to reverse opioid overdose in the body for only 30 to 90 minutes. But many opioids remain in the body longer than that."
+    },
+    {
+      "conceito": "tumor-benigno-maligno",
+      "url": "https://www.cancer.gov/about-cancer/understanding/what-is-cancer",
+      "titulo": "What Is Cancer?",
+      "orgao": "NCI/NIH",
+      "trecho": "Benign tumors do not spread into, or invade, nearby tissues."
+    },
+    {
+      "conceito": "carcinoma-epitelial",
+      "url": "https://www.cancer.gov/about-cancer/understanding/what-is-cancer",
+      "titulo": "What Is Cancer?",
+      "orgao": "NCI/NIH",
+      "trecho": "Carcinomas are the most common type of cancer. They are formed by epithelial cells"
+    },
+    {
+      "conceito": "metastase-nome",
+      "url": "https://www.cancer.gov/about-cancer/understanding/what-is-cancer",
+      "titulo": "What Is Cancer?",
+      "orgao": "NCI/NIH",
+      "trecho": "breast cancer that forms a metastatic tumor in the lung is metastatic breast cancer, not lung cancer."
+    },
+    {
+      "conceito": "avc-sinais",
+      "url": "https://www.cdc.gov/stroke/signs-symptoms/index.html",
+      "titulo": "Signs and Symptoms of Stroke",
+      "orgao": "CDC",
+      "trecho": "Sudden numbness or weakness in the face, arm, or leg, especially on one side of the body."
+    },
+    {
+      "conceito": "tvp-embolia-pulmonar",
+      "url": "https://www.cdc.gov/blood-clots/about/index.html",
+      "titulo": "About Venous Thromboembolism (Blood Clots)",
+      "orgao": "CDC",
+      "trecho": "DVT occurs when a blood clot develops in the deep veins, most commonly in the legs. ... PE occurs when a part of the blood clot breaks off and travels to the lungs."
+    },
+    {
+      "conceito": "hipertensao-assintomatica",
+      "url": "https://www.cdc.gov/high-blood-pressure/about/index.html",
+      "titulo": "About High Blood Pressure",
+      "orgao": "CDC",
+      "trecho": "High blood pressure usually has no warning signs or symptoms, and many people do not know they have it. Measuring your blood pressure is the only way to know"
+    },
+    {
+      "conceito": "falciforme-vasos",
+      "url": "https://www.cdc.gov/sickle-cell/about/index.html",
+      "titulo": "About Sickle Cell Disease",
+      "orgao": "CDC",
+      "trecho": "Red blood cells become hard and sticky and get stuck in small blood vessels, resulting in pain and other serious complications"
+    },
+    {
+      "conceito": "sono-seguro-bebe",
+      "url": "https://safetosleep.nichd.nih.gov/reduce-risk/reduce",
+      "titulo": "Ways to Reduce Baby's Risk (Safe to Sleep)",
+      "orgao": "NICHD/NIH",
+      "trecho": "Place all babies—including those born preterm and those with reflux—on their backs to sleep until they are 1 year old."
+    },
+    {
+      "conceito": "aleitamento-exclusivo",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/a/aleitamento-materno",
+      "titulo": "Amamentação",
+      "orgao": "Ministério da Saúde",
+      "trecho": "nos primeiros 6 meses, o bebê receba somente leite materno (aleitamento materno exclusivo), ou seja, sem necessidade de sucos, chás, água e outros alimentos."
+    },
+    {
+      "conceito": "teste-do-pezinho",
+      "url": "https://www.gov.br/saude/pt-br/composicao/saes/triagem-neonatal",
+      "titulo": "Triagem Neonatal (Programa Nacional de Triagem Neonatal)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A Triagem Neonatal Biológica é realizada através de exames no sangue colhido no papel-filtro (sangue seco), obtido por punção no calcanhar do recém-nascido."
+    },
+    {
+      "conceito": "acido-folico",
+      "url": "https://www.cdc.gov/folic-acid/about/index.html",
+      "titulo": "About Folic Acid",
+      "orgao": "CDC",
+      "trecho": "NTDs happen in the first few weeks of pregnancy, often before you know you are pregnant."
+    },
+    {
+      "conceito": "pre-eclampsia",
+      "url": "https://www.nichd.nih.gov/health/topics/preeclampsia/conditioninfo",
+      "titulo": "What are preeclampsia and eclampsia?",
+      "orgao": "NICHD/NIH",
+      "trecho": "it also involves high blood pressure at or after 20 weeks of pregnancy in a woman whose blood pressure was normal before pregnancy."
+    },
+    {
+      "conceito": "rastreamento-colo-utero",
+      "url": "https://www.gov.br/inca/pt-br/assuntos/gestor-e-profissional-de-saude/controle-do-cancer-do-colo-do-utero/acoes/deteccao-precoce",
+      "titulo": "Detecção precoce do câncer do colo do útero",
+      "orgao": "INCA/Ministério da Saúde",
+      "trecho": "O rastreamento deve ser ofertado às mulheres ou qualquer pessoa com colo do útero, na faixa etária de 25 a 64 anos e que já tiveram atividade sexual."
+    },
+    {
+      "conceito": "vigilancia-epidemiologica",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/l8080.htm",
+      "titulo": "Lei nº 8.080, de 19 de setembro de 1990 (art. 6º, § 2º)",
+      "orgao": "Presidência da República",
+      "trecho": "com a finalidade de recomendar e adotar as medidas de prevenção e controle das doenças ou agravos."
+    },
+    {
+      "conceito": "conselho-de-saude",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/l8142.htm",
+      "titulo": "Lei nº 8.142, de 28 de dezembro de 1990 (art. 1º, § 2º)",
+      "orgao": "Presidência da República",
+      "trecho": "O Conselho de Saúde, em caráter permanente e deliberativo, órgão colegiado composto por representantes do governo, prestadores de serviço, profissionais de saúde e usuários"
+    },
+    {
+      "conceito": "atencao-basica-coordenacao",
+      "url": "https://bvsms.saude.gov.br/bvs/saudelegis/gm/2017/prt2436_22_09_2017.html",
+      "titulo": "Portaria nº 2.436, de 21 de setembro de 2017 (PNAB), art. 2º, § 1º",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A Atenção Básica será a principal porta de entrada e centro de comunicação da RAS, coordenadora do cuidado e ordenadora das ações e serviços"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Pendências: lista mestra
 
-Atualizada em **09/10/2026**, antes de uma viagem do usuário. É o ponto de partida para retomar o trabalho. O detalhe de cada fase está no [cronograma](cronograma-recuperacao-caca-med.md) (blocos de 09/10 e de 07/10), e a lista abaixo aponta para ele. Quando esta lista e um bloco antigo do cronograma discordarem, **vale esta lista**.
+Atualizada em **09/10/2026**, antes de uma viagem do usuário, e revista em **11/10/2026** com as respostas do usuário. É o ponto de partida para retomar o trabalho. O detalhe de cada fase está no [cronograma](cronograma-recuperacao-caca-med.md) (blocos de 09/10 e de 07/10), e a lista abaixo aponta para ele. Quando esta lista e um bloco antigo do cronograma discordarem, **vale esta lista**.
 
 Legenda: **[U]** com o usuário, **[A]** com o agente, **[U+A]** precisa dos dois.
 
@@ -39,35 +39,36 @@ Registros: [PWA](app-instalavel.md), [cadastro Google e e-mail](incidente-cadast
 ## 3. Decisões que dependem do usuário
 
 1. **Domínio para o e-mail do app** (cadastro e recuperação de senha). Sem ele, só a equipe do projeto recebe e-mail. `cacomed.com.br` e `cacamed.com.br` são só sugestões, sem disponibilidade consultada. Ver [proposta](proposta-email-autenticacao.md).
-2. **Liberar o DDX para o público:** confirmar a lista (Plantão, Erro médico, Causa e efeito, Paciente DDX; e a Batalha?) e se libera **antes ou depois da economia v3**. O usuário já disse que validou o conteúdo que existe.
+2. ~~**Liberar o DDX para o público**~~ **adiado** (11/10/2026). Antes, arrumar os modos, principalmente os casos, que hoje são poucos. Falta dizer **por qual modo começar** (Paciente DDX tem 17 casos; Plantão, Erro médico e Causa e efeito também) e quantos casos por modo bastam para liberar.
 3. **Silhueta no mapa da história:** forma real da doença escurecida (revela o tipo de agente) ou forma genérica até a descoberta.
 4. **Botão "Pular" nas cutscenes** a partir da segunda vez: sim ou não.
 5. **Itens da Batalha na Revisão:** entram nas cartas do Quiz, ganham carta própria ou deixam de ser gerados.
 6. **Formato do pergaminho** (resumo da doença): confirmar ou ajustar a [tabela proposta](modo-historia-v2.md#pergaminho-resumo-da-doença).
 7. **Modo bio:** só uma ideia (liga/desliga no Quiz e no V ou M para um modo de biologia direto). Falta definir conteúdo, regras e economia, depois das outras fases.
 8. **Salvar o protótipo de movimento no repositório?** São cerca de 1 MB de código-fonte, sem as dependências. Sugestão: sim, numa pasta própria, para não depender de uma pasta temporária.
-9. **Publicar o frontend** (só Vercel; a API v14 não muda): tela "Confirme seu e-mail", Cadastro 2.0 com as escolhas guardadas e texto da Batalha estilo Pokémon. Os três foram conferidos na homologação. O sorteio dos bancos separados também está na `main`, mas não muda nada até haver frases revisadas, e mora na API, que não precisa ser publicada agora.
+9. **Publicar o frontend** (decidido em 11/10/2026: **deploys sempre às quintas-feiras**, com confirmação no dia; nos outros dias, só arrumar o jogo) (só Vercel; a API v14 não muda): tela "Confirme seu e-mail", Cadastro 2.0 com as escolhas guardadas e texto da Batalha estilo Pokémon. Os três foram conferidos na homologação. O sorteio dos bancos separados também está na `main`, mas não muda nada até haver frases revisadas, e mora na API, que não precisa ser publicada agora.
 10. **Quando desligar o Firebase.** Hoje nenhuma conta do jogo depende só dele. Critério já registrado: sete dias estáveis, cadastro, recuperação e logout públicos testados, fallback removido do código **antes** de desligar o serviço. Sem data automática.
-11. **Fontes do lote `vm-lote-001`:** pelo menos 12 de 36 URLs são de outro assunto ([triagem](../content/review/vm-lote-001-triagem.md)). Pedir ao ChatGPT que refaça só as fontes ou buscar à mão? Mudar o prompt para pedir `fonte: null` sempre?
-12. **Mínimo de conceitos para trocar o banco do V ou M:** hoje 16 (valor provisório, igual ao banco atual).
-13. **Temas do V ou M:** padronizar por área ampla ("Fisiologia") ou manter subtemas ("Fisiologia respiratória")? Afeta a Revisão v2, que agrupa por tema.
-14. **Versionar o fluxo de conteúdo:** `content/`, `scripts/validar-conteudo.mjs`, o teste dele, o script `content:validate` do `package.json`, os índices do Obsidian em `docs/` e as mudanças nos dois prompts estão só nesta máquina, fora do Git. O agente ajustou o validador e o teste, mas não fez commit de arquivos que não criou.
+11. ~~Fontes do lote `vm-lote-001`~~ **resolvido** (11/10/2026): o agente refez o lote como `vm-lote-002`, com 40 conceitos e os trechos conferidos literalmente nas fontes ([dossiê](../content/review/vm-lote-002-fontes.md)). O prompt do ChatGPT passou a ter duas partes, fontes e depois frases, e `npm run content:fontes` confere os trechos.
+12. ~~Mínimo para trocar o banco do V ou M~~ **ampliado para 40 conceitos revisados** (11/10/2026).
+13. ~~Temas do V ou M~~ **por área ampla** (11/10/2026): lista fixa de 15 áreas em `TEMAS_VM`, conferida pelo validador e pelos testes. Pendente: os temas do Quiz ("Curiosidades específicas", "Detalhes da medicina"…) seguem outro padrão; padronizar também?
+14. ~~Versionar o fluxo de conteúdo~~ **feito** (commit `d5c871b`, 11/10/2026).
 
 ## 4. Tarefas do usuário (fora do código)
 
-1. **Rodar os prompts no ChatGPT** e trazer o JSON de volta:
-   - [frases do Verdade ou mentira](prompts/prompt-vou-m-frases.md) (40 conceitos por lote);
+1. **Revisão médica do lote `vm-lote-002`** (40 conceitos, 80 frases): [dossiê com fonte e trecho de cada um](../content/review/vm-lote-002-fontes.md); os pontos de atenção estão em `pontos_revisor`, no JSON. Aprovado, ele entra no banco com `revisado: true`; com 40 conceitos revisados, o V ou M troca de banco.
+2. **Rodar os prompts no ChatGPT** (opcional; o agente também faz os lotes) e trazer o JSON de volta:
+   - [frases do Verdade ou mentira](prompts/prompt-vou-m-frases.md), agora em duas partes;
    - [casos do Paciente DDX](prompts/prompt-paciente-ddx-casos.md) (de 4 a 6 por conversa).
-2. **Enviar os PDFs das fontes** que os novos casos citarem, para eu conferir as páginas.
-3. **Revisão médica** do conteúdo novo e do que ainda está marcado como não revisado:
+3. **Enviar os PDFs das fontes** que os novos casos citarem, para eu conferir as páginas.
+4. **Revisão médica** do conteúdo novo e do que ainda está marcado como não revisado:
    - frases novas do V ou M e casos novos do Paciente DDX;
    - as 12 doenças da Batalha (e, quando existir, o pergaminho de cada uma);
    - as marcações `grave` das condutas do Paciente DDX (a [regra de erro grave](revisao-inteligente.md#o-que-é-erro-grave-no-paciente-ddx) já foi aprovada; faltam as marcações caso a caso);
    - explicações completas do Erro médico e do Paciente DDX para a Revisão v2.
-4. **Console do Firebase:** apagar a conta de login `gfire0009@gmail.com` (o perfil dela no Supabase já foi apagado) e conferir a lista de usuários, para achar quem criou conta mas nunca terminou o cadastro (essas contas não aparecem no banco).
-5. **Testar em aparelho real** (iPhone e Android) seguindo o [roteiro](roteiro-smartphone.md): instalar o app, entrar com a conta real e jogar uma cruzadinha. Depois, testar o cadastro por e-mail de ponta a ponta (a conta de teste `gfire0009` já está confirmada: ao entrar, ela cai no Cadastro 2.0).
-6. **E-mail próprio (quando houver domínio):** registrar o domínio, criar a conta no Resend e colar a credencial **você mesmo** no painel do Supabase (a credencial não passa pelo chat).
-7. **Acessibilidade** (opcional): foco, leitor de tela e zoom de 200% nas telas principais.
+5. **Console do Firebase:** apagar a conta de login `gfire0009@gmail.com` (o perfil dela no Supabase já foi apagado) e conferir a lista de usuários, para achar quem criou conta mas nunca terminou o cadastro (essas contas não aparecem no banco).
+6. **Testar em aparelho real** (iPhone e Android) seguindo o [roteiro](roteiro-smartphone.md): instalar o app, entrar com a conta real e jogar uma cruzadinha. Depois, testar o cadastro por e-mail de ponta a ponta (a conta de teste `gfire0009` já está confirmada: ao entrar, ela cai no Cadastro 2.0).
+7. **E-mail próprio (quando houver domínio):** registrar o domínio, criar a conta no Resend e colar a credencial **você mesmo** no painel do Supabase (a credencial não passa pelo chat).
+8. **Acessibilidade** (opcional): foco, leitor de tela e zoom de 200% nas telas principais.
 
 ## 5. Trabalho do agente, na ordem decidida
 
@@ -75,9 +76,10 @@ Detalhe e caixas de seleção no [cronograma de 09/10](cronograma-recuperacao-ca
 
 1. **Cadastro:** publicar a tela de confirmação e o Cadastro 2.0 com as escolhas guardadas (feito na `main` em 10/10, falta publicar); configurar o e-mail próprio quando houver domínio.
 2. **Ajustes rápidos:**
-   - bancos separados do Quiz e do V ou M ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)): sorteio pronto e testado (10/10); o primeiro lote foi triado e **não está pronto** ([triagem](../content/review/vm-lote-001-triagem.md)): fontes erradas;
+   - bancos separados do Quiz e do V ou M ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)): sorteio pronto e testado; lote `vm-lote-002` pronto para a revisão médica (11/10). Depois da aprovação: integrar com `revisado: true` e publicar numa quinta;
    - ~~texto da Batalha estilo Pokémon~~: feito na `main` em 10/10, falta publicar ([especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon)).
-3. **DDX para o público:** liberar o conteúdo validado (marcar `revisado`, tirar a restrição de administrador, ajustar o teste que exige `revisado: false` nos 17 casos, publicar) e incorporar os casos novos depois da conferência.
+3. **Mais casos nos modos** (prioridade decidida em 11/10/2026, antes de liberar o DDX): escrever casos novos com o mesmo método do V ou M (fontes lidas e trechos conferidos), começando pelo modo que o usuário escolher.
+   - **DDX para o público, adiado:** liberar o conteúdo validado (marcar `revisado`, tirar a restrição de administrador, ajustar o teste que exige `revisado: false` nos 17 casos, publicar) quando houver casos suficientes.
 4. **Economia v3** ([especificação](economia-v3.md)): 100 XP fixos nos jogos, bônus de tempo escondido, ofensiva de login, 4 missões novas por dia, DDX com 300 XP, Batalha com 500 XP, tickets sem saldo negativo, `VERSAO_ECONOMIA = 3`.
 5. **Revisão Inteligente v2** ([especificação](revisao-inteligente.md)): quatro cartas, sessões de 7 itens, erro grave no Paciente DDX, liberação no nível 10, +40 XP por item dominado, explicações da LLM.
 6. **Modo história v2 da Batalha** ([especificação](modo-historia-v2.md)): protótipos (mapa, cutscene de entrada, transição) → aprovação → porte; 5 cutscenes de transmissão; pergaminho; enciclopédia.
