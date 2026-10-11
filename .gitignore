@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 .env
 supabase/.temp/
+
+# Estado da janela do Obsidian (muda a cada abertura)
+docs/**/.obsidian/workspace*.json

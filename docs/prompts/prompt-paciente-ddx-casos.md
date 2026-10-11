@@ -24,7 +24,7 @@ Os casos pertencem a módulos que seguem a Portaria Inep 478/2025 (Enamed) e as 
 - `pre-natal`: Rede Materno-Infantil (pré-natal na Unidade Básica).
 - `crianca`: Rede Materno-Infantil (criança doente, do lactente ao recém-nascido).
 
-Você também pode propor **módulos novos** da Atenção Primária (por exemplo, doenças crônicas, saúde mental e cuidado continuado). Quando propuser, inclua `modulo_novo` (veja o formato abaixo).
+Você também pode propor **módulos novos** da Atenção Primária (por exemplo, doenças crônicas, saúde mental e cuidado continuado). Quando propuser, inclua-os em `modulos_novos` (veja o formato abaixo).
 
 ## Casos que já existem (não repita)
 dengue sem sinais de alarme (grupo A); malária por *P. vivax*; leptospirose; hanseníase paucibacilar; tuberculose pulmonar; infarto com supra de ST; tromboembolismo pulmonar; dissecção aguda de aorta; dengue com sinais de alarme (grupo C); escorpionismo moderado; acidente botrópico moderado; bacteriúria assintomática na gestação; sífilis na gestação; pré-eclâmpsia com sinais de gravidade; pneumonia na criança (AIDPI); diarreia com desidratação (Plano B); recém-nascido com doença grave.
@@ -60,7 +60,7 @@ Escreva **{N} casos novos** (use N = 5 se eu não disser outro número), distrib
 - `dcn`: DCN de Medicina (2025)
 
 ## Formato da resposta
-Responda **só com um objeto JSON** com os campos `casos` (array), `fontes_novas` (array, pode ser vazio) e `modulos_novos` (array, pode ser vazio). Sem comentários dentro do JSON.
+Responda **só com um objeto JSON** com os campos `casos` (array), `fontes_novas` (array, pode ser vazio), `modulos_novos` (array, pode ser vazio) e `pontos_revisor` (array de textos, pode ser vazio). Sem comentários ou texto fora do JSON.
 
 Exemplo completo de **um** caso (siga exatamente esta estrutura e os nomes dos campos):
 
@@ -146,7 +146,6 @@ Formato de `modulos_novos`:
 { "id": "cronicos-aps", "nome": "Doenças crônicas na Unidade Básica", "rede": "Rede de Atenção Primária", "resumo": "Frase curta, no estilo dos módulos existentes." }
 ```
 
-## Depois do JSON
-Escreva a seção **"Pontos para o revisor"**: para cada caso, liste o que mais merece conferência (conduta que varia entre diretrizes, dose, número de referência, fonte que você não pôde confirmar). Se não houver, diga "nenhum".
+Em `pontos_revisor`, para cada caso, liste o que mais merece conferência (conduta que varia entre diretrizes, dose, número de referência, fonte que você não pôde confirmar). Use `[]` quando não houver pontos.
 
 =====

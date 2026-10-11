@@ -10,6 +10,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "node --test src/utils/*.test.js",
+    "content:validate": "node scripts/validar-conteudo.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

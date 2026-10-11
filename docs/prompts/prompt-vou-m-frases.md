@@ -35,15 +35,15 @@ Antibiótico não trata vírus; cor do muco e antibiótico; rim e bexiga; néfro
 Escreva 1 a 2 frases que expliquem **por que a frase verdadeira é verdadeira e qual é o erro da falsa**. A explicação é a mesma para as duas frases do conceito.
 
 ### Fonte
-Uma URL `https://` de fonte pública e estável (Ministério da Saúde, OMS, CDC, NIH/NCBI Bookshelf, PubMed, sociedades médicas brasileiras). **Não invente URLs.** Se não tiver certeza de uma URL real, escreva `null` em `fonte` e liste o conceito no final, em "pontos para o revisor".
+Uma URL `https://` de fonte pública e estável (Ministério da Saúde, OMS, CDC, NIH/NCBI Bookshelf, PubMed, sociedades médicas brasileiras). **Não invente URLs.** Se não tiver certeza de uma URL real, escreva `null` em `fonte` e liste o conceito em `pontos_revisor`.
 
 ## Formato da resposta
-Responda **só com um array JSON** (sem comentários dentro dele), uma linha por frase, nesta ordem: a verdadeira e depois a falsa de cada conceito.
+Responda **só com um objeto JSON** com `frases` (array) e `pontos_revisor` (array de textos). Em `frases`, coloque a verdadeira e depois a falsa de cada conceito. Sem texto fora do JSON.
 
 No exemplo, `https://URL-REAL-DA-FONTE` é um marcador: troque pela URL real de cada fonte.
 
 ```json
-[
+{"frases": [
   {
     "id": "frase-pressao-pulso-v",
     "conceito": "pressao-pulso",
@@ -64,7 +64,7 @@ No exemplo, `https://URL-REAL-DA-FONTE` é um marcador: troque pela URL real de 
     "explicacao": "A pressão de pulso é sistólica menos diastólica; confundi-la com a pressão arterial média é um erro comum.",
     "fonte": "https://URL-REAL-DA-FONTE"
   }
-]
+], "pontos_revisor": []}
 ```
 
 Regras do formato:
@@ -74,7 +74,6 @@ Regras do formato:
 - `versao`: sempre `1`.
 - `verdadeira`: `true` ou `false`, sem aspas.
 
-## Depois do JSON
-Escreva a seção **"Pontos para o revisor"**: liste os conceitos em que você tem alguma dúvida (conduta que muda entre diretrizes, número que varia, fonte que não pôde confirmar). Se não houver, diga "nenhum".
+Em `pontos_revisor`, liste os conceitos em que você tem alguma dúvida (conduta que muda entre diretrizes, número que varia, fonte que não pôde confirmar). Use `[]` quando não houver pontos.
 
 =====
