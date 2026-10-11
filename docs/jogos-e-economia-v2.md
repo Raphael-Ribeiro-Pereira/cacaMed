@@ -35,6 +35,14 @@ Verdade ou mentira tem uma rodada com cinco frases. São sorteadas de uma a quat
 
 **Depois:** a Revisão v2 completa sessões com itens parecidos por conceito, então cada banco precisa de vários itens por conceito.
 
+**Implementado em 10/10/2026 (sem conteúdo novo ainda):**
+- As frases novas entram em `BANCO_FRASES` com o campo `revisado`. Só `revisado: true` vai para o sorteio. As 32 antigas não têm o campo (`fraseLegada`) e continuam no banco para o histórico e a revisão.
+- `frasesDoSorteio` troca o sorteio para o banco novo quando houver `MINIMO_CONCEITOS_VM` conceitos com o par verdadeiro/falso revisado. Até lá, o sorteio continua igual ao de hoje.
+- **Valor provisório: 16 conceitos**, o mesmo número de hoje, para a troca não reduzir a variedade. O usuário pode mudar.
+- Testes: conceito novo não repete assunto do Quiz (o assunto vem do ID da pergunta, `conceitoDoQuiz`) e tem o par completo; frase não revisada nunca é sorteada; a troca acontece no mínimo.
+- O validador de lotes recusa conceito igual a assunto do Quiz e avisa quando a mesma fonte aparece em conceitos diferentes. Tema igual deixou de gerar aviso.
+- Falta: integrar um lote aprovado e publicar a API (as regras rodam na Edge Function).
+
 ## Nível e missões
 
 O nível global considera todo o XP. Começa no nível 1, com zero XP. A dificuldade por tópico da cruzadinha continua separada, preservando o gerador.

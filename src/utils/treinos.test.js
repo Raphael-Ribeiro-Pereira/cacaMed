@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BANCO_QUIZ, BANCO_FRASES } from './bancoTreinos.js';
-import { criarEntradaTreino, responderTreinoPerfil } from './treinos.js';
+import { MINIMO_CONCEITOS_VM, conceitoDoQuiz, criarEntradaTreino, fraseLegada, frasesDoSorteio, responderTreinoPerfil } from './treinos.js';
 import { concederRecompensa, nivelPorXP, migrarEconomia } from './economia.js';
 import { criarMissoesDiarias } from './missoes.js';
 
@@ -34,6 +34,33 @@ test('banco contém opções distintas, gabaritos válidos, fontes e IDs únicos
   assert.equal(new Set([...BANCO_QUIZ, ...BANCO_FRASES].map(q => q.id)).size, BANCO_QUIZ.length + BANCO_FRASES.length);
   for (const q of BANCO_QUIZ) { assert.equal(q.opcoes.length, 4); assert.equal(new Set(q.opcoes.map(o => o.texto)).size, 4); assert.ok(q.opcoes.some(o => o.id === q.correta)); }
   for (const q of [...BANCO_QUIZ, ...BANCO_FRASES]) { assert.ok(q.explicacao); assert.match(q.fonte, /^https:\/\//); }
+});
+
+test('bancos separados: conceito novo do V ou M não repete assunto do Quiz e vem em par verdadeiro/falso', () => {
+  const doQuiz = new Set(BANCO_QUIZ.map(conceitoDoQuiz));
+  // As frases antigas são as versões verdadeira e falsa dos próprios assuntos do Quiz; por isso saem do sorteio.
+  assert.deepEqual(new Set(BANCO_FRASES.filter(fraseLegada).map(f => f.conceito)), doQuiz);
+  const novas = BANCO_FRASES.filter(f => !fraseLegada(f));
+  for (const f of novas) {
+    assert.ok(!doQuiz.has(f.conceito), `${f.conceito} já é assunto do Quiz`);
+    assert.equal(typeof f.revisado, 'boolean');
+    assert.deepEqual(novas.filter(x => x.conceito === f.conceito).map(x => x.verdadeira).sort(), [false, true]);
+  }
+});
+
+test('sorteio usa as frases antigas até haver conceitos novos revisados suficientes, e nunca frase não revisada', () => {
+  const par = (conceito, revisado) => [true, false].map(verdadeira => ({ id: `frase-${conceito}-${verdadeira ? 'v' : 'f'}`, conceito, verdadeira, revisado }));
+  const legado = BANCO_FRASES.filter(fraseLegada);
+  const novos = n => Array.from({ length: n }, (_, i) => par(`novo-${i}`, true)).flat();
+  const naoRevisados = par('rascunho', false);
+  assert.deepEqual(frasesDoSorteio([...legado, ...novos(MINIMO_CONCEITOS_VM - 1), ...naoRevisados]), legado);
+  const trocado = frasesDoSorteio([...legado, ...novos(MINIMO_CONCEITOS_VM), ...naoRevisados]);
+  assert.equal(trocado.length, MINIMO_CONCEITOS_VM * 2);
+  assert.ok(trocado.every(f => f.revisado === true));
+  // Conceito com só um lado revisado não conta nem é sorteado.
+  const meioPar = [{ ...par('meio', true)[0] }, { ...par('meio', false)[1] }];
+  assert.ok(!frasesDoSorteio([...legado, ...novos(MINIMO_CONCEITOS_VM), ...meioPar]).some(f => f.conceito === 'meio'));
+  assert.deepEqual(frasesDoSorteio([...legado, ...novos(MINIMO_CONCEITOS_VM - 1), ...meioPar]), legado);
 });
 
 test('sorteio de frases tem cinco conceitos diferentes e todas as distribuições de 1 a 4 verdades', () => {

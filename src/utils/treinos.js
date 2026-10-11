@@ -2,6 +2,21 @@ import { BANCO_QUIZ, BANCO_FRASES } from './bancoTreinos.js';
 import { concederRecompensa } from './economia.js';
 import { aplicarProgressoMissoes, lerMissoes } from './missoes.js';
 
+// Bancos separados (09/10/2026): o V ou M ganha conceitos que não estão no Quiz. Frase do banco novo
+// traz o campo revisado e só entra no sorteio depois da revisão médica; as 32 frases antigas (sem o campo,
+// mesmos conceitos do Quiz) continuam no banco para o histórico e a revisão, mas saem do sorteio
+// quando o banco novo tiver MINIMO_CONCEITOS_VM conceitos com o par verdadeiro/falso revisado.
+export const MINIMO_CONCEITOS_VM = 16;
+export const conceitoDoQuiz = item => item.id.replace(/^quiz-(teoria|casos)-/, '');
+export const fraseLegada = item => item.revisado === undefined;
+export function frasesDoSorteio(banco = BANCO_FRASES) {
+  const revisadas = banco.filter(item => item.revisado === true);
+  const lados = new Map();
+  for (const item of revisadas) lados.set(item.conceito, (lados.get(item.conceito) || new Set()).add(item.verdadeira));
+  const completos = new Set([...lados].filter(([, s]) => s.size === 2).map(([conceito]) => conceito));
+  return completos.size >= MINIMO_CONCEITOS_VM ? revisadas.filter(item => completos.has(item.conceito)) : banco.filter(fraseLegada);
+}
+
 function embaralhar(itens, sorteio) {
   const copia = [...itens];
   for (let i = copia.length - 1; i > 0; i--) {
@@ -21,9 +36,10 @@ export function criarEntradaTreino(modo, variante, id, anterior, sorteio = Math.
   } else {
     const verdades = 1 + Math.floor(sorteio() * 4);
     const conceitos = new Set();
+    const sorteaveis = frasesDoSorteio();
     itens = [];
     for (const [valor, quantidade] of [[true, verdades], [false, 5 - verdades]]) {
-      const banco = embaralhar(BANCO_FRASES.filter(item => item.verdadeira === valor), sorteio);
+      const banco = embaralhar(sorteaveis.filter(item => item.verdadeira === valor), sorteio);
       const ordenado = [...banco.filter(item => !anteriores.has(item.id)), ...banco.filter(item => anteriores.has(item.id))];
       for (const item of ordenado) {
         if (conceitos.has(item.conceito)) continue;

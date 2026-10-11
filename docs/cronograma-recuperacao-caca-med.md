@@ -27,7 +27,12 @@ O cadastro por e-mail **funcionava**: o servidor criou a conta, enviou o e-mail 
 
 ### Fase B — Ajustes rápidos
 
-- [ ] **Bancos separados do Quiz e do V ou M** ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)). O [prompt](prompts/prompt-vou-m-frases.md) para o ChatGPT está pronto. Falta o usuário trazer o JSON, eu validar e checar duplicatas, e a revisão médica.
+- [ ] **Bancos separados do Quiz e do V ou M** ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)). O [prompt](prompts/prompt-vou-m-frases.md) para o ChatGPT está pronto.
+  - [x] Sorteio preparado para o banco novo, com testes (10/10/2026). Troca com 16 conceitos revisados (valor provisório).
+  - [x] Triagem do primeiro lote, `vm-lote-001` ([relatório](../content/review/vm-lote-001-triagem.md)): nenhum conceito repete o Quiz, mas **pelo menos 12 das 36 fontes são de outro assunto**, falta 1 conceito e há IDs a corrigir.
+  - [ ] Corrigir as fontes do lote (usuário escolhe: ChatGPT refaz ou busca à mão).
+  - [ ] Revisão médica e integração do lote aprovado com `revisado: true`.
+  - [ ] Publicar a API e o frontend quando houver conceitos revisados suficientes.
 - [x] **Texto da Batalha estilo Pokémon** (digitação, parada esperando o toque, toque completa o texto) — [especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon). Vale para treinamento, história e Duelo. Feito em 10/10/2026 em `BatalhaArena.jsx`: 20 ms por letra (`MS_POR_LETRA`), seta só com o texto completo, Enter e Espaço iguais ao toque, e "O que você vai fazer?" e "Confirmando o resultado…" sem esperar toque, porque acompanham o menu ou o servidor. Conferido na homologação (abertura e um turno do treinamento). **Não conferido:** "reduzir movimento" no aparelho (o código mostra o texto inteiro e mantém a espera do toque). Falta publicar.
 - [x] **"A Batalha não aparece no PC":** não era defeito. A Batalha é piloto só do administrador, e o teste foi com conta comum. Passa a aparecer quando a Batalha for liberada.
 

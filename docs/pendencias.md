@@ -46,8 +46,12 @@ Registros: [PWA](app-instalavel.md), [cadastro Google e e-mail](incidente-cadast
 6. **Formato do pergaminho** (resumo da doença): confirmar ou ajustar a [tabela proposta](modo-historia-v2.md#pergaminho-resumo-da-doença).
 7. **Modo bio:** só uma ideia (liga/desliga no Quiz e no V ou M para um modo de biologia direto). Falta definir conteúdo, regras e economia, depois das outras fases.
 8. **Salvar o protótipo de movimento no repositório?** São cerca de 1 MB de código-fonte, sem as dependências. Sugestão: sim, numa pasta própria, para não depender de uma pasta temporária.
-9. **Publicar a tela nova do cadastro por e-mail** (já testada na homologação).
+9. **Publicar o frontend** (só Vercel; a API v14 não muda): tela "Confirme seu e-mail", Cadastro 2.0 com as escolhas guardadas e texto da Batalha estilo Pokémon. Os três foram conferidos na homologação. O sorteio dos bancos separados também está na `main`, mas não muda nada até haver frases revisadas, e mora na API, que não precisa ser publicada agora.
 10. **Quando desligar o Firebase.** Hoje nenhuma conta do jogo depende só dele. Critério já registrado: sete dias estáveis, cadastro, recuperação e logout públicos testados, fallback removido do código **antes** de desligar o serviço. Sem data automática.
+11. **Fontes do lote `vm-lote-001`:** pelo menos 12 de 36 URLs são de outro assunto ([triagem](../content/review/vm-lote-001-triagem.md)). Pedir ao ChatGPT que refaça só as fontes ou buscar à mão? Mudar o prompt para pedir `fonte: null` sempre?
+12. **Mínimo de conceitos para trocar o banco do V ou M:** hoje 16 (valor provisório, igual ao banco atual).
+13. **Temas do V ou M:** padronizar por área ampla ("Fisiologia") ou manter subtemas ("Fisiologia respiratória")? Afeta a Revisão v2, que agrupa por tema.
+14. **Versionar o fluxo de conteúdo:** `content/`, `scripts/validar-conteudo.mjs`, o teste dele, o script `content:validate` do `package.json`, os índices do Obsidian em `docs/` e as mudanças nos dois prompts estão só nesta máquina, fora do Git. O agente ajustou o validador e o teste, mas não fez commit de arquivos que não criou.
 
 ## 4. Tarefas do usuário (fora do código)
 
@@ -71,7 +75,7 @@ Detalhe e caixas de seleção no [cronograma de 09/10](cronograma-recuperacao-ca
 
 1. **Cadastro:** publicar a tela de confirmação e o Cadastro 2.0 com as escolhas guardadas (feito na `main` em 10/10, falta publicar); configurar o e-mail próprio quando houver domínio.
 2. **Ajustes rápidos:**
-   - bancos separados do Quiz e do V ou M ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)), validando o JSON do ChatGPT e checando duplicatas;
+   - bancos separados do Quiz e do V ou M ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)): sorteio pronto e testado (10/10); o primeiro lote foi triado e **não está pronto** ([triagem](../content/review/vm-lote-001-triagem.md)): fontes erradas;
    - ~~texto da Batalha estilo Pokémon~~: feito na `main` em 10/10, falta publicar ([especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon)).
 3. **DDX para o público:** liberar o conteúdo validado (marcar `revisado`, tirar a restrição de administrador, ajustar o teste que exige `revisado: false` nos 17 casos, publicar) e incorporar os casos novos depois da conferência.
 4. **Economia v3** ([especificação](economia-v3.md)): 100 XP fixos nos jogos, bônus de tempo escondido, ofensiva de login, 4 missões novas por dia, DDX com 300 XP, Batalha com 500 XP, tickets sem saldo negativo, `VERSAO_ECONOMIA = 3`.
