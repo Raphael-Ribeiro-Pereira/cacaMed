@@ -23,6 +23,16 @@ test('exames desnecessários reduzem eficiência e o tempo não altera XP', () =
   assert.equal(extra.pontos.eficiencia, base.pontos.eficiencia - 10);
   assert.ok(extra.minutos > base.minutos);
 });
+test('destino errado desconta: alta indevida 80, encaminhamento desnecessário 20, destino certo nada', () => {
+  const completo = ['gravidade', 'inicio', 'antecedentes', 'medicamentos', 'alergias', 'associados', 'ausculta', 'pfe', 'asma', 'tratamento', 'antiinflamatorio', 'oxigenio', 'reavaliar', 'orientar'];
+  assert.equal(executarPlantao(caso, [...completo, 'alta']).xp, 250);
+  assert.equal(executarPlantao(caso, [...completo, 'encaminhar']).xp, 230);
+  const precisaEncaminhar = { ...caso, destinoAdequado: 'encaminhar' };
+  assert.equal(executarPlantao(precisaEncaminhar, [...completo, 'encaminhar']).xp, 250);
+  const alta = executarPlantao(precisaEncaminhar, [...completo, 'alta']);
+  assert.equal(alta.xp, 170);
+  assert.equal(alta.seguro, false);
+});
 test('artefato Apps Script é idêntico ao motor do navegador', () => {
   const origem = readFileSync(new URL('./plantao.js', import.meta.url), 'utf8');
   const script = readFileSync(new URL('../../docs/plantao-motor.gs', import.meta.url), 'utf8');

@@ -69,7 +69,9 @@ function executarPlantao(caso, escolhas = []) {
   if (hipotese !== caso.hipoteseCorreta && feitas.has(caso.hipoteseCorreta)) omissoes.push(caso.hipoteseCorreta);
   const altaInsegura = destino === 'alta' && caso.criteriosAlta.some(id => !feitas.has(id));
   const seguro = encerrado && destino === caso.destinoAdequado && !altaInsegura && hipotese === caso.hipoteseCorreta && !omissoes.length;
-  const desconto = altaInsegura ? 80 : destino === 'encaminhar' ? 20 : 0;
+  // Alta indevida (sem os critérios, ou quando o caso pedia encaminhar) desconta 80; encaminhar sem necessidade, 20.
+  const altaIndevida = altaInsegura || (destino === 'alta' && caso.destinoAdequado !== 'alta');
+  const desconto = altaIndevida ? 80 : destino === 'encaminhar' && caso.destinoAdequado !== 'encaminhar' ? 20 : 0;
   const xp = encerrado ? Math.max(0, pontos.raciocinio + pontos.seguranca + pontos.eficiencia - desconto) : 0;
   return { escolhas: [...escolhas], eventos, minutos, encerrado, hipotese, destino, seguro, altaInsegura, omissoes, pontos, desconto, xp,
     estadoPaciente };
