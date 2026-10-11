@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { validarFrases, validarCasos } from '../../scripts/validar-conteudo.mjs';
 
 const frase = (verdadeira, texto) => ({ id: `frase-pressao-pulso-${verdadeira ? 'v' : 'f'}`, conceito: 'pressao-pulso', versao: 1,
-  tema: 'Fisiologia cardiovascular', texto, verdadeira, explicacao: 'A diferença entre as pressões define a pressão de pulso.', fonte: null });
+  tema: 'Fisiologia', texto, verdadeira, explicacao: 'A diferença entre as pressões define a pressão de pulso.', fonte: null });
 
 test('frases exigem par verdadeiro/falso e fonte na etapa pronta', () => {
   const data = { frases: [
@@ -19,6 +19,9 @@ test('frases exigem par verdadeiro/falso e fonte na etapa pronta', () => {
   const doQuiz = structuredClone(data);
   for (const f of doQuiz.frases) { f.conceito = 'insulina'; f.id = `frase-insulina-${f.verdadeira ? 'v' : 'f'}`; }
   assert.match(validarFrases(doQuiz).errors.join(' '), /já é assunto do Quiz/);
+  const subtema = structuredClone(data);
+  for (const f of subtema.frases) f.tema = 'Fisiologia cardiovascular';
+  assert.match(validarFrases(subtema).errors.join(' '), /fora da lista de áreas amplas/);
 });
 
 test('casos recusam estrutura inválida e páginas não conferidas na etapa pronta', () => {
@@ -35,4 +38,21 @@ test('casos recusam estrutura inválida e páginas não conferidas na etapa pron
   assert.match(validarCasos(data, { pronto: true }).errors.join(' '), /página ainda não conferida/);
   data.casos[0].hipoteses[1].certa = true;
   assert.match(validarCasos(data).errors.join(' '), /uma certa/);
+});
+
+test('conferência de fontes acha o trecho literal, recusa trecho inventado e domínio fora da lista', async () => {
+  const { normalizar, trechosAusentes, dominioPermitido, validarListaFontes } = await import('../../scripts/conferir-fontes.mjs');
+  const pagina = normalizar('<p>&sect;1&ordm; A Aten&ccedil;&atilde;o B&aacute;sica ser&aacute; a principal porta de entrada e  centro de <b>comunica&ccedil;&atilde;o</b> .</p>');
+  assert.deepEqual(trechosAusentes(pagina, 'A Atenção Básica será a principal porta de entrada e centro de comunicação.'), []);
+  assert.deepEqual(trechosAusentes(pagina, '§1º A Atenção Básica ... centro de comunicação'), []);
+  assert.equal(trechosAusentes(pagina, 'A Atenção Básica será a única porta de entrada').length, 1);
+  assert.ok(dominioPermitido('https://www.cdc.gov/tetanus/causes/index.html'));
+  assert.ok(dominioPermitido('https://bvsms.saude.gov.br/bvs/saudelegis/gm/2017/prt2436_22_09_2017.html'));
+  assert.ok(!dominioPermitido('https://www.ncbi.nlm.nih.gov.exemplo.com/books/NBK1/'));
+  assert.ok(!dominioPermitido('https://openstax.org/books/anatomy-and-physiology-2e/pages/1-introduction'));
+  assert.ok(!dominioPermitido('http://www.cdc.gov/x'));
+  assert.ok(!dominioPermitido('https://www.ncbi.nlm.nih.gov/books/NBK538324/'));
+  assert.ok(!dominioPermitido('https://pmc.ncbi.nlm.nih.gov/articles/PMC1/'));
+  assert.match(validarListaFontes({ fontes: [{ conceito: 'x', url: 'https://openstax.org/a', titulo: 't', orgao: 'o', trecho: 'algo' }] }).join(' '), /domínio fora/);
+  assert.match(validarListaFontes({ fontes: [{ conceito: 'x', area: 'Fisiologia renal', url: 'https://www.cdc.gov/a', titulo: 't', orgao: 'o', trecho: 'algo' }] }).join(' '), /área/);
 });

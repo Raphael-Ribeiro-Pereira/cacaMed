@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import { BANCO_QUIZ, BANCO_FRASES } from '../src/utils/bancoTreinos.js';
-import { conceitoDoQuiz } from '../src/utils/treinos.js';
+import { TEMAS_VM, conceitoDoQuiz } from '../src/utils/treinos.js';
 import { CASOS_PACIENTE, FONTES_PACIENTE, MODULOS_PACIENTE } from '../src/utils/pacienteDdxConteudo.js';
 
 const texto = value => typeof value === 'string' && value.trim().length > 0;
@@ -47,6 +47,7 @@ export function validarFrases(data, { pronto = false } = {}) {
     if (textos.has(normalized)) errors.push(`${label}: frase duplicada (texto normalizado).`);
     textos.add(normalized);
     if (conceitosQuiz.has(f.conceito)) errors.push(`${label}: conceito ${f.conceito} já é assunto do Quiz.`);
+    if (f.tema && !TEMAS_VM.includes(f.tema)) errors.push(`${label}: tema "${f.tema}" fora da lista de áreas amplas (${TEMAS_VM.join(', ')}).`);
     if (f.fonte) conceitosPorFonte.set(f.fonte, (conceitosPorFonte.get(f.fonte) || new Set()).add(f.conceito));
     if (f.fonte !== null && (typeof f.fonte !== 'string' || !/^https:\/\/[^\s/]+(?:\/[^\s]*)?$/.test(f.fonte))) errors.push(`${label}: fonte deve ser URL https ou null.`);
     if (pronto && !f.fonte) errors.push(`${label}: fonte pendente.`);

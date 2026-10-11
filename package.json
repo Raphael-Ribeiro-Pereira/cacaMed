@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "test": "node --test src/utils/*.test.js",
     "content:validate": "node scripts/validar-conteudo.mjs",
+    "content:fontes": "node scripts/conferir-fontes.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

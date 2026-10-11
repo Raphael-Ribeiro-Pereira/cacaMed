@@ -1,79 +1,129 @@
-# Prompt para o ChatGPT: banco novo de Verdade ou mentira
+# Prompt para o ChatGPT: banco novo de Verdade ou mentira (em duas partes)
 
-Como usar: copie tudo o que está entre as linhas `=====` e cole no ChatGPT. Peça em lotes de 40 conceitos (80 frases) por conversa. Depois, cole o JSON de volta aqui; eu valido o formato, confiro duplicatas com o Quiz e o banco antigo e preparo a publicação. Todo conteúdo novo entra como **não revisado** e só vai para os jogadores depois da sua revisão médica.
+Por que um banco novo: as frases antigas do V ou M são a versão verdadeira e a falsa dos mesmos 16 conceitos das perguntas do Quiz, então o mesmo assunto aparece nos dois modos. O banco novo usa **conceitos diferentes** dos do Quiz.
 
-Por que um banco novo: as frases atuais do V ou M são a versão verdadeira e a falsa dos mesmos 16 conceitos das perguntas do Quiz, então o mesmo assunto aparece nos dois modos. O banco novo usa **conceitos diferentes** dos do Quiz.
+Por que duas partes (decisão de 11/10/2026): no primeiro lote, o ChatGPT inventou pelo menos 12 de 36 fontes ([triagem](../../content/review/vm-lote-001-triagem.md)). Agora ele primeiro **busca as fontes e copia um trecho de cada uma**; o script `npm run content:fontes` abre cada página e confere se o trecho está lá. Só com as fontes aprovadas ele escreve as frases.
+
+**Como usar:**
+1. Cole a **Parte 1** no ChatGPT, com a navegação na web ligada. Salve a resposta em `content/inbox/vm-lote-NNN-fontes.json` e rode `npm run content:fontes -- content/inbox/vm-lote-NNN-fontes.json`. Fontes que falharem voltam para o ChatGPT corrigir ou trocar o conceito.
+2. Na mesma conversa, cole a **Parte 2** e, logo abaixo dela, o JSON de fontes aprovado. Salve a resposta em `content/inbox/vm-lote-NNN.json` e rode `npm run content:validate -- frases content/inbox/vm-lote-NNN.json --ready`.
+3. Traga os dois arquivos aqui para a conferência das frases contra os trechos. Depois vem a sua revisão médica. Todo conteúdo novo entra como **não revisado**.
+
+O agente também pode fazer o lote inteiro sozinho, com o mesmo fluxo; o lote `vm-lote-002` foi feito assim.
+
+## Parte 1: fontes
 
 =====
 
-Você é professor de medicina e elaborador de questões de provas de graduação no Brasil. Vai escrever o conteúdo de um modo de jogo chamado **Verdade ou mentira**, para estudantes de medicina.
+Você é professor de medicina e vai preparar o material de um jogo de estudo, o **Verdade ou mentira**, para estudantes de medicina no Brasil. Nesta primeira parte você **não escreve frases**: só escolhe os conceitos e encontra a fonte de cada um.
 
-## Como o jogo funciona
-- Cada **conceito** tem exatamente **2 frases**: uma verdadeira e uma falsa sobre o mesmo assunto.
-- Cada rodada sorteia 5 frases de conceitos diferentes. O jogador marca quais são verdadeiras e depois lê a explicação e a fonte de cada uma.
-- O jogo é só em português do Brasil.
+### Tarefa
+Escolha **40 conceitos** de graduação em medicina, do ciclo básico ao clínico, e para cada um encontre **uma página da web** que afirme o fato com clareza. Distribua de 2 a 4 conceitos por área, usando exatamente estas áreas: Anatomia, Fisiologia, Histologia, Embriologia, Bioquímica, Microbiologia, Imunologia, Parasitologia, Farmacologia, Patologia, Semiologia, Clínica médica, Pediatria, Ginecologia e obstetrícia, Saúde coletiva.
 
-## Sua tarefa
-Escreva **40 conceitos novos** (80 frases no total).
+### Onde buscar (só estes sites)
+Use **apenas** páginas destes domínios, que são de governo ou de domínio público:
+- `cdc.gov`;
+- sites do NIH: `cancer.gov`, `niddk.nih.gov`, `nichd.nih.gov`, `nida.nih.gov`, `training.seer.cancer.gov`, `medlineplus.gov/genetics`;
+- `gov.br`: Ministério da Saúde, INCA e departamentos do Ministério;
+- `planalto.gov.br` e `bvsms.saude.gov.br`, para leis e portarias do SUS.
 
-### Cobertura
-Distribua os conceitos entre estas áreas, mais ou menos igualmente (de 3 a 4 por área): anatomia, fisiologia, histologia e embriologia, bioquímica, microbiologia, imunologia, parasitologia, farmacologia, patologia, semiologia e propedêutica, clínica médica, pediatria, ginecologia e obstetrícia, saúde coletiva e SUS. Nível: graduação, do ciclo básico ao clínico.
+**Não use** NCBI, PubMed, PMC, StatPearls, OpenStax, Wikipédia, blogs, livros nem sites de sociedades. Se não achar uma página desses domínios para um conceito, troque o conceito.
 
 ### Não repita estes assuntos (já estão no jogo)
-Antibiótico não trata vírus; cor do muco e antibiótico; rim e bexiga; néfron (glomérulo e túbulo); reabsorção tubular de água; eritropoietina e anemia na doença renal; hemácia madura sem núcleo; plaquetas e megacariócitos; endolinfa rica em potássio; potencial endococlear; primeiros socorros em crise convulsiva; cronometrar a crise convulsiva (5 minutos); diabetes tipo 1 e insulina; vacinas e memória imunológica; rins regulam água, sais e ácidos; uso responsável de antibióticos.
+- **Quiz:**
+  - antibiótico não trata vírus; cor do muco e antibiótico; uso responsável de antibióticos;
+  - rim e bexiga; néfron; reabsorção tubular de água; rins regulam água, sais e ácidos;
+  - eritropoietina e anemia na doença renal; hemácia madura sem núcleo; plaquetas e megacariócitos;
+  - endolinfa rica em potássio; potencial endococlear;
+  - primeiros socorros em crise convulsiva; cronometrar a crise convulsiva;
+  - diabetes tipo 1 e insulina; vacinas e memória imunológica.
+- **Lote anterior do V ou M:**
+  - artérias pulmonares; vesícula biliar e bile; árvore brônquica; nó sinoatrial; ocitocina e prolactina; diafragma na inspiração;
+  - músculo liso; epitélio alveolar; origem embrionária da adrenal;
+  - fenilcetonúria; ciclo da ureia; intolerância à lactose;
+  - Legionella; tétano; transmissão da tuberculose; HIV e linfócitos T CD4+; timo;
+  - oxiúro; malária e Anopheles; esquistossomose; doença de Chagas;
+  - metformina; naloxona; tumor benigno e maligno; carcinoma; nome da metástase;
+  - sinais de AVC; trombose venosa e embolia pulmonar; hipertensão sem sintomas; doença falciforme;
+  - sono seguro do bebê; aleitamento exclusivo; teste do pezinho; ácido fólico; pré-eclâmpsia; rastreamento do colo do útero;
+  - vigilância epidemiológica; Conselho de Saúde; Atenção Básica coordenadora do cuidado.
 
-### Regras de qualidade
-1. **A frase falsa deve ser plausível**: um erro que um estudante realmente cometeria (trocar um mecanismo, uma estrutura, uma conduta, uma classificação). Nada de absurdo ou piada.
-2. As duas frases têm **estrutura e tamanho parecidos**, para o jogador não adivinhar só pela redação.
-3. **Uma afirmação por frase.** Evite "sempre" e "nunca" quando não forem essenciais, e evite pegadinha de redação.
-4. Só use assuntos com **consenso estável** nas fontes. Se houver controvérsia ou a conduta mudou nos últimos anos, escolha outro assunto.
-5. Use números só quando forem estáveis e de ampla aceitação (valores de referência, prazos de diretrizes vigentes).
-6. Não copie trechos de livros nem de sites. Escreva com suas palavras.
-7. Frases entre 8 e 25 palavras.
+### O trecho
+Para cada conceito, **copie da página**, sem mudar nenhuma palavra, de 1 a 2 frases (até 60 palavras) que afirmem o fato. Um script vai abrir a URL e procurar esse texto exato, então:
+- não resuma, não traduza e não corrija o texto;
+- não junte frases distantes; se precisar pular um pedaço, use `...` entre as partes;
+- não use texto de imagem nem de PDF.
 
-### Explicação
-Escreva 1 a 2 frases que expliquem **por que a frase verdadeira é verdadeira e qual é o erro da falsa**. A explicação é a mesma para as duas frases do conceito.
+### Formato da resposta
+Responda **só com um objeto JSON**, sem texto fora dele:
 
-### Fonte
-Uma URL `https://` de fonte pública e estável (Ministério da Saúde, OMS, CDC, NIH/NCBI Bookshelf, PubMed, sociedades médicas brasileiras). **Não invente URLs.** Se não tiver certeza de uma URL real, escreva `null` em `fonte` e liste o conceito em `pontos_revisor`.
+```json
+{"fontes": [
+  {
+    "conceito": "tetano-esporos",
+    "area": "Microbiologia",
+    "url": "https://www.cdc.gov/tetanus/causes/index.html",
+    "titulo": "Tetanus: Causes and How It Spreads",
+    "orgao": "CDC",
+    "trecho": "Tetanus spores from the environment enter the body through cuts or wounds. Tetanus doesn't spread from person to person."
+  }
+]}
+```
 
-## Formato da resposta
-Responda **só com um objeto JSON** com `frases` (array) e `pontos_revisor` (array de textos). Em `frases`, coloque a verdadeira e depois a falsa de cada conceito. Sem texto fora do JSON.
+- `conceito`: identificador curto, minúsculas, sem acento nem espaço (use hífen), único.
+- `area`: uma das áreas da lista, escrita igual.
 
-No exemplo, `https://URL-REAL-DA-FONTE` é um marcador: troque pela URL real de cada fonte.
+=====
+
+## Parte 2: frases
+
+=====
+
+Agora escreva as frases do **Verdade ou mentira** usando **somente** as fontes do JSON que colei abaixo. Nada de conhecimento de fora: se o trecho não sustenta uma frase, não escreva essa frase.
+
+### Como o jogo funciona
+- Cada conceito tem **2 frases**: uma verdadeira e uma falsa sobre o mesmo assunto.
+- Cada rodada sorteia 5 frases de conceitos diferentes. O jogador marca quais são verdadeiras e depois lê a explicação e a fonte.
+- O jogo é em português do Brasil.
+
+### Regras
+1. A **verdadeira** diz, com suas palavras, o que o trecho afirma. Não acrescente fato que não está no trecho.
+2. A **falsa** é contradita pelo trecho: troque a estrutura, o mecanismo, o local ou a classificação que o trecho afirma. Ela deve ser plausível, um erro que um estudante cometeria; nada de absurdo ou piada.
+3. As duas frases têm estrutura e tamanho parecidos, entre 8 e 25 palavras, com uma afirmação cada.
+4. Evite "sempre" e "nunca" quando não forem essenciais. Use números só quando estiverem no trecho.
+5. A **explicação** (1 a 2 frases) diz por que a verdadeira é verdadeira e qual é o erro da falsa, também só com o que está na fonte. É a mesma para as duas frases do conceito.
+6. Não copie o trecho palavra por palavra na frase; escreva em português, com suas palavras.
+
+### Formato da resposta
+Responda **só com um objeto JSON** com `frases` e `pontos_revisor`. Em `frases`, coloque a verdadeira e depois a falsa de cada conceito.
 
 ```json
 {"frases": [
   {
-    "id": "frase-pressao-pulso-v",
-    "conceito": "pressao-pulso",
+    "id": "frase-tetano-esporos-v",
+    "conceito": "tetano-esporos",
     "versao": 1,
-    "tema": "Fisiologia cardiovascular",
-    "texto": "A pressão de pulso é a diferença entre a pressão arterial sistólica e a diastólica.",
+    "tema": "Microbiologia",
+    "texto": "Os esporos do Clostridium tetani vêm do ambiente, como solo e poeira, e entram no corpo por ferimentos na pele.",
     "verdadeira": true,
-    "explicacao": "A pressão de pulso é sistólica menos diastólica; confundi-la com a pressão arterial média é um erro comum.",
-    "fonte": "https://URL-REAL-DA-FONTE"
+    "explicacao": "O tétano não é transmitido entre pessoas: esporos do ambiente entram por pele lesada, em geral por ferimentos.",
+    "fonte": "https://www.cdc.gov/tetanus/causes/index.html"
   },
   {
-    "id": "frase-pressao-pulso-f",
-    "conceito": "pressao-pulso",
+    "id": "frase-tetano-esporos-f",
+    "conceito": "tetano-esporos",
     "versao": 1,
-    "tema": "Fisiologia cardiovascular",
-    "texto": "A pressão de pulso é a média entre a pressão arterial sistólica e a diastólica.",
+    "tema": "Microbiologia",
+    "texto": "O tétano passa de pessoa para pessoa pelo contato com secreções respiratórias de quem está doente.",
     "verdadeira": false,
-    "explicacao": "A pressão de pulso é sistólica menos diastólica; confundi-la com a pressão arterial média é um erro comum.",
-    "fonte": "https://URL-REAL-DA-FONTE"
+    "explicacao": "O tétano não é transmitido entre pessoas: esporos do ambiente entram por pele lesada, em geral por ferimentos.",
+    "fonte": "https://www.cdc.gov/tetanus/causes/index.html"
   }
 ], "pontos_revisor": []}
 ```
 
-Regras do formato:
-- `conceito`: identificador curto, em minúsculas, sem acento nem espaço (use hífen), **único** e igual nas duas frases.
-- `id`: `frase-` + conceito + `-v` (verdadeira) ou `-f` (falsa).
-- `tema`: nome da área ou do assunto, curto, em português. **Não** coloque no tema a resposta nem o nome do diagnóstico.
-- `versao`: sempre `1`.
-- `verdadeira`: `true` ou `false`, sem aspas.
-
-Em `pontos_revisor`, liste os conceitos em que você tem alguma dúvida (conduta que muda entre diretrizes, número que varia, fonte que não pôde confirmar). Use `[]` quando não houver pontos.
+- `conceito` e `fonte` iguais aos do JSON de fontes; `tema` igual à `area`.
+- `id`: `frase-` + conceito + `-v` ou `-f`. `versao`: sempre `1`. `verdadeira`: `true` ou `false`, sem aspas.
+- Em `pontos_revisor`, liste o que merece conferência: orientação dos EUA que pode diferir da brasileira, número, diretriz recente. Use `[]` se não houver.
 
 =====

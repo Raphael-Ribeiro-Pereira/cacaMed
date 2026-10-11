@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BANCO_QUIZ, BANCO_FRASES } from './bancoTreinos.js';
-import { MINIMO_CONCEITOS_VM, conceitoDoQuiz, criarEntradaTreino, fraseLegada, frasesDoSorteio, responderTreinoPerfil } from './treinos.js';
+import { MINIMO_CONCEITOS_VM, TEMAS_VM, conceitoDoQuiz, criarEntradaTreino, fraseLegada, frasesDoSorteio, responderTreinoPerfil } from './treinos.js';
 import { concederRecompensa, nivelPorXP, migrarEconomia } from './economia.js';
 import { criarMissoesDiarias } from './missoes.js';
 
@@ -44,6 +44,7 @@ test('bancos separados: conceito novo do V ou M não repete assunto do Quiz e ve
   for (const f of novas) {
     assert.ok(!doQuiz.has(f.conceito), `${f.conceito} já é assunto do Quiz`);
     assert.equal(typeof f.revisado, 'boolean');
+    assert.ok(TEMAS_VM.includes(f.tema), `${f.conceito}: tema ${f.tema} fora das áreas amplas`);
     assert.deepEqual(novas.filter(x => x.conceito === f.conceito).map(x => x.verdadeira).sort(), [false, true]);
   }
 });

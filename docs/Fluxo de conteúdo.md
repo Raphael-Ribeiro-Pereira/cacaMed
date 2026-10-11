@@ -1,6 +1,8 @@
 # Fluxo de conteúdo
 
 1. Execute [[prompts/prompt-vou-m-frases|o prompt de frases]] ou [[prompts/prompt-paciente-ddx-casos|o prompt de casos]] em lotes pequenos.
+   - **Frases do V ou M, em duas partes (desde 11/10/2026):** a Parte 1 traz só as fontes, cada uma com um trecho copiado da página; `npm run content:fontes -- content/inbox/lote-fontes.json` abre cada URL e confere o trecho literalmente, e só aceita domínios de governo ou de domínio público. A Parte 2 escreve as frases só com as fontes aprovadas.
+   - O agente também pode fazer o lote inteiro, com o mesmo fluxo (foi assim no `vm-lote-002`).
 2. Salve o objeto JSON recebido em `content/inbox/`. Os pontos para o revisor ficam no campo `pontos_revisor`.
 3. Valide com `npm run content:validate -- frases content/inbox/lote.json` ou `npm run content:validate -- casos content/inbox/lote.json`.
 4. Corrija o JSON e leve a revisão clínica e bibliográfica para `content/review/`. URLs e páginas precisam ser conferidas nas fontes originais. O script faz checagem estrutural, não confirma a veracidade médica nem a disponibilidade dos links.
