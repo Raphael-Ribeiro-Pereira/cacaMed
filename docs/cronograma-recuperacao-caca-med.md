@@ -9,6 +9,7 @@ Respostas do usuário às pendências de 10/10. Mudam a ordem do plano de 09/10 
 - **Fase C (DDX público) adiada.** Antes, arrumar os modos, principalmente **os casos, que hoje são poucos**: um modo por vez, 15 casos por lote, na ordem Plantão → Erro médico → Causa e efeito (os dois últimos usam um caso do Plantão).
 - **Conteúdo com fontes conferidas.** O agente refez o lote do V ou M (`vm-lote-002`, 40 conceitos) em duas etapas: fontes lidas, depois frases. Os trechos foram conferidos literalmente (`npm run content:fontes`, 40 de 40). Fontes só de governo ou de domínio público. O prompt do ChatGPT também ficou em duas partes.
 - **Banco do V ou M:** a troca acontece com 40 conceitos revisados; os temas são por área ampla (lista fixa `TEMAS_TREINO`).
+- **Plantão, lote 1:** 15 casos prontos para revisão (AVC, sepse, hipoglicemia, cetoacidose, overdose de opioide, intermação, monóxido de carbono, ferimento com risco de tétano, mordedura de cão, síndrome gripal na gestante, cistite, diarreia aguda, trombose venosa, apendicite e meningite). [Dossiê](../content/review/plantao-lote-001.md).
 
 ## Plano de 09/10/2026 — cadastro, bancos separados, Batalha e DDX público
 

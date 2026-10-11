@@ -1,0 +1,2993 @@
+{
+  "casos": [
+    {
+      "id": "neuro-avc-1",
+      "versao": 1,
+      "sistema": "Neurológico",
+      "revisado": false,
+      "titulo": "Fala enrolada e fraqueza súbita",
+      "paciente": "Sr. Antônio, 68 anos",
+      "queixa": "A esposa conta: \"Ele começou a enrolar a fala e o braço direito ficou fraco.\"",
+      "fonte": "https://www.cdc.gov/stroke/signs-symptoms/index.html",
+      "vitais": "FC 88 bpm · FR 16 irpm · SpO₂ 97% em ar ambiente · PA 168/94 mmHg · T 36,5°C",
+      "hipoteseCorreta": "avc",
+      "destinoAdequado": "encaminhar",
+      "criteriosAlta": [],
+      "estadoInicial": "Déficit neurológico súbito; o tempo é decisivo",
+      "acoes": [
+        {
+          "id": "gravidade",
+          "grupo": "Avaliação",
+          "texto": "Avaliar consciência, via aérea e respiração",
+          "resposta": "Acordado, responde a perguntas com fala arrastada. Via aérea livre, respira sem esforço.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "inicio",
+          "grupo": "Anamnese",
+          "texto": "A que horas começou? Quando foi visto bem pela última vez?",
+          "resposta": "A esposa conta que ele estava bem às 9h e às 9h20 começou com a fala enrolada. Agora são 10h.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "sinais",
+          "grupo": "Exame físico",
+          "texto": "Examinar face, força dos braços e pernas e fala",
+          "resposta": "Boca desviada, fraqueza no braço e na perna direitos e fala arrastada. Tudo começou de repente.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 2
+        },
+        {
+          "id": "antecedentes",
+          "grupo": "Anamnese",
+          "texto": "Quais doenças tem e quais remédios usa?",
+          "resposta": "Tem pressão alta e toma o remédio de forma irregular. Não usa anticoagulante.",
+          "pontos": 15,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "cefaleia",
+          "grupo": "Anamnese",
+          "texto": "Teve dor de cabeça forte e repentina?",
+          "resposta": "Nega dor de cabeça.",
+          "pontos": 10,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "tomografia",
+          "grupo": "Exames",
+          "texto": "Pedir tomografia de crânio aqui e esperar o laudo antes de acionar a transferência",
+          "resposta": "A unidade não tem tomógrafo e a espera atrasou a transferência. O exame de imagem é feito no hospital de referência, sem atrasar o transporte.",
+          "pontos": -20,
+          "criterio": "eficiencia",
+          "minutos": 60
+        },
+        {
+          "id": "radiografia",
+          "grupo": "Exames",
+          "texto": "Pedir radiografia de tórax de rotina",
+          "resposta": "Sem achados. O exame não muda a conduta e consumiu tempo.",
+          "pontos": -10,
+          "criterio": "eficiencia",
+          "minutos": 15
+        },
+        {
+          "id": "avc",
+          "grupo": "Hipóteses",
+          "texto": "Registrar AVC agudo como hipótese principal",
+          "resposta": "Hipótese registrada: déficit súbito de um lado do corpo e alteração da fala.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "enxaqueca",
+          "grupo": "Hipóteses",
+          "texto": "Registrar enxaqueca com aura como hipótese principal",
+          "resposta": "Hipótese registrada, mas um déficit súbito de um lado do corpo, sem dor de cabeça, não deve ser atribuído a enxaqueca.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "ansiedade",
+          "grupo": "Hipóteses",
+          "texto": "Registrar crise de ansiedade como hipótese principal",
+          "resposta": "Hipótese registrada, mas os sinais focais não se explicam por ansiedade.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "acionar",
+          "grupo": "Conduta",
+          "texto": "Acionar transporte de urgência para hospital com atendimento de AVC, informando o horário de início",
+          "resposta": "Transporte acionado. A equipe de destino foi avisada do horário de início e se prepara para receber o paciente.",
+          "pontos": 40,
+          "criterio": "seguranca",
+          "minutos": 2,
+          "exige": [
+            "gravidade",
+            "inicio"
+          ]
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Monitorar sinais vitais e nível de consciência até a chegada do transporte",
+          "resposta": "Sem piora neurológica durante a espera. FC 86 bpm, FR 16 irpm, SpO₂ 97% em ar ambiente, PA 164/92 mmHg, T 36,5°C.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 10,
+          "exige": [
+            "acionar"
+          ],
+          "estadoPaciente": "Aguardando transporte, sem piora"
+        },
+        {
+          "id": "registrar",
+          "grupo": "Conduta",
+          "texto": "Registrar horário de início, achados e medidas para a equipe de destino",
+          "resposta": "Registro entregue à equipe do transporte.",
+          "pontos": 25,
+          "criterio": "seguranca",
+          "minutos": 2,
+          "exige": [
+            "inicio",
+            "sinais"
+          ]
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta registrada. Em suspeita de AVC, a conduta é transferir com urgência: os tratamentos que mais ajudam dependem de reconhecer e diagnosticar o AVC em poucas horas.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Paciente transferido para o hospital de referência em AVC, com o horário de início registrado.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "gravidade",
+        "inicio",
+        "sinais",
+        "avc",
+        "acionar",
+        "registrar"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.cdc.gov/stroke/signs-symptoms/index.html",
+          "titulo": "Signs and Symptoms of Stroke",
+          "orgao": "CDC",
+          "trecho": "Sudden numbness or weakness in the face, arm, or leg, especially on one side of the body.",
+          "sustenta": "Sinal típico de AVC: déficit súbito de um lado."
+        },
+        {
+          "url": "https://www.cdc.gov/stroke/signs-symptoms/index.html",
+          "titulo": "Signs and Symptoms of Stroke",
+          "orgao": "CDC",
+          "trecho": "The stroke treatments that work best are available only if the stroke is recognized and diagnosed within 3 hours of the first symptoms",
+          "sustenta": "O horário de início importa e a alta perde a janela."
+        },
+        {
+          "url": "https://www.cdc.gov/stroke/treatment/index.html",
+          "titulo": "Treatment and Intervention for Stroke",
+          "orgao": "CDC",
+          "trecho": "At the hospital, health professionals will ask about your medical history and the time your symptoms started. Brain scans will show what type of stroke you had.",
+          "sustenta": "A imagem é feita no hospital; o horário de início guia o tratamento."
+        },
+        {
+          "url": "https://www.cdc.gov/stroke/treatment/index.html",
+          "titulo": "Treatment and Intervention for Stroke",
+          "orgao": "CDC",
+          "trecho": "The emergency workers will also collect valuable information that guides treatment and alert hospital medical staff before you arrive at the emergency room",
+          "sustenta": "Avisar a equipe de destino e registrar as informações."
+        }
+      ]
+    },
+    {
+      "id": "infecto-sepse-1",
+      "versao": 1,
+      "sistema": "Infeccioso",
+      "revisado": false,
+      "titulo": "Febre e confusão em idosa",
+      "paciente": "Dona Cleide, 74 anos",
+      "queixa": "A filha conta: \"Ela está com febre e confusa desde ontem, e quase não urinou.\"",
+      "fonte": "https://www.cdc.gov/sepsis/about/index.html",
+      "vitais": "FC 124 bpm · FR 28 irpm · SpO₂ 93% em ar ambiente · PA 86/50 mmHg · T 38,9°C",
+      "hipoteseCorreta": "sepse",
+      "destinoAdequado": "encaminhar",
+      "criteriosAlta": [],
+      "estadoInicial": "Grave: sinais de infecção com hipotensão e confusão",
+      "acoes": [
+        {
+          "id": "gravidade",
+          "grupo": "Avaliação",
+          "texto": "Avaliar consciência, perfusão e respiração",
+          "resposta": "Sonolenta e desorientada, pele fria e úmida, respiração rápida.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "foco",
+          "grupo": "Anamnese",
+          "texto": "Algum sintoma indica onde a infecção começou?",
+          "resposta": "Há três dias tem ardência para urinar e urina com cheiro forte.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "antecedentes",
+          "grupo": "Anamnese",
+          "texto": "Quais doenças tem? Esteve internada recentemente?",
+          "resposta": "É diabética e esteve internada há um mês.",
+          "pontos": 15,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "alergias",
+          "grupo": "Anamnese",
+          "texto": "Tem alergia a medicamentos?",
+          "resposta": "Nega alergias.",
+          "pontos": 15,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "exame",
+          "grupo": "Exame físico",
+          "texto": "Examinar tórax, abdome, região lombar e pele",
+          "resposta": "Dor à punho-percussão lombar à direita. Pulmões sem ruídos anormais; pele sem lesões.",
+          "pontos": 15,
+          "criterio": "raciocinio",
+          "minutos": 2
+        },
+        {
+          "id": "coleta",
+          "grupo": "Exames",
+          "texto": "Colher exames de sangue e urina sem atrasar o tratamento",
+          "resposta": "Amostras colhidas em poucos minutos. Os resultados não devem atrasar o tratamento.",
+          "pontos": 15,
+          "criterio": "raciocinio",
+          "minutos": 3
+        },
+        {
+          "id": "tomografia",
+          "grupo": "Exames",
+          "texto": "Pedir tomografia de abdome antes de iniciar o tratamento",
+          "resposta": "Exame demorado que atrasou o início do tratamento de uma paciente instável.",
+          "pontos": -20,
+          "criterio": "eficiencia",
+          "minutos": 40
+        },
+        {
+          "id": "sepse",
+          "grupo": "Hipóteses",
+          "texto": "Registrar sepse de provável foco urinário como hipótese principal",
+          "resposta": "Hipótese registrada: infecção com confusão, hipotensão e taquicardia.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "cistite",
+          "grupo": "Hipóteses",
+          "texto": "Registrar infecção urinária simples como hipótese principal",
+          "resposta": "Hipótese registrada, mas confusão e pressão baixa indicam uma resposta grave à infecção, não um quadro simples.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "desidratacao",
+          "grupo": "Hipóteses",
+          "texto": "Registrar apenas desidratação como hipótese principal",
+          "resposta": "Hipótese registrada, mas febre e foco urinário apontam para infecção grave.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "tratamento",
+          "grupo": "Conduta",
+          "texto": "Iniciar o protocolo de sepse da unidade, com antibiótico o quanto antes",
+          "resposta": "Equipe inicia o protocolo de sepse, incluindo antibiótico, sem esperar os resultados.",
+          "pontos": 40,
+          "criterio": "seguranca",
+          "minutos": 5,
+          "exige": [
+            "gravidade",
+            "alergias"
+          ],
+          "estadoPaciente": "Em tratamento; aguarda reavaliação"
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Reavaliar logo após as primeiras medidas",
+          "resposta": "FC 112 bpm, FR 24 irpm, SpO₂ 95% com oxigênio, PA 98/60 mmHg, T 38,4°C. Ainda confusa.",
+          "pontos": 25,
+          "criterio": "seguranca",
+          "minutos": 30,
+          "exige": [
+            "tratamento"
+          ],
+          "estadoPaciente": "Ainda grave após as primeiras medidas"
+        },
+        {
+          "id": "comunicar",
+          "grupo": "Conduta",
+          "texto": "Comunicar a gravidade à equipe de destino e registrar o que foi feito",
+          "resposta": "Equipe do hospital de referência informada sobre o quadro e as medidas já tomadas.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 2,
+          "exige": [
+            "reavaliar"
+          ]
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta registrada. Sepse é emergência: sem tratamento rápido e continuado, evolui para lesão de órgãos e morte.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Paciente transferida para unidade de maior complexidade, com o tratamento já iniciado.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "gravidade",
+        "foco",
+        "alergias",
+        "sepse",
+        "tratamento",
+        "reavaliar",
+        "comunicar"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.cdc.gov/sepsis/about/index.html",
+          "titulo": "About Sepsis",
+          "orgao": "CDC",
+          "trecho": "Without fast treatment, sepsis can quickly lead to tissue damage, organ failure, and death.",
+          "sustenta": "Sepse é emergência; a alta é insegura."
+        },
+        {
+          "url": "https://www.cdc.gov/sepsis/about/index.html",
+          "titulo": "About Sepsis",
+          "orgao": "CDC",
+          "trecho": "Infections that lead to sepsis most often start in the Gastrointestinal tract Lung Skin or Urinary tract.",
+          "sustenta": "Procurar o foco, como o urinário."
+        },
+        {
+          "url": "https://www.cdc.gov/sepsis/about/index.html",
+          "titulo": "About Sepsis",
+          "orgao": "CDC",
+          "trecho": "Most people who develop sepsis have at least one underlying medical condition or recent hospitalization.",
+          "sustenta": "Doença crônica e internação recente aumentam o risco."
+        },
+        {
+          "url": "https://www.cdc.gov/sepsis/hcp/clinical-care/index.html",
+          "titulo": "Clinical Care of Sepsis",
+          "orgao": "CDC",
+          "trecho": "Start antibiotics as soon as possible in addition to other therapies appropriate for the patient.",
+          "sustenta": "Antibiótico o quanto antes."
+        },
+        {
+          "url": "https://www.cdc.gov/sepsis/hcp/clinical-care/index.html",
+          "titulo": "Clinical Care of Sepsis",
+          "orgao": "CDC",
+          "trecho": "Early and frequent reassessment of patients with sepsis should be undertaken",
+          "sustenta": "Reavaliar cedo e com frequência."
+        }
+      ]
+    },
+    {
+      "id": "endo-hipoglicemia-1",
+      "versao": 1,
+      "sistema": "Endócrino",
+      "revisado": false,
+      "titulo": "Suor frio e confusão antes do almoço",
+      "paciente": "Seu Raimundo, 70 anos",
+      "queixa": "O filho conta: \"Ele ficou suado, tremendo e confuso antes do almoço.\"",
+      "fonte": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/low-blood-glucose-hypoglycemia",
+      "vitais": "FC 104 bpm · FR 18 irpm · SpO₂ 98% em ar ambiente · PA 138/82 mmHg · T 36,4°C",
+      "hipoteseCorreta": "hipoglicemia",
+      "destinoAdequado": "alta",
+      "criteriosAlta": [
+        "carboidrato",
+        "reavaliar",
+        "lanche",
+        "orientar"
+      ],
+      "estadoInicial": "Confuso, mas acordado e engolindo",
+      "acoes": [
+        {
+          "id": "gravidade",
+          "grupo": "Avaliação",
+          "texto": "Avaliar consciência e se consegue engolir com segurança",
+          "resposta": "Acordado e um pouco confuso, obedece a comandos e engole sem dificuldade.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "glicemia",
+          "grupo": "Exames",
+          "texto": "Medir glicemia capilar",
+          "resposta": "Glicemia capilar de 54 mg/dL.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "medicamentos",
+          "grupo": "Anamnese",
+          "texto": "Quais remédios usa para o diabetes? Comeu hoje?",
+          "resposta": "Toma glibenclamida, uma sulfonilureia, pela manhã. Hoje tomou o remédio e não comeu nada.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "antecedentes",
+          "grupo": "Anamnese",
+          "texto": "Tem doença nos rins ou já teve episódios assim?",
+          "resposta": "Tem doença renal crônica leve. Nunca teve um episódio parecido.",
+          "pontos": 15,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "tomografia",
+          "grupo": "Exames",
+          "texto": "Pedir tomografia de crânio",
+          "resposta": "Sem alterações. A confusão se explicava pela glicemia baixa.",
+          "pontos": -20,
+          "criterio": "eficiencia",
+          "minutos": 40
+        },
+        {
+          "id": "hipoglicemia",
+          "grupo": "Hipóteses",
+          "texto": "Registrar hipoglicemia como hipótese principal",
+          "resposta": "Hipótese registrada: glicemia abaixo de 70 mg/dL com sintomas, em uso de sulfonilureia e sem comer.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "avc",
+          "grupo": "Hipóteses",
+          "texto": "Registrar AVC como hipótese principal",
+          "resposta": "Hipótese registrada, mas não há déficit de um lado do corpo e a glicemia está baixa.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "sincope",
+          "grupo": "Hipóteses",
+          "texto": "Registrar desmaio comum como hipótese principal",
+          "resposta": "Hipótese registrada, mas ele não desmaiou e a glicemia explica os sintomas.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "carboidrato",
+          "grupo": "Conduta",
+          "texto": "Oferecer de 15 a 20 g de carboidrato de absorção rápida pela boca",
+          "resposta": "Toma meio copo de suco de fruta comum, sem ser diet.",
+          "pontos": 35,
+          "criterio": "seguranca",
+          "minutos": 2,
+          "exige": [
+            "gravidade",
+            "glicemia"
+          ]
+        },
+        {
+          "id": "glucagon",
+          "grupo": "Conduta",
+          "texto": "Aplicar glucagon",
+          "resposta": "Não era necessário: ele está acordado e engole. O glucagon serve para a hipoglicemia grave, quando a pessoa não consegue se tratar.",
+          "pontos": -10,
+          "criterio": "eficiencia",
+          "minutos": 2
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Medir a glicemia de novo depois de 15 minutos",
+          "resposta": "Glicemia de 98 mg/dL, lúcido e sem suor. FC 86 bpm, FR 16 irpm, SpO₂ 98% em ar ambiente, PA 132/80 mmHg, T 36,4°C.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 15,
+          "exige": [
+            "carboidrato"
+          ],
+          "estadoPaciente": "Glicemia corrigida, lúcido"
+        },
+        {
+          "id": "lanche",
+          "grupo": "Conduta",
+          "texto": "Oferecer um lanche, já que a próxima refeição está a mais de uma hora",
+          "resposta": "Come bolachas e uma fruta.",
+          "pontos": 15,
+          "criterio": "seguranca",
+          "minutos": 5,
+          "exige": [
+            "reavaliar"
+          ]
+        },
+        {
+          "id": "orientar",
+          "grupo": "Conduta",
+          "texto": "Orientar sinais de hipoglicemia e como tratá-la e pedir revisão do remédio com a equipe que o acompanha",
+          "resposta": "Família orientada sobre os sinais e a regra dos 15. Registrado o pedido de revisão da sulfonilureia, pela idade e pela doença renal.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 3,
+          "exige": [
+            "reavaliar"
+          ]
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta com glicemia corrigida, lanche e orientação.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Encaminhamento registrado. Com a glicemia corrigida e o paciente lúcido, o caso podia ser resolvido aqui.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "gravidade",
+        "glicemia",
+        "medicamentos",
+        "hipoglicemia",
+        "carboidrato",
+        "reavaliar",
+        "orientar"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/low-blood-glucose-hypoglycemia",
+          "titulo": "Low Blood Glucose (Hypoglycemia)",
+          "orgao": "NIDDK/NIH",
+          "trecho": "For many people with diabetes, this means a blood glucose reading lower than 70 milligrams per deciliter (mg/dL).",
+          "sustenta": "Limite de 70 mg/dL."
+        },
+        {
+          "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/low-blood-glucose-hypoglycemia",
+          "titulo": "Low Blood Glucose (Hypoglycemia)",
+          "orgao": "NIDDK/NIH",
+          "trecho": "Eat or drink 15 to 20 grams of glucose or carbohydrates right away.",
+          "sustenta": "Tratar com 15 a 20 g de carboidrato."
+        },
+        {
+          "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/low-blood-glucose-hypoglycemia",
+          "titulo": "Low Blood Glucose (Hypoglycemia)",
+          "orgao": "NIDDK/NIH",
+          "trecho": "Wait 15 minutes and check your blood glucose level again.",
+          "sustenta": "Medir de novo em 15 minutos."
+        },
+        {
+          "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/low-blood-glucose-hypoglycemia",
+          "titulo": "Low Blood Glucose (Hypoglycemia)",
+          "orgao": "NIDDK/NIH",
+          "trecho": "If your next meal is more than 1 hour away, have a snack",
+          "sustenta": "Lanche se a refeição estiver longe."
+        },
+        {
+          "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/low-blood-glucose-hypoglycemia",
+          "titulo": "Low Blood Glucose (Hypoglycemia)",
+          "orgao": "NIDDK/NIH",
+          "trecho": "Two types of diabetes pills can cause low blood glucose sulfonylureas",
+          "sustenta": "Sulfonilureia causa hipoglicemia."
+        },
+        {
+          "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/low-blood-glucose-hypoglycemia",
+          "titulo": "Low Blood Glucose (Hypoglycemia)",
+          "orgao": "NIDDK/NIH",
+          "trecho": "Glucagon —a hormone that raises blood glucose levels—is the best way to treat severely low blood glucose.",
+          "sustenta": "Glucagon é para a hipoglicemia grave."
+        }
+      ]
+    },
+    {
+      "id": "endo-cetoacidose-1",
+      "versao": 1,
+      "sistema": "Endócrino",
+      "revisado": false,
+      "titulo": "Vômitos, sede e respiração rápida",
+      "paciente": "Júlia, 19 anos",
+      "queixa": "\"Estou vomitando desde ontem, com muita sede e dor na barriga. Tenho diabetes tipo 1.\"",
+      "fonte": "https://www.cdc.gov/diabetes/about/diabetic-ketoacidosis.html",
+      "vitais": "FC 118 bpm · FR 30 irpm · SpO₂ 98% em ar ambiente · PA 104/66 mmHg · T 36,9°C",
+      "hipoteseCorreta": "cetoacidose",
+      "destinoAdequado": "encaminhar",
+      "criteriosAlta": [],
+      "estadoInicial": "Desidratada, com respiração rápida e profunda",
+      "acoes": [
+        {
+          "id": "gravidade",
+          "grupo": "Avaliação",
+          "texto": "Avaliar consciência, respiração e hidratação",
+          "resposta": "Consciente e muito cansada. Respiração rápida e profunda, boca e pele secas.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "insulina",
+          "grupo": "Anamnese",
+          "texto": "Como está usando a insulina?",
+          "resposta": "Com o vômito, parou de aplicar a insulina porque não estava comendo.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "sintomas",
+          "grupo": "Anamnese",
+          "texto": "Que outros sintomas teve nos últimos dias?",
+          "resposta": "Urina muito e sente muita sede há dois dias. A mãe notou hálito com cheiro de fruta.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "glicemia",
+          "grupo": "Exames",
+          "texto": "Medir glicemia capilar",
+          "resposta": "Glicemia capilar de 412 mg/dL.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "cetonas",
+          "grupo": "Exames",
+          "texto": "Pesquisar cetonas no sangue ou na urina",
+          "resposta": "Cetonas elevadas.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 5
+        },
+        {
+          "id": "radiografia",
+          "grupo": "Exames",
+          "texto": "Pedir radiografia de abdome",
+          "resposta": "Sem achados. O exame não ajuda no diagnóstico e atrasa a transferência.",
+          "pontos": -10,
+          "criterio": "eficiencia",
+          "minutos": 20
+        },
+        {
+          "id": "cetoacidose",
+          "grupo": "Hipóteses",
+          "texto": "Registrar cetoacidose diabética como hipótese principal",
+          "resposta": "Hipótese registrada: diabetes tipo 1, insulina suspensa, glicemia muito alta, cetonas elevadas e respiração rápida e profunda.",
+          "pontos": 45,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "gastroenterite",
+          "grupo": "Hipóteses",
+          "texto": "Registrar gastroenterite como hipótese principal",
+          "resposta": "Hipótese registrada, mas a glicemia alta com cetonas indica cetoacidose; a doença que causa vômitos pode ter sido o gatilho.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "apendicite",
+          "grupo": "Hipóteses",
+          "texto": "Registrar apendicite como hipótese principal",
+          "resposta": "Hipótese registrada, mas a dor abdominal aqui acompanha a cetoacidose, que explica o quadro.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "insulina-casa",
+          "grupo": "Conduta",
+          "texto": "Orientar a voltar a aplicar a insulina em casa e beber água",
+          "resposta": "Inseguro: cetonas elevadas com vômitos são emergência e precisam de tratamento hospitalar.",
+          "pontos": -20,
+          "criterio": "seguranca",
+          "minutos": 2
+        },
+        {
+          "id": "comunicar",
+          "grupo": "Conduta",
+          "texto": "Comunicar ao hospital de destino a glicemia, as cetonas e o quadro",
+          "resposta": "Equipe de destino avisada; vai repor líquidos, eletrólitos e insulina.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 2,
+          "exige": [
+            "glicemia",
+            "cetonas"
+          ]
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Monitorar sinais vitais e consciência até a transferência",
+          "resposta": "Sem piora durante a espera. FC 116 bpm, FR 28 irpm, SpO₂ 98% em ar ambiente, PA 106/66 mmHg, T 36,9°C.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 15,
+          "exige": [
+            "gravidade"
+          ],
+          "estadoPaciente": "Aguardando transferência"
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta registrada. Cetonas elevadas com vômitos e respiração difícil são emergência; o tratamento é hospitalar.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Paciente transferida para tratamento de emergência da cetoacidose.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "gravidade",
+        "insulina",
+        "glicemia",
+        "cetonas",
+        "cetoacidose",
+        "comunicar"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.cdc.gov/diabetes/about/diabetic-ketoacidosis.html",
+          "titulo": "Diabetic Ketoacidosis",
+          "orgao": "CDC",
+          "trecho": "The two most common causes are: Illness. You may not be able to eat or drink as much as usual, which can make blood sugar hard to manage. Missing insulin shots",
+          "sustenta": "Doença e insulina suspensa são as causas mais comuns."
+        },
+        {
+          "url": "https://www.cdc.gov/diabetes/about/diabetic-ketoacidosis.html",
+          "titulo": "Diabetic Ketoacidosis",
+          "orgao": "CDC",
+          "trecho": "Fast, deep breathing. Dry skin and mouth. Flushed face. Fruity-smelling breath.",
+          "sustenta": "Sinais de cetoacidose."
+        },
+        {
+          "url": "https://www.cdc.gov/diabetes/about/diabetic-ketoacidosis.html",
+          "titulo": "Diabetic Ketoacidosis",
+          "orgao": "CDC",
+          "trecho": "Elevated ketones are a sign of DKA. This is a medical emergency that needs to be treated immediately",
+          "sustenta": "Cetonas elevadas são emergência."
+        },
+        {
+          "url": "https://www.cdc.gov/diabetes/about/diabetic-ketoacidosis.html",
+          "titulo": "Diabetic Ketoacidosis",
+          "orgao": "CDC",
+          "trecho": "If you have DKA, you'll be treated in the emergency room or admitted to the hospital.",
+          "sustenta": "Tratamento hospitalar: encaminhar."
+        }
+      ]
+    },
+    {
+      "id": "tox-opioide-1",
+      "versao": 1,
+      "sistema": "Toxicológico",
+      "revisado": false,
+      "titulo": "Não acorda depois de usar comprimidos",
+      "paciente": "Homem de cerca de 30 anos",
+      "queixa": "Os amigos contam: \"Ele tomou uns comprimidos de remédio forte para dor com bebida e não acorda direito.\"",
+      "fonte": "https://nida.nih.gov/publications/drugfacts/naloxone",
+      "vitais": "FC 58 bpm · FR 6 irpm · SpO₂ 84% em ar ambiente · PA 100/60 mmHg · T 36,0°C",
+      "hipoteseCorreta": "overdose",
+      "destinoAdequado": "encaminhar",
+      "criteriosAlta": [],
+      "estadoInicial": "Grave: respiração lenta e superficial",
+      "acoes": [
+        {
+          "id": "gravidade",
+          "grupo": "Avaliação",
+          "texto": "Avaliar resposta, respiração, pupilas e cor dos lábios",
+          "resposta": "Só responde à dor. Respiração lenta e superficial, pupilas muito pequenas, lábios arroxeados.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "historia",
+          "grupo": "Anamnese",
+          "texto": "Perguntar aos amigos o que ele usou e quando",
+          "resposta": "Comprimidos de um opioide receitado ao avô, com cerveja, há cerca de uma hora.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "monitor",
+          "grupo": "Exames",
+          "texto": "Monitorar saturação e frequência respiratória",
+          "resposta": "SpO₂ de 84% e FR de 6 irpm.",
+          "pontos": 15,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "tomografia",
+          "grupo": "Exames",
+          "texto": "Pedir tomografia de crânio antes de qualquer medida",
+          "resposta": "O exame atrasou o tratamento de um paciente que mal respirava.",
+          "pontos": -20,
+          "criterio": "eficiencia",
+          "minutos": 40
+        },
+        {
+          "id": "overdose",
+          "grupo": "Hipóteses",
+          "texto": "Registrar overdose de opioide como hipótese principal",
+          "resposta": "Hipótese registrada: pupilas muito pequenas, respiração lenta e uso de opioide.",
+          "pontos": 50,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "alcool",
+          "grupo": "Hipóteses",
+          "texto": "Registrar só intoxicação alcoólica como hipótese principal",
+          "resposta": "Hipótese registrada, mas pupilas muito pequenas e respiração tão lenta apontam para o opioide.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "ave",
+          "grupo": "Hipóteses",
+          "texto": "Registrar AVC como hipótese principal",
+          "resposta": "Hipótese registrada, mas a história e os sinais apontam para overdose de opioide.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "naloxona",
+          "grupo": "Conduta",
+          "texto": "Administrar naloxona",
+          "resposta": "Em poucos minutos volta a respirar melhor e abre os olhos.",
+          "pontos": 40,
+          "criterio": "seguranca",
+          "minutos": 3,
+          "exige": [
+            "gravidade"
+          ],
+          "estadoPaciente": "Respondeu à naloxona"
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Reavaliar respiração e consciência depois da naloxona",
+          "resposta": "Acordado e confuso. FC 76 bpm, FR 14 irpm, SpO₂ 95% em ar ambiente, PA 112/70 mmHg, T 36,2°C.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 10,
+          "exige": [
+            "naloxona"
+          ],
+          "estadoPaciente": "Melhorou, mas pode voltar a piorar"
+        },
+        {
+          "id": "vigiar",
+          "grupo": "Conduta",
+          "texto": "Manter observação contínua, porque o efeito da naloxona pode acabar antes do opioide",
+          "resposta": "Equipe mantém vigilância. A naloxona age por 30 a 90 minutos, e muitos opioides duram mais.",
+          "pontos": 35,
+          "criterio": "seguranca",
+          "minutos": 5,
+          "exige": [
+            "reavaliar"
+          ]
+        },
+        {
+          "id": "liberar-amigos",
+          "grupo": "Conduta",
+          "texto": "Liberar com os amigos logo que acordar",
+          "resposta": "Inseguro: o efeito da naloxona pode acabar antes do efeito do opioide, e a respiração pode voltar a ficar lenta.",
+          "pontos": -20,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta registrada. Depois da naloxona, a pessoa precisa de observação contínua: a overdose pode voltar quando o efeito da naloxona passa.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Paciente transferido para observação em serviço de maior complexidade.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "gravidade",
+        "historia",
+        "overdose",
+        "naloxona",
+        "reavaliar",
+        "vigiar"
+      ],
+      "citacoes": [
+        {
+          "url": "https://nida.nih.gov/publications/drugfacts/naloxone",
+          "titulo": "Naloxone DrugFacts",
+          "orgao": "NIDA/NIH",
+          "trecho": "very small pupils slow or shallow breathing",
+          "sustenta": "Sinais de overdose de opioide."
+        },
+        {
+          "url": "https://nida.nih.gov/publications/drugfacts/naloxone",
+          "titulo": "Naloxone DrugFacts",
+          "orgao": "NIDA/NIH",
+          "trecho": "Naloxone is a medicine that rapidly reverses an opioid overdose.",
+          "sustenta": "Naloxona reverte a overdose."
+        },
+        {
+          "url": "https://nida.nih.gov/publications/drugfacts/naloxone",
+          "titulo": "Naloxone DrugFacts",
+          "orgao": "NIDA/NIH",
+          "trecho": "Naloxone works to reverse opioid overdose in the body for only 30 to 90 minutes. But many opioids remain in the body longer than that.",
+          "sustenta": "O efeito acaba antes; não liberar logo."
+        },
+        {
+          "url": "https://nida.nih.gov/publications/drugfacts/naloxone",
+          "titulo": "Naloxone DrugFacts",
+          "orgao": "NIDA/NIH",
+          "trecho": "People who are given naloxone should be observed constantly until emergency care arrives.",
+          "sustenta": "Observação contínua."
+        }
+      ]
+    },
+    {
+      "id": "amb-intermacao-1",
+      "versao": 1,
+      "sistema": "Ambiental",
+      "revisado": false,
+      "titulo": "Desmaio no canteiro de obras",
+      "paciente": "Carlos, 41 anos, pedreiro",
+      "queixa": "O colega conta: \"Ele estava trabalhando no sol, começou a falar enrolado e caiu.\"",
+      "fonte": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html",
+      "vitais": "FC 132 bpm · FR 26 irpm · SpO₂ 96% em ar ambiente · PA 98/58 mmHg · T 41,0°C",
+      "hipoteseCorreta": "intermacao",
+      "destinoAdequado": "encaminhar",
+      "criteriosAlta": [],
+      "estadoInicial": "Grave: muito quente e confuso",
+      "acoes": [
+        {
+          "id": "gravidade",
+          "grupo": "Avaliação",
+          "texto": "Avaliar consciência, respiração e pele",
+          "resposta": "Confuso, fala arrastada. Pele muito quente. Respira rápido, sem obstrução.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "contexto",
+          "grupo": "Anamnese",
+          "texto": "Perguntar ao colega como foi o dia de trabalho",
+          "resposta": "Trabalhou desde cedo no sol forte, bebeu pouca água e não parou para descansar.",
+          "pontos": 20,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "temperatura",
+          "grupo": "Exame físico",
+          "texto": "Confirmar a temperatura corporal",
+          "resposta": "Temperatura de 41,0°C.",
+          "pontos": 15,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "resfriar",
+          "grupo": "Conduta",
+          "texto": "Levar para local fresco, tirar a roupa de cima e resfriar rápido com água fria, panos molhados e ventilação",
+          "resposta": "Resfriamento iniciado com água fria e ventilador.",
+          "pontos": 45,
+          "criterio": "seguranca",
+          "minutos": 5,
+          "exige": [
+            "gravidade"
+          ],
+          "estadoPaciente": "Em resfriamento"
+        },
+        {
+          "id": "gelo",
+          "grupo": "Conduta",
+          "texto": "Colocar panos frios ou gelo na cabeça, no pescoço, nas axilas e na virilha",
+          "resposta": "Compressas frias posicionadas.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 2,
+          "exige": [
+            "resfriar"
+          ]
+        },
+        {
+          "id": "tomografia",
+          "grupo": "Exames",
+          "texto": "Pedir tomografia de crânio antes de resfriar",
+          "resposta": "O exame atrasou o resfriamento, que é a medida urgente.",
+          "pontos": -20,
+          "criterio": "eficiencia",
+          "minutos": 40
+        },
+        {
+          "id": "intermacao",
+          "grupo": "Hipóteses",
+          "texto": "Registrar intermação (golpe de calor) como hipótese principal",
+          "resposta": "Hipótese registrada: calor intenso, confusão e temperatura muito alta.",
+          "pontos": 50,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "exaustao",
+          "grupo": "Hipóteses",
+          "texto": "Registrar exaustão pelo calor como hipótese principal",
+          "resposta": "Hipótese registrada, mas confusão mental e temperatura tão alta indicam o quadro mais grave, a intermação.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "meningite",
+          "grupo": "Hipóteses",
+          "texto": "Registrar meningite como hipótese principal",
+          "resposta": "Hipótese registrada, mas a exposição ao calor no trabalho explica o quadro.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Reavaliar depois do resfriamento",
+          "resposta": "Mais acordado. FC 112 bpm, FR 22 irpm, SpO₂ 97% em ar ambiente, PA 106/64 mmHg, T 39,0°C.",
+          "pontos": 25,
+          "criterio": "seguranca",
+          "minutos": 20,
+          "exige": [
+            "resfriar"
+          ],
+          "estadoPaciente": "Melhorando com o resfriamento"
+        },
+        {
+          "id": "comunicar",
+          "grupo": "Conduta",
+          "texto": "Acionar o atendimento de emergência e ficar com o paciente até a chegada da equipe",
+          "resposta": "Equipe de transporte acionada; o resfriamento continua até a chegada.",
+          "pontos": 25,
+          "criterio": "seguranca",
+          "minutos": 2,
+          "exige": [
+            "gravidade"
+          ]
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta registrada. A intermação pode causar incapacidade permanente ou morte sem tratamento de emergência.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Paciente transferido para tratamento de emergência, com resfriamento mantido.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "gravidade",
+        "temperatura",
+        "resfriar",
+        "intermacao",
+        "reavaliar",
+        "comunicar"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html",
+          "titulo": "Heat-related Illnesses",
+          "orgao": "NIOSH/CDC",
+          "trecho": "Heat stroke is the most serious heat-related illness.",
+          "sustenta": "É o quadro mais grave ligado ao calor."
+        },
+        {
+          "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html",
+          "titulo": "Heat-related Illnesses",
+          "orgao": "NIOSH/CDC",
+          "trecho": "Heat stroke can cause permanent disability or death if the person does not receive emergency treatment.",
+          "sustenta": "Precisa de tratamento de emergência."
+        },
+        {
+          "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html",
+          "titulo": "Heat-related Illnesses",
+          "orgao": "NIOSH/CDC",
+          "trecho": "Confusion, altered mental status, slurred speech",
+          "sustenta": "Sintomas."
+        },
+        {
+          "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html",
+          "titulo": "Heat-related Illnesses",
+          "orgao": "NIOSH/CDC",
+          "trecho": "Move the worker to a shaded, cool area and remove outer clothing. Cool the worker quickly",
+          "sustenta": "Resfriar rápido."
+        },
+        {
+          "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html",
+          "titulo": "Heat-related Illnesses",
+          "orgao": "NIOSH/CDC",
+          "trecho": "Place cold wet cloths or ice on the head, neck, armpits, and groin",
+          "sustenta": "Compressas frias."
+        },
+        {
+          "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html",
+          "titulo": "Heat-related Illnesses",
+          "orgao": "NIOSH/CDC",
+          "trecho": "Call 911 for emergency medical care. Stay with the worker until emergency medical services arrive.",
+          "sustenta": "Acionar emergência e ficar junto."
+        }
+      ]
+    },
+    {
+      "id": "tox-monoxido-1",
+      "versao": 1,
+      "sistema": "Toxicológico",
+      "revisado": false,
+      "titulo": "Família inteira com dor de cabeça",
+      "paciente": "Fernanda, 34 anos",
+      "queixa": "\"Eu, meu marido e meu filho acordamos com dor de cabeça e tontura.\"",
+      "fonte": "https://www.cdc.gov/carbon-monoxide/hcp/clinical-guidance/index.html",
+      "vitais": "FC 104 bpm · FR 20 irpm · SpO₂ 99% em ar ambiente · PA 122/78 mmHg · T 36,6°C",
+      "hipoteseCorreta": "monoxido",
+      "destinoAdequado": "alta",
+      "criteriosAlta": [
+        "oxigenio",
+        "reavaliar",
+        "orientar",
+        "gravidez"
+      ],
+      "estadoInicial": "Sintomática, com oximetria normal",
+      "acoes": [
+        {
+          "id": "gravidade",
+          "grupo": "Avaliação",
+          "texto": "Avaliar consciência, respiração e dor no peito",
+          "resposta": "Consciente e orientada, com dor de cabeça e náusea. Nega dor no peito e desmaio.",
+          "pontos": 25,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "exposicao",
+          "grupo": "Anamnese",
+          "texto": "Perguntar sobre a casa, outras pessoas com sintomas e febre",
+          "resposta": "Ligaram um aquecedor a gás com as janelas fechadas. Todos em casa têm os mesmos sintomas, e ninguém tem febre.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "gravidez",
+          "grupo": "Exames",
+          "texto": "Fazer teste de gravidez",
+          "resposta": "Teste negativo.",
+          "pontos": 15,
+          "criterio": "seguranca",
+          "minutos": 5
+        },
+        {
+          "id": "neuro",
+          "grupo": "Exame físico",
+          "texto": "Fazer exame neurológico com avaliação cognitiva",
+          "resposta": "Sem déficits; memória e atenção preservadas.",
+          "pontos": 15,
+          "criterio": "raciocinio",
+          "minutos": 3
+        },
+        {
+          "id": "cohb",
+          "grupo": "Exames",
+          "texto": "Dosar a carboxi-hemoglobina",
+          "resposta": "Carboxi-hemoglobina de 18%. Ela não fuma.",
+          "pontos": 20,
+          "criterio": "raciocinio",
+          "minutos": 20
+        },
+        {
+          "id": "oximetria",
+          "grupo": "Exames",
+          "texto": "Descartar a intoxicação porque a SpO₂ está em 99%",
+          "resposta": "Erro: o oxímetro de pulso não é preciso quando há carboxi-hemoglobina; a saturação normal não descarta a intoxicação.",
+          "pontos": -10,
+          "criterio": "eficiencia",
+          "minutos": 1
+        },
+        {
+          "id": "ecg",
+          "grupo": "Exames",
+          "texto": "Fazer eletrocardiograma",
+          "resposta": "Ritmo sinusal, sem sinais de isquemia.",
+          "pontos": 10,
+          "criterio": "raciocinio",
+          "minutos": 10
+        },
+        {
+          "id": "monoxido",
+          "grupo": "Hipóteses",
+          "texto": "Registrar intoxicação por monóxido de carbono como hipótese principal",
+          "resposta": "Hipótese registrada: exposição a aquecedor a gás, sem febre, várias pessoas com os mesmos sintomas.",
+          "pontos": 20,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "gripe",
+          "grupo": "Hipóteses",
+          "texto": "Registrar síndrome gripal como hipótese principal",
+          "resposta": "Hipótese registrada, mas sem febre e com toda a família doente após o aquecedor, a intoxicação é mais provável.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "oxigenio",
+          "grupo": "Conduta",
+          "texto": "Iniciar oxigênio a 100% por máscara",
+          "resposta": "Oxigênio a 100% iniciado.",
+          "pontos": 40,
+          "criterio": "seguranca",
+          "minutos": 2,
+          "exige": [
+            "gravidade"
+          ],
+          "estadoPaciente": "Em oxigênio a 100%"
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Reavaliar depois de cerca de 4 horas de oxigênio",
+          "resposta": "Sem sintomas e com exame neurológico normal. FC 84 bpm, FR 16 irpm, SpO₂ 99%, PA 118/76 mmHg, T 36,6°C.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 240,
+          "exige": [
+            "oxigenio"
+          ],
+          "estadoPaciente": "Sem sintomas após o oxigênio"
+        },
+        {
+          "id": "orientar",
+          "grupo": "Conduta",
+          "texto": "Orientar a não voltar para casa até o aquecedor ser revisto e garantir a avaliação da família",
+          "resposta": "Marido e filho também em atendimento. Orientada a não usar o aparelho até a revisão e a ter detector de monóxido.",
+          "pontos": 25,
+          "criterio": "seguranca",
+          "minutos": 3,
+          "exige": [
+            "reavaliar"
+          ]
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta sem sintomas, após o oxigênio, com orientação sobre a fonte do gás.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Encaminhamento registrado. Sem desmaio, sem alteração cardíaca ou neurológica, sem gravidez e com carboxi-hemoglobina abaixo de 25%, não havia critério para oxigênio hiperbárico.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "gravidade",
+        "exposicao",
+        "gravidez",
+        "cohb",
+        "monoxido",
+        "oxigenio",
+        "reavaliar",
+        "orientar"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.cdc.gov/carbon-monoxide/hcp/clinical-guidance/index.html",
+          "titulo": "Clinical Guidance for Carbon Monoxide (CO) Poisoning",
+          "orgao": "CDC",
+          "trecho": "Consider CO poisoning especially in these situations: No fever associated with symptoms, history of exposure, multiple patients with similar complaints.",
+          "sustenta": "Quando suspeitar."
+        },
+        {
+          "url": "https://www.cdc.gov/carbon-monoxide/hcp/clinical-guidance/index.html",
+          "titulo": "Clinical Guidance for Carbon Monoxide (CO) Poisoning",
+          "orgao": "CDC",
+          "trecho": "All women of childbearing age who are suspected of having CO poisoning should have a pregnancy test.",
+          "sustenta": "Teste de gravidez."
+        },
+        {
+          "url": "https://www.cdc.gov/carbon-monoxide/hcp/clinical-guidance/index.html",
+          "titulo": "Clinical Guidance for Carbon Monoxide (CO) Poisoning",
+          "orgao": "CDC",
+          "trecho": "pulse oximeter is not accurate when COHgb is present.",
+          "sustenta": "A oximetria normal não descarta."
+        },
+        {
+          "url": "https://www.cdc.gov/carbon-monoxide/hcp/clinical-guidance/index.html",
+          "titulo": "Clinical Guidance for Carbon Monoxide (CO) Poisoning",
+          "orgao": "CDC",
+          "trecho": "Administer 100% oxygen until the patient is symptom-free, usually about 4-5 hours.",
+          "sustenta": "Oxigênio a 100% até ficar sem sintomas."
+        },
+        {
+          "url": "https://www.cdc.gov/carbon-monoxide/hcp/clinical-guidance/index.html",
+          "titulo": "Clinical Guidance for Carbon Monoxide (CO) Poisoning",
+          "orgao": "CDC",
+          "trecho": "Consider hyperbaric oxygen therapy (HBO) therapy when the patient has a COHgb level of more than 25- 30%, there is evidence of cardiac involvement, severe acidosis, transient or prolonged unconsciousness, neurological impairment, or abnormal neuropsychiatric testing.",
+          "sustenta": "Critérios para hiperbárica, ausentes aqui."
+        }
+      ]
+    },
+    {
+      "id": "pele-tetano-1",
+      "versao": 1,
+      "sistema": "Pele e partes moles",
+      "revisado": false,
+      "titulo": "Pisou num prego na obra",
+      "paciente": "Paulo, 45 anos",
+      "queixa": "\"Pisei num prego enferrujado há duas horas, quando estava trabalhando.\"",
+      "fonte": "https://www.cdc.gov/tetanus/hcp/clinical-guidance/index.html",
+      "vitais": "FC 82 bpm · FR 16 irpm · SpO₂ 98% em ar ambiente · PA 126/80 mmHg · T 36,5°C",
+      "hipoteseCorreta": "ferimento-sujo",
+      "destinoAdequado": "alta",
+      "criteriosAlta": [
+        "limpar",
+        "reforco",
+        "reavaliar",
+        "orientar"
+      ],
+      "estadoInicial": "Estável, com ferimento perfurante",
+      "acoes": [
+        {
+          "id": "ferimento",
+          "grupo": "Exame físico",
+          "texto": "Examinar o ferimento",
+          "resposta": "Ferimento perfurante na sola do pé, com terra. Sem sangramento ativo; sente e mexe os dedos normalmente.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 2
+        },
+        {
+          "id": "vacina",
+          "grupo": "Anamnese",
+          "texto": "Conferir a vacinação contra o tétano",
+          "resposta": "Pela carteira, tem o esquema completo; o último reforço foi há 7 anos.",
+          "pontos": 35,
+          "criterio": "raciocinio",
+          "minutos": 2
+        },
+        {
+          "id": "alergias",
+          "grupo": "Anamnese",
+          "texto": "Tem alergia a vacinas ou medicamentos?",
+          "resposta": "Nega alergias.",
+          "pontos": 10,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "rotina",
+          "grupo": "Exames",
+          "texto": "Pedir hemograma e cultura de rotina",
+          "resposta": "Exames sem utilidade neste caso; não mudam a conduta.",
+          "pontos": -10,
+          "criterio": "eficiencia",
+          "minutos": 30
+        },
+        {
+          "id": "ferimento-sujo",
+          "grupo": "Hipóteses",
+          "texto": "Classificar como ferimento sujo, com risco aumentado de tétano",
+          "resposta": "Classificação registrada: ferimento perfurante com terra.",
+          "pontos": 55,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "ferimento-limpo",
+          "grupo": "Hipóteses",
+          "texto": "Classificar como ferimento limpo e pequeno, sem risco relevante",
+          "resposta": "Classificação registrada, mas ferimento perfurante com terra é sujo e tem risco maior.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "limpar",
+          "grupo": "Conduta",
+          "texto": "Limpar o ferimento e remover a sujeira",
+          "resposta": "Ferimento lavado e limpo.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 10,
+          "exige": [
+            "ferimento"
+          ]
+        },
+        {
+          "id": "reforco",
+          "grupo": "Conduta",
+          "texto": "Aplicar reforço da vacina contra o tétano",
+          "resposta": "Reforço aplicado: esquema completo, mas o último reforço foi há 5 anos ou mais, e o ferimento é sujo.",
+          "pontos": 35,
+          "criterio": "seguranca",
+          "minutos": 5,
+          "exige": [
+            "vacina",
+            "alergias"
+          ]
+        },
+        {
+          "id": "imunoglobulina",
+          "grupo": "Conduta",
+          "texto": "Aplicar imunoglobulina antitetânica",
+          "resposta": "Não indicada: ele tem o esquema completo. A imunoglobulina fica para quem tem vacinação desconhecida ou incompleta, ou imunodeficiência.",
+          "pontos": -10,
+          "criterio": "eficiencia",
+          "minutos": 5
+        },
+        {
+          "id": "antibiotico",
+          "grupo": "Conduta",
+          "texto": "Prescrever antibiótico para prevenir o tétano",
+          "resposta": "Não recomendado: antibiótico não é usado para prevenir tétano no cuidado do ferimento.",
+          "pontos": -10,
+          "criterio": "eficiencia",
+          "minutos": 2
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Reavaliar o pé depois da limpeza",
+          "resposta": "Ferimento limpo. FC 78 bpm, FR 16 irpm, SpO₂ 98% em ar ambiente, PA 124/80 mmHg, T 36,5°C.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 5,
+          "exige": [
+            "limpar"
+          ]
+        },
+        {
+          "id": "orientar",
+          "grupo": "Conduta",
+          "texto": "Orientar cuidados com o ferimento e retorno se houver sinais de infecção",
+          "resposta": "Orientado a manter o ferimento limpo e voltar se surgir vermelhidão, pus, febre ou dor que aumenta.",
+          "pontos": 15,
+          "criterio": "seguranca",
+          "minutos": 3,
+          "exige": [
+            "reavaliar"
+          ]
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta com ferimento limpo, reforço aplicado e orientações.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Encaminhamento registrado. O caso podia ser resolvido aqui, com limpeza e vacina.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "ferimento",
+        "vacina",
+        "ferimento-sujo",
+        "limpar",
+        "reforco"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.cdc.gov/tetanus/hcp/clinical-guidance/index.html",
+          "titulo": "Clinical Guidance for Wound Management to Prevent Tetanus",
+          "orgao": "CDC",
+          "trecho": "Penetrating or puncture wounds Wounds containing dirt, soil, feces, or saliva",
+          "sustenta": "Perfurante com terra é ferimento sujo."
+        },
+        {
+          "url": "https://www.cdc.gov/tetanus/hcp/clinical-guidance/index.html",
+          "titulo": "Clinical Guidance for Wound Management to Prevent Tetanus",
+          "orgao": "CDC",
+          "trecho": "For dirty or major wounds People with a complete tetanus primary series who received their last tetanus vaccine 5 or more years ago.",
+          "sustenta": "Indica o reforço."
+        },
+        {
+          "url": "https://www.cdc.gov/tetanus/hcp/clinical-guidance/index.html",
+          "titulo": "Clinical Guidance for Wound Management to Prevent Tetanus",
+          "orgao": "CDC",
+          "trecho": "For dirty or major wounds People with an unknown tetanus vaccination history People who have never received tetanus vaccines People with an incomplete tetanus vaccine primary series",
+          "sustenta": "Quem recebe imunoglobulina; não é o caso."
+        },
+        {
+          "url": "https://www.cdc.gov/tetanus/hcp/clinical-guidance/index.html",
+          "titulo": "Clinical Guidance for Wound Management to Prevent Tetanus",
+          "orgao": "CDC",
+          "trecho": "Antibiotics (topical or systemic) aren't recommended during wound care to protect against tetanus.",
+          "sustenta": "Sem antibiótico para prevenir tétano."
+        }
+      ]
+    },
+    {
+      "id": "zoo-raiva-1",
+      "versao": 1,
+      "sistema": "Zoonoses",
+      "revisado": false,
+      "titulo": "Mordida de cachorro na perna",
+      "paciente": "Lucas, 12 anos",
+      "queixa": "A mãe conta: \"O cachorro do vizinho mordeu a perna dele há uma hora.\"",
+      "fonte": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/r/raiva",
+      "vitais": "FC 96 bpm · FR 18 irpm · SpO₂ 99% em ar ambiente · PA 108/68 mmHg · T 36,6°C",
+      "hipoteseCorreta": "exposicao-raiva",
+      "destinoAdequado": "alta",
+      "criteriosAlta": [
+        "lavar",
+        "profilaxia",
+        "observar"
+      ],
+      "estadoInicial": "Estável, com mordedura recente",
+      "acoes": [
+        {
+          "id": "ferimento",
+          "grupo": "Exame físico",
+          "texto": "Examinar o ferimento",
+          "resposta": "Duas perfurações e uma escoriação na panturrilha, sem sangramento ativo.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 2
+        },
+        {
+          "id": "animal",
+          "grupo": "Anamnese",
+          "texto": "Perguntar sobre o cachorro: é conhecido? Pode ser observado?",
+          "resposta": "É o cachorro do vizinho, que mora ao lado e pode ser observado. O dono diz que ele está saudável.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "vacina-tetano",
+          "grupo": "Anamnese",
+          "texto": "Conferir a vacinação contra o tétano",
+          "resposta": "Carteira de vacinação em dia.",
+          "pontos": 15,
+          "criterio": "seguranca",
+          "minutos": 2
+        },
+        {
+          "id": "radiografia",
+          "grupo": "Exames",
+          "texto": "Pedir radiografia da perna",
+          "resposta": "Sem alterações. O ferimento é superficial e o exame não muda a conduta.",
+          "pontos": -10,
+          "criterio": "eficiencia",
+          "minutos": 20
+        },
+        {
+          "id": "exposicao-raiva",
+          "grupo": "Hipóteses",
+          "texto": "Registrar exposição ao vírus da raiva por mordedura de cão",
+          "resposta": "Hipótese registrada: agressão por animal exige avaliação da profilaxia antirrábica.",
+          "pontos": 45,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "sem-risco",
+          "grupo": "Hipóteses",
+          "texto": "Registrar ferimento sem risco de raiva, porque o cão parece saudável",
+          "resposta": "Hipótese registrada, mas toda agressão por animal precisa da avaliação da profilaxia, e o cão deve ser observado.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "lavar",
+          "grupo": "Conduta",
+          "texto": "Lavar o ferimento com bastante água e sabão e aplicar antisséptico",
+          "resposta": "Ferimento lavado com cuidado e antisséptico aplicado.",
+          "pontos": 35,
+          "criterio": "seguranca",
+          "minutos": 10,
+          "exige": [
+            "ferimento"
+          ]
+        },
+        {
+          "id": "profilaxia",
+          "grupo": "Conduta",
+          "texto": "Avaliar e prescrever a profilaxia antirrábica conforme o protocolo do Ministério da Saúde",
+          "resposta": "Esquema definido pelo fluxograma, considerando o ferimento e a possibilidade de observar o animal.",
+          "pontos": 35,
+          "criterio": "seguranca",
+          "minutos": 5,
+          "exige": [
+            "ferimento",
+            "animal"
+          ]
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Reavaliar o menino depois do atendimento",
+          "resposta": "Tranquilo e sem sangramento. FC 90 bpm, FR 18 irpm, SpO₂ 99% em ar ambiente, PA 106/68 mmHg, T 36,6°C.",
+          "pontos": 15,
+          "criterio": "seguranca",
+          "minutos": 5,
+          "exige": [
+            "lavar"
+          ]
+        },
+        {
+          "id": "observar",
+          "grupo": "Conduta",
+          "texto": "Orientar observar o cão por 10 dias e avisar o serviço se ele adoecer, sumir ou morrer",
+          "resposta": "Mãe e vizinho orientados a observar o cão e a avisar a unidade se houver qualquer mudança.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 3,
+          "exige": [
+            "animal"
+          ]
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta com ferimento tratado, profilaxia definida e observação do cão orientada.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Encaminhamento registrado. O atendimento antirrábico podia ser feito aqui.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "ferimento",
+        "animal",
+        "exposicao-raiva",
+        "lavar",
+        "profilaxia",
+        "observar"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/r/raiva",
+          "titulo": "Raiva",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Quanto ao ferimento, deve-se lavar abundantemente com água e sabão, o mais rápido possível, e aplicar produto antisséptico.",
+          "sustenta": "Lavar e aplicar antisséptico."
+        },
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/r/raiva",
+          "titulo": "Raiva",
+          "orgao": "Ministério da Saúde",
+          "trecho": "O esquema de profilaxia da raiva humana deve ser prescrito pelo médico ou enfermeiro, que avaliará o caso indicando a aplicação de vacina e/ou soro.",
+          "sustenta": "Profilaxia definida após avaliação."
+        },
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/r/raiva",
+          "titulo": "Raiva",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Nos casos de agressão por cães e gatos, quando possível, observar o animal por 10 dias para ver se ele manifesta doença ou morre.",
+          "sustenta": "Observar o cão por 10 dias."
+        },
+        {
+          "url": "https://www.cdc.gov/tetanus/hcp/clinical-guidance/index.html",
+          "titulo": "Clinical Guidance for Wound Management to Prevent Tetanus",
+          "orgao": "CDC",
+          "trecho": "Wounds containing dirt, soil, feces, or saliva (e.g., animal or human bites)",
+          "sustenta": "Mordedura é ferimento de risco para tétano: conferir a vacina."
+        }
+      ]
+    },
+    {
+      "id": "resp-gripe-gestante-1",
+      "versao": 1,
+      "sistema": "Respiratório",
+      "revisado": false,
+      "titulo": "Febre e tosse na gravidez",
+      "paciente": "Aline, 27 anos, grávida de 24 semanas",
+      "queixa": "\"Comecei ontem à tarde com febre, tosse e dor no corpo.\"",
+      "fonte": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/g/gripe-influenza",
+      "vitais": "FC 98 bpm · FR 18 irpm · SpO₂ 98% em ar ambiente · PA 112/70 mmHg · T 38,3°C",
+      "hipoteseCorreta": "influenza",
+      "destinoAdequado": "alta",
+      "criteriosAlta": [
+        "antiviral",
+        "reavaliar",
+        "orientar"
+      ],
+      "estadoInicial": "Síndrome gripal sem sinais de gravidade",
+      "acoes": [
+        {
+          "id": "gravidade",
+          "grupo": "Avaliação",
+          "texto": "Avaliar respiração, fala e sinais de gravidade",
+          "resposta": "Fala frases completas, sem falta de ar. Sem confusão.",
+          "pontos": 25,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "inicio",
+          "grupo": "Anamnese",
+          "texto": "Quando começaram os sintomas?",
+          "resposta": "Ontem à tarde, há menos de 48 horas.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "sintomas",
+          "grupo": "Anamnese",
+          "texto": "Que sintomas tem?",
+          "resposta": "Febre, tosse, dor de garganta, dor no corpo e dor de cabeça, de início repentino.",
+          "pontos": 20,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "gestacao",
+          "grupo": "Anamnese",
+          "texto": "Como está a gestação e o pré-natal?",
+          "resposta": "24 semanas, pré-natal em dia, sem intercorrências. O bebê está se mexendo.",
+          "pontos": 20,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "ausculta",
+          "grupo": "Exame físico",
+          "texto": "Auscultar os pulmões",
+          "resposta": "Murmúrio vesicular presente, sem ruídos anormais.",
+          "pontos": 20,
+          "criterio": "raciocinio",
+          "minutos": 2
+        },
+        {
+          "id": "radiografia",
+          "grupo": "Exames",
+          "texto": "Pedir radiografia de tórax de rotina",
+          "resposta": "Sem achados. O exame não muda a conduta neste quadro sem sinais pulmonares.",
+          "pontos": -10,
+          "criterio": "eficiencia",
+          "minutos": 20
+        },
+        {
+          "id": "influenza",
+          "grupo": "Hipóteses",
+          "texto": "Registrar síndrome gripal (influenza) como hipótese principal",
+          "resposta": "Hipótese registrada: febre, tosse e dor no corpo de início súbito, sem sinais de gravidade.",
+          "pontos": 40,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "pneumonia",
+          "grupo": "Hipóteses",
+          "texto": "Registrar pneumonia como hipótese principal",
+          "resposta": "Hipótese registrada, mas sem falta de ar e com ausculta normal o quadro é de síndrome gripal.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "antiviral",
+          "grupo": "Conduta",
+          "texto": "Prescrever o antiviral do protocolo de influenza, por ser gestante",
+          "resposta": "Antiviral prescrito. A gestação é fator de risco para complicações, e o tratamento deve começar de preferência nas primeiras 48 horas.",
+          "pontos": 35,
+          "criterio": "seguranca",
+          "minutos": 3,
+          "exige": [
+            "gravidade",
+            "inicio",
+            "gestacao"
+          ]
+        },
+        {
+          "id": "sem-antiviral",
+          "grupo": "Conduta",
+          "texto": "Não prescrever antiviral porque não há sinais de gravidade",
+          "resposta": "Inseguro: em gestantes com síndrome gripal o antiviral é indicado mesmo sem gravidade.",
+          "pontos": -15,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Rever sinais vitais e saturação antes de liberar",
+          "resposta": "Estável. FC 92 bpm, FR 18 irpm, SpO₂ 98% em ar ambiente, PA 110/70 mmHg, T 37,6°C.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 30,
+          "exige": [
+            "antiviral"
+          ]
+        },
+        {
+          "id": "orientar",
+          "grupo": "Conduta",
+          "texto": "Orientar ficar em casa, afastamento e retorno se surgir falta de ar",
+          "resposta": "Orientada a ficar em casa e a se afastar até 24 horas sem febre, sem usar antitérmico, e a voltar se tiver falta de ar ou piora.",
+          "pontos": 25,
+          "criterio": "seguranca",
+          "minutos": 3,
+          "exige": [
+            "reavaliar"
+          ]
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta com antiviral, orientações e sinais para retorno.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Encaminhamento registrado. Sem sinais de gravidade, o caso podia ser resolvido aqui, com o antiviral.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "gravidade",
+        "inicio",
+        "gestacao",
+        "influenza",
+        "antiviral",
+        "orientar"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/g/gripe-influenza",
+          "titulo": "Gripe (influenza)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "o uso do antiviral Fosfato de Oseltamivir está indicado para todos os casos de Síndrome Respiratória Aguda Grave (SRAG) e casos de Síndrome Gripal (SG) com condições ou fatores de risco para complicações.",
+          "sustenta": "Antiviral para síndrome gripal com fator de risco."
+        },
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/g/gripe-influenza",
+          "titulo": "Gripe (influenza)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "O início do tratamento deve ocorrer preferencialmente nas primeiras 48 horas após o início dos sintomas.",
+          "sustenta": "Janela de 48 horas."
+        },
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/g/gripe-influenza",
+          "titulo": "Gripe (influenza)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Grávidas em qualquer idade gestacional",
+          "sustenta": "Gestante é fator de risco."
+        },
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/g/gripe-influenza",
+          "titulo": "Gripe (influenza)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Orientar o afastamento temporário (trabalho, escola etc.) até 24 horas após cessar a febre sem a utilização de medicamento antitérmico.",
+          "sustenta": "Afastamento."
+        }
+      ]
+    },
+    {
+      "id": "uro-cistite-1",
+      "versao": 1,
+      "sistema": "Urinário",
+      "revisado": false,
+      "titulo": "Ardência para urinar",
+      "paciente": "Bianca, 24 anos",
+      "queixa": "\"Estou com ardência para urinar e indo ao banheiro toda hora desde ontem.\"",
+      "fonte": "https://www.cdc.gov/uti/about/index.html",
+      "vitais": "FC 84 bpm · FR 16 irpm · SpO₂ 99% em ar ambiente · PA 116/74 mmHg · T 36,8°C",
+      "hipoteseCorreta": "cistite",
+      "destinoAdequado": "alta",
+      "criteriosAlta": [
+        "antibiotico",
+        "reavaliar",
+        "orientar"
+      ],
+      "estadoInicial": "Estável, com sintomas urinários",
+      "acoes": [
+        {
+          "id": "gravidade",
+          "grupo": "Avaliação",
+          "texto": "Avaliar estado geral",
+          "resposta": "Bom estado geral, sem sinais de gravidade.",
+          "pontos": 15,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "sintomas",
+          "grupo": "Anamnese",
+          "texto": "Detalhar os sintomas urinários",
+          "resposta": "Ardência ao urinar, vontade de urinar toda hora mesmo com a bexiga vazia e pressão no pé da barriga.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "rim",
+          "grupo": "Anamnese",
+          "texto": "Tem febre, calafrios, dor nas costas, náusea ou vômitos?",
+          "resposta": "Nega febre, calafrios, dor nas costas, náusea e vômitos.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "gravidez",
+          "grupo": "Anamnese",
+          "texto": "Pode estar grávida?",
+          "resposta": "Menstruou há duas semanas; teste de gravidez negativo.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 5
+        },
+        {
+          "id": "alergias",
+          "grupo": "Anamnese",
+          "texto": "Tem alergia a medicamentos?",
+          "resposta": "Nega alergias.",
+          "pontos": 10,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "exame",
+          "grupo": "Exame físico",
+          "texto": "Examinar abdome e região lombar",
+          "resposta": "Dor leve acima do púbis. Punho-percussão lombar negativa.",
+          "pontos": 15,
+          "criterio": "raciocinio",
+          "minutos": 2
+        },
+        {
+          "id": "tomografia",
+          "grupo": "Exames",
+          "texto": "Pedir tomografia de abdome",
+          "resposta": "Sem achados. O exame não estava indicado para este quadro.",
+          "pontos": -20,
+          "criterio": "eficiencia",
+          "minutos": 40
+        },
+        {
+          "id": "cistite",
+          "grupo": "Hipóteses",
+          "texto": "Registrar infecção da bexiga (cistite) como hipótese principal",
+          "resposta": "Hipótese registrada: sintomas urinários baixos, sem febre nem dor nas costas.",
+          "pontos": 55,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "pielonefrite",
+          "grupo": "Hipóteses",
+          "texto": "Registrar infecção do rim (pielonefrite) como hipótese principal",
+          "resposta": "Hipótese registrada, mas sem febre, calafrios, dor nas costas ou vômitos o quadro é de cistite.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "ist",
+          "grupo": "Hipóteses",
+          "texto": "Registrar infecção sexualmente transmissível como hipótese principal",
+          "resposta": "Hipótese registrada, mas o quadro é de infecção urinária, que não é uma IST.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "antibiotico",
+          "grupo": "Conduta",
+          "texto": "Prescrever o antibiótico do protocolo para cistite",
+          "resposta": "Antibiótico prescrito conforme o protocolo da unidade.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 3,
+          "exige": [
+            "alergias",
+            "gravidez"
+          ]
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Rever sinais vitais antes de liberar",
+          "resposta": "Estável. FC 80 bpm, FR 16 irpm, SpO₂ 99% em ar ambiente, PA 114/72 mmHg, T 36,7°C.",
+          "pontos": 10,
+          "criterio": "seguranca",
+          "minutos": 5,
+          "exige": [
+            "antibiotico"
+          ]
+        },
+        {
+          "id": "orientar",
+          "grupo": "Conduta",
+          "texto": "Orientar hidratação, prevenção e retorno se surgir febre ou dor nas costas",
+          "resposta": "Orientada a beber água, urinar depois das relações e voltar se tiver febre, calafrios ou dor nas costas.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 3,
+          "exige": [
+            "reavaliar"
+          ]
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta com antibiótico e orientações.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Encaminhamento registrado. Uma cistite sem sinais de infecção renal podia ser tratada aqui.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "sintomas",
+        "rim",
+        "gravidez",
+        "cistite",
+        "antibiotico",
+        "orientar"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.cdc.gov/uti/about/index.html",
+          "titulo": "About Urinary Tract Infections",
+          "orgao": "CDC",
+          "trecho": "A bladder infection (cystitis) is the most common type of UTI.",
+          "sustenta": "A cistite é a mais comum."
+        },
+        {
+          "url": "https://www.cdc.gov/uti/about/index.html",
+          "titulo": "About Urinary Tract Infections",
+          "orgao": "CDC",
+          "trecho": "Symptoms of a kidney infection can include: Fever Chills Lower back pain or pain in the side of your back Nausea or vomiting",
+          "sustenta": "Sinais que apontariam para pielonefrite."
+        },
+        {
+          "url": "https://www.cdc.gov/uti/about/index.html",
+          "titulo": "About Urinary Tract Infections",
+          "orgao": "CDC",
+          "trecho": "a UTI is not a sexually transmitted infection",
+          "sustenta": "Não é IST."
+        },
+        {
+          "url": "https://www.cdc.gov/uti/about/index.html",
+          "titulo": "About Urinary Tract Infections",
+          "orgao": "CDC",
+          "trecho": "Urinate after sexual activity Stay well hydrated",
+          "sustenta": "Prevenção."
+        }
+      ]
+    },
+    {
+      "id": "gi-diarreia-1",
+      "versao": 1,
+      "sistema": "Gastrointestinal",
+      "revisado": false,
+      "titulo": "Diarreia desde ontem",
+      "paciente": "Roberto, 38 anos",
+      "queixa": "\"Estou com diarreia desde ontem, umas cinco vezes, e um pouco de cólica.\"",
+      "fonte": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/dda",
+      "vitais": "FC 88 bpm · FR 16 irpm · SpO₂ 99% em ar ambiente · PA 124/78 mmHg · T 37,2°C",
+      "hipoteseCorreta": "dda",
+      "destinoAdequado": "alta",
+      "criteriosAlta": [
+        "plano-a",
+        "reavaliar",
+        "orientar"
+      ],
+      "estadoInicial": "Hidratado, com diarreia aguda",
+      "acoes": [
+        {
+          "id": "gravidade",
+          "grupo": "Avaliação",
+          "texto": "Avaliar estado geral e consciência",
+          "resposta": "Consciente, bom estado geral, engole sem dificuldade.",
+          "pontos": 15,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "caracteristicas",
+          "grupo": "Anamnese",
+          "texto": "Tem sangue ou muco nas fezes, febre ou vômitos?",
+          "resposta": "Fezes líquidas, sem sangue nem muco. Sem vômitos; febre baixa ontem.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "contatos",
+          "grupo": "Anamnese",
+          "texto": "Alguém próximo adoeceu igual? Comeu algo diferente?",
+          "resposta": "Ninguém da família adoeceu. Comeu em um restaurante novo anteontem.",
+          "pontos": 15,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "hidratacao",
+          "grupo": "Exame físico",
+          "texto": "Avaliar o estado de hidratação e pesar o paciente",
+          "resposta": "Sem sinais de desidratação: mucosas úmidas, sem sede intensa, urinando normalmente. Peso registrado.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 3
+        },
+        {
+          "id": "coprocultura",
+          "grupo": "Exames",
+          "texto": "Pedir coprocultura de rotina",
+          "resposta": "Sem indicação neste caso: a coleta é importante em surtos, desidratação grave, sangue nas fezes ou suspeita de cólera.",
+          "pontos": -10,
+          "criterio": "eficiencia",
+          "minutos": 15
+        },
+        {
+          "id": "dda",
+          "grupo": "Hipóteses",
+          "texto": "Registrar diarreia aguda sem desidratação como hipótese principal",
+          "resposta": "Hipótese registrada: diarreia aguda, paciente hidratado.",
+          "pontos": 60,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "colera",
+          "grupo": "Hipóteses",
+          "texto": "Registrar cólera como hipótese principal",
+          "resposta": "Hipótese registrada, mas não há desidratação grave nem contexto que sustente essa suspeita.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "apendicite",
+          "grupo": "Hipóteses",
+          "texto": "Registrar apendicite como hipótese principal",
+          "resposta": "Hipótese registrada, mas a cólica difusa com diarreia e abdome sem dor localizada não sustentam essa hipótese.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "antibiotico",
+          "grupo": "Conduta",
+          "texto": "Prescrever antibiótico",
+          "resposta": "Sem indicação: o antibiótico fica reservado para diarreia com sangue ou muco e comprometimento do estado geral, ou cólera com desidratação grave.",
+          "pontos": -15,
+          "criterio": "eficiencia",
+          "minutos": 2
+        },
+        {
+          "id": "plano-a",
+          "grupo": "Conduta",
+          "texto": "Orientar o Plano A: mais líquidos e soro de reidratação oral após cada evacuação, mantendo a alimentação habitual",
+          "resposta": "Orientado a beber mais água e soro de reidratação oral após cada evacuação e a comer normalmente.",
+          "pontos": 35,
+          "criterio": "seguranca",
+          "minutos": 3,
+          "exige": [
+            "hidratacao"
+          ]
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Observar se tolera o soro de reidratação oral",
+          "resposta": "Tomou o soro sem vomitar. FC 84 bpm, FR 16 irpm, SpO₂ 99% em ar ambiente, PA 122/78 mmHg, T 37,0°C.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 30,
+          "exige": [
+            "plano-a"
+          ]
+        },
+        {
+          "id": "orientar",
+          "grupo": "Conduta",
+          "texto": "Orientar os sinais para voltar ao serviço",
+          "resposta": "Voltar se não melhorar em 2 dias ou se tiver piora da diarreia, vômitos repetidos, muita sede, recusa de alimentos, sangue nas fezes ou menos urina.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 3,
+          "exige": [
+            "reavaliar"
+          ]
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta com o Plano A e os sinais de retorno.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Encaminhamento registrado. Um paciente hidratado segue o Plano A em casa.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "caracteristicas",
+        "hidratacao",
+        "dda",
+        "plano-a",
+        "orientar"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/dda",
+          "titulo": "Doenças diarreicas agudas (DDA)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "O exame físico, com enfoque na avaliação do estado de hidratação, é importante para avaliar a presença de desidratação e a instituição do tratamento adequado, além disso, o paciente deve ser pesado, sempre que possível.",
+          "sustenta": "Avaliar hidratação e pesar."
+        },
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/dda",
+          "titulo": "Doenças diarreicas agudas (DDA)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Aumento da ingestão de água e outros líquidos incluindo solução de SRO principalmente após cada episódio de diarreia",
+          "sustenta": "Plano A."
+        },
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/dda",
+          "titulo": "Doenças diarreicas agudas (DDA)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "O Tratamento com antibiótico deve ser reservado apenas para os casos de DDA com sangue ou muco nas fezes (disenteria) e comprometimento do estado geral ou em caso de cólera com desidratação grave",
+          "sustenta": "Sem antibiótico aqui."
+        },
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/dda",
+          "titulo": "Doenças diarreicas agudas (DDA)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Retorno do paciente ao serviço, caso não melhore em 2 dias ou apresente piora da diarreia, vômitos repetidos, muita sede, recusa de alimentos, sangue nas fezes ou diminuição da diurese",
+          "sustenta": "Sinais de retorno."
+        }
+      ]
+    },
+    {
+      "id": "vasc-tvp-1",
+      "versao": 1,
+      "sistema": "Vascular",
+      "revisado": false,
+      "titulo": "Perna inchada depois de cirurgia",
+      "paciente": "Dona Marta, 58 anos",
+      "queixa": "\"Fiz cirurgia no joelho há dez dias e agora a perna esquerda está inchada e doendo.\"",
+      "fonte": "https://www.cdc.gov/blood-clots/about/index.html",
+      "vitais": "FC 92 bpm · FR 16 irpm · SpO₂ 97% em ar ambiente · PA 132/84 mmHg · T 36,9°C",
+      "hipoteseCorreta": "tvp",
+      "destinoAdequado": "encaminhar",
+      "criteriosAlta": [],
+      "estadoInicial": "Estável, com perna inchada",
+      "acoes": [
+        {
+          "id": "gravidade",
+          "grupo": "Avaliação",
+          "texto": "Avaliar respiração e estado geral",
+          "resposta": "Respira sem esforço, bom estado geral.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "pernas",
+          "grupo": "Anamnese",
+          "texto": "Desde quando a perna está assim?",
+          "resposta": "Há dois dias a panturrilha esquerda incha e dói, pior ao andar.",
+          "pontos": 20,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "risco",
+          "grupo": "Anamnese",
+          "texto": "Como tem sido a mobilidade depois da cirurgia?",
+          "resposta": "Tem ficado quase todo o tempo sentada ou deitada desde a cirurgia.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "sinais-tep",
+          "grupo": "Anamnese",
+          "texto": "Tem falta de ar, dor no peito ao respirar, tosse com sangue ou desmaio?",
+          "resposta": "Nega falta de ar, dor no peito, tosse com sangue e desmaio.",
+          "pontos": 30,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "exame",
+          "grupo": "Exame físico",
+          "texto": "Examinar as duas pernas",
+          "resposta": "Perna esquerda inchada, quente, avermelhada e dolorosa na panturrilha. Perna direita normal.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 2
+        },
+        {
+          "id": "radiografia",
+          "grupo": "Exames",
+          "texto": "Pedir radiografia da perna",
+          "resposta": "Sem alterações ósseas. O exame não avalia as veias.",
+          "pontos": -10,
+          "criterio": "eficiencia",
+          "minutos": 20
+        },
+        {
+          "id": "tvp",
+          "grupo": "Hipóteses",
+          "texto": "Registrar trombose venosa profunda como hipótese principal",
+          "resposta": "Hipótese registrada: inchaço, dor, calor e vermelhidão em uma perna, após cirurgia e com pouca mobilidade.",
+          "pontos": 55,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "celulite",
+          "grupo": "Hipóteses",
+          "texto": "Registrar celulite como hipótese principal",
+          "resposta": "Hipótese registrada, mas o contexto pós-operatório com pouca mobilidade torna a trombose a principal suspeita.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "distensao",
+          "grupo": "Hipóteses",
+          "texto": "Registrar distensão muscular como hipótese principal",
+          "resposta": "Hipótese registrada, mas não houve esforço e o quadro combina com trombose.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "orientar-tep",
+          "grupo": "Conduta",
+          "texto": "Explicar os sinais de embolia pulmonar e procurar ajuda imediata se surgirem",
+          "resposta": "Orientada sobre falta de ar, dor no peito e desmaio.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 2,
+          "exige": [
+            "sinais-tep"
+          ]
+        },
+        {
+          "id": "comunicar",
+          "grupo": "Conduta",
+          "texto": "Registrar e comunicar à equipe de destino a suspeita de trombose",
+          "resposta": "Equipe de referência avisada para avaliação e exame das veias.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 2,
+          "exige": [
+            "exame"
+          ]
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Rever sinais vitais antes da transferência",
+          "resposta": "Estável. FC 90 bpm, FR 16 irpm, SpO₂ 97% em ar ambiente, PA 130/84 mmHg, T 36,9°C.",
+          "pontos": 15,
+          "criterio": "seguranca",
+          "minutos": 10,
+          "exige": [
+            "gravidade"
+          ]
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta registrada. A suspeita de trombose precisa de avaliação médica rápida, porque parte do coágulo pode se soltar e ir para os pulmões.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Paciente encaminhada para avaliação e confirmação da trombose.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "risco",
+        "sinais-tep",
+        "exame",
+        "tvp",
+        "comunicar"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.cdc.gov/blood-clots/about/index.html",
+          "titulo": "About Venous Thromboembolism (Blood Clots)",
+          "orgao": "CDC",
+          "trecho": "Swelling Pain or tenderness Warmth Redness or discoloration",
+          "sustenta": "Sinais de TVP."
+        },
+        {
+          "url": "https://www.cdc.gov/blood-clots/about/index.html",
+          "titulo": "About Venous Thromboembolism (Blood Clots)",
+          "orgao": "CDC",
+          "trecho": "Slow blood flow caused by limited movement",
+          "sustenta": "Fator de risco: pouca mobilidade."
+        },
+        {
+          "url": "https://www.cdc.gov/blood-clots/about/index.html",
+          "titulo": "About Venous Thromboembolism (Blood Clots)",
+          "orgao": "CDC",
+          "trecho": "Difficulty breathing Faster than normal or irregular heartbeat Chest pain or discomfort, which usually worsens with a deep breath or coughing",
+          "sustenta": "Sinais de embolia pulmonar."
+        },
+        {
+          "url": "https://www.cdc.gov/blood-clots/about/index.html",
+          "titulo": "About Venous Thromboembolism (Blood Clots)",
+          "orgao": "CDC",
+          "trecho": "The most serious complication of DVT happens when a part of the clot breaks off and travels through the bloodstream to the lungs",
+          "sustenta": "Por que não dar alta."
+        }
+      ]
+    },
+    {
+      "id": "gi-apendicite-1",
+      "versao": 1,
+      "sistema": "Gastrointestinal",
+      "revisado": false,
+      "titulo": "Dor que começou no umbigo",
+      "paciente": "Larissa, 23 anos",
+      "queixa": "\"A dor começou perto do umbigo ontem à noite e agora está do lado direito, embaixo.\"",
+      "fonte": "https://www.niddk.nih.gov/health-information/digestive-diseases/appendicitis/symptoms-causes",
+      "vitais": "FC 102 bpm · FR 18 irpm · SpO₂ 98% em ar ambiente · PA 118/76 mmHg · T 37,9°C",
+      "hipoteseCorreta": "apendicite",
+      "destinoAdequado": "encaminhar",
+      "criteriosAlta": [],
+      "estadoInicial": "Dor abdominal que piora",
+      "acoes": [
+        {
+          "id": "gravidade",
+          "grupo": "Avaliação",
+          "texto": "Avaliar estado geral e intensidade da dor",
+          "resposta": "Dor forte, prefere ficar parada. Consciente e orientada.",
+          "pontos": 25,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "dor",
+          "grupo": "Anamnese",
+          "texto": "Como a dor começou e o que a piora?",
+          "resposta": "Começou de repente perto do umbigo, desceu para o lado direito e piora ao andar, tossir e respirar fundo.",
+          "pontos": 30,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "sintomas",
+          "grupo": "Anamnese",
+          "texto": "Tem outros sintomas?",
+          "resposta": "Perdeu o apetite e teve náusea.",
+          "pontos": 20,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "abdome",
+          "grupo": "Exame físico",
+          "texto": "Examinar o abdome",
+          "resposta": "Dor no quadrante inferior direito, que piora ao tossir.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 2
+        },
+        {
+          "id": "gravidez",
+          "grupo": "Exames",
+          "texto": "Fazer teste de gravidez",
+          "resposta": "Teste negativo.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 5
+        },
+        {
+          "id": "urina",
+          "grupo": "Exames",
+          "texto": "Fazer exame de urina",
+          "resposta": "Sem sinais de infecção urinária.",
+          "pontos": 15,
+          "criterio": "raciocinio",
+          "minutos": 15
+        },
+        {
+          "id": "tomografia-direta",
+          "grupo": "Exames",
+          "texto": "Pedir tomografia antes do teste de gravidez",
+          "resposta": "Erro de sequência: em mulher em idade fértil, o teste de gravidez vem antes da tomografia, porque a radiação pode prejudicar o feto.",
+          "pontos": -20,
+          "criterio": "eficiencia",
+          "minutos": 30
+        },
+        {
+          "id": "apendicite",
+          "grupo": "Hipóteses",
+          "texto": "Registrar apendicite aguda como hipótese principal",
+          "resposta": "Hipótese registrada: dor que começa no umbigo e migra para a direita, com perda de apetite e náusea.",
+          "pontos": 40,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "gastroenterite",
+          "grupo": "Hipóteses",
+          "texto": "Registrar gastroenterite como hipótese principal",
+          "resposta": "Hipótese registrada, mas a dor localizada que migrou não combina com gastroenterite.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "itu",
+          "grupo": "Hipóteses",
+          "texto": "Registrar infecção urinária como hipótese principal",
+          "resposta": "Hipótese registrada, mas o exame de urina não mostrou infecção.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "cirurgiao",
+          "grupo": "Conduta",
+          "texto": "Solicitar avaliação do cirurgião no hospital de referência",
+          "resposta": "Avaliação cirúrgica solicitada.",
+          "pontos": 35,
+          "criterio": "seguranca",
+          "minutos": 2,
+          "exige": [
+            "abdome"
+          ]
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Rever sinais vitais e dor antes da transferência",
+          "resposta": "Dor mantida. FC 100 bpm, FR 18 irpm, SpO₂ 98% em ar ambiente, PA 118/76 mmHg, T 37,9°C.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 10,
+          "exige": [
+            "gravidade"
+          ]
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta registrada. Apendicite é emergência e precisa de avaliação e tratamento imediatos.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Paciente encaminhada ao hospital de referência para avaliação cirúrgica.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "dor",
+        "abdome",
+        "gravidez",
+        "apendicite",
+        "cirurgiao"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.niddk.nih.gov/health-information/digestive-diseases/appendicitis/symptoms-causes",
+          "titulo": "Symptoms & Causes of Appendicitis",
+          "orgao": "NIDDK/NIH",
+          "trecho": "begin near your belly button and move lower and to your right",
+          "sustenta": "Migração da dor."
+        },
+        {
+          "url": "https://www.niddk.nih.gov/health-information/digestive-diseases/appendicitis/symptoms-causes",
+          "titulo": "Symptoms & Causes of Appendicitis",
+          "orgao": "NIDDK/NIH",
+          "trecho": "Appendicitis is a medical emergency that requires immediate care.",
+          "sustenta": "Emergência: encaminhar."
+        },
+        {
+          "url": "https://www.niddk.nih.gov/health-information/digestive-diseases/appendicitis/diagnosis",
+          "titulo": "Diagnosis of Appendicitis",
+          "orgao": "NIDDK/NIH",
+          "trecho": "If you're a woman of childbearing age, you should have a pregnancy test before having a CT scan.",
+          "sustenta": "Teste de gravidez antes da tomografia."
+        },
+        {
+          "url": "https://www.niddk.nih.gov/health-information/digestive-diseases/appendicitis/treatment",
+          "titulo": "Treatment for Appendicitis",
+          "orgao": "NIDDK/NIH",
+          "trecho": "Doctors typically treat appendicitis by removing the appendix. This surgery is called an appendectomy.",
+          "sustenta": "Tratamento cirúrgico."
+        }
+      ]
+    },
+    {
+      "id": "neuro-meningite-1",
+      "versao": 1,
+      "sistema": "Neurológico",
+      "revisado": false,
+      "titulo": "Febre alta e dor de cabeça forte",
+      "paciente": "Gabriel, 19 anos",
+      "queixa": "\"Estou com febre alta, uma dor de cabeça muito forte e vomitei desde a madrugada.\"",
+      "fonte": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/m/meningite",
+      "vitais": "FC 118 bpm · FR 22 irpm · SpO₂ 97% em ar ambiente · PA 108/66 mmHg · T 39,4°C",
+      "hipoteseCorreta": "meningite",
+      "destinoAdequado": "encaminhar",
+      "criteriosAlta": [],
+      "estadoInicial": "Grave: suspeita de infecção do sistema nervoso",
+      "acoes": [
+        {
+          "id": "gravidade",
+          "grupo": "Avaliação",
+          "texto": "Avaliar consciência e sinais de gravidade",
+          "resposta": "Sonolento, mas responde. Sem convulsões.",
+          "pontos": 25,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "meningeo",
+          "grupo": "Exame físico",
+          "texto": "Examinar pescoço e sensibilidade à luz",
+          "resposta": "Rigidez de nuca e incômodo com a luz.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 2
+        },
+        {
+          "id": "pele",
+          "grupo": "Exame físico",
+          "texto": "Procurar manchas na pele",
+          "resposta": "Manchas vermelho-arroxeadas no tronco e nas pernas.",
+          "pontos": 25,
+          "criterio": "raciocinio",
+          "minutos": 2
+        },
+        {
+          "id": "contatos",
+          "grupo": "Anamnese",
+          "texto": "Com quem mora e teve contato próximo?",
+          "resposta": "Mora numa república com outros quatro estudantes.",
+          "pontos": 15,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "alergias",
+          "grupo": "Anamnese",
+          "texto": "Tem alergia a medicamentos?",
+          "resposta": "Nega alergias.",
+          "pontos": 10,
+          "criterio": "seguranca",
+          "minutos": 1
+        },
+        {
+          "id": "esperar-liquor",
+          "grupo": "Exames",
+          "texto": "Aguardar a punção lombar e o resultado do líquor antes de tratar",
+          "resposta": "Inseguro: o início do tratamento não deve ser atrasado pelos exames que identificam o agente.",
+          "pontos": -20,
+          "criterio": "eficiencia",
+          "minutos": 60
+        },
+        {
+          "id": "meningite",
+          "grupo": "Hipóteses",
+          "texto": "Registrar meningite (provável bacteriana) como hipótese principal",
+          "resposta": "Hipótese registrada: febre, dor de cabeça forte, vômitos, rigidez de nuca e manchas na pele.",
+          "pontos": 50,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "enxaqueca",
+          "grupo": "Hipóteses",
+          "texto": "Registrar enxaqueca como hipótese principal",
+          "resposta": "Hipótese registrada, mas febre, rigidez de nuca e manchas na pele não são de enxaqueca.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "dengue",
+          "grupo": "Hipóteses",
+          "texto": "Registrar dengue como hipótese principal",
+          "resposta": "Hipótese registrada, mas rigidez de nuca com sonolência aponta para meningite.",
+          "pontos": 0,
+          "criterio": "raciocinio",
+          "minutos": 1
+        },
+        {
+          "id": "tratamento",
+          "grupo": "Conduta",
+          "texto": "Iniciar o tratamento da meningite conforme protocolo, sem esperar os exames",
+          "resposta": "Equipe inicia o tratamento com antibiótico e cuidados de suporte.",
+          "pontos": 40,
+          "criterio": "seguranca",
+          "minutos": 5,
+          "exige": [
+            "gravidade",
+            "alergias"
+          ],
+          "estadoPaciente": "Em tratamento, aguarda transferência"
+        },
+        {
+          "id": "reavaliar",
+          "grupo": "Evolução",
+          "texto": "Reavaliar depois das primeiras medidas",
+          "resposta": "Mantém-se sonolento, sem convulsões. FC 112 bpm, FR 22 irpm, SpO₂ 97% em ar ambiente, PA 110/68 mmHg, T 38,8°C.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 20,
+          "exige": [
+            "tratamento"
+          ]
+        },
+        {
+          "id": "comunicar",
+          "grupo": "Conduta",
+          "texto": "Comunicar ao hospital de destino e registrar os contatos próximos",
+          "resposta": "Hospital avisado. Contatos da república registrados para as ações de vigilância.",
+          "pontos": 20,
+          "criterio": "seguranca",
+          "minutos": 3,
+          "exige": [
+            "contatos"
+          ]
+        },
+        {
+          "id": "alta",
+          "grupo": "Encerramento",
+          "texto": "Encerrar com alta orientada",
+          "resposta": "Alta registrada. A meningite é emergência médica: todo caso suspeito deve ser internado.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        },
+        {
+          "id": "encaminhar",
+          "grupo": "Encerramento",
+          "texto": "Encaminhar para serviço de maior complexidade",
+          "resposta": "Paciente transferido para internação, com o tratamento já iniciado.",
+          "pontos": 0,
+          "criterio": "seguranca",
+          "minutos": 1,
+          "terminal": true
+        }
+      ],
+      "essenciais": [
+        "gravidade",
+        "meningeo",
+        "pele",
+        "meningite",
+        "tratamento",
+        "comunicar"
+      ],
+      "citacoes": [
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/m/meningite",
+          "titulo": "Meningite",
+          "orgao": "Ministério da Saúde",
+          "trecho": "febre, dor de cabeça intensa, rigidez no pescoço, náuseas, vômitos e sensibilidade à luz",
+          "sustenta": "Sintomas."
+        },
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/m/meningite",
+          "titulo": "Meningite",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Sinais de gravidade incluem confusão mental, convulsões, dificuldade para acordar e manchas vermelhas ou arroxeadas na pele.",
+          "sustenta": "Sinais de gravidade."
+        },
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/m/meningite",
+          "titulo": "Meningite",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Todos os casos suspeitos devem ser internados para avaliação e tratamento. O início do tratamento não deve ser atrasado por conta da realização de exames laboratoriais para identificação do agente causador.",
+          "sustenta": "Internar e não atrasar o tratamento."
+        },
+        {
+          "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/m/meningite",
+          "titulo": "Meningite",
+          "orgao": "Ministério da Saúde",
+          "trecho": "As meningites bacterianas e virais são geralmente transmitidas de pessoa para pessoa por contato próximo, por meio de gotículas respiratórias",
+          "sustenta": "Contatos próximos."
+        }
+      ]
+    }
+  ],
+  "pontos_revisor": [
+    "Os detalhes de cada história (nomes, sinais vitais, falas, resultados de exames) são fictícios, como no caso piloto. As fontes sustentam as decisões centrais: diagnóstico, sinais de alarme, conduta essencial e destino.",
+    "Exames marcados como desnecessários (radiografia, tomografia, hemograma de rotina) são julgamento clínico do roteiro, não estão nas fontes. Conferir caso a caso.",
+    "Os casos não trazem doses. Onde há medicamento, a ação diz \"conforme protocolo\" (antibiótico na sepse, na cistite e na meningite; antiviral na gestante; profilaxia antirrábica).",
+    "Fontes dos EUA (CDC, NIH) em AVC, sepse, hipoglicemia, cetoacidose, overdose, intermação, monóxido, tétano, cistite, trombose e apendicite: conferir se a conduta brasileira é a mesma.",
+    "Em casos de encaminhamento, o motor atual desconta 20 XP mesmo quando encaminhar é o certo, e não desconta a alta indevida se os critérios de alta estiverem cumpridos. Corrigir o motor antes de liberar estes casos."
+  ]
+}

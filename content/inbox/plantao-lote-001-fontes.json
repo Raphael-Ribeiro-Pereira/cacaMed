@@ -1,0 +1,466 @@
+{
+  "fontes": [
+    {
+      "conceito": "neuro-avc-1#1",
+      "url": "https://www.cdc.gov/stroke/signs-symptoms/index.html",
+      "titulo": "Signs and Symptoms of Stroke",
+      "orgao": "CDC",
+      "trecho": "Sudden numbness or weakness in the face, arm, or leg, especially on one side of the body."
+    },
+    {
+      "conceito": "neuro-avc-1#2",
+      "url": "https://www.cdc.gov/stroke/signs-symptoms/index.html",
+      "titulo": "Signs and Symptoms of Stroke",
+      "orgao": "CDC",
+      "trecho": "The stroke treatments that work best are available only if the stroke is recognized and diagnosed within 3 hours of the first symptoms"
+    },
+    {
+      "conceito": "neuro-avc-1#3",
+      "url": "https://www.cdc.gov/stroke/treatment/index.html",
+      "titulo": "Treatment and Intervention for Stroke",
+      "orgao": "CDC",
+      "trecho": "At the hospital, health professionals will ask about your medical history and the time your symptoms started. Brain scans will show what type of stroke you had."
+    },
+    {
+      "conceito": "neuro-avc-1#4",
+      "url": "https://www.cdc.gov/stroke/treatment/index.html",
+      "titulo": "Treatment and Intervention for Stroke",
+      "orgao": "CDC",
+      "trecho": "The emergency workers will also collect valuable information that guides treatment and alert hospital medical staff before you arrive at the emergency room"
+    },
+    {
+      "conceito": "infecto-sepse-1#1",
+      "url": "https://www.cdc.gov/sepsis/about/index.html",
+      "titulo": "About Sepsis",
+      "orgao": "CDC",
+      "trecho": "Without fast treatment, sepsis can quickly lead to tissue damage, organ failure, and death."
+    },
+    {
+      "conceito": "infecto-sepse-1#2",
+      "url": "https://www.cdc.gov/sepsis/about/index.html",
+      "titulo": "About Sepsis",
+      "orgao": "CDC",
+      "trecho": "Infections that lead to sepsis most often start in the Gastrointestinal tract Lung Skin or Urinary tract."
+    },
+    {
+      "conceito": "infecto-sepse-1#3",
+      "url": "https://www.cdc.gov/sepsis/about/index.html",
+      "titulo": "About Sepsis",
+      "orgao": "CDC",
+      "trecho": "Most people who develop sepsis have at least one underlying medical condition or recent hospitalization."
+    },
+    {
+      "conceito": "infecto-sepse-1#4",
+      "url": "https://www.cdc.gov/sepsis/hcp/clinical-care/index.html",
+      "titulo": "Clinical Care of Sepsis",
+      "orgao": "CDC",
+      "trecho": "Start antibiotics as soon as possible in addition to other therapies appropriate for the patient."
+    },
+    {
+      "conceito": "infecto-sepse-1#5",
+      "url": "https://www.cdc.gov/sepsis/hcp/clinical-care/index.html",
+      "titulo": "Clinical Care of Sepsis",
+      "orgao": "CDC",
+      "trecho": "Early and frequent reassessment of patients with sepsis should be undertaken"
+    },
+    {
+      "conceito": "endo-hipoglicemia-1#1",
+      "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/low-blood-glucose-hypoglycemia",
+      "titulo": "Low Blood Glucose (Hypoglycemia)",
+      "orgao": "NIDDK/NIH",
+      "trecho": "For many people with diabetes, this means a blood glucose reading lower than 70 milligrams per deciliter (mg/dL)."
+    },
+    {
+      "conceito": "endo-hipoglicemia-1#2",
+      "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/low-blood-glucose-hypoglycemia",
+      "titulo": "Low Blood Glucose (Hypoglycemia)",
+      "orgao": "NIDDK/NIH",
+      "trecho": "Eat or drink 15 to 20 grams of glucose or carbohydrates right away."
+    },
+    {
+      "conceito": "endo-hipoglicemia-1#3",
+      "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/low-blood-glucose-hypoglycemia",
+      "titulo": "Low Blood Glucose (Hypoglycemia)",
+      "orgao": "NIDDK/NIH",
+      "trecho": "Wait 15 minutes and check your blood glucose level again."
+    },
+    {
+      "conceito": "endo-hipoglicemia-1#4",
+      "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/low-blood-glucose-hypoglycemia",
+      "titulo": "Low Blood Glucose (Hypoglycemia)",
+      "orgao": "NIDDK/NIH",
+      "trecho": "If your next meal is more than 1 hour away, have a snack"
+    },
+    {
+      "conceito": "endo-hipoglicemia-1#5",
+      "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/low-blood-glucose-hypoglycemia",
+      "titulo": "Low Blood Glucose (Hypoglycemia)",
+      "orgao": "NIDDK/NIH",
+      "trecho": "Two types of diabetes pills can cause low blood glucose sulfonylureas"
+    },
+    {
+      "conceito": "endo-hipoglicemia-1#6",
+      "url": "https://www.niddk.nih.gov/health-information/diabetes/overview/preventing-problems/low-blood-glucose-hypoglycemia",
+      "titulo": "Low Blood Glucose (Hypoglycemia)",
+      "orgao": "NIDDK/NIH",
+      "trecho": "Glucagon —a hormone that raises blood glucose levels—is the best way to treat severely low blood glucose."
+    },
+    {
+      "conceito": "endo-cetoacidose-1#1",
+      "url": "https://www.cdc.gov/diabetes/about/diabetic-ketoacidosis.html",
+      "titulo": "Diabetic Ketoacidosis",
+      "orgao": "CDC",
+      "trecho": "The two most common causes are: Illness. You may not be able to eat or drink as much as usual, which can make blood sugar hard to manage. Missing insulin shots"
+    },
+    {
+      "conceito": "endo-cetoacidose-1#2",
+      "url": "https://www.cdc.gov/diabetes/about/diabetic-ketoacidosis.html",
+      "titulo": "Diabetic Ketoacidosis",
+      "orgao": "CDC",
+      "trecho": "Fast, deep breathing. Dry skin and mouth. Flushed face. Fruity-smelling breath."
+    },
+    {
+      "conceito": "endo-cetoacidose-1#3",
+      "url": "https://www.cdc.gov/diabetes/about/diabetic-ketoacidosis.html",
+      "titulo": "Diabetic Ketoacidosis",
+      "orgao": "CDC",
+      "trecho": "Elevated ketones are a sign of DKA. This is a medical emergency that needs to be treated immediately"
+    },
+    {
+      "conceito": "endo-cetoacidose-1#4",
+      "url": "https://www.cdc.gov/diabetes/about/diabetic-ketoacidosis.html",
+      "titulo": "Diabetic Ketoacidosis",
+      "orgao": "CDC",
+      "trecho": "If you have DKA, you'll be treated in the emergency room or admitted to the hospital."
+    },
+    {
+      "conceito": "tox-opioide-1#1",
+      "url": "https://nida.nih.gov/publications/drugfacts/naloxone",
+      "titulo": "Naloxone DrugFacts",
+      "orgao": "NIDA/NIH",
+      "trecho": "very small pupils slow or shallow breathing"
+    },
+    {
+      "conceito": "tox-opioide-1#2",
+      "url": "https://nida.nih.gov/publications/drugfacts/naloxone",
+      "titulo": "Naloxone DrugFacts",
+      "orgao": "NIDA/NIH",
+      "trecho": "Naloxone is a medicine that rapidly reverses an opioid overdose."
+    },
+    {
+      "conceito": "tox-opioide-1#3",
+      "url": "https://nida.nih.gov/publications/drugfacts/naloxone",
+      "titulo": "Naloxone DrugFacts",
+      "orgao": "NIDA/NIH",
+      "trecho": "Naloxone works to reverse opioid overdose in the body for only 30 to 90 minutes. But many opioids remain in the body longer than that."
+    },
+    {
+      "conceito": "tox-opioide-1#4",
+      "url": "https://nida.nih.gov/publications/drugfacts/naloxone",
+      "titulo": "Naloxone DrugFacts",
+      "orgao": "NIDA/NIH",
+      "trecho": "People who are given naloxone should be observed constantly until emergency care arrives."
+    },
+    {
+      "conceito": "amb-intermacao-1#1",
+      "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html",
+      "titulo": "Heat-related Illnesses",
+      "orgao": "NIOSH/CDC",
+      "trecho": "Heat stroke is the most serious heat-related illness."
+    },
+    {
+      "conceito": "amb-intermacao-1#2",
+      "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html",
+      "titulo": "Heat-related Illnesses",
+      "orgao": "NIOSH/CDC",
+      "trecho": "Heat stroke can cause permanent disability or death if the person does not receive emergency treatment."
+    },
+    {
+      "conceito": "amb-intermacao-1#3",
+      "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html",
+      "titulo": "Heat-related Illnesses",
+      "orgao": "NIOSH/CDC",
+      "trecho": "Confusion, altered mental status, slurred speech"
+    },
+    {
+      "conceito": "amb-intermacao-1#4",
+      "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html",
+      "titulo": "Heat-related Illnesses",
+      "orgao": "NIOSH/CDC",
+      "trecho": "Move the worker to a shaded, cool area and remove outer clothing. Cool the worker quickly"
+    },
+    {
+      "conceito": "amb-intermacao-1#5",
+      "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html",
+      "titulo": "Heat-related Illnesses",
+      "orgao": "NIOSH/CDC",
+      "trecho": "Place cold wet cloths or ice on the head, neck, armpits, and groin"
+    },
+    {
+      "conceito": "amb-intermacao-1#6",
+      "url": "https://www.cdc.gov/niosh/heat-stress/about/illnesses.html",
+      "titulo": "Heat-related Illnesses",
+      "orgao": "NIOSH/CDC",
+      "trecho": "Call 911 for emergency medical care. Stay with the worker until emergency medical services arrive."
+    },
+    {
+      "conceito": "tox-monoxido-1#1",
+      "url": "https://www.cdc.gov/carbon-monoxide/hcp/clinical-guidance/index.html",
+      "titulo": "Clinical Guidance for Carbon Monoxide (CO) Poisoning",
+      "orgao": "CDC",
+      "trecho": "Consider CO poisoning especially in these situations: No fever associated with symptoms, history of exposure, multiple patients with similar complaints."
+    },
+    {
+      "conceito": "tox-monoxido-1#2",
+      "url": "https://www.cdc.gov/carbon-monoxide/hcp/clinical-guidance/index.html",
+      "titulo": "Clinical Guidance for Carbon Monoxide (CO) Poisoning",
+      "orgao": "CDC",
+      "trecho": "All women of childbearing age who are suspected of having CO poisoning should have a pregnancy test."
+    },
+    {
+      "conceito": "tox-monoxido-1#3",
+      "url": "https://www.cdc.gov/carbon-monoxide/hcp/clinical-guidance/index.html",
+      "titulo": "Clinical Guidance for Carbon Monoxide (CO) Poisoning",
+      "orgao": "CDC",
+      "trecho": "pulse oximeter is not accurate when COHgb is present."
+    },
+    {
+      "conceito": "tox-monoxido-1#4",
+      "url": "https://www.cdc.gov/carbon-monoxide/hcp/clinical-guidance/index.html",
+      "titulo": "Clinical Guidance for Carbon Monoxide (CO) Poisoning",
+      "orgao": "CDC",
+      "trecho": "Administer 100% oxygen until the patient is symptom-free, usually about 4-5 hours."
+    },
+    {
+      "conceito": "tox-monoxido-1#5",
+      "url": "https://www.cdc.gov/carbon-monoxide/hcp/clinical-guidance/index.html",
+      "titulo": "Clinical Guidance for Carbon Monoxide (CO) Poisoning",
+      "orgao": "CDC",
+      "trecho": "Consider hyperbaric oxygen therapy (HBO) therapy when the patient has a COHgb level of more than 25- 30%, there is evidence of cardiac involvement, severe acidosis, transient or prolonged unconsciousness, neurological impairment, or abnormal neuropsychiatric testing."
+    },
+    {
+      "conceito": "pele-tetano-1#1",
+      "url": "https://www.cdc.gov/tetanus/hcp/clinical-guidance/index.html",
+      "titulo": "Clinical Guidance for Wound Management to Prevent Tetanus",
+      "orgao": "CDC",
+      "trecho": "Penetrating or puncture wounds Wounds containing dirt, soil, feces, or saliva"
+    },
+    {
+      "conceito": "pele-tetano-1#2",
+      "url": "https://www.cdc.gov/tetanus/hcp/clinical-guidance/index.html",
+      "titulo": "Clinical Guidance for Wound Management to Prevent Tetanus",
+      "orgao": "CDC",
+      "trecho": "For dirty or major wounds People with a complete tetanus primary series who received their last tetanus vaccine 5 or more years ago."
+    },
+    {
+      "conceito": "pele-tetano-1#3",
+      "url": "https://www.cdc.gov/tetanus/hcp/clinical-guidance/index.html",
+      "titulo": "Clinical Guidance for Wound Management to Prevent Tetanus",
+      "orgao": "CDC",
+      "trecho": "For dirty or major wounds People with an unknown tetanus vaccination history People who have never received tetanus vaccines People with an incomplete tetanus vaccine primary series"
+    },
+    {
+      "conceito": "pele-tetano-1#4",
+      "url": "https://www.cdc.gov/tetanus/hcp/clinical-guidance/index.html",
+      "titulo": "Clinical Guidance for Wound Management to Prevent Tetanus",
+      "orgao": "CDC",
+      "trecho": "Antibiotics (topical or systemic) aren't recommended during wound care to protect against tetanus."
+    },
+    {
+      "conceito": "zoo-raiva-1#1",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/r/raiva",
+      "titulo": "Raiva",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Quanto ao ferimento, deve-se lavar abundantemente com água e sabão, o mais rápido possível, e aplicar produto antisséptico."
+    },
+    {
+      "conceito": "zoo-raiva-1#2",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/r/raiva",
+      "titulo": "Raiva",
+      "orgao": "Ministério da Saúde",
+      "trecho": "O esquema de profilaxia da raiva humana deve ser prescrito pelo médico ou enfermeiro, que avaliará o caso indicando a aplicação de vacina e/ou soro."
+    },
+    {
+      "conceito": "zoo-raiva-1#3",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/r/raiva",
+      "titulo": "Raiva",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Nos casos de agressão por cães e gatos, quando possível, observar o animal por 10 dias para ver se ele manifesta doença ou morre."
+    },
+    {
+      "conceito": "zoo-raiva-1#4",
+      "url": "https://www.cdc.gov/tetanus/hcp/clinical-guidance/index.html",
+      "titulo": "Clinical Guidance for Wound Management to Prevent Tetanus",
+      "orgao": "CDC",
+      "trecho": "Wounds containing dirt, soil, feces, or saliva (e.g., animal or human bites)"
+    },
+    {
+      "conceito": "resp-gripe-gestante-1#1",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/g/gripe-influenza",
+      "titulo": "Gripe (influenza)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "o uso do antiviral Fosfato de Oseltamivir está indicado para todos os casos de Síndrome Respiratória Aguda Grave (SRAG) e casos de Síndrome Gripal (SG) com condições ou fatores de risco para complicações."
+    },
+    {
+      "conceito": "resp-gripe-gestante-1#2",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/g/gripe-influenza",
+      "titulo": "Gripe (influenza)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "O início do tratamento deve ocorrer preferencialmente nas primeiras 48 horas após o início dos sintomas."
+    },
+    {
+      "conceito": "resp-gripe-gestante-1#3",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/g/gripe-influenza",
+      "titulo": "Gripe (influenza)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Grávidas em qualquer idade gestacional"
+    },
+    {
+      "conceito": "resp-gripe-gestante-1#4",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/g/gripe-influenza",
+      "titulo": "Gripe (influenza)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Orientar o afastamento temporário (trabalho, escola etc.) até 24 horas após cessar a febre sem a utilização de medicamento antitérmico."
+    },
+    {
+      "conceito": "uro-cistite-1#1",
+      "url": "https://www.cdc.gov/uti/about/index.html",
+      "titulo": "About Urinary Tract Infections",
+      "orgao": "CDC",
+      "trecho": "A bladder infection (cystitis) is the most common type of UTI."
+    },
+    {
+      "conceito": "uro-cistite-1#2",
+      "url": "https://www.cdc.gov/uti/about/index.html",
+      "titulo": "About Urinary Tract Infections",
+      "orgao": "CDC",
+      "trecho": "Symptoms of a kidney infection can include: Fever Chills Lower back pain or pain in the side of your back Nausea or vomiting"
+    },
+    {
+      "conceito": "uro-cistite-1#3",
+      "url": "https://www.cdc.gov/uti/about/index.html",
+      "titulo": "About Urinary Tract Infections",
+      "orgao": "CDC",
+      "trecho": "a UTI is not a sexually transmitted infection"
+    },
+    {
+      "conceito": "uro-cistite-1#4",
+      "url": "https://www.cdc.gov/uti/about/index.html",
+      "titulo": "About Urinary Tract Infections",
+      "orgao": "CDC",
+      "trecho": "Urinate after sexual activity Stay well hydrated"
+    },
+    {
+      "conceito": "gi-diarreia-1#1",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/dda",
+      "titulo": "Doenças diarreicas agudas (DDA)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "O exame físico, com enfoque na avaliação do estado de hidratação, é importante para avaliar a presença de desidratação e a instituição do tratamento adequado, além disso, o paciente deve ser pesado, sempre que possível."
+    },
+    {
+      "conceito": "gi-diarreia-1#2",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/dda",
+      "titulo": "Doenças diarreicas agudas (DDA)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Aumento da ingestão de água e outros líquidos incluindo solução de SRO principalmente após cada episódio de diarreia"
+    },
+    {
+      "conceito": "gi-diarreia-1#3",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/dda",
+      "titulo": "Doenças diarreicas agudas (DDA)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "O Tratamento com antibiótico deve ser reservado apenas para os casos de DDA com sangue ou muco nas fezes (disenteria) e comprometimento do estado geral ou em caso de cólera com desidratação grave"
+    },
+    {
+      "conceito": "gi-diarreia-1#4",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/dda",
+      "titulo": "Doenças diarreicas agudas (DDA)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Retorno do paciente ao serviço, caso não melhore em 2 dias ou apresente piora da diarreia, vômitos repetidos, muita sede, recusa de alimentos, sangue nas fezes ou diminuição da diurese"
+    },
+    {
+      "conceito": "vasc-tvp-1#1",
+      "url": "https://www.cdc.gov/blood-clots/about/index.html",
+      "titulo": "About Venous Thromboembolism (Blood Clots)",
+      "orgao": "CDC",
+      "trecho": "Swelling Pain or tenderness Warmth Redness or discoloration"
+    },
+    {
+      "conceito": "vasc-tvp-1#2",
+      "url": "https://www.cdc.gov/blood-clots/about/index.html",
+      "titulo": "About Venous Thromboembolism (Blood Clots)",
+      "orgao": "CDC",
+      "trecho": "Slow blood flow caused by limited movement"
+    },
+    {
+      "conceito": "vasc-tvp-1#3",
+      "url": "https://www.cdc.gov/blood-clots/about/index.html",
+      "titulo": "About Venous Thromboembolism (Blood Clots)",
+      "orgao": "CDC",
+      "trecho": "Difficulty breathing Faster than normal or irregular heartbeat Chest pain or discomfort, which usually worsens with a deep breath or coughing"
+    },
+    {
+      "conceito": "vasc-tvp-1#4",
+      "url": "https://www.cdc.gov/blood-clots/about/index.html",
+      "titulo": "About Venous Thromboembolism (Blood Clots)",
+      "orgao": "CDC",
+      "trecho": "The most serious complication of DVT happens when a part of the clot breaks off and travels through the bloodstream to the lungs"
+    },
+    {
+      "conceito": "gi-apendicite-1#1",
+      "url": "https://www.niddk.nih.gov/health-information/digestive-diseases/appendicitis/symptoms-causes",
+      "titulo": "Symptoms & Causes of Appendicitis",
+      "orgao": "NIDDK/NIH",
+      "trecho": "begin near your belly button and move lower and to your right"
+    },
+    {
+      "conceito": "gi-apendicite-1#2",
+      "url": "https://www.niddk.nih.gov/health-information/digestive-diseases/appendicitis/symptoms-causes",
+      "titulo": "Symptoms & Causes of Appendicitis",
+      "orgao": "NIDDK/NIH",
+      "trecho": "Appendicitis is a medical emergency that requires immediate care."
+    },
+    {
+      "conceito": "gi-apendicite-1#3",
+      "url": "https://www.niddk.nih.gov/health-information/digestive-diseases/appendicitis/diagnosis",
+      "titulo": "Diagnosis of Appendicitis",
+      "orgao": "NIDDK/NIH",
+      "trecho": "If you're a woman of childbearing age, you should have a pregnancy test before having a CT scan."
+    },
+    {
+      "conceito": "gi-apendicite-1#4",
+      "url": "https://www.niddk.nih.gov/health-information/digestive-diseases/appendicitis/treatment",
+      "titulo": "Treatment for Appendicitis",
+      "orgao": "NIDDK/NIH",
+      "trecho": "Doctors typically treat appendicitis by removing the appendix. This surgery is called an appendectomy."
+    },
+    {
+      "conceito": "neuro-meningite-1#1",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/m/meningite",
+      "titulo": "Meningite",
+      "orgao": "Ministério da Saúde",
+      "trecho": "febre, dor de cabeça intensa, rigidez no pescoço, náuseas, vômitos e sensibilidade à luz"
+    },
+    {
+      "conceito": "neuro-meningite-1#2",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/m/meningite",
+      "titulo": "Meningite",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Sinais de gravidade incluem confusão mental, convulsões, dificuldade para acordar e manchas vermelhas ou arroxeadas na pele."
+    },
+    {
+      "conceito": "neuro-meningite-1#3",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/m/meningite",
+      "titulo": "Meningite",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Todos os casos suspeitos devem ser internados para avaliação e tratamento. O início do tratamento não deve ser atrasado por conta da realização de exames laboratoriais para identificação do agente causador."
+    },
+    {
+      "conceito": "neuro-meningite-1#4",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/m/meningite",
+      "titulo": "Meningite",
+      "orgao": "Ministério da Saúde",
+      "trecho": "As meningites bacterianas e virais são geralmente transmitidas de pessoa para pessoa por contato próximo, por meio de gotículas respiratórias"
+    }
+  ]
+}

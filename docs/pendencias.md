@@ -26,7 +26,7 @@ Legenda: **[U]** com o usuário, **[A]** com o agente, **[U+A]** precisa dos doi
 | Item | Estado |
 | --- | --- |
 | Site | https://caca-med.vercel.app, deploy `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx` (commit `75a82fa`) |
-| Código ainda **não publicado** (deploy às quintas) | Frontend: tela "Confirme seu e-mail" (`824c8e2`), Cadastro 2.0 com as escolhas guardadas e texto da Batalha estilo Pokémon. **API e frontend:** banco novo do V ou M (40 conceitos revisados; as 32 frases antigas saem do sorteio) e temas por área ampla no Quiz e no V ou M. Depois de publicar a API, conferir os arquivos publicados contra `supabase/functions/cacamed-api` |
+| Código ainda **não publicado** (deploy às quintas) | Frontend: tela "Confirme seu e-mail" (`824c8e2`), Cadastro 2.0 com as escolhas guardadas e texto da Batalha estilo Pokémon. **API e frontend:** banco novo do V ou M (40 conceitos revisados; as 32 frases antigas saem do sorteio), temas por área ampla no Quiz e no V ou M e a correção do desconto de destino no Plantão. Depois de publicar a API, conferir os arquivos publicados contra `supabase/functions/cacamed-api` |
 | API | Edge Function `cacamed-api`, **versão 14**, no projeto Supabase `lruzndfqfivlvcckvgbw` (São Paulo, plano Free). Inclui a correção da senha no cadastro Google e a aprovação de migração |
 | Vercel | equipe `team_nkI26shDp4jqQSE5MaIZduEE`, projeto `prj_XAluhsTRRiiEuiGabCvqNzaVrWsv` |
 | Voltar o site | promover `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa` (commit `9a7396a`); a API v14 é compatível |
@@ -56,19 +56,20 @@ Registros: [PWA](app-instalavel.md), [cadastro Google e e-mail](incidente-cadast
 ## 4. Tarefas do usuário (fora do código)
 
 1. ~~Revisão médica do lote `vm-lote-002`~~ **aprovada em 11/10/2026** e integrada ao banco ([dossiê](../content/review/vm-lote-002-fontes.md)).
-2. **Rodar os prompts no ChatGPT** (opcional; o agente também faz os lotes) e trazer o JSON de volta:
+2. **Revisão médica do lote 1 do Plantão** (15 casos): [dossiê com cada caso, pontos e fontes](../content/review/plantao-lote-001.md). Depois da aprovação, o agente integra os casos e faz a tela de escolha de caso (hoje a tela abre sempre o caso piloto).
+3. **Rodar os prompts no ChatGPT** (opcional; o agente também faz os lotes) e trazer o JSON de volta:
    - [frases do Verdade ou mentira](prompts/prompt-vou-m-frases.md), agora em duas partes;
    - [casos do Paciente DDX](prompts/prompt-paciente-ddx-casos.md) (de 4 a 6 por conversa).
-3. **Enviar os PDFs das fontes** que os novos casos citarem, para eu conferir as páginas.
-4. **Revisão médica** do conteúdo novo e do que ainda está marcado como não revisado:
+4. **Enviar os PDFs das fontes** que os novos casos citarem, para eu conferir as páginas.
+5. **Revisão médica** do conteúdo novo e do que ainda está marcado como não revisado:
    - frases novas do V ou M e casos novos do Paciente DDX;
    - as 12 doenças da Batalha (e, quando existir, o pergaminho de cada uma);
    - as marcações `grave` das condutas do Paciente DDX (a [regra de erro grave](revisao-inteligente.md#o-que-é-erro-grave-no-paciente-ddx) já foi aprovada; faltam as marcações caso a caso);
    - explicações completas do Erro médico e do Paciente DDX para a Revisão v2.
-5. **Console do Firebase:** apagar a conta de login `gfire0009@gmail.com` (o perfil dela no Supabase já foi apagado) e conferir a lista de usuários, para achar quem criou conta mas nunca terminou o cadastro (essas contas não aparecem no banco).
-6. **Testar em aparelho real** (iPhone e Android) seguindo o [roteiro](roteiro-smartphone.md): instalar o app, entrar com a conta real e jogar uma cruzadinha. Depois, testar o cadastro por e-mail de ponta a ponta (a conta de teste `gfire0009` já está confirmada: ao entrar, ela cai no Cadastro 2.0).
-7. **E-mail próprio (quando houver domínio):** registrar o domínio, criar a conta no Resend e colar a credencial **você mesmo** no painel do Supabase (a credencial não passa pelo chat).
-8. **Acessibilidade** (opcional): foco, leitor de tela e zoom de 200% nas telas principais.
+6. **Console do Firebase:** apagar a conta de login `gfire0009@gmail.com` (o perfil dela no Supabase já foi apagado) e conferir a lista de usuários, para achar quem criou conta mas nunca terminou o cadastro (essas contas não aparecem no banco).
+7. **Testar em aparelho real** (iPhone e Android) seguindo o [roteiro](roteiro-smartphone.md): instalar o app, entrar com a conta real e jogar uma cruzadinha. Depois, testar o cadastro por e-mail de ponta a ponta (a conta de teste `gfire0009` já está confirmada: ao entrar, ela cai no Cadastro 2.0).
+8. **E-mail próprio (quando houver domínio):** registrar o domínio, criar a conta no Resend e colar a credencial **você mesmo** no painel do Supabase (a credencial não passa pelo chat).
+9. **Acessibilidade** (opcional): foco, leitor de tela e zoom de 200% nas telas principais.
 
 ## 5. Trabalho do agente, na ordem decidida
 
@@ -78,7 +79,11 @@ Detalhe e caixas de seleção no [cronograma de 09/10](cronograma-recuperacao-ca
 2. **Ajustes rápidos:**
    - bancos separados do Quiz e do V ou M ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)): sorteio pronto e testado; lote `vm-lote-002` pronto para a revisão médica (11/10). Depois da aprovação: integrar com `revisado: true` e publicar numa quinta;
    - ~~texto da Batalha estilo Pokémon~~: feito na `main` em 10/10, falta publicar ([especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon)).
-3. **Mais casos nos modos** (prioridade decidida em 11/10/2026, antes de liberar o DDX): escrever casos novos com o mesmo método do V ou M (fontes lidas e trechos conferidos), começando pelo modo que o usuário escolher.
+3. **Mais casos nos modos** (prioridade decidida em 11/10/2026, antes de liberar o DDX): um modo por vez, 15 casos por lote, com o mesmo método do V ou M (fontes lidas e trechos conferidos).
+   - **Plantão, lote 1 (15 casos): pronto para revisão** em 11/10/2026: [dossiê](../content/review/plantao-lote-001.md), `content/inbox/plantao-lote-001.json`. Validado com `npm run content:validate -- plantao …` (o caminho completo roda no motor e sai seguro) e com as 66 citações conferidas.
+   - Corrigido no motor (11/10/2026, falta publicar a API): a alta indevida num caso que pedia encaminhamento rendia mais XP que o encaminhamento correto. Agora a alta indevida desconta 80, o encaminhamento desnecessário 20 e o destino certo nada; o piloto não muda.
+   - Na integração: tela de escolha de caso (proposta: lista por sistema, com os concluídos marcados) e `CASOS_PLANTAO` com os 16 casos. O XP de todos os casos continua indo para a chave `DDX-RESPIRATORIO`, que só separa o XP do DDX no perfil; renomear é opcional.
+   - Depois: Erro médico (uma auditoria para cada caso do Plantão) e Causa e efeito, nessa ordem, porque os dois usam um caso do Plantão.
    - **DDX para o público, adiado:** liberar o conteúdo validado (marcar `revisado`, tirar a restrição de administrador, ajustar o teste que exige `revisado: false` nos 17 casos, publicar) quando houver casos suficientes.
 4. **Economia v3** ([especificação](economia-v3.md)): 100 XP fixos nos jogos, bônus de tempo escondido, ofensiva de login, 4 missões novas por dia, DDX com 300 XP, Batalha com 500 XP, tickets sem saldo negativo, `VERSAO_ECONOMIA = 3`.
 5. **Revisão Inteligente v2** ([especificação](revisao-inteligente.md)): quatro cartas, sessões de 7 itens, erro grave no Paciente DDX, liberação no nível 10, +40 XP por item dominado, explicações da LLM.
