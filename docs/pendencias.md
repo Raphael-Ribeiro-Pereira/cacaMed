@@ -26,7 +26,7 @@ Legenda: **[U]** com o usuário, **[A]** com o agente, **[U+A]** precisa dos doi
 | Item | Estado |
 | --- | --- |
 | Site | https://caca-med.vercel.app, deploy `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx` (commit `75a82fa`) |
-| Código ainda **não publicado** | tela "Confirme seu e-mail" do cadastro por e-mail (commit `824c8e2`), Cadastro 2.0 com título, matéria e foto já escolhidos (10/10) e texto da Batalha estilo Pokémon (10/10). Só frontend: a API v14 não muda |
+| Código ainda **não publicado** (deploy às quintas) | Frontend: tela "Confirme seu e-mail" (`824c8e2`), Cadastro 2.0 com as escolhas guardadas e texto da Batalha estilo Pokémon. **API e frontend:** banco novo do V ou M (40 conceitos revisados; as 32 frases antigas saem do sorteio) e temas por área ampla no Quiz e no V ou M. Depois de publicar a API, conferir os arquivos publicados contra `supabase/functions/cacamed-api` |
 | API | Edge Function `cacamed-api`, **versão 14**, no projeto Supabase `lruzndfqfivlvcckvgbw` (São Paulo, plano Free). Inclui a correção da senha no cadastro Google e a aprovação de migração |
 | Vercel | equipe `team_nkI26shDp4jqQSE5MaIZduEE`, projeto `prj_XAluhsTRRiiEuiGabCvqNzaVrWsv` |
 | Voltar o site | promover `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa` (commit `9a7396a`); a API v14 é compatível |
@@ -39,7 +39,7 @@ Registros: [PWA](app-instalavel.md), [cadastro Google e e-mail](incidente-cadast
 ## 3. Decisões que dependem do usuário
 
 1. **Domínio para o e-mail do app** (cadastro e recuperação de senha). Sem ele, só a equipe do projeto recebe e-mail. `cacomed.com.br` e `cacamed.com.br` são só sugestões, sem disponibilidade consultada. Ver [proposta](proposta-email-autenticacao.md).
-2. ~~**Liberar o DDX para o público**~~ **adiado** (11/10/2026). Antes, arrumar os modos, principalmente os casos, que hoje são poucos. Falta dizer **por qual modo começar** (Paciente DDX tem 17 casos; Plantão, Erro médico e Causa e efeito também) e quantos casos por modo bastam para liberar.
+2. ~~**Liberar o DDX para o público**~~ **adiado** (11/10/2026). Antes, arrumar os modos, principalmente os casos, que hoje são poucos. Decidido: **um modo por vez, 15 casos por lote**, para a revisão não ficar grande. Plantão, Erro médico e Causa e efeito têm 1 caso cada; o Erro médico e o Causa e efeito dependem de um caso do Plantão (`casoId`), então a ordem é Plantão → Erro médico → Causa e efeito. O Paciente DDX tem 17.
 3. **Silhueta no mapa da história:** forma real da doença escurecida (revela o tipo de agente) ou forma genérica até a descoberta.
 4. **Botão "Pular" nas cutscenes** a partir da segunda vez: sim ou não.
 5. **Itens da Batalha na Revisão:** entram nas cartas do Quiz, ganham carta própria ou deixam de ser gerados.
@@ -50,12 +50,12 @@ Registros: [PWA](app-instalavel.md), [cadastro Google e e-mail](incidente-cadast
 10. **Quando desligar o Firebase.** Hoje nenhuma conta do jogo depende só dele. Critério já registrado: sete dias estáveis, cadastro, recuperação e logout públicos testados, fallback removido do código **antes** de desligar o serviço. Sem data automática.
 11. ~~Fontes do lote `vm-lote-001`~~ **resolvido** (11/10/2026): o agente refez o lote como `vm-lote-002`, com 40 conceitos e os trechos conferidos literalmente nas fontes ([dossiê](../content/review/vm-lote-002-fontes.md)). O prompt do ChatGPT passou a ter duas partes, fontes e depois frases, e `npm run content:fontes` confere os trechos.
 12. ~~Mínimo para trocar o banco do V ou M~~ **ampliado para 40 conceitos revisados** (11/10/2026).
-13. ~~Temas do V ou M~~ **por área ampla** (11/10/2026): lista fixa de 15 áreas em `TEMAS_VM`, conferida pelo validador e pelos testes. Pendente: os temas do Quiz ("Curiosidades específicas", "Detalhes da medicina"…) seguem outro padrão; padronizar também?
+13. ~~Temas do V ou M e do Quiz~~ **por área ampla** (11/10/2026): lista fixa de 15 áreas em `TEMAS_TREINO`, conferida pelo validador e pelos testes. O Quiz e as 32 frases antigas também foram padronizados ([mapa](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)).
 14. ~~Versionar o fluxo de conteúdo~~ **feito** (commit `d5c871b`, 11/10/2026).
 
 ## 4. Tarefas do usuário (fora do código)
 
-1. **Revisão médica do lote `vm-lote-002`** (40 conceitos, 80 frases): [dossiê com fonte e trecho de cada um](../content/review/vm-lote-002-fontes.md); os pontos de atenção estão em `pontos_revisor`, no JSON. Aprovado, ele entra no banco com `revisado: true`; com 40 conceitos revisados, o V ou M troca de banco.
+1. ~~Revisão médica do lote `vm-lote-002`~~ **aprovada em 11/10/2026** e integrada ao banco ([dossiê](../content/review/vm-lote-002-fontes.md)).
 2. **Rodar os prompts no ChatGPT** (opcional; o agente também faz os lotes) e trazer o JSON de volta:
    - [frases do Verdade ou mentira](prompts/prompt-vou-m-frases.md), agora em duas partes;
    - [casos do Paciente DDX](prompts/prompt-paciente-ddx-casos.md) (de 4 a 6 por conversa).

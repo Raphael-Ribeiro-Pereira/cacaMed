@@ -6,9 +6,9 @@
 
 Respostas do usuário às pendências de 10/10. Mudam a ordem do plano de 09/10 abaixo:
 - **Deploys sempre às quintas-feiras.** Nos outros dias, o trabalho é arrumar o jogo; o que fica pronto entra na lista "Código ainda não publicado" das [pendências](pendencias.md).
-- **Fase C (DDX público) adiada.** Antes, arrumar os modos, principalmente **os casos, que hoje são poucos**. Falta o usuário dizer por qual modo começar.
+- **Fase C (DDX público) adiada.** Antes, arrumar os modos, principalmente **os casos, que hoje são poucos**: um modo por vez, 15 casos por lote, na ordem Plantão → Erro médico → Causa e efeito (os dois últimos usam um caso do Plantão).
 - **Conteúdo com fontes conferidas.** O agente refez o lote do V ou M (`vm-lote-002`, 40 conceitos) em duas etapas: fontes lidas, depois frases. Os trechos foram conferidos literalmente (`npm run content:fontes`, 40 de 40). Fontes só de governo ou de domínio público. O prompt do ChatGPT também ficou em duas partes.
-- **Banco do V ou M:** a troca acontece com 40 conceitos revisados; os temas são por área ampla (lista fixa `TEMAS_VM`).
+- **Banco do V ou M:** a troca acontece com 40 conceitos revisados; os temas são por área ampla (lista fixa `TEMAS_TREINO`).
 
 ## Plano de 09/10/2026 — cadastro, bancos separados, Batalha e DDX público
 
@@ -39,7 +39,7 @@ O cadastro por e-mail **funcionava**: o servidor criou a conta, enviou o e-mail 
   - [x] Sorteio preparado para o banco novo, com testes (10/10/2026). Troca com 40 conceitos revisados (decisão de 11/10/2026).
   - [x] Triagem do primeiro lote, `vm-lote-001` ([relatório](../content/review/vm-lote-001-triagem.md)): nenhum conceito repete o Quiz, mas **pelo menos 12 das 36 fontes são de outro assunto**, falta 1 conceito e há IDs a corrigir.
   - [x] Corrigir as fontes: lote refeito pelo agente como `vm-lote-002` (11/10/2026), com o [dossiê de fontes](../content/review/vm-lote-002-fontes.md).
-  - [ ] Revisão médica do `vm-lote-002` e integração com `revisado: true`.
+  - [x] Revisão médica do `vm-lote-002` (aprovada pelo usuário em 11/10/2026) e integração com `revisado: true` (`scripts/integrar-frases.mjs`). Temas do Quiz padronizados por área ampla.
   - [ ] Publicar a API e o frontend numa quinta, quando houver 40 conceitos revisados.
 - [x] **Texto da Batalha estilo Pokémon** (digitação, parada esperando o toque, toque completa o texto) — [especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon). Vale para treinamento, história e Duelo. Feito em 10/10/2026 em `BatalhaArena.jsx`: 20 ms por letra (`MS_POR_LETRA`), seta só com o texto completo, Enter e Espaço iguais ao toque, e "O que você vai fazer?" e "Confirmando o resultado…" sem esperar toque, porque acompanham o menu ou o servidor. Conferido na homologação (abertura e um turno do treinamento). **Não conferido:** "reduzir movimento" no aparelho (o código mostra o texto inteiro e mantém a espera do toque). Falta publicar.
 - [x] **"A Batalha não aparece no PC":** não era defeito. A Batalha é piloto só do administrador, e o teste foi com conta comum. Passa a aparecer quando a Batalha for liberada.

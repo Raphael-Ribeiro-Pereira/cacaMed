@@ -8,8 +8,8 @@ import { aplicarProgressoMissoes, lerMissoes } from './missoes.js';
 // quando o banco novo tiver MINIMO_CONCEITOS_VM conceitos com o par verdadeiro/falso revisado
 // (40 desde 11/10/2026: o usuário pediu um banco maior que o atual antes da troca).
 export const MINIMO_CONCEITOS_VM = 40;
-// Temas do banco novo por área ampla (decisão de 11/10/2026): a Revisão v2 agrupa sessões por tema.
-export const TEMAS_VM = ['Anatomia', 'Fisiologia', 'Histologia', 'Embriologia', 'Bioquímica', 'Microbiologia', 'Imunologia',
+// Temas do Quiz e do V ou M por área ampla (decisão de 11/10/2026): a Revisão v2 agrupa sessões por tema.
+export const TEMAS_TREINO = ['Anatomia', 'Fisiologia', 'Histologia', 'Embriologia', 'Bioquímica', 'Microbiologia', 'Imunologia',
   'Parasitologia', 'Farmacologia', 'Patologia', 'Semiologia', 'Clínica médica', 'Pediatria', 'Ginecologia e obstetrícia', 'Saúde coletiva'];
 export const conceitoDoQuiz = item => item.id.replace(/^quiz-(teoria|casos)-/, '');
 export const fraseLegada = item => item.revisado === undefined;

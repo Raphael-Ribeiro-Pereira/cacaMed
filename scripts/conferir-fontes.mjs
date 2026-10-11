@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
-import { TEMAS_VM } from '../src/utils/treinos.js';
+import { TEMAS_TREINO } from '../src/utils/treinos.js';
 
 // Etapa 1 do fluxo de conteúdo: cada conceito traz a URL da fonte e um trecho copiado dela.
 // O script abre a página e procura o trecho literalmente; trecho ou URL inventados são recusados.
@@ -51,7 +51,7 @@ export function validarListaFontes(data) {
   for (const [i, f] of data.fontes.entries()) {
     for (const campo of ['conceito', 'url', 'titulo', 'orgao', 'trecho']) if (typeof f?.[campo] !== 'string' || !f[campo].trim()) errors.push(`fontes[${i}].${campo} obrigatório`);
     if (f?.url && !dominioPermitido(f.url)) errors.push(`fontes[${i}]: domínio fora da lista permitida (${f.url}).`);
-    if (f?.area !== undefined && !TEMAS_VM.includes(f.area)) errors.push(`fontes[${i}]: área "${f.area}" fora da lista (${TEMAS_VM.join(', ')}).`);
+    if (f?.area !== undefined && !TEMAS_TREINO.includes(f.area)) errors.push(`fontes[${i}]: área "${f.area}" fora da lista (${TEMAS_TREINO.join(', ')}).`);
     const palavras = String(f?.trecho || '').split(/\s+/).filter(Boolean).length;
     if (palavras > 60) errors.push(`fontes[${i}]: trecho com ${palavras} palavras; use até 60.`);
   }

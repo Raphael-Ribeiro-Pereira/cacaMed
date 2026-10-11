@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BANCO_QUIZ, BANCO_FRASES } from './bancoTreinos.js';
-import { MINIMO_CONCEITOS_VM, TEMAS_VM, conceitoDoQuiz, criarEntradaTreino, fraseLegada, frasesDoSorteio, responderTreinoPerfil } from './treinos.js';
+import { MINIMO_CONCEITOS_VM, TEMAS_TREINO, conceitoDoQuiz, criarEntradaTreino, fraseLegada, frasesDoSorteio, responderTreinoPerfil } from './treinos.js';
 import { concederRecompensa, nivelPorXP, migrarEconomia } from './economia.js';
 import { criarMissoesDiarias } from './missoes.js';
 
@@ -37,6 +37,7 @@ test('banco contém opções distintas, gabaritos válidos, fontes e IDs únicos
 });
 
 test('bancos separados: conceito novo do V ou M não repete assunto do Quiz e vem em par verdadeiro/falso', () => {
+  for (const item of [...BANCO_QUIZ, ...BANCO_FRASES]) assert.ok(TEMAS_TREINO.includes(item.tema), `${item.id}: tema ${item.tema} fora das áreas amplas`);
   const doQuiz = new Set(BANCO_QUIZ.map(conceitoDoQuiz));
   // As frases antigas são as versões verdadeira e falsa dos próprios assuntos do Quiz; por isso saem do sorteio.
   assert.deepEqual(new Set(BANCO_FRASES.filter(fraseLegada).map(f => f.conceito)), doQuiz);
@@ -44,7 +45,6 @@ test('bancos separados: conceito novo do V ou M não repete assunto do Quiz e ve
   for (const f of novas) {
     assert.ok(!doQuiz.has(f.conceito), `${f.conceito} já é assunto do Quiz`);
     assert.equal(typeof f.revisado, 'boolean');
-    assert.ok(TEMAS_VM.includes(f.tema), `${f.conceito}: tema ${f.tema} fora das áreas amplas`);
     assert.deepEqual(novas.filter(x => x.conceito === f.conceito).map(x => x.verdadeira).sort(), [false, true]);
   }
 });

@@ -39,10 +39,27 @@ Verdade ou mentira tem uma rodada com cinco frases. São sorteadas de uma a quat
 - As frases novas entram em `BANCO_FRASES` com o campo `revisado`. Só `revisado: true` vai para o sorteio. As 32 antigas não têm o campo (`fraseLegada`) e continuam no banco para o histórico e a revisão.
 - `frasesDoSorteio` troca o sorteio para o banco novo quando houver `MINIMO_CONCEITOS_VM` conceitos com o par verdadeiro/falso revisado. Até lá, o sorteio continua igual ao de hoje.
 - **40 conceitos** (decisão de 11/10/2026: o banco novo precisa ser maior que o atual, de 16, antes da troca).
-- Temas por área ampla, numa lista fixa (`TEMAS_VM`): Anatomia, Fisiologia, Histologia, Embriologia, Bioquímica, Microbiologia, Imunologia, Parasitologia, Farmacologia, Patologia, Semiologia, Clínica médica, Pediatria, Ginecologia e obstetrícia e Saúde coletiva. O validador recusa outro tema.
+- Temas por área ampla, numa lista fixa (`TEMAS_TREINO`): Anatomia, Fisiologia, Histologia, Embriologia, Bioquímica, Microbiologia, Imunologia, Parasitologia, Farmacologia, Patologia, Semiologia, Clínica médica, Pediatria, Ginecologia e obstetrícia e Saúde coletiva. O validador recusa outro tema.
 - Testes: conceito novo não repete assunto do Quiz (o assunto vem do ID da pergunta, `conceitoDoQuiz`) e tem o par completo; frase não revisada nunca é sorteada; a troca acontece no mínimo.
 - O validador de lotes recusa conceito igual a assunto do Quiz e avisa quando a mesma fonte aparece em conceitos diferentes. Tema igual deixou de gerar aviso.
-- Falta: integrar um lote aprovado e publicar a API (as regras rodam na Edge Function).
+- **11/10/2026:** o lote `vm-lote-002` (40 conceitos) foi aprovado pelo usuário e integrado com `node scripts/integrar-frases.mjs content/approved/vm-lote-002.json`. O sorteio já usa só o banco novo; falta publicar a API numa quinta.
+- **Temas do Quiz e das 32 frases antigas** também passaram para área ampla. Só o rótulo muda; o histórico guardado mantém o nome antigo, então as estatísticas de erros misturam os dois por um tempo:
+
+| Conceito | Antes | Depois |
+| --- | --- | --- |
+| antivirus | Microbiologia | Microbiologia |
+| muco | Mitos do dia a dia | Clínica médica |
+| rim | Fisiologia renal | Anatomia |
+| nefron | Detalhes da medicina | Histologia |
+| reabsorcao, sal | Fisiologia renal | Fisiologia |
+| epo | Hematologia | Fisiologia |
+| plaquetas | Hematologia | Histologia |
+| nucleo | Curiosidades específicas | Histologia |
+| endolinfa, potencial | Curiosidades específicas | Fisiologia |
+| convulsao, cronometro | Primeiros cuidados | Clínica médica |
+| insulina | Endocrinologia | Clínica médica |
+| vacina | Imunologia | Imunologia |
+| seguranca | Princípios de cuidado | Farmacologia |
 
 ## Nível e missões
 
