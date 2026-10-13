@@ -175,6 +175,7 @@
 .cbt .mon-head small { display: block; color: var(--muted); font-size: 11.5px; }
 .cbt .state { font: 700 9.5px var(--mono); letter-spacing: .05em; padding: 4px 8px; border-radius: 999px; text-transform: uppercase; background: rgba(255, 183, 3, .12); color: var(--amber); white-space: nowrap; }
 .cbt .state.good { background: rgba(0, 245, 212, .12); color: var(--mint); }
+.cbt .state.bad { background: rgba(255, 51, 102, .14); color: var(--crimson-soft); }
 .cbt .vitals { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 8px; }
 .cbt .vital small { display: block; font: 600 9px var(--mono); color: var(--muted); letter-spacing: .06em; }
 .cbt .vital b { font: 700 16px var(--mono); }
