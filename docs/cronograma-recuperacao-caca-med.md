@@ -13,7 +13,17 @@ Respostas do usuário ao [questionário](decisoes-para-responder.md). **Mudam o 
 - **App de verdade (C):** o PWA instalou como web app, jogável mas fora da tela principal do celular. Ordem: **app offline primeiro**, depois a análise de prós e contras de Capacitor x React Native. Lojas: **as duas** (Play Store e App Store), sem data.
 - **Quiz e V ou M:** a meta de 50 itens novos não foi repetida nesta resposta. Fica **abaixo do DDX** e só entra se sobrar fôlego.
 
-**Não respondido ainda** (assumo o recomendado e registro): B1 (variações de seleção e investigação), B2, B5, B6, B7, B8, B9, A2, A3, A5, D e E.
+### Esclarecimentos do mesmo dia (13/10/2026, mais tarde)
+
+- **O DDX tem 3 modos: Plantão, Erro médico e Causa e efeito.** A **Batalha não é DDX**: é um modo à parte (continua restrita a administradores). O **Paciente DDX** foi portado em 06/10/2026 do protótipo de movimento (ver [paciente-ddx.md](paciente-ddx.md)) e se sobrepõe ao Plantão; o usuário não o conta como modo do DDX. **Proposta do agente, aguardando confirmação:** fundir o Paciente DDX no Plantão (seus 17 casos viram casos do Plantão) e retirar o modo.
+- **Leitura da meta:** onde o usuário escreveu "25 paciente" entendo **25 casos do Plantão** (o modo do paciente). Plantão: 16 aprovados, faltam 9; ou 33 se os 17 do Paciente DDX forem convertidos.
+- **B2:** os 3 modos entram no desenho novo.
+- **B5, destinos do Plantão (4):** alta, UTI, encaminhamento e retorno/observação. Sai a "enfermaria" do protótipo.
+- **B6, categorias de falha do Erro médico (7):** omissão, atraso, conduta inadequada, falha de registro, **erro grande de medicação** (por exemplo, o médico escreve 10 dipironas no lugar de 1) e **erro lógico de causa e efeito** (por exemplo, remédio para o fígado quando o problema é no coração; simples, nada difícil).
+- **B7:** o Erro médico e o Causa e efeito **não** são presos a um caso do Plantão: cada auditoria e cada relação tem o seu próprio caso.
+- **Efeitos na documentação:** a Revisão v2 fala em cartas do Paciente DDX; se ele for fundido, a carta passa a ser do Plantão. A economia v3 mantém 300 XP + bônus para os 3 modos do DDX e 500 XP na Batalha.
+
+**Ainda não respondido** (assumo o recomendado e registro): B1, B8, B9, A2, A3, A5, D e E.
 
 ## Ajustes de 11/10/2026 — deploys às quintas, conteúdo com fontes e casos antes do DDX
 

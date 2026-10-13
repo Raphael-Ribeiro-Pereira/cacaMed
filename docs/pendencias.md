@@ -42,7 +42,9 @@ Registros: [PWA](app-instalavel.md), [cadastro Google e e-mail](incidente-cadast
 - **DDX liberado na quinta 15/10**, com a cara nova e as metas 25 Paciente DDX + 25 Erro médico + 50 Causa e efeito. **Só a Batalha fica desligada** para jogadores.
 - **Tempo = bônus de desempenho, sem cronômetro na tela.** Doses só quando a fonte brasileira citar a quantidade.
 - **App:** offline primeiro; depois Capacitor x React Native; as duas lojas. Quinta de 22/10: design web.
-- Ainda abertas, assumindo o recomendado: B1, B2, B5 a B9, A2, A3, A5, D e E do [questionário](decisoes-para-responder.md).
+- **O DDX tem 3 modos** (Plantão, Erro médico, Causa e efeito); a **Batalha não é DDX**. Proposta aguardando confirmação: fundir o Paciente DDX no Plantão. Meta lida como 25 casos do **Plantão**.
+- B2 (os 3 no desenho novo), B5 (destinos: alta, UTI, encaminhamento, retorno/observação), B6 (7 categorias de falha, incluindo erro grande de medicação e erro lógico de causa e efeito) e B7 (casos independentes) respondidas.
+- Ainda abertas, assumindo o recomendado: B1, B8, B9, A2, A3, A5, D e E do [questionário](decisoes-para-responder.md).
 
 
 1. **Domínio para o e-mail do app** (cadastro e recuperação de senha). Sem ele, só a equipe do projeto recebe e-mail. `cacomed.com.br` e `cacamed.com.br` são só sugestões, sem disponibilidade consultada. Ver [proposta](proposta-email-autenticacao.md).

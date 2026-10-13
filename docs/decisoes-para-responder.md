@@ -4,7 +4,7 @@ Responda pelo número (por exemplo, "B3: opção 2"). Em cada pergunta há o con
 
 Hoje é domingo, 11/10. A próxima quinta-feira é **15/10**.
 
-> **Respondidas em 13/10:** A1 (DDX completo na quinta), A4 (libera o DDX, menos a Batalha), B3 (tempo como bônus, sem cronômetro na tela), B4 (doses quando a fonte citar), C1 (o PWA ficou como web app), C2 (as duas lojas) e a ordem do app (offline, depois Capacitor x React Native). O restante continua aberto; onde preciso decidir, uso a opção recomendada e registro.
+> **Respondidas em 13/10 (e B2, B5, B6 e B7 mais tarde):** A1 (DDX completo na quinta), A4 (libera o DDX, menos a Batalha), B3 (tempo como bônus, sem cronômetro na tela), B4 (doses quando a fonte citar), C1 (o PWA ficou como web app), C2 (as duas lojas) e a ordem do app (offline, depois Capacitor x React Native). O restante continua aberto; onde preciso decidir, uso a opção recomendada e registro.
 
 ---
 
