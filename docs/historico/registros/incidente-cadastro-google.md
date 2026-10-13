@@ -35,7 +35,7 @@ Estado da conta depois das tentativas: e-mail confirmado, senha gravada, `senha_
 ## Limites
 
 - A troca de senha pelo Supabase Auth não foi exercitada de ponta a ponta antes da publicação: isso exigiria criar uma conta real em produção. A confirmação é o jogador concluir o cadastro depois do deploy.
-- O cadastro por formulário de **qualquer jogador novo** depende do e-mail de confirmação. O SMTP padrão do Supabase só entrega para a equipe do projeto e tem limite baixo. Até configurar o SMTP público (pendência no [cronograma](cronograma-recuperacao-caca-med.md)), o caminho que funciona para jogadores de fora é o Google.
+- O cadastro por formulário de **qualquer jogador novo** depende do e-mail de confirmação. O SMTP padrão do Supabase só entrega para a equipe do projeto e tem limite baixo. Até configurar o SMTP público (pendência no [cronograma](../../cronograma-recuperacao-caca-med.md)), o caminho que funciona para jogadores de fora é o Google.
 - O jogador afetado tem uma senha gravada numa das tentativas. Se não lembrar qual foi, a recuperação por e-mail também depende do SMTP público.
 
 ## Publicação (07/10/2026)

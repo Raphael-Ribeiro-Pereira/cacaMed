@@ -42,10 +42,10 @@ Três recargas autenticadas em produção: menu em 937 / 511 / 508 ms, média 65
 
 Build otimizada local no navegador integrado, sessão já autenticada: primeira abertura até menu 2.006 ms, FCP/LCP observado 1.976 ms, nove assets com 313.713 bytes transferidos. Reabertura na mesma aba: menu 1.968 ms, FCP/LCP 1.960 ms, nove assets com só 2.700 bytes transferidos (cabeçalhos/revalidação, compatível com cache). Uma chamada de obterPerfil por abertura, sem duplicação. Não houve login manual nessas amostras. São duas medições locais, sem latência CDN, sem garantia de cold start da função e sem CPU/rede móvel; FCP no navegador integrado pode ser afetado pela execução em segundo plano. Medição da primeira tela de login em outra origem local ficou em 2.064 ms, antes do ajuste do filtro de assets; não usar o contador parcial antigo como evidência de cache frio.
 
-- Teste físico Android/iOS, Wi-Fi e 4G/5G: [roteiro detalhado](roteiro-smartphone.md).
+- Teste físico Android/iOS, Wi-Fi e 4G/5G: [roteiro detalhado](../../roteiro-smartphone.md).
 - Provar login do perfil ainda não vinculado e a senha antiga. Credenciais não devem ser enviadas no chat.
 - E-mail público: custom SMTP ainda desligado. Envio padrão restringe destinatários à equipe e permite dois emails/hora, [conforme Supabase](https://supabase.com/docs/guides/auth/auth-smtp). Cadastro e recuperação externos não estão homologados.
-- Proposta: [domínio próprio e Resend](proposta-email-autenticacao.md). Nenhum domínio comprado nem serviço contratado.
+- Proposta: [domínio próprio e Resend](../../proposta-email-autenticacao.md). Nenhum domínio comprado nem serviço contratado.
 - Sete dias reais de uso estável depois dessas validações; não antecipar a retirada da ponte Firebase. Nenhuma automação de observação foi criada.
 
 ## Retirada e recuperação

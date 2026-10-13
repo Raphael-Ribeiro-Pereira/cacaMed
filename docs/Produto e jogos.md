@@ -1,11 +1,22 @@
 # Produto e jogos
 
-- [[economia-v3|Economia v3]]
-- [[ddx-plantao-medico|Plantão médico]]
-- [[ddx-erro-medico|Erro médico]]
-- [[ddx-causa-efeito|Causa e efeito]]
-- [[ddx-batalha-diagnostica|Batalha diagnóstica]]
-- [[modo-historia-v2|Modo história v2]]
-- [[paciente-ddx|Paciente DDX]]
-- [[revisao-inteligente|Revisão inteligente]]
-- [[telas-de-jogo|Telas de jogo]]
+Voltar ao [[Inicio|Início]].
+
+## Modos
+
+- [[ddx|DDX]]: Plantão, Erro médico e Causa e efeito, num documento só.
+- [[ddx-batalha-diagnostica|Batalha diagnóstica]]: não é DDX e está desligada para jogadores. O plano novo está em [[modo-historia-v2|Modo história v2]].
+- [[jogos-e-economia-v2|Quiz, Verdade ou mentira e economia v2]]: as regras vigentes e os bancos separados.
+- [[revisao-inteligente|Revisão inteligente]]: a v1 está no ar e a v2 já foi decidida.
+
+## Economia e progresso
+
+- [[economia-v3|Economia v3]]: decidida, ainda não implementada.
+- [[coroas-estatisticas-cracha|Coroas, Estatísticas e Crachá]].
+
+## Telas
+
+- [[entrada-menu-casca|Entrada, menu e casca]].
+- [[telas-de-jogo|Telas de jogo]].
+- [[caca-med-guidelines|Diretrizes de desenvolvimento e de design]].
+- Os protótipos ficam em `prototipos/` (o principal é `ddx-modos.html`) e em `docs/prototipos/` (as variações do DDX). A referência visual antiga, do Stitch, está em `docs/stitch-reference/`.

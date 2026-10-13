@@ -25,5 +25,5 @@ for(const concurrent of [1,10,25,50,100]) {
   report.lotes.push({ simultaneas:concurrent,...stats(rows),amostras:rows });
   console.log(JSON.stringify({ simultaneas:concurrent,...stats(rows) }));
 }
-await writeFile(new URL('../docs/medicao-producao-2026-09-30.json',import.meta.url),JSON.stringify(report,null,2)+'\n');
+await writeFile(new URL('../docs/historico/registros/medicao-producao-2026-09-30.json',import.meta.url),JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify({ primeiraRequisicao:report.primeiraRequisicao,primeiraAPI:report.primeiraAPI }));

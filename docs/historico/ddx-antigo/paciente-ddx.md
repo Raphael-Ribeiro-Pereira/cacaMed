@@ -25,14 +25,14 @@ No hub do DDX (`PlantaoMedico.jsx`), para o administrador, ao lado da Batalha: "
 
 1. Revisão médica dos 17 casos (hipóteses, condutas, exames ilustrativos e vigência das fontes). Depois da revisão, marcar `revisado: true` e aumentar `versao` quando o conteúdo mudar.
 2. ~~Decidir a economia e se os erros entram na Revisão Inteligente~~: decidido em 07/10/2026, ainda não implementado.
-   - **XP:** 300 + bônus, como os outros modos do DDX, sem multiplicador por nível. O caso não cobra ticket ([economia v3](economia-v3.md)).
-   - **Revisão:** os erros entram na Revisão Inteligente. O jogador refaz os casos errados e depois recebe uma revisão detalhada escrita pela LLM, com a fonte da biblioteca do caso ([Revisão v2](revisao-inteligente.md#versão-2-decidida-em-07102026-ainda-não-implementada)).
+   - **XP:** 300 + bônus, como os outros modos do DDX, sem multiplicador por nível. O caso não cobra ticket ([economia v3](../../economia-v3.md)).
+   - **Revisão:** os erros entram na Revisão Inteligente. O jogador refaz os casos errados e depois recebe uma revisão detalhada escrita pela LLM, com a fonte da biblioteca do caso ([Revisão v2](../../revisao-inteligente.md#versão-2-decidida-em-07102026-ainda-não-implementada)).
 3. ~~Publicar a Edge Function com `concluirCasoPaciente` e o frontend~~: feito em 06/10/2026, a pedido do usuário. Edge Function `cacamed-api` versão 12, com os 23 arquivos conferidos contra as cópias locais (só os escapes `\u` de `coroas.js` e `importarBancoCSV.js` chegaram decodificados, o que dá o mesmo resultado). Coroas, ranking e palavras responderam 200, e um POST sem login respondeu 401. Frontend na Vercel: deploy `dpl_3SHAdbbc2VasNiycApMEBExtFKeF`, commit d028855. Para voltar ao frontend anterior, promover `dpl_BGGkokiUtgDNhNoHQLmSPuARv8T4` (commit d0bd23e); a versão 12 da API continua compatível com ele.
 
 ## Liberação e novos casos (09/10/2026)
 
-- O usuário informou que **já validou** os casos que existem hoje. A liberação para jogadores está no [cronograma](cronograma-recuperacao-caca-med.md#fase-c--ddx-para-o-público), com a lista de modos a confirmar e a dúvida sobre liberar antes ou depois da economia v3.
-- Novos casos: use o [prompt para o ChatGPT](prompts/prompt-paciente-ddx-casos.md). O jogo exige o mesmo formato dos 17 casos atuais, com fontes da biblioteca e páginas conferidas (os testes recusam `pag` que não seja um inteiro). Por isso o ChatGPT devolve `"pag": 0` e eu confiro cada citação contra os PDFs antes de aceitar o caso.
+- O usuário informou que **já validou** os casos que existem hoje. A liberação para jogadores está no [cronograma](../../cronograma-recuperacao-caca-med.md#fase-c--ddx-para-o-público), com a lista de modos a confirmar e a dúvida sobre liberar antes ou depois da economia v3.
+- Novos casos: use o [prompt para o ChatGPT](prompt-paciente-ddx-casos.md). O jogo exige o mesmo formato dos 17 casos atuais, com fontes da biblioteca e páginas conferidas (os testes recusam `pag` que não seja um inteiro). Por isso o ChatGPT devolve `"pag": 0` e eu confiro cada citação contra os PDFs antes de aceitar o caso.
 
 ## Homologação
 

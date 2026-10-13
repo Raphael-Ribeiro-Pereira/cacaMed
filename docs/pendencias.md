@@ -1,13 +1,13 @@
 # Pendências: lista mestra
 
-Atualizada em **09/10/2026**, antes de uma viagem do usuário, e revista em **11/10/2026** com as respostas do usuário. É o ponto de partida para retomar o trabalho. O detalhe de cada fase está no [cronograma](cronograma-recuperacao-caca-med.md) (blocos de 09/10 e de 07/10), e a lista abaixo aponta para ele. Quando esta lista e um bloco antigo do cronograma discordarem, **vale esta lista**.
+Atualizada em **13/10/2026**, na arrumação dos documentos. É o ponto de partida para retomar o trabalho e **vale sobre qualquer outro documento**. Índice geral no [[Inicio|Início]]; o DDX vigente está em [[ddx|DDX]]; o que saiu de uso está no [[historico/Histórico|Histórico]]. O [cronograma](cronograma-recuperacao-caca-med.md) guarda o histórico das decisões.
 
 Legenda: **[U]** com o usuário, **[A]** com o agente, **[U+A]** precisa dos dois.
 
 ## 1. Retomar o trabalho
 
-- **Código:** tudo está no GitHub, `Raphael-Ribeiro-Pereira/cacaMed`, branch `main`. A pasta de trabalho é `C:\Users\Rapha\Documents\cacaMed\.claude\worktrees\game-prototyping-c1a9d2` (branch `claude/game-prototyping-c1a9d2`, igual à `main`).
-- **Atenção:** o checkout principal (`C:\Users\Rapha\Documents\cacaMed`) está **desatualizado** (commit `fe9a83e`). Rode `git pull` nele antes de trabalhar lá. Ele tem o `.env` com as chaves; a pasta de trabalho acima **não tem `.env`**, por isso a página de homologação mostra um erro de Firebase no console. É esperado e não afeta os testes.
+- **Código:** tudo está no GitHub, `Raphael-Ribeiro-Pereira/cacaMed`, branch `main`. A pasta de trabalho atual é `/home/raphael/Documents/cacaMed` (Linux). As pastas antigas no Windows (`C:\Users\Rapha\Documents\cacaMed` e o worktree `game-prototyping-c1a9d2`) ficaram para trás.
+- **Cofre do Obsidian:** a pasta `docs/`. Todo documento novo entra num índice com link `[[...]]`.
 - **Em outra máquina:**
   1. `git clone` do repositório e `npm ci`.
   2. Copie `.env.example` para `.env.local` e preencha os valores. As chaves **não estão no Git**: pegue no console do Firebase, no painel do Supabase (URL e chave publicável) e na Vercel. Para o modo atual, `VITE_FONTE_DADOS=supabase` e `VITE_AUTH_SUPABASE=true`.
@@ -26,7 +26,7 @@ Legenda: **[U]** com o usuário, **[A]** com o agente, **[U+A]** precisa dos doi
 | Item | Estado |
 | --- | --- |
 | Site | https://caca-med.vercel.app, deploy `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx` (commit `75a82fa`) |
-| Código ainda **não publicado** (deploy às quintas) | Frontend: tela "Confirme seu e-mail" (`824c8e2`), Cadastro 2.0 com as escolhas guardadas e texto da Batalha estilo Pokémon. **API e frontend:** banco novo do V ou M (40 conceitos revisados; as 32 frases antigas saem do sorteio), temas por área ampla no Quiz e no V ou M e a correção do desconto de destino no Plantão. Depois de publicar a API, conferir os arquivos publicados contra `supabase/functions/cacamed-api` |
+| Código ainda **não publicado** (deploy às quintas) | **DDX novo** (Plantão v2 com 33 casos, Erro médico e Causa e efeito v2, telas novas, hub com 3 modos). Frontend: tela "Confirme seu e-mail" (`824c8e2`), Cadastro 2.0 com as escolhas guardadas e texto da Batalha estilo Pokémon. **API e frontend:** banco novo do V ou M (40 conceitos revisados; as 32 frases antigas saem do sorteio), temas por área ampla no Quiz e no V ou M e a correção do desconto de destino no Plantão. Depois de publicar a API, conferir os arquivos publicados contra `supabase/functions/cacamed-api` |
 | API | Edge Function `cacamed-api`, **versão 14**, no projeto Supabase `lruzndfqfivlvcckvgbw` (São Paulo, plano Free). Inclui a correção da senha no cadastro Google e a aprovação de migração |
 | Vercel | equipe `team_nkI26shDp4jqQSE5MaIZduEE`, projeto `prj_XAluhsTRRiiEuiGabCvqNzaVrWsv` |
 | Voltar o site | promover `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa` (commit `9a7396a`); a API v14 é compatível |
@@ -34,16 +34,16 @@ Legenda: **[U]** com o usuário, **[A]** com o agente, **[U+A]** precisa dos doi
 | Firebase | ponte ainda ativa (ver item 6 da seção 6) |
 | App instalável (PWA) | publicado em 07/10/2026; falta teste em aparelho real |
 
-Registros: [PWA](app-instalavel.md), [cadastro Google e e-mail](incidente-cadastro-google.md), [migração de contas](migracao-supabase.md#contas-firebase-com-e-mail-não-verificado-08102026).
+Registros: [PWA](app-instalavel.md), [cadastro Google e e-mail](historico/registros/incidente-cadastro-google.md), [migração de contas](migracao-supabase.md#contas-firebase-com-e-mail-não-verificado-08102026).
 
 ## 3. Decisões que dependem do usuário
 
 **Respondidas em 13/10/2026** (detalhe no [cronograma](cronograma-recuperacao-caca-med.md#decisões-de-13102026--ddx-completo-e-liberado-na-quinta-1510)):
-- **DDX liberado na quinta 15/10**, com a cara nova e as metas 25 Paciente DDX + 25 Erro médico + 50 Causa e efeito. **Só a Batalha fica desligada** para jogadores.
+- **DDX liberado na quinta 15/10**, com a cara nova. Metas: 25 Plantão, 25 Erro médico e 50 Causa e efeito, que são meta e não obrigação. **Só a Batalha fica desligada** para jogadores.
 - **Tempo = bônus de desempenho, sem cronômetro na tela.** Doses só quando a fonte brasileira citar a quantidade.
 - **App:** offline primeiro; depois Capacitor x React Native; as duas lojas. Quinta de 22/10: design web.
-- **O DDX tem 3 modos** (Plantão, Erro médico, Causa e efeito); a **Batalha não é DDX**. Proposta aguardando confirmação: fundir o Paciente DDX no Plantão. Meta lida como 25 casos do **Plantão**.
-- B2 (os 3 no desenho novo), B5 (destinos: alta, UTI, encaminhamento, retorno/observação), B6 (7 categorias de falha, incluindo erro grande de medicação e erro lógico de causa e efeito) e B7 (casos independentes) respondidas.
+- **O DDX tem 3 modos** (Plantão, Erro médico, Causa e efeito); a **Batalha não é DDX**. O **Paciente DDX foi fundido no Plantão** (confirmado): os 17 casos viraram `pdx-*` e o Plantão ficou com 33.
+- B2 (os 3 no desenho novo), B5 (destinos: alta, UTI, encaminhamento, retorno/observação), B6 (**6 categorias** de falha: omissão, atraso, conduta inadequada, falha de registro, erro grande de medicação e erro lógico de causa e efeito) e B7 (casos independentes) respondidas.
 - Ainda abertas, assumindo o recomendado: B1, B8, B9, A2, A3, A5, D e E do [questionário](decisoes-para-responder.md).
 
 
@@ -68,13 +68,13 @@ Registros: [PWA](app-instalavel.md), [cadastro Google e e-mail](incidente-cadast
 2. **Revisão médica do lote 1 do Plantão** (15 casos): [dossiê com cada caso, pontos e fontes](../content/review/plantao-lote-001.md). Depois da aprovação, o agente integra os casos e faz a tela de escolha de caso (hoje a tela abre sempre o caso piloto).
 3. **Rodar os prompts no ChatGPT** (opcional; o agente também faz os lotes) e trazer o JSON de volta:
    - [frases do Verdade ou mentira](prompts/prompt-vou-m-frases.md), agora em duas partes;
-   - [casos do Paciente DDX](prompts/prompt-paciente-ddx-casos.md) (de 4 a 6 por conversa).
+   - (o prompt do Paciente DDX foi aposentado; os casos do DDX são feitos pelo agente a partir das fontes lidas).
 4. **Enviar os PDFs das fontes** que os novos casos citarem, para eu conferir as páginas.
 5. **Revisão médica** do conteúdo novo e do que ainda está marcado como não revisado:
-   - frases novas do V ou M e casos novos do Paciente DDX;
+   - frases novas do V ou M e lotes novos do DDX;
    - as 12 doenças da Batalha (e, quando existir, o pergaminho de cada uma);
-   - as marcações `grave` das condutas do Paciente DDX (a [regra de erro grave](revisao-inteligente.md#o-que-é-erro-grave-no-paciente-ddx) já foi aprovada; faltam as marcações caso a caso);
-   - explicações completas do Erro médico e do Paciente DDX para a Revisão v2.
+   - as marcações `grave` das condutas dos casos `pdx-*` do Plantão, que vieram do Paciente DDX (a [regra de erro grave](revisao-inteligente.md#o-que-é-erro-grave-no-paciente-ddx) já foi aprovada; faltam as marcações caso a caso);
+   - explicações completas do Erro médico e do Plantão para a Revisão v2.
 6. **Console do Firebase:** apagar a conta de login `gfire0009@gmail.com` (o perfil dela no Supabase já foi apagado) e conferir a lista de usuários, para achar quem criou conta mas nunca terminou o cadastro (essas contas não aparecem no banco).
 7. **Testar em aparelho real** (iPhone e Android) seguindo o [roteiro](roteiro-smartphone.md): instalar o app, entrar com a conta real e jogar uma cruzadinha. Depois, testar o cadastro por e-mail de ponta a ponta (a conta de teste `gfire0009` já está confirmada: ao entrar, ela cai no Cadastro 2.0).
 8. **E-mail próprio (quando houver domínio):** registrar o domínio, criar a conta no Resend e colar a credencial **você mesmo** no painel do Supabase (a credencial não passa pelo chat).
@@ -89,11 +89,11 @@ Detalhe e caixas de seleção no [cronograma de 09/10](cronograma-recuperacao-ca
    - bancos separados do Quiz e do V ou M ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)): sorteio pronto e testado; lote `vm-lote-002` pronto para a revisão médica (11/10). Depois da aprovação: integrar com `revisado: true` e publicar numa quinta;
    - ~~texto da Batalha estilo Pokémon~~: feito na `main` em 10/10, falta publicar ([especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon)).
 3. **Mais casos nos modos** (prioridade decidida em 11/10/2026, antes de liberar o DDX): um modo por vez, 15 casos por lote, com o mesmo método do V ou M (fontes lidas e trechos conferidos).
-   - **Plantão, lote 1 (15 casos): pronto para revisão** em 11/10/2026: [dossiê](../content/review/plantao-lote-001.md), `content/inbox/plantao-lote-001.json`. Validado com `npm run content:validate -- plantao …` (o caminho completo roda no motor e sai seguro) e com as 66 citações conferidas.
+   - **Plantão:** lote 1 aprovado e integrado; 33 casos no banco (piloto, lote 1 e os 17 `pdx-*`).
    - Corrigido no motor (11/10/2026, falta publicar a API): a alta indevida num caso que pedia encaminhamento rendia mais XP que o encaminhamento correto. Agora a alta indevida desconta 80, o encaminhamento desnecessário 20 e o destino certo nada; o piloto não muda.
-   - Na integração: tela de escolha de caso (proposta: lista por sistema, com os concluídos marcados) e `CASOS_PLANTAO` com os 16 casos. O XP de todos os casos continua indo para a chave `DDX-RESPIRATORIO`, que só separa o XP do DDX no perfil; renomear é opcional.
-   - Depois: Erro médico (uma auditoria para cada caso do Plantão) e Causa e efeito, nessa ordem, porque os dois usam um caso do Plantão.
-   - **DDX para o público, adiado:** liberar o conteúdo validado (marcar `revisado`, tirar a restrição de administrador, ajustar o teste que exige `revisado: false` nos 17 casos, publicar) quando houver casos suficientes.
+   - **Erro médico:** lote 1 (10) e lote 2 (17) aguardando revisão: [dossiê 1](../content/review/erro-lote-001.md) e [dossiê 2](../content/review/erro-lote-002.md).
+   - **Causa e efeito:** lotes 1 a 3 (14 + 9 + 12) aguardando revisão: [1](../content/review/causa-lote-001.md), [2](../content/review/causa-lote-002.md) e [3](../content/review/causa-lote-003.md). Com o piloto são 36; para chegar a 50 falta um lote 4, que é opcional.
+   - **Liberar na quinta 15/10:** integrar o aprovado (`integrar-ddx.mjs`), sincronizar com o Supabase, testar com conta comum, rodar testes, lint e build e publicar com o "sim" do usuário. Ponto de volta da Vercel: `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx`. Detalhe em [[ddx|DDX]].
 4. **Economia v3** ([especificação](economia-v3.md)): 100 XP fixos nos jogos, bônus de tempo escondido, ofensiva de login, 4 missões novas por dia, DDX com 300 XP, Batalha com 500 XP, tickets sem saldo negativo, `VERSAO_ECONOMIA = 3`.
 5. **Revisão Inteligente v2** ([especificação](revisao-inteligente.md)): quatro cartas, sessões de 7 itens, erro grave no Paciente DDX, liberação no nível 10, +40 XP por item dominado, explicações da LLM.
 6. **Modo história v2 da Batalha** ([especificação](modo-historia-v2.md)): protótipos (mapa, cutscene de entrada, transição) → aprovação → porte; 5 cutscenes de transmissão; pergaminho; enciclopédia.
@@ -107,7 +107,7 @@ Detalhe e caixas de seleção no [cronograma de 09/10](cronograma-recuperacao-ca
 3. **Apagar `src/components/ui/StitchBrand.jsx`** (não é importado) e os estilos `stitch-header` e `stitch-brand`, que só ele usa.
 4. **Teste que falha há tempos:** "artefato Apps Script é idêntico ao motor do navegador" (diferença de quebra de linha). Não vem das mudanças recentes. Consertar ou aposentar junto com o Apps Script.
 5. **Segurança das dependências:** a auditoria de 30/09 apontou 15 vulnerabilidades em dependências (duas críticas, transitivas). Reavaliar com `npm audit`.
-6. **Retirar o Firebase:** depois da decisão 10, remover o fallback Firebase do frontend e a aceitação de tokens legados na API, publicar, testar e só então desligar o serviço. Preservar backup. Ver [reconciliação](reconciliacao-producao-2026-09-30.md).
+6. **Retirar o Firebase:** depois da decisão 10, remover o fallback Firebase do frontend e a aceitação de tokens legados na API, publicar, testar e só então desligar o serviço. Preservar backup. Ver [reconciliação](historico/registros/reconciliacao-producao-2026-09-30.md).
 7. **Apps Script e planilhas:** reavaliar se ainda servem como fonte de retorno ou podem ser desligados.
 8. **Desempenho:** aviso de bundle acima de 500 kB; medir abertura a frio no celular e carga com usuários distintos (precisa de contas de teste).
 9. ~~**Cadastro:** o Cadastro 2.0 pede título e matéria de novo depois da confirmação do e-mail.~~ Resolvido em 10/10/2026 (falta publicar).

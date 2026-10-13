@@ -7,7 +7,7 @@ Status atual (06/10/2026): API `cacamed-api` versão 12 publicada, com Batalha, 
 - Dois perfis e 55 eventos importados e comparados com a origem. Banco de palavras importado: 1.939 linhas de conteúdo.
 - Quiz, Verdade ou mentira, Revisão, Plantão, Erro médico, Causa e efeito e Cruzadinha usam persistência transacional, controle de versão e recibos permanentes.
 - Login real abriu com 6.117 XP e seis tickets. Identidade vinculada ao Supabase Auth mediante token Firebase verificado; testes isolados não alteraram esse perfil.
-- 82 testes locais, lint e build passaram. 50 chamadas reais no navegador: média 410 ms, mediana 398 ms, p95 560 ms. [Relatório completo](auditoria-supabase-2026-09-30.md).
+- 82 testes locais, lint e build passaram. 50 chamadas reais no navegador: média 410 ms, mediana 398 ms, p95 560 ms. [Relatório completo](historico/registros/auditoria-supabase-2026-09-30.md).
 - Telas carregadas sob demanda com React.lazy/Suspense. JavaScript, React e Vite preservados.
 - Login inicial, Google e senhas ainda dependem da ponte Firebase. Não desligar Firebase Auth. A estratégia das senhas está aguardando decisão do usuário; o provedor Google do Supabase ainda está desativado e precisa de configuração OAuth.
 - Produção Vercel ainda usa a implantação anterior. Publicação e reconciliação final pendentes; deploy automático continua fora deste fluxo.

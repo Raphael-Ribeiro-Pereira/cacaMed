@@ -1,21 +1,27 @@
 # Desenvolvimento e operação
 
+Voltar ao [[Inicio|Início]].
+
 ## Retomar
 
-- [[pendencias|Lista mestra]]
-- [[cronograma-recuperacao-caca-med|Cronograma]]
-- [[guia_conventional_commits|Commits]]
+- [[pendencias|Pendências]]: a lista mestra, com o estado de produção.
+- [[decisoes-para-responder|Decisões para responder]]: o questionário do usuário.
+- [[cronograma-recuperacao-caca-med|Cronograma]]: o histórico das decisões.
+- [[guia_conventional_commits|Commits]].
 
 ## Arquitetura e publicação
 
-- [[migracao-supabase|Migração Supabase]]
-- [[auditoria-supabase-2026-09-30|Auditoria Supabase]]
-- [[reconciliacao-producao-2026-09-30|Reconciliação de produção]]
-- [[app-instalavel|PWA]] e [[app-offline|Plano offline]]
+- Backend: Edge Function `cacamed-api` no Supabase. As regras compartilhadas ficam em `src/utils` e `src/shared`, copiadas com `node scripts/sincronizar-supabase.mjs` ([[migracao-supabase|Migração Supabase]]).
+- **Deploy só às quintas-feiras**, com o "sim" do usuário no dia. Nos outros dias, as mudanças ficam prontas na `main` e entram na lista "Código ainda não publicado" das [[pendencias|Pendências]].
+- O Firebase ainda funciona como ponte de login e o Apps Script é legado ([[historico/Histórico|Histórico]]).
 
-## Homologação e incidentes
+## App
 
-- [[homologacao-final-2026-09-30|Homologação]]
-- [[roteiro-smartphone|Roteiro para celular]]
-- [[incidente-quiz-rodada-mudou|Incidente do Quiz]]
-- [[incidente-cadastro-google|Incidente do cadastro Google]]
+- [[app-instalavel|PWA]], já publicado.
+- [[app-offline|Plano offline]]: é o próximo passo depois do DDX. Depois vem a escolha entre Capacitor e React Native e, por fim, as lojas.
+- [[roteiro-smartphone|Roteiro de teste no celular]].
+- [[proposta-email-autenticacao|E-mail de autenticação]]: depende de um domínio próprio.
+
+## Registros antigos
+
+Homologações, auditorias e incidentes de setembro e outubro estão no [[historico/Histórico|Histórico]].

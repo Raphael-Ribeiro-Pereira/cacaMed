@@ -1,15 +1,22 @@
 # Fluxo de conteúdo
 
-1. Execute [[prompts/prompt-vou-m-frases|o prompt de frases]] ou [[prompts/prompt-paciente-ddx-casos|o prompt de casos]] em lotes pequenos.
-   - **Frases do V ou M, em duas partes (desde 11/10/2026):** a Parte 1 traz só as fontes, cada uma com um trecho copiado da página; `npm run content:fontes -- content/inbox/lote-fontes.json` abre cada URL e confere o trecho literalmente, e só aceita domínios de governo ou de domínio público. A Parte 2 escreve as frases só com as fontes aprovadas.
-   - O agente também pode fazer o lote inteiro, com o mesmo fluxo (foi assim no `vm-lote-002`).
-   - **Casos do Plantão:** `npm run content:validate -- plantao content/inbox/plantao-lote-NNN.json` confere a estrutura e roda o caminho completo de cada caso no motor; as citações vão num arquivo à parte para `content:fontes`. Lotes de 15 casos, um modo por vez.
-2. Salve o objeto JSON recebido em `content/inbox/`. Os pontos para o revisor ficam no campo `pontos_revisor`.
-3. Valide com `npm run content:validate -- frases content/inbox/lote.json` ou `npm run content:validate -- casos content/inbox/lote.json`.
-4. Corrija o JSON e leve a revisão clínica e bibliográfica para `content/review/`. URLs e páginas precisam ser conferidas nas fontes originais. O script faz checagem estrutural, não confirma a veracidade médica nem a disponibilidade dos links.
-5. Depois de conferir as fontes, rode o mesmo comando com `--ready`. Para casos, todas as páginas devem ser inteiros positivos. Para frases, todas as URLs devem estar preenchidas.
-6. Após aprovação médica registrada fora do JSON gerado, coloque o lote em `content/approved/`. A integração com os bancos de `src/utils` e a publicação são etapas separadas, ainda não automatizadas.
+Voltar a [[Prompts e conteúdo]]. Vale para o V ou M, o Quiz e os 3 modos do [[ddx|DDX]].
 
-O validador compara IDs e texto exato normalizado com os bancos atuais. Assuntos parecidos exigem conferência humana. `pontos_revisor` nunca substitui essa revisão.
+## Regras
 
-Arquivos recebidos são dados não confiáveis: revise texto e fontes antes de usar no jogo. Um lote aprovado não libera conteúdo automaticamente aos jogadores.
+- **Fontes brasileiras primeiro:** Ministério da Saúde, Conitec, Fiocruz, sociedades médicas e revistas da SciELO. CDC e NIH entram só para doenças que não existem no Brasil. O NCBI (PubMed, StatPearls) não é aceito, porque o texto é das editoras.
+- **Nada inventado:** cada item tem pelo menos 2 citações, cada uma com trecho de até 60 palavras copiado da fonte. `npm run content:fontes` abre cada URL (HTML ou PDF) e procura o trecho literalmente.
+- **Doses** só entram quando a fonte brasileira citar a quantidade.
+- **Revisão em lotes de 15**, um modo por vez. Nenhum lote entra no jogo sem a aprovação do usuário.
+
+## Passo a passo
+
+1. **Gerar** o lote em `content/inbox/<modo>-lote-NNN.json`, com as citações em `…-fontes.json`. O agente faz os lotes a partir das fontes lidas. Para o V ou M também existe [[prompts/prompt-vou-m-frases|o prompt de duas partes]] para o ChatGPT.
+2. **Conferir as fontes:** `npm run content:fontes -- content/inbox/<lote>-fontes.json`. Só domínios da lista em `scripts/conferir-fontes.mjs`, sempre com `https`.
+3. **Validar a estrutura:** `npm run content:validate -- <frases|casos|plantao|erro|causa> content/inbox/<lote>.json`. No Plantão, o validador também roda o caminho completo do caso no motor.
+4. **Dossiê** em `content/review/<lote>.md`: cada item com as cartas ou etapas, as fontes, os trechos e os pontos para o revisor (campo `pontos_revisor`).
+5. **Revisão do usuário.** Depois da aprovação, o lote vai para `content/approved/`.
+6. **Integrar:** `node scripts/integrar-ddx.mjs <plantao|erro|causa>` ou `node scripts/integrar-frases.mjs`, com `revisado: true`. Depois, `node scripts/sincronizar-supabase.mjs` e os testes.
+7. **Publicar** numa quinta-feira, com o "sim" do usuário ([[Desenvolvimento e operação]]).
+
+Arquivos recebidos são dados não confiáveis: revise o texto e as fontes antes de usar no jogo. O validador confere a estrutura, não a veracidade médica.

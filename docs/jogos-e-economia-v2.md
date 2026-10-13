@@ -1,6 +1,6 @@
 # Quiz, Verdade ou mentira e economia v2
 
-Entrega de 28/09/2026. Quiz e Verdade ou mentira validados pelo usuário e liberados na versão 18; API atual na versão 19, incluindo o piloto da Revisão inteligente. Frontend local, aguardando validação do novo piloto e publicação Vercel. Deploy automático permanece desativado. [Histórico do incidente do Quiz, incluindo a tentativa anterior incompleta](incidente-quiz-rodada-mudou.md).
+Entrega de 28/09/2026. Quiz e Verdade ou mentira validados pelo usuário e liberados na versão 18; API atual na versão 19, incluindo o piloto da Revisão inteligente. Frontend local, aguardando validação do novo piloto e publicação Vercel. Deploy automático permanece desativado. [Histórico do incidente do Quiz, incluindo a tentativa anterior incompleta](historico/registros/incidente-quiz-rodada-mudou.md).
 
 ## Regras implementadas
 
@@ -87,7 +87,7 @@ Apps Script autentica a identidade Firebase, limita operações ao próprio perf
 
 Reenvio, consulta de perfil e início da rodada seguinte reparam registros de respostas/recibos que falharam após salvar o perfil. Não repetem recompensa. A interface oferece reenviar pedido ou consultar progresso salvo; bloqueia saída enquanto existe pedido sem resultado confirmado.
 
-Fontes: `src/utils/economia.js`, `missoes.js`, `bancoTreinos.js`, `treinos.js`, `revisaoInteligente.js`, `docs/treinos-api.gs` e `docs/revisao-api.gs`. Execute `npm run sync:plantao` para gerar `docs/treinos-motor.gs`. Editor remoto: `Código.gs` (API), `Plantao.gs` (DDX) e `Treinos.gs` (economia, jogos e revisão). Salvar sozinho não atualiza `/exec`; atualizar a versão da implantação existente mantendo URL e permissões.
+Fontes: `src/utils/economia.js`, `missoes.js`, `bancoTreinos.js`, `treinos.js`, `revisaoInteligente.js`, `docs/historico/apps-script/treinos-api.gs` e `docs/historico/apps-script/revisao-api.gs`. Execute `npm run sync:plantao` para gerar `docs/historico/apps-script/treinos-motor.gs`. Editor remoto: `Código.gs` (API), `Plantao.gs` (DDX) e `Treinos.gs` (economia, jogos e revisão). Salvar sozinho não atualiza `/exec`; atualizar a versão da implantação existente mantendo URL e permissões.
 
 ## Verificações
 

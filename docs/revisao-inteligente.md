@@ -182,7 +182,7 @@ O perfil conserva apenas a sessão mais recente, contadores de itens/acertos/ses
 
 O cliente envia ação, `revisaoId`, `itemId`, `versao` e escolha. Gabarito, datas, sequências e recompensas são calculados pelo servidor. Quiz exige ID de alternativa; frases exigem booleano, incluindo `false` como resposta válida.
 
-As operações usam autenticação e lock existentes. Primeiro salvam o perfil, depois completam log e recibo. `historicoConfirmado` permite reparar interrupções por consulta ou reenvio. O recibo da sessão encerrada em `Partidas` tem XP zero. Repetir uma resposta devolve o estado salvo; alterá-la é rejeitado. A comparação usa valores e tipos, independentemente da ordem dos campos JSON, preservando a prevenção do [incidente do Quiz](incidente-quiz-rodada-mudou.md).
+As operações usam autenticação e lock existentes. Primeiro salvam o perfil, depois completam log e recibo. `historicoConfirmado` permite reparar interrupções por consulta ou reenvio. O recibo da sessão encerrada em `Partidas` tem XP zero. Repetir uma resposta devolve o estado salvo; alterá-la é rejeitado. A comparação usa valores e tipos, independentemente da ordem dos campos JSON, preservando a prevenção do [incidente do Quiz](historico/registros/incidente-quiz-rodada-mudou.md).
 
 A leitura completa ocorre ao consultar/iniciar e atualizar a fila no encerramento. Login e consultas gerais só reparam uma revisão com gravação pendente. Não existe nova varredura completa em todo login. Grandes volumes ainda podem exigir indexação ou outra fonte de dados; o piloto usa as planilhas existentes.
 
@@ -190,11 +190,11 @@ A leitura completa ocorre ao consultar/iniciar e atualizar a fila no encerrament
 
 - `src/utils/revisaoInteligente.js`: seleção, intervalos, respostas e relatório.
 - `src/components/RevisaoInteligente.jsx`: tela, retomada e recuperação de falhas.
-- `docs/revisao-api.gs`: histórico privado e operações autenticadas.
-- `docs/apps-script-ranking.gs`: rotas, reparação e reset administrativo.
+- `docs/historico/apps-script/revisao-api.gs`: histórico privado e operações autenticadas.
+- `docs/historico/apps-script/apps-script-ranking.gs`: rotas, reparação e reset administrativo.
 - `scripts/homologacao.jsx`: dados fictícios locais e falha simulada.
 
-Execute `npm run sync:plantao` após modificar regras ou APIs. O gerador incorpora a revisão em `docs/treinos-motor.gs`. Atualize Código.gs e Treinos.gs no editor remoto, compare com fontes locais e atualize a implantação existente. Salvar sozinho não atualiza /exec.
+Execute `npm run sync:plantao` após modificar regras ou APIs. O gerador incorpora a revisão em `docs/historico/apps-script/treinos-motor.gs`. Atualize Código.gs e Treinos.gs no editor remoto, compare com fontes locais e atualize a implantação existente. Salvar sozinho não atualiza /exec.
 
 O piloto usa `REVISAO_LIBERADA = false` no backend e restrição correspondente no menu/tela. Após aprovação, atualizar ambos, gerar o artefato e publicar API e frontend.
 
@@ -216,4 +216,4 @@ O teste do segundo acerto inicialmente esperava três dias mesmo com duas revis�
 4. Conferir reapresentação do erro, adiamento dos acertos, sessão parcial e clareza da próxima data.
 5. Aprovar o fluxo antes de liberar para jogadores e publicar o frontend no Vercel.
 
-Testes locais validam interface/regras; testes de API simulam planilha. O fluxo autenticado com a planilha publicada foi conferido na auditoria de 28–30/09/2026: sessão real de quatro itens, retomada após interrupção, relatório 4/4 e preservação de XP/tickets. A aprovação do produto e a liberação para jogadores continuam pendentes. Veja os positivos, limitações e propostas na [auditoria dos modos](auditoria-modos-2026-09-29.md). Duração de sessão não é registrada nesta versão; o histórico permite comparar acertos e reapresentações sem alterar a economia.
+Testes locais validam interface/regras; testes de API simulam planilha. O fluxo autenticado com a planilha publicada foi conferido na auditoria de 28–30/09/2026: sessão real de quatro itens, retomada após interrupção, relatório 4/4 e preservação de XP/tickets. A aprovação do produto e a liberação para jogadores continuam pendentes. Veja os positivos, limitações e propostas na [auditoria dos modos](historico/registros/auditoria-modos-2026-09-29.md). Duração de sessão não é registrada nesta versão; o histórico permite comparar acertos e reapresentações sem alterar a economia.

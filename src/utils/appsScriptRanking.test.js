@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { Buffer } from 'node:buffer';
 import vm from 'node:vm';
 
-const codigo = readFileSync(new URL('../../docs/apps-script-ranking.gs', import.meta.url), 'utf8');
+const codigo = readFileSync(new URL('../../docs/historico/apps-script/apps-script-ranking.gs', import.meta.url), 'utf8');
 
 function prepararScript({ projeto = 'caca-med', uid = 'jogador-1', email = 'jogador@gmail.com' } = {}) {
   const linhas = [['uid', 'nome', 'xpGlobal', 'nivelGlobal', 'partidas', 'letras', 'atualizadoEm']];
@@ -68,8 +68,8 @@ function prepararScript({ projeto = 'caca-med', uid = 'jogador-1', email = 'joga
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
   });
   vm.runInContext(codigo, contexto);
-  vm.runInContext(readFileSync(new URL('../../docs/plantao-motor.gs', import.meta.url), 'utf8'), contexto);
-  vm.runInContext(readFileSync(new URL('../../docs/treinos-motor.gs', import.meta.url), 'utf8'), contexto);
+  vm.runInContext(readFileSync(new URL('../../docs/historico/apps-script/plantao-motor.gs', import.meta.url), 'utf8'), contexto);
+  vm.runInContext(readFileSync(new URL('../../docs/historico/apps-script/treinos-motor.gs', import.meta.url), 'utf8'), contexto);
   return { contexto, linhas, abas, idToken };
 }
 
@@ -93,9 +93,9 @@ test('motor gerado contém exatamente as regras e APIs atuais de treino e revis�
   const partes = ['economia', 'missoes', 'bancoTreinos', 'treinos', 'revisaoInteligente'].map(nome =>
     readFileSync(new URL(`./${nome}.js`, import.meta.url), 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '')).join('\n');
   const esperado = '// GERADO por node scripts/sincronizar-plantao.mjs. Não editar manualmente.\n' + partes + '\n'
-    + readFileSync(new URL('../../docs/treinos-api.gs', import.meta.url), 'utf8') + '\n'
-    + readFileSync(new URL('../../docs/revisao-api.gs', import.meta.url), 'utf8');
-  const gerado = readFileSync(new URL('../../docs/treinos-motor.gs', import.meta.url), 'utf8');
+    + readFileSync(new URL('../../docs/historico/apps-script/treinos-api.gs', import.meta.url), 'utf8') + '\n'
+    + readFileSync(new URL('../../docs/historico/apps-script/revisao-api.gs', import.meta.url), 'utf8');
+  const gerado = readFileSync(new URL('../../docs/historico/apps-script/treinos-motor.gs', import.meta.url), 'utf8');
   assert.equal(gerado.replace(/\r\n/g, '\n'), esperado.replace(/\r\n/g, '\n'));
 });
 

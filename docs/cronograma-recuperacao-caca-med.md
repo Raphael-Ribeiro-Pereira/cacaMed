@@ -15,7 +15,7 @@ Respostas do usuário ao [questionário](decisoes-para-responder.md). **Mudam o 
 
 ### Esclarecimentos do mesmo dia (13/10/2026, mais tarde)
 
-- **O DDX tem 3 modos: Plantão, Erro médico e Causa e efeito.** A **Batalha não é DDX**: é um modo à parte (continua restrita a administradores). O **Paciente DDX** foi portado em 06/10/2026 do protótipo de movimento (ver [paciente-ddx.md](paciente-ddx.md)) e se sobrepõe ao Plantão; o usuário não o conta como modo do DDX. **Proposta do agente, aguardando confirmação:** fundir o Paciente DDX no Plantão (seus 17 casos viram casos do Plantão) e retirar o modo.
+- **O DDX tem 3 modos: Plantão, Erro médico e Causa e efeito.** A **Batalha não é DDX**: é um modo à parte (continua restrita a administradores). O **Paciente DDX** foi portado em 06/10/2026 do protótipo de movimento (ver [paciente-ddx.md](historico/ddx-antigo/paciente-ddx.md)) e se sobrepõe ao Plantão; o usuário não o conta como modo do DDX. **Proposta do agente, aguardando confirmação:** fundir o Paciente DDX no Plantão (seus 17 casos viram casos do Plantão) e retirar o modo.
 - **Leitura da meta:** onde o usuário escreveu "25 paciente" entendo **25 casos do Plantão** (o modo do paciente). Plantão: 16 aprovados, faltam 9; ou 33 se os 17 do Paciente DDX forem convertidos.
 - **B2:** os 3 modos entram no desenho novo.
 - **B5, destinos do Plantão (4):** alta, UTI, encaminhamento e retorno/observação. Sai a "enfermaria" do protótipo.
@@ -51,7 +51,7 @@ Em 09/10/2026 o usuário trouxe novas pendências e respondeu as dúvidas. Este 
 
 ### Fase A — Cadastro por e-mail
 
-O cadastro por e-mail **funcionava**: o servidor criou a conta, enviou o e-mail de confirmação (22:19) e a conta foi confirmada (22:32). O problema era a tela: ao enviar, ela limpava a senha, pintava os campos de vermelho e mostrava só um aviso pequeno no topo, o que parecia um cancelamento. Ver [incidente](incidente-cadastro-google.md#cadastro-por-e-mail-09102026).
+O cadastro por e-mail **funcionava**: o servidor criou a conta, enviou o e-mail de confirmação (22:19) e a conta foi confirmada (22:32). O problema era a tela: ao enviar, ela limpava a senha, pintava os campos de vermelho e mostrava só um aviso pequeno no topo, o que parecia um cancelamento. Ver [incidente](historico/registros/incidente-cadastro-google.md#cadastro-por-e-mail-09102026).
 
 - [x] Tela "Confirme seu e-mail" no lugar do formulário, com reenvio (espera de 60 s) e "usei o e-mail errado". Feita e conferida na homologação em 09/10/2026.
 - [ ] Publicar o frontend.
@@ -74,7 +74,7 @@ O cadastro por e-mail **funcionava**: o servidor criou a conta, enviou o e-mail 
 
 - [ ] **Liberar o conteúdo já validado.** O usuário confirmou em 09/10/2026 que validou o que existe. Confirmar a lista: Plantão, Erro médico, Causa e efeito e Paciente DDX (e a Batalha?). Passos: marcar `revisado: true`, tirar a restrição de administrador do Paciente DDX e dos modos liberados, ajustar o teste que hoje exige `revisado: false` nos 17 casos, publicar API e frontend.
 - [ ] Decidir se libera **antes ou depois da economia v3**. O Paciente DDX hoje não paga XP nem ticket; a v3 define 300 XP + bônus.
-- [ ] **Mais casos do Paciente DDX.** O [prompt](prompts/prompt-paciente-ddx-casos.md) está pronto. Fluxo: ChatGPT escreve → eu valido o formato → eu confiro as páginas das fontes contra os PDFs que o usuário enviar → revisão médica → publicação.
+- [ ] **Mais casos do Paciente DDX.** O [prompt](historico/ddx-antigo/prompt-paciente-ddx-casos.md) está pronto. Fluxo: ChatGPT escreve → eu valido o formato → eu confiro as páginas das fontes contra os PDFs que o usuário enviar → revisão médica → publicação.
 
 ### Fase D — Economia v3 e Revisão v2
 
@@ -136,7 +136,7 @@ A ordem segue as dependências:
 
 ### Fase 0 — Arrumação
 
-- [x] **Publicar a correção do cadastro com Google** (API v13 e frontend `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx`, publicados em 07/10/2026; falta o jogador confirmar) ([incidente de 07/10/2026](incidente-cadastro-google.md)): a senha criada no Cadastro 2.0 derrubava a sessão e o cadastro parava em "Entre novamente na conta". Precisa de Edge Function nova e frontend.
+- [x] **Publicar a correção do cadastro com Google** (API v13 e frontend `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx`, publicados em 07/10/2026; falta o jogador confirmar) ([incidente de 07/10/2026](historico/registros/incidente-cadastro-google.md)): a senha criada no Cadastro 2.0 derrubava a sessão e o cadastro parava em "Entre novamente na conta". Precisa de Edge Function nova e frontend.
 - [ ] **SMTP público:** sem ele, o cadastro por formulário e a recuperação de senha não entregam e-mail para jogadores de fora da equipe.
 - [ ] **Dicas de IA da cruzadinha quebradas em produção:**
   - `/api/ia` só existe no servidor local (`server/index.js`) e respondeu 404 em `https://caca-med.vercel.app` em 07/10/2026;
@@ -217,7 +217,7 @@ A ordem segue as dependências:
 Este bloco substitui pendências históricas abaixo. Produção Vercel ativada com fonte e autenticação Supabase; login Google no domínio público validado pelo agente e pelo usuário.
 
 - [x] Reconciliação final: dois perfis integralmente iguais, 35 respostas, quatro revisões e 16 recibos presentes sem divergências; nenhuma importação adicional necessária.
-- [x] Medição pública de leituras: lotes de 1/10/25/50/100 chamadas simultâneas, zero falhas; evidências e limites no [relatório](reconciliacao-producao-2026-09-30.md).
+- [x] Medição pública de leituras: lotes de 1/10/25/50/100 chamadas simultâneas, zero falhas; evidências e limites no [relatório](historico/registros/reconciliacao-producao-2026-09-30.md).
 - [x] Login em viewport de 360/390 px sem transbordamento horizontal.
 - [x] Instrumentar abertura completa e chamadas API com diagnóstico opcional local. Build otimizada em desktop: primeira abertura autenticada 2.006 ms, recarga 1.968 ms; medição pública e celular ainda necessários.
 - [x] Homologar gravações autenticadas concorrentes no perfil isolado: 2/5/10 reenvios do mesmo recibo e cinco da resposta final do Quiz, sem recompensa duplicada. API v10 e RPC PT409 corrigem timeout e resposta desatualizada.
@@ -230,7 +230,7 @@ Este bloco substitui pendências históricas abaixo. Produção Vercel ativada c
 
 Revisão clínica, Batalha diagnóstica e mobile Expo continuam na sequência. Não tratar as medições HTTP como aprovação de desempenho em celular real.
 
-[Relatório final, falhas reproduzidas e correções](homologacao-final-2026-09-30.md). Ponte Firebase permanece até as provas de identidade/senha e a janela de homologação; não há data automática de desligamento.
+[Relatório final, falhas reproduzidas e correções](historico/registros/homologacao-final-2026-09-30.md). Ponte Firebase permanece até as provas de identidade/senha e a janela de homologação; não há data automática de desligamento.
 
 ## Estado atual em 28/09/2026 — Revisão inteligente
 
@@ -246,7 +246,7 @@ Quiz (Teoria e Casos clínicos) e Verdade ou mentira implementados, com salvamen
 
 60 testes passaram; lint sem erros e build concluída. Navegador validou interface com serviço isolado: Quiz Teoria 4/5, Casos 5/5, Verdade ou mentira 3/5, 5/5 e 0/5, contadores de tickets, missões, nível e recarga. Login Google não concluiu neste navegador; validação autenticada dos novos jogos com dados reais permanece pendente. Nenhum saldo real foi alterado para testar.
 
-Correção posterior do Quiz publicada na versão 17: comparação por conteúdo elimina falso conflito por ordem dos campos. Duas rodadas 5/5 e recarga passaram na homologação com reordenação de objetos. A versão 16 corrigiu trabalho redundante e revelou o erro, mas não resolveu o conflito. [Registro das tentativas, causa reproduzida e prevenção](incidente-quiz-rodada-mudou.md).
+Correção posterior do Quiz publicada na versão 17: comparação por conteúdo elimina falso conflito por ordem dos campos. Duas rodadas 5/5 e recarga passaram na homologação com reordenação de objetos. A versão 16 corrigiu trabalho redundante e revelou o erro, mas não resolveu o conflito. [Registro das tentativas, causa reproduzida e prevenção](historico/registros/incidente-quiz-rodada-mudou.md).
 
 API publicada na versão 15 da implantação existente, preservando URL e permissões. Frontend em localhost:5173; Vercel, liberação para jogadores comuns e validação de conteúdo aguardam o usuário. Deploy automático permanece desativado. Revisão inteligente fica para a última fase; respostas já ficam registradas.
 
@@ -670,7 +670,7 @@ O plano integrado com Cloud Functions foi **cancelado antes de qualquer função
 
 **Implementação em andamento.** Na única planilha autorizada, foram criadas as abas vazias `PerfisGoogle`, `RankingNovaTemporada` e `Partidas`, com cabeçalhos; `Ranking` antiga ainda está intacta. O provedor Google foi ativado no Firebase Authentication e o projeto continuou no plano Spark. O Apps Script local agora tem API autenticada por token Firebase e uma página de ponte para devolver respostas ao navegador, cadastro com pontuação zero, edição de perfil, tutorial, recompensa de cruzadinha calculada no script, recibos e ranking da nova temporada. A ponte permite explicitamente `localhost:5173` e `127.0.0.1:5173`; outras origens exigem atualização consciente da lista. O frontend tem fluxos locais de Google, confirmação com senha, Cadastro 2.0 e leituras/escritas pela planilha sob `VITE_FONTE_DADOS=planilha`. O script e o modo novo ainda precisam ser publicados e validados no navegador com a conta de teste. A pontuação calculada no Apps Script limita entradas e impede duplicação por ID, mas **não comprova o jogo honesto**, pois as métricas enviadas pelo navegador podem ser falsificadas. O cliente OAuth direto criado anteriormente pode não ser necessário, pois o Firebase Authentication gerencia o provedor Google; decidir removê-lo apenas após a validação, sem expor o client secret.
 
-**Portão antes da limpeza definitiva.** Publicar `docs/apps-script-ranking.gs` na implantação web vinculada à planilha autorizada; testar a ponte, Google inédito, conta antiga por senha, vinculação Google com senha antiga, tutorial, vitória, relatório de XP, perfil, estatísticas, ranking e reenvio de partida. Só então ativar `VITE_FONTE_DADOS=planilha` para todos e remover os documentos de progresso do Firestore e a aba antiga `Ranking`; as contas de Authentication permanecem. Nenhum passo desse portão exige faturamento.
+**Portão antes da limpeza definitiva.** Publicar `docs/historico/apps-script/apps-script-ranking.gs` na implantação web vinculada à planilha autorizada; testar a ponte, Google inédito, conta antiga por senha, vinculação Google com senha antiga, tutorial, vitória, relatório de XP, perfil, estatísticas, ranking e reenvio de partida. Só então ativar `VITE_FONTE_DADOS=planilha` para todos e remover os documentos de progresso do Firestore e a aba antiga `Ranking`; as contas de Authentication permanecem. Nenhum passo desse portão exige faturamento.
 
 **Validação parcial (25/09, versão 5).** O usuário colou o script no editor vinculado à planilha e a implantação web existente foi atualizada para a versão 5, mantendo a mesma URL. A leitura pública da nova temporada retornou HTTP 200 com `ranking: []`. No Chrome normal, o login antigo por e-mail abriu o Cadastro 2.0; o login Google funcionou em `http://localhost:5173/`, exibiu o aviso de vínculo e concluiu o cadastro. Dois perfis novos, com XP e tickets zerados, apareceram na aba privada. O login Google falhou em `127.0.0.1`; essa origem não foi configurada para OAuth, portanto usar `localhost` no desenvolvimento. O navegador integrado não conseguiu carregar a ponte; o teste de partida, relatório, perfil e ranking segue pendente no Chrome normal. **Não apagar Firestore ou `Ranking` antiga antes desses testes.**
 
@@ -690,14 +690,14 @@ O plano integrado com Cloud Functions foi **cancelado antes de qualquer função
 **Ajuste visual admin (26/09).** Após a validação dos controles e da seleção de dicas pelo usuário, os controles admin foram movidos para um Speed Dial/FAB fixo no canto inferior direito do Centro de Comando, da seleção de tópicos e da partida. O painel é exclusivo de `role: "admin"`, fecha por botão ou Escape e fica oculto durante os diálogos da partida. Nenhuma ação, permissão ou cor da paleta foi alterada. `npm test` (24 casos), `npm run lint` e `npm run build` passaram. Falta conferir visualmente o FAB com sessão admin no Chrome normal; o navegador integrado em `127.0.0.1` não conseguiu carregar o perfil pela ponte do Apps Script.
 
 - [x] Código local das ferramentas admin, seleção de dica e username; testes automatizados, lint e build.
-- [x] Publicar nova versão de `docs/apps-script-ranking.gs` na implantação web existente. Em 26/09, o conteúdo integral do editor foi comparado com o arquivo local e salvo; a implantação ativa passou da versão 5 para a **versão 6**, preservando o mesmo código de implantação/URL e as permissões anteriores. A chamada GET pública não pôde ser repetida neste ambiente porque o navegador integrado bloqueou `script.google.com/macros` e o terminal não teve acesso de rede externo; ainda falta a homologação real no Chrome.
+- [x] Publicar nova versão de `docs/historico/apps-script/apps-script-ranking.gs` na implantação web existente. Em 26/09, o conteúdo integral do editor foi comparado com o arquivo local e salvo; a implantação ativa passou da versão 5 para a **versão 6**, preservando o mesmo código de implantação/URL e as permissões anteriores. A chamada GET pública não pôde ser repetida neste ambiente porque o navegador integrado bloqueou `script.google.com/macros` e o terminal não teve acesso de rede externo; ainda falta a homologação real no Chrome.
 - [ ] Homologar no Chrome em `http://localhost:5173/` com a conta admin: role, preenchimento de uma palavra, finalizador, nova grade, XP/níveis/reset, relatório e atualização do ranking. Testar conta comum sem acesso admin.
 - [ ] Verificar Cadastro 2.0 com conta Google nova: username próprio e opção de primeiro nome, incluindo persistência após sair e entrar.
 
 - [ ] Testar primeira entrada do tutorial em conta realmente nova e persistência após novo login. A conta de teste usada para o ranking abriu diretamente o tabuleiro; isso é compatível com histórico de uso ou com a marca de tutorial já concluído. Não foi tratada como conta inédita nem alterada apenas para simular esse cenário.
 - [ ] Simular falha de rede no salvamento e confirmar tentativa de novo envio sem duplicar recompensa.
 - [ ] Conferir foco e leitura do relatório em leitor de tela e zoom real de 200%.
-- [x] Definir fonte pública do ranking global e substituir a leitura de `usuarios` pelo Apps Script. Código do endpoint de leitura versionado em `docs/apps-script-ranking.gs`; implantação existente atualizada para a versão 3. Com a conta de teste autenticada, a tela mostrou `Jogador Teste` (4 níveis, 120 acertos) e os filtros global, mesma patente e Hall da Fama funcionaram. A planilha ainda contém só essa linha de teste.
+- [x] Definir fonte pública do ranking global e substituir a leitura de `usuarios` pelo Apps Script. Código do endpoint de leitura versionado em `docs/historico/apps-script/apps-script-ranking.gs`; implantação existente atualizada para a versão 3. Com a conta de teste autenticada, a tela mostrou `Jogador Teste` (4 níveis, 120 acertos) e os filtros global, mesma patente e Hall da Fama funcionaram. A planilha ainda contém só essa linha de teste.
 - [x] Sincronizar automaticamente a pontuação da conta autenticada para a planilha: Apps Script valida token Firebase, lê o documento oficial do usuário, atualiza a linha por UID e publica apenas hash de identificação e métricas. Conta de teste apareceu com 50 XP, nível 0 e contadores zerados; a UI mostrou #2 com `Jogador Teste` ainda presente. Tempo médio é calculado das cruzadinhas. Usuários inativos aparecem quando voltarem a entrar.
 - [x] Remover a linha manual `Jogador Teste` da aba `Ranking` da planilha autorizada e confirmar que a linha real permaneceu.
 - [x] Publicar isolamento entre contas no Firestore. Leitura anônima negada (HTTP 403) e perfil próprio acessível na conta de teste. [ ] Restringir escrita de pontuação e demais campos de progresso quando o backend autoritativo estiver pronto; testar cadastro, tutorial, partida, recompensa e ranking após isso.
@@ -816,7 +816,7 @@ Este bloco substitui o status das etapas anteriores. Usuário autorizou continua
 - [x] Homologar todos os motores pela API real, incluindo duas rodadas de Quiz, repetição DDX, reenvio, cruzadinha e revisão sem recompensa.
 - [x] Medir 50 chamadas no navegador: média 410 ms, mediana 398 ms, p95 560 ms. Perfil real preservado.
 - [x] Iniciar otimização de abertura com carregamento das telas sob demanda; lint, build e 82 testes passaram.
-- [x] Documentar evidências, limitações, tentativas e rollback em [auditoria-supabase-2026-09-30.md](auditoria-supabase-2026-09-30.md).
+- [x] Documentar evidências, limitações, tentativas e rollback em [auditoria-supabase-2026-09-30.md](historico/registros/auditoria-supabase-2026-09-30.md).
 - [x] Concluir estratégia de senhas antigas e configurar Google OAuth no Supabase antes de retirar a ponte Firebase. Senhas antigas têm migração por login válido; o Google OAuth foi configurado, os retornos autorizados foram registrados e o login real local foi validado preservando XP, tickets e histórico. A ponte Firebase continua ativa como fallback até a homologação pública.
 - [ ] Reconciliar a origem imediatamente antes da troca de produção, publicar manualmente na Vercel e homologar o domínio público.
 - [ ] Medir abertura a frio/mobile e carga concorrente.

@@ -1,4 +1,4 @@
-\# Diretrizes de Desenvolvimento: Projeto Caça-Med
+# Diretrizes de Desenvolvimento: Projeto Caça-Med
 
 
 
