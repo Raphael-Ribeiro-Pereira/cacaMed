@@ -1,0 +1,221 @@
+{
+  "fontes": [
+    {
+      "conceito": "ce-dm2-resistencia-insulina#1",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "caracterizada pela resistência à insulina, associada à deficiência progressiva de secreção de insulina pelas células beta pancreáticas, além de alterações na secreção de incretinas"
+    },
+    {
+      "conceito": "ce-dm2-resistencia-insulina#2",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "Na presença de resistência insulínica, há aumento da demanda por insulina, mas sua produção é insuficiente. Inicialmente, as células beta pancreáticas conseguem compensar essa demanda por meio de adaptação funcionais. Porém, a falência progressiva dessas células compromete o controle glicêmico, resultando em hiperglicemia persistente. O esforço secretor contínuo leva à exaustão funcional e à apoptose celular"
+    },
+    {
+      "conceito": "ce-dm2-resistencia-insulina#3",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "Pertence à classe das biguanidas e reduz a glicose por múltiplos mecanismos, entre eles a diminuição da produção hepática de glicose e aumento da captação muscular de glicose"
+    },
+    {
+      "conceito": "ce-sulfonilureia-hipoglicemia#1",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "Esta classe medicamentosa promove a liberação de insulina a partir das células beta pancreáticas, o que também aumenta o risco de hipoglicemia."
+    },
+    {
+      "conceito": "ce-sulfonilureia-hipoglicemia#2",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "a gliclazida liberação pronlongada está associada a uma menor taxa de hipoglicemia, sendo preferível em pacientes com episódios de hipoglicemia recorrente ou risco aumentado de hipoglicemia"
+    },
+    {
+      "conceito": "ce-dpoc-tabagismo#1",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "Do ponto de vista fisiopatológico, a obstrução crônica ao fluxo de ar ocorre devido a alterações nas vias respiratórias (como bronquite e bronquiolite) e/ou nos alvéolos (como no enfisema)"
+    },
+    {
+      "conceito": "ce-dpoc-tabagismo#2",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "espirometria pósbroncodilatador, que confirma a presença de obstrução persistente ao fluxo aéreo quando a relação entre volume expiratório forçado em 1 segundo (VEF1) e a capacidade vital forçada (CVF) é um valor inferior a 0,7"
+    },
+    {
+      "conceito": "ce-dpoc-tabagismo#3",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "tórax em barril/hiperinsuflação pulmonar e tiragem intercostal podem indicar doença em fase avançada"
+    },
+    {
+      "conceito": "ce-dpoc-tabagismo#4",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "O aconselhamento para cessação do tabagismo tem papel fundamental, em todos os níveis de atenção, uma vez que a manutenção está associada a pior prognóstico"
+    },
+    {
+      "conceito": "ce-dpoc-hipoxemia-cor-pulmonale#1",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "Se SpO2 for menor que 92%, é indicada a gasometria arterial para avaliar a gravidade da hipoxemia e a necessidade de oxigenoterapia"
+    },
+    {
+      "conceito": "ce-dpoc-hipoxemia-cor-pulmonale#2",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "Complicações como hipoxemia e cor pulmonale são indicativos da necessidade de oxigenoterapia"
+    },
+    {
+      "conceito": "ce-dpoc-hipoxemia-cor-pulmonale#3",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "Pacientes com hipertensão pulmonar: requerem avaliação com ecocardiograma e possível uso de oxigenoterapia crônica"
+    },
+    {
+      "conceito": "ce-dmg-hiperglicemia-fetal#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "O aumento na resistência à insulina evolui com o passar da gestação e está bem definido na 24ª semana; se o pâncreas materno não consegue responder às demandas na produção de insulina, instala-se a hiperglicemia materna."
+    },
+    {
+      "conceito": "ce-dmg-hiperglicemia-fetal#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "O controle da glicemia materna tem como meta alcançar e manter níveis de normoglicemia: • Jejum <95 mg/dL"
+    },
+    {
+      "conceito": "ce-dmg-hiperglicemia-fetal#3",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A insulina se destaca como primeira escolha entre as medidas farmacológicas no controle da hiperglicemia na gestação."
+    },
+    {
+      "conceito": "ce-sifilis-gestacao#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A principal via de transmissão é a transplacentária, embora a transmissão intraparto"
+    },
+    {
+      "conceito": "ce-sifilis-gestacao#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A transmissão da sífilis por via transplacentária pode resultar em desfechos negativos quando as gestantes não são adequada e precocemente tratadas. Pode ter como resultado abortos, óbitos fetais e neonatais, até recém-nascidos vivos com sequelas diversas da doença"
+    },
+    {
+      "conceito": "ce-sifilis-gestacao#3",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "O tratamento da sífilis na gestação deve ser realizado com penicilina, já que não existe evidência de que nenhuma outra droga seja efetiva para o feto."
+    },
+    {
+      "conceito": "ce-sifilis-gestacao#4",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "o feto ainda não terá desenvolvido a reação inflamatória ao T. pallidum, que causa as lesões"
+    },
+    {
+      "conceito": "ce-sifilis-gestacao#5",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "a dose recomendada de penicilina benzatina é de 2.400.000 UI, dividida em duas injeções de 1.200.000 UI em cada um dos glúteos, em uma única tomada."
+    },
+    {
+      "conceito": "ce-anemia-ferropriva-gestacao#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A anemia por deficiência de ferro, via de regra, manifesta-se com microcitose (VCM <80 fL) e hipocromia (HCM <26 pg"
+    },
+    {
+      "conceito": "ce-anemia-ferropriva-gestacao#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "sintomas como palidez cutâneo-mucosa, astenia, cansaço fácil e o achado de sopro sistólico suave"
+    },
+    {
+      "conceito": "ce-anemia-ferropriva-gestacao#3",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A suplementação rotineira de ferro elementar na dose de 30-40 mg/dia é recomendado para praticamente todas as gestantes, à exceção daquelas com doenças caracterizadas por sobrecarga de ferro"
+    },
+    {
+      "conceito": "ce-hellp#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Essa síndrome está relacionada à anemia hemolítica microangiopática e ao vasoespasmo no fígado materno."
+    },
+    {
+      "conceito": "ce-hellp#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A sintomatologia geralmente é pobre, podendo-se encontrar mal-estar, epigastralgia, náuseas e cefaléia."
+    },
+    {
+      "conceito": "ce-hellp#3",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "O fator mais importante para diminuição da morbimortalidade materna é o diagnóstico precoce, antecipando-se às complicações"
+    },
+    {
+      "conceito": "ce-sepse-civd#1",
+      "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+      "titulo": "Sepse: atualidades e perspectivas",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "A ativação do sistema de coagulação - desencadeada a partir da expressão do FT (fator tecidual), evento mediado por proteínas de microrganismos e por citocinas proinflamatórias"
+    },
+    {
+      "conceito": "ce-sepse-civd#2",
+      "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+      "titulo": "Sepse: atualidades e perspectivas",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "têm papel decisivo na fisiopatologia da sepse grave e do choque séptico."
+    },
+    {
+      "conceito": "ce-sepse-civd#3",
+      "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+      "titulo": "Sepse: atualidades e perspectivas",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "Tal cenário pode culminar na instalação da CID - caracterizada por (1) ativação intravascular da coagulação, (2) formação e deposição de fibrina na microvasculatura, (3) consumo de plaquetas"
+    },
+    {
+      "conceito": "ce-sepse-civd#4",
+      "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+      "titulo": "Sepse: atualidades e perspectivas",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "Além disso, o consumo de fibrina e de plaquetas (devido à ativação intravascular da coagulação) pode desencadear hemorragias graves, complicando ainda mais este panorama."
+    },
+    {
+      "conceito": "ce-sepse-civd#5",
+      "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+      "titulo": "Sepse: atualidades e perspectivas",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "medidas terapêuticas que se baseiam, fundamentalmente, em reposição volêmica, antibioticoterapia, emprego de costicosteróides, tratamento anticoagulante, medidas de manutenção da viabilidade biológica e suporte nutricional."
+    }
+  ]
+}

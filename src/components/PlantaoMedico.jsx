@@ -21,6 +21,7 @@ const MODOS = [
   { id: 'erroMedico', nome: 'Erro médico', desc: 'Leia o prontuário, ache a falha, classifique e corrija.', Icone: FileSearch, acao: 'iniciarAuditoria', abrindo: 'Abrindo prontuário para auditoria' },
   { id: 'causaEfeito', nome: 'Causa e efeito', desc: 'Monte o circuito: mecanismo, consequência, compensação e intervenção.', Icone: GitBranch, acao: 'iniciarRelacao', abrindo: 'Montando o mapa fisiológico' },
 ];
+const NOME_DESTINO = { alta: 'alta', uti: 'UTI', encaminhar: 'encaminhamento', observacao: 'retorno ou observação' };
 const PASSOS_ADMISSAO = ['Validando ticket', 'Registrando entrada', 'Carregando prontuário', 'Paciente na sala'];
 
 export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil = chamarPerfilPlanilha }) {
@@ -182,17 +183,24 @@ export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, 
     const encerradoNoServidor = entrada.relatorio.encerrado;
     const repetido = encerradoNoServidor ? Number(entrada.xpConcedido) === 0 && r.xp > 0 : (ddx.concluidos || []).includes(`${caso.id}:${caso.versao}`);
     const linhas = [['Raciocínio', `+${r.pontos.raciocinio}`, 'pos'], ['Segurança', `${r.pontos.seguranca >= 0 ? '+' : '−'}${Math.abs(r.pontos.seguranca)}`, r.pontos.seguranca >= 0 ? 'pos' : 'neg'],
-      ['Eficiência', `${r.pontos.eficiencia >= 0 ? '+' : '−'}${Math.abs(r.pontos.eficiencia)}`, r.pontos.eficiencia >= 0 ? 'pos' : 'neg'], ['Desconto de encerramento', r.desconto ? `−${r.desconto}` : '0', r.desconto ? 'neg' : 'mut']];
+      ['Eficiência', `${r.pontos.eficiencia >= 0 ? '+' : '−'}${Math.abs(r.pontos.eficiencia)}`, r.pontos.eficiencia >= 0 ? 'pos' : 'neg'], ['Destino', r.desconto ? `−${r.desconto}` : '0', r.desconto ? 'neg' : 'mut']];
+    if (r.bonus > 0) linhas.push(['Bônus de desempenho', `+${r.bonus}`, 'pos']);
     if (repetido) linhas.push(['Repetição de caso', '×0', 'mut']);
     const fase = encerradoNoServidor ? 'ok' : sync === 'err' ? 'erro' : 'salvando';
     return raiz(<Resultado key={entrada.id} stamp={r.seguro ? 'PLANTÃO SEGURO' : 'PLANTÃO ENCERRADO'} tom={r.seguro ? undefined : 'amber'} recibo={entrada.id}
-      sub={`${caso.paciente} · ${r.minutos} min simulados`} linhas={linhas} total={encerradoNoServidor ? Number(entrada.xpConcedido) || 0 : repetido ? 0 : r.xp} fase={fase}
+      sub={caso.paciente} linhas={linhas} total={encerradoNoServidor ? Number(entrada.xpConcedido) || 0 : repetido ? 0 : r.xp} fase={fase}
       aviso={repetido ? 'Repetição: XP só na primeira conclusão deste caso.' : null} aoTentar={() => salvar(escolhas)}
       principal={{ rotulo: 'Voltar ao DDX', aoClicar: () => { setEscolhasLocais(null); setSync('idle'); setVista('hub'); } }} aoVoltar={() => setTelaAtual('menu')}
       detalhes={<>
-        <div className="det"><b className={r.seguro ? 'yes' : 'no'}>{r.seguro ? <Check /> : <X />}{r.seguro ? 'Critérios de segurança cumpridos' : 'Atendimento com pontos para revisão'}</b>{r.altaInsegura && <p>Alta antes de completar tratamento, reavaliação ou orientações.</p>}</div>
+        <div className="det"><b className={r.seguro ? 'yes' : 'no'}>{r.seguro ? <Check /> : <X />}{r.seguro ? 'Critérios de segurança cumpridos' : 'Atendimento com pontos para revisão'}</b>
+          {r.altaInsegura && <p>Alta antes de completar tratamento, reavaliação ou orientações.</p>}
+          {r.destino && r.destino !== caso.destinoAdequado && <p>Destino escolhido: {NOME_DESTINO[r.destino]}. O caso pedia: {NOME_DESTINO[caso.destinoAdequado]}.</p>}</div>
         <div className="det"><b>Omissões para revisar</b>{r.omissoes.length ? r.omissoes.map(o => <p key={o}>• {caso.acoes.find(a => a.id === o).texto}</p>) : <p>Nenhuma etapa essencial omitida.</p>}</div>
-        {caso.fonte && <a className="det" href={caso.fonte} target="_blank" rel="noreferrer" style={{ color: 'var(--mint)', display: 'flex', gap: 6, alignItems: 'center' }}>Referência clínica para revisão <ExternalLink size={13} /></a>}
+        {caso.aprendizado && <div className="det"><b>O que levar do caso</b><p>{caso.aprendizado}</p></div>}
+        {caso.alerta && <div className="det"><b>Alerta: {caso.alerta.nome}</b><p>{caso.alerta.quando}. {caso.alerta.resposta}.</p><p style={{ color: 'var(--muted)' }}>{caso.alerta.porque}</p></div>}
+        {caso.notificar && <div className="det"><b>Notificação</b><p>{caso.notificar}</p></div>}
+        {caso.referencias?.length > 0 && <div className="det"><b>Referências</b>{caso.referencias.map((f, k) => <p key={k}>• {f.fonte}, p. {f.pag}: {f.sobre}</p>)}</div>}
+        {/^https?:/.test(caso.fonte || '') && <a className="det" href={caso.fonte} target="_blank" rel="noreferrer" style={{ color: 'var(--mint)', display: 'flex', gap: 6, alignItems: 'center' }}>Fonte do caso <ExternalLink size={13} /></a>}
       </>} />);
   }
 
@@ -214,13 +222,13 @@ export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, 
   return raiz(<div className="cbt-scr">
     <div inert={Boolean(folha || confirmar)} style={{ display: 'contents' }}>
       <div className="topbar"><button className="icon-btn" onClick={sair} aria-label="Voltar ao DDX"><ChevronLeft /></button>
-        <h1><small>Plantão médico · {r.minutos} min</small>{caso.paciente}</h1>
+        <h1><small>Plantão médico</small>{caso.paciente}</h1>
         {sync === 'err' ? <button className="sync err" onClick={() => salvar(escolhas)}><span className="dot" />Falhou. Toque para reenviar</button>
           : sync !== 'idle' && <span className={`sync ${sync === 'ok' ? 'ok' : ''}`}><span className="dot" />{sync === 'pend' ? 'Salvando' : 'Salvo'}</span>}</div>
       <div className="scroll pl-grid" style={{ paddingTop: 0 }}>
         <div className="pl-left"><div className="monitor">
-          <div className="mon-head"><span className={`state ${reavaliado ? 'good' : ''}`} style={{ whiteSpace: 'normal' }}>{r.estadoPaciente}</span></div>
-          <Vitais v={vitaisDoCaso(caso, reavaliado)} mudou={reavaliado} />
+          <div className="mon-head"><span className={`state ${r.piorando ? 'bad' : reavaliado || Object.keys(r.vitais).length ? 'good' : ''}`} style={{ whiteSpace: 'normal' }} role={r.piorando ? 'alert' : undefined}>{r.estadoPaciente}</span></div>
+          <Vitais v={vitaisDoCaso(caso, reavaliado, r.vitais)} mudou={reavaliado || Object.keys(r.vitais).length > 0} />
         </div></div>
         <div className="pl-mid">
           <div className="alas" style={{ padding: '12px 0 10px' }}>{grupos.map(g => {
@@ -245,11 +253,11 @@ export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, 
               {[...r.eventos].reverse().map(ev => {
                 const acao = caso.acoes.find(a => a.id === ev.id);
                 return <motion.div key={ev.id} className={`ev ${acao.pontos < 0 ? 'neg' : ''}`} initial={animar() ? { opacity: 0, y: -12, height: 0 } : false} animate={{ opacity: 1, y: 0, height: 'auto' }} transition={{ duration: .4, ease: [0.16, 1, 0.3, 1] }}>
-                  <small>{ev.minutos} min · {acao.grupo}</small><b>{ev.texto}</b><p>{ev.resposta}</p>
+                  <small>{acao.grupo}</small><b>{ev.texto}</b><p>{ev.resposta}</p>
                 </motion.div>;
               })}
             </AnimatePresence>
-            {!r.eventos.length && <p className="muted">Comece avaliando a paciente. Perguntas e exames respondem na hora.</p>}
+            {!r.eventos.length && <p className="muted">Comece avaliando o paciente. Perguntas e exames respondem na hora.</p>}
           </div>
         </div>
       </div>

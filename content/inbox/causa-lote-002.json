@@ -1,0 +1,796 @@
+{
+  "relacoes": [
+    {
+      "id": "ce-dm2-resistencia-insulina",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Endócrino e metabólico",
+      "titulo": "Diabetes tipo 2: da resistência à hiperglicemia",
+      "paciente": "Seu Marcos, 54 anos",
+      "cenario": "Obeso, com glicemia de jejum persistentemente alta. Está começando o tratamento do diabetes tipo 2.",
+      "vitais": "FC 82 bpm · FR 16 irpm · SpO₂ 98% em ar ambiente · PA 136/84 mmHg · T 36,6°C",
+      "estimulo": "Resistência à insulina no diabetes tipo 2",
+      "contexto": "Monte o circuito. Siga a insulina, da demanda aumentada ao medicamento de primeira escolha.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c6",
+          "explicacao": "Na resistência insulínica, há aumento da demanda por insulina, e as células beta tentam compensar."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c5",
+          "explicacao": "O esforço secretor contínuo leva à exaustão funcional e à apoptose das células beta, e o controle glicêmico se perde."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c4",
+          "explicacao": "As células beta conseguem compensar a demanda por adaptações funcionais, até que falham."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c2",
+          "explicacao": "A metformina é a primeira opção e reduz a glicose por vários mecanismos, entre eles diminuir a produção hepática de glicose e aumentar a captação muscular."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Dieta sem carboidrato como único tratamento medicamentoso"
+        },
+        {
+          "id": "c2",
+          "texto": "Metformina: reduz a produção hepática de glicose e aumenta a captação muscular"
+        },
+        {
+          "id": "c3",
+          "texto": "Sulfonilureia isolada em dose máxima como primeira escolha"
+        },
+        {
+          "id": "c4",
+          "texto": "No início, as células beta aumentam a secreção para compensar"
+        },
+        {
+          "id": "c5",
+          "texto": "As células beta se esgotam e a insulina deixa de bastar: hiperglicemia persistente"
+        },
+        {
+          "id": "c6",
+          "texto": "A resistência à insulina aumenta a demanda por insulina"
+        }
+      ],
+      "fonte": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+      "citacoes": [
+        {
+          "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+          "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+          "orgao": "Ministério da Saúde/Conitec",
+          "trecho": "caracterizada pela resistência à insulina, associada à deficiência progressiva de secreção de insulina pelas células beta pancreáticas, além de alterações na secreção de incretinas",
+          "sustenta": "Resistência à insulina e deficiência progressiva de secreção."
+        },
+        {
+          "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+          "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+          "orgao": "Ministério da Saúde/Conitec",
+          "trecho": "Na presença de resistência insulínica, há aumento da demanda por insulina, mas sua produção é insuficiente. Inicialmente, as células beta pancreáticas conseguem compensar essa demanda por meio de adaptação funcionais. Porém, a falência progressiva dessas células compromete o controle glicêmico, resultando em hiperglicemia persistente. O esforço secretor contínuo leva à exaustão funcional e à apoptose celular",
+          "sustenta": "Compensação das células beta, exaustão e apoptose."
+        },
+        {
+          "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+          "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+          "orgao": "Ministério da Saúde/Conitec",
+          "trecho": "Pertence à classe das biguanidas e reduz a glicose por múltiplos mecanismos, entre eles a diminuição da produção hepática de glicose e aumento da captação muscular de glicose",
+          "sustenta": "Mecanismo da metformina."
+        }
+      ]
+    },
+    {
+      "id": "ce-sulfonilureia-hipoglicemia",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Endócrino e metabólico",
+      "titulo": "Sulfonilureia e hipoglicemia",
+      "paciente": "Dona Neusa, 72 anos",
+      "cenario": "Diabética tipo 2 em uso de glibenclamida. Pulou o almoço e chegou suada, tremendo e confusa.",
+      "vitais": "FC 100 bpm · FR 18 irpm · SpO₂ 98% em ar ambiente · PA 130/80 mmHg · T 36,3°C",
+      "estimulo": "Sulfonilureia em idosa que não almoçou",
+      "contexto": "Monte o circuito. Siga o que o medicamento faz com a insulina e como evitar.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c5",
+          "explicacao": "Esta classe promove a liberação de insulina a partir das células beta pancreáticas."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c3",
+          "explicacao": "A liberação de insulina aumenta o risco de hipoglicemia."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c2",
+          "explicacao": "O corpo reage à queda da glicose com sinais de alerta do sistema adrenérgico, que antecedem a confusão."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c4",
+          "explicacao": "A gliclazida de liberação prolongada associa-se a menor taxa de hipoglicemia e é preferível em quem já teve episódios recorrentes."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Aumentar a dose da glibenclamida para melhorar o controle"
+        },
+        {
+          "id": "c2",
+          "texto": "Sudorese, tremor e taquicardia por descarga adrenérgica diante da queda da glicose"
+        },
+        {
+          "id": "c3",
+          "texto": "Com pouco alimento, o excesso de insulina derruba a glicemia: hipoglicemia"
+        },
+        {
+          "id": "c4",
+          "texto": "Preferir a gliclazida de liberação prolongada, de menor taxa de hipoglicemia"
+        },
+        {
+          "id": "c5",
+          "texto": "A sulfonilureia estimula as células beta a liberar insulina, com ou sem alimento"
+        },
+        {
+          "id": "c6",
+          "texto": "Trocar por insulina em dose alta pela manhã sem monitorar"
+        }
+      ],
+      "fonte": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+      "citacoes": [
+        {
+          "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+          "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+          "orgao": "Ministério da Saúde/Conitec",
+          "trecho": "Esta classe medicamentosa promove a liberação de insulina a partir das células beta pancreáticas, o que também aumenta o risco de hipoglicemia.",
+          "sustenta": "Mecanismo da sulfonilureia e risco de hipoglicemia."
+        },
+        {
+          "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+          "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+          "orgao": "Ministério da Saúde/Conitec",
+          "trecho": "a gliclazida liberação pronlongada está associada a uma menor taxa de hipoglicemia, sendo preferível em pacientes com episódios de hipoglicemia recorrente ou risco aumentado de hipoglicemia",
+          "sustenta": "Gliclazida de liberação prolongada como escolha."
+        }
+      ]
+    },
+    {
+      "id": "ce-dpoc-tabagismo",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Respiratório",
+      "titulo": "Tabagismo e falta de ar crônica",
+      "paciente": "Seu Alcides, 66 anos",
+      "cenario": "Fuma há 40 anos. Tosse com catarro todo dia e falta de ar ao subir escada. Tórax em barril.",
+      "vitais": "FC 88 bpm · FR 22 irpm · SpO₂ 92% em ar ambiente · PA 138/84 mmHg · T 36,7°C",
+      "estimulo": "Exposição prolongada à fumaça do cigarro",
+      "contexto": "Monte o circuito, do tabaco ao que se faz para frear a doença.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c6",
+          "explicacao": "A DPOC é uma resposta inflamatória anormal, geralmente causada por inalação significativa de partículas ou gases nocivos."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c3",
+          "explicacao": "As alterações nas vias respiratórias e nos alvéolos causam obstrução persistente, confirmada pela espirometria pós-broncodilatador."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c4",
+          "explicacao": "O ar fica retido: a hiperinsuflação e o tórax em barril sinalizam doença em fase avançada."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c1",
+          "explicacao": "O aconselhamento para cessação do tabagismo tem papel fundamental, porque continuar fumando piora o prognóstico e reduz o efeito da medicação."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Cessação do tabagismo, com tratamento broncodilatador"
+        },
+        {
+          "id": "c2",
+          "texto": "Corticoide oral contínuo como tratamento de manutenção"
+        },
+        {
+          "id": "c3",
+          "texto": "Obstrução crônica ao fluxo de ar, não totalmente reversível (VEF1/CVF abaixo de 0,7)"
+        },
+        {
+          "id": "c4",
+          "texto": "Hiperinsuflação pulmonar, tórax em barril e dispneia aos esforços"
+        },
+        {
+          "id": "c5",
+          "texto": "Antibiótico contínuo para evitar a inflamação"
+        },
+        {
+          "id": "c6",
+          "texto": "Resposta inflamatória anormal nas vias aéreas e nos alvéolos"
+        }
+      ],
+      "fonte": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+      "citacoes": [
+        {
+          "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+          "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+          "orgao": "Ministério da Saúde/Conitec",
+          "trecho": "Do ponto de vista fisiopatológico, a obstrução crônica ao fluxo de ar ocorre devido a alterações nas vias respiratórias (como bronquite e bronquiolite) e/ou nos alvéolos (como no enfisema)",
+          "sustenta": "Mecanismo da obstrução crônica."
+        },
+        {
+          "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+          "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+          "orgao": "Ministério da Saúde/Conitec",
+          "trecho": "espirometria pósbroncodilatador, que confirma a presença de obstrução persistente ao fluxo aéreo quando a relação entre volume expiratório forçado em 1 segundo (VEF1) e a capacidade vital forçada (CVF) é um valor inferior a 0,7",
+          "sustenta": "Obstrução confirmada pela espirometria."
+        },
+        {
+          "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+          "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+          "orgao": "Ministério da Saúde/Conitec",
+          "trecho": "tórax em barril/hiperinsuflação pulmonar e tiragem intercostal podem indicar doença em fase avançada",
+          "sustenta": "Hiperinsuflação como sinal de doença avançada."
+        },
+        {
+          "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+          "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+          "orgao": "Ministério da Saúde/Conitec",
+          "trecho": "O aconselhamento para cessação do tabagismo tem papel fundamental, em todos os níveis de atenção, uma vez que a manutenção está associada a pior prognóstico",
+          "sustenta": "Cessação do tabagismo."
+        }
+      ]
+    },
+    {
+      "id": "ce-dpoc-hipoxemia-cor-pulmonale",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Respiratório",
+      "titulo": "DPOC avançada com inchaço nas pernas",
+      "paciente": "Seu Ivo, 70 anos",
+      "cenario": "DPOC grave. SpO₂ baixa em repouso, pernas inchadas e veias do pescoço distendidas.",
+      "vitais": "FC 96 bpm · FR 24 irpm · SpO₂ 87% em ar ambiente · PA 124/76 mmHg · T 36,5°C",
+      "estimulo": "Hipoxemia crônica na DPOC avançada",
+      "contexto": "Monte o circuito. Siga o que a falta de oxigênio faz com a circulação do pulmão e com o lado direito do coração.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c1",
+          "explicacao": "A DPOC compromete a função pulmonar de forma persistente e progressiva, com queda da oxigenação."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c3",
+          "explicacao": "A hipoxemia crônica eleva a pressão nas artérias do pulmão e sobrecarrega o ventrículo direito."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c4",
+          "explicacao": "O ventrículo direito falha em esvaziar o sangue que volta, e o líquido se acumula nas pernas."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c2",
+          "explicacao": "Com SpO₂ abaixo de 92% indica-se a gasometria, e a hipoxemia com cor pulmonale indica oxigenoterapia."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Obstrução e destruição dos alvéolos reduzem a troca gasosa e causam hipoxemia"
+        },
+        {
+          "id": "c2",
+          "texto": "Gasometria e oxigenoterapia crônica quando a SpO₂ está abaixo de 92%"
+        },
+        {
+          "id": "c3",
+          "texto": "Hipertensão pulmonar e cor pulmonale, com sobrecarga do coração direito"
+        },
+        {
+          "id": "c4",
+          "texto": "Edema de pernas e distensão das veias do pescoço"
+        },
+        {
+          "id": "c5",
+          "texto": "Sedativo para reduzir a sensação de falta de ar"
+        },
+        {
+          "id": "c6",
+          "texto": "Diurético em dose alta como único tratamento"
+        }
+      ],
+      "fonte": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+      "citacoes": [
+        {
+          "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+          "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+          "orgao": "Ministério da Saúde/Conitec",
+          "trecho": "Se SpO2 for menor que 92%, é indicada a gasometria arterial para avaliar a gravidade da hipoxemia e a necessidade de oxigenoterapia",
+          "sustenta": "Gasometria quando SpO₂ está abaixo de 92%."
+        },
+        {
+          "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+          "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+          "orgao": "Ministério da Saúde/Conitec",
+          "trecho": "Complicações como hipoxemia e cor pulmonale são indicativos da necessidade de oxigenoterapia",
+          "sustenta": "Hipoxemia e cor pulmonale indicam oxigenoterapia."
+        },
+        {
+          "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+          "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+          "orgao": "Ministério da Saúde/Conitec",
+          "trecho": "Pacientes com hipertensão pulmonar: requerem avaliação com ecocardiograma e possível uso de oxigenoterapia crônica",
+          "sustenta": "Hipertensão pulmonar: ecocardiograma e oxigenoterapia crônica."
+        }
+      ]
+    },
+    {
+      "id": "ce-dmg-hiperglicemia-fetal",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Obstétrico",
+      "titulo": "Diabetes na gravidez e o bebê grande",
+      "paciente": "Priscila, 31 anos",
+      "cenario": "Gestante de 28 semanas, com glicemia de jejum alterada e feto acima do percentil esperado para a idade gestacional.",
+      "vitais": "FC 88 bpm · FR 18 irpm · SpO₂ 98% em ar ambiente · PA 118/76 mmHg · T 36,6°C",
+      "estimulo": "Gestação com resistência à insulina crescente",
+      "contexto": "Monte o circuito. Siga a glicose da mãe até o feto e o tratamento.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c5",
+          "explicacao": "O aporte de nutrientes ao feto é garantido por hormônios placentários diabetogênicos, e a resistência à insulina evolui com a gestação."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c3",
+          "explicacao": "Se o pâncreas materno não consegue produzir a insulina necessária, instala-se a hiperglicemia materna."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c2",
+          "explicacao": "A hiperglicemia aumenta o risco de crescimento fetal excessivo, distocia de ombros, hipóxia intrauterina e outras repercussões nos filhos."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c1",
+          "explicacao": "O objetivo é manter a normoglicemia, e a insulina é a primeira escolha quando as medidas não medicamentosas não bastam."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Metas de glicemia, dieta e exercício; insulina se as metas não forem atingidas"
+        },
+        {
+          "id": "c2",
+          "texto": "O excesso de glicose chega ao feto: crescimento fetal excessivo e risco de distocia de ombros"
+        },
+        {
+          "id": "c3",
+          "texto": "Se o pâncreas materno não responde à demanda, instala-se a hiperglicemia"
+        },
+        {
+          "id": "c4",
+          "texto": "Suspender o exercício e o monitoramento da glicemia"
+        },
+        {
+          "id": "c5",
+          "texto": "Hormônios placentários aumentam a resistência à insulina, que cresce até a 24ª semana"
+        },
+        {
+          "id": "c6",
+          "texto": "Dieta com mais carboidratos para ganhar peso fetal"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "O aumento na resistência à insulina evolui com o passar da gestação e está bem definido na 24ª semana; se o pâncreas materno não consegue responder às demandas na produção de insulina, instala-se a hiperglicemia materna.",
+          "sustenta": "Resistência crescente e hiperglicemia materna."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "O controle da glicemia materna tem como meta alcançar e manter níveis de normoglicemia: • Jejum <95 mg/dL",
+          "sustenta": "Metas glicêmicas na gestação."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "A insulina se destaca como primeira escolha entre as medidas farmacológicas no controle da hiperglicemia na gestação.",
+          "sustenta": "Insulina como primeira escolha farmacológica."
+        }
+      ]
+    },
+    {
+      "id": "ce-sifilis-gestacao",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Obstétrico",
+      "titulo": "Sífilis na gestação sem tratamento",
+      "paciente": "Camila, 22 anos",
+      "cenario": "Gestante de 14 semanas, com teste rápido de sífilis reagente e sem tratamento até agora.",
+      "vitais": "FC 80 bpm · FR 16 irpm · SpO₂ 99% em ar ambiente · PA 110/70 mmHg · T 36,5°C",
+      "estimulo": "Sífilis materna não tratada",
+      "contexto": "Monte o circuito. Siga o treponema até o feto e o tratamento que o impede.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c6",
+          "explicacao": "A principal via de transmissão é a transplacentária."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c1",
+          "explicacao": "A transmissão pode causar abortos, óbitos fetais e neonatais, prematuridade e recém-nascidos com sequelas."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c4",
+          "explicacao": "No primeiro trimestre o feto ainda não desenvolveu a reação inflamatória ao T. pallidum que causa as lesões, por isso tratar cedo previne a infecção fetal."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c2",
+          "explicacao": "A penicilina é o único tratamento comprovado para o feto; na fase primária, secundária e latência recente, a dose é única de 2.400.000 UI."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Aborto, óbito fetal, prematuridade ou sífilis congênita"
+        },
+        {
+          "id": "c2",
+          "texto": "Penicilina benzatina 2.400.000 UI (duas injeções de 1.200.000 UI) na fase recente"
+        },
+        {
+          "id": "c3",
+          "texto": "Azitromicina em dose única, porque a penicilina não atravessa a placenta"
+        },
+        {
+          "id": "c4",
+          "texto": "A reação inflamatória fetal ao treponema, que só se forma mais tarde, causa as lesões"
+        },
+        {
+          "id": "c5",
+          "texto": "Aguardar o parto para tratar o recém-nascido"
+        },
+        {
+          "id": "c6",
+          "texto": "Passagem do treponema pela placenta (transmissão transplacentária)"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "A principal via de transmissão é a transplacentária, embora a transmissão intraparto",
+          "sustenta": "Transmissão transplacentária."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "A transmissão da sífilis por via transplacentária pode resultar em desfechos negativos quando as gestantes não são adequada e precocemente tratadas. Pode ter como resultado abortos, óbitos fetais e neonatais, até recém-nascidos vivos com sequelas diversas da doença",
+          "sustenta": "Aborto, óbito fetal e sequelas."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "O tratamento da sífilis na gestação deve ser realizado com penicilina, já que não existe evidência de que nenhuma outra droga seja efetiva para o feto.",
+          "sustenta": "Penicilina como tratamento."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "o feto ainda não terá desenvolvido a reação inflamatória ao T. pallidum, que causa as lesões",
+          "sustenta": "Reação inflamatória fetal e as lesões."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "a dose recomendada de penicilina benzatina é de 2.400.000 UI, dividida em duas injeções de 1.200.000 UI em cada um dos glúteos, em uma única tomada.",
+          "sustenta": "Dose de penicilina benzatina."
+        }
+      ]
+    },
+    {
+      "id": "ce-anemia-ferropriva-gestacao",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Obstétrico",
+      "titulo": "Anemia por falta de ferro na gravidez",
+      "paciente": "Débora, 25 anos",
+      "cenario": "Gestante de 20 semanas, pálida, cansada, com sopro sistólico suave. Hemograma com VCM baixo.",
+      "vitais": "FC 96 bpm · FR 18 irpm · SpO₂ 98% em ar ambiente · PA 108/66 mmHg · T 36,5°C",
+      "estimulo": "Gestação com pouca oferta de ferro",
+      "contexto": "Monte o circuito. Siga o ferro, do déficit ao hemograma e à suplementação.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c2",
+          "explicacao": "Sem ferro, a medula produz menos hemoglobina e hemácias menores."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c4",
+          "explicacao": "A anemia por deficiência de ferro manifesta-se, via de regra, com microcitose e hipocromia."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c6",
+          "explicacao": "O sangue leva menos oxigênio e o coração aumenta o fluxo, o que explica os sintomas e o sopro."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c1",
+          "explicacao": "A suplementação rotineira de 30 a 40 mg/dia é recomendada para praticamente todas as gestantes, de preferência entre as refeições ou ao deitar."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Suplementação de ferro elementar de 30 a 40 mg/dia, longe das refeições"
+        },
+        {
+          "id": "c2",
+          "texto": "Deficiência de ferro, que reduz a produção de hemoglobina"
+        },
+        {
+          "id": "c3",
+          "texto": "Ferro junto de polivitamínicos para absorver melhor"
+        },
+        {
+          "id": "c4",
+          "texto": "Anemia ferropriva com microcitose e hipocromia (VCM abaixo de 80 fL e HCM abaixo de 26 pg)"
+        },
+        {
+          "id": "c5",
+          "texto": "Transfusão de sangue na primeira consulta com anemia leve"
+        },
+        {
+          "id": "c6",
+          "texto": "Palidez, astenia, cansaço fácil e sopro sistólico suave"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "A anemia por deficiência de ferro, via de regra, manifesta-se com microcitose (VCM <80 fL) e hipocromia (HCM <26 pg",
+          "sustenta": "Microcitose e hipocromia."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "sintomas como palidez cutâneo-mucosa, astenia, cansaço fácil e o achado de sopro sistólico suave",
+          "sustenta": "Sinais clínicos da anemia."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "A suplementação rotineira de ferro elementar na dose de 30-40 mg/dia é recomendado para praticamente todas as gestantes, à exceção daquelas com doenças caracterizadas por sobrecarga de ferro",
+          "sustenta": "Dose da suplementação."
+        }
+      ]
+    },
+    {
+      "id": "ce-hellp",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Obstétrico",
+      "titulo": "Pré-eclâmpsia grave com plaquetas baixas",
+      "paciente": "Joana, 34 anos",
+      "cenario": "Gestante de 33 semanas com pré-eclâmpsia. Dor no alto da barriga, náusea e plaquetas de 80.000/mm³.",
+      "vitais": "FC 104 bpm · FR 20 irpm · SpO₂ 97% em ar ambiente · PA 164/108 mmHg · T 36,8°C",
+      "estimulo": "Pré-eclâmpsia grave",
+      "contexto": "Monte o circuito. Siga o comprometimento do fígado e do sangue até o que muda o desfecho.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c6",
+          "explicacao": "A síndrome HELLP é o comprometimento hépato-hematológico da pré-eclâmpsia, ligada à anemia hemolítica microangiopática e ao vasoespasmo no fígado."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c3",
+          "explicacao": "O nome resume os três achados: hemólise, aumento de enzimas hepáticas e plaquetopenia."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c4",
+          "explicacao": "A clínica costuma ser pobre, com mal-estar, epigastralgia, náuseas e cefaleia."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c5",
+          "explicacao": "O fator mais importante para reduzir a morbimortalidade materna é o diagnóstico precoce, que antecipa as complicações."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Tratar como hepatite aguda comum, sem avaliar a pré-eclâmpsia"
+        },
+        {
+          "id": "c2",
+          "texto": "Liberar a gestante com anti-hipertensivo oral e retorno em uma semana"
+        },
+        {
+          "id": "c3",
+          "texto": "Hemólise, enzimas hepáticas elevadas e plaquetas baixas (HELLP)"
+        },
+        {
+          "id": "c4",
+          "texto": "Epigastralgia, mal-estar e náuseas, sintomas pobres que levantam a suspeita"
+        },
+        {
+          "id": "c5",
+          "texto": "Diagnóstico precoce, antes das complicações"
+        },
+        {
+          "id": "c6",
+          "texto": "Anemia hemolítica microangiopática e vasoespasmo no fígado materno"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Essa síndrome está relacionada à anemia hemolítica microangiopática e ao vasoespasmo no fígado materno.",
+          "sustenta": "Mecanismo da síndrome HELLP."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "A sintomatologia geralmente é pobre, podendo-se encontrar mal-estar, epigastralgia, náuseas e cefaléia.",
+          "sustenta": "Sintomas da HELLP."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+          "titulo": "Manual de Gestação de Alto Risco",
+          "orgao": "Ministério da Saúde",
+          "trecho": "O fator mais importante para diminuição da morbimortalidade materna é o diagnóstico precoce, antecipando-se às complicações",
+          "sustenta": "Diagnóstico precoce."
+        }
+      ]
+    },
+    {
+      "id": "ce-sepse-civd",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Hematológico",
+      "titulo": "Sepse com sangramento nas punções",
+      "paciente": "Seu Alberto, 63 anos",
+      "cenario": "Choque séptico há horas. Plaquetas baixas e sangramento nos locais de punção.",
+      "vitais": "FC 122 bpm · FR 28 irpm · SpO₂ 92% em ar ambiente · PA 84/48 mmHg · T 38,7°C",
+      "estimulo": "Sepse grave com ativação intensa da coagulação",
+      "contexto": "Monte o circuito. Siga a coagulação, do estímulo ao tratamento.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c2",
+          "explicacao": "A coagulação é ativada pelo fator tecidual, e a antitrombina III e a proteína C, que a freiam, são inibidas."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c3",
+          "explicacao": "Surge a CIVD, com formação de fibrina na microvasculatura e consumo de plaquetas."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c4",
+          "explicacao": "O fluxo para os tecidos piora e o consumo de plaquetas e fibrina causa sangramento."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c1",
+          "explicacao": "As medidas se baseiam em reposição volêmica, antibioticoterapia e tratamento anticoagulante, entre outras."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Tratar o foco com antibiótico e reposição volêmica, e considerar o tratamento anticoagulante"
+        },
+        {
+          "id": "c2",
+          "texto": "Ativação do fator tecidual e perda dos anticoagulantes naturais"
+        },
+        {
+          "id": "c3",
+          "texto": "CIVD: fibrina na microcirculação e consumo de plaquetas"
+        },
+        {
+          "id": "c4",
+          "texto": "Obstrução do fluxo para os órgãos e hemorragias graves por consumo de plaquetas e fibrina"
+        },
+        {
+          "id": "c5",
+          "texto": "Dar plaquetas e suspender o antibiótico"
+        },
+        {
+          "id": "c6",
+          "texto": "Corticoide isolado para parar o sangramento"
+        }
+      ],
+      "fonte": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+      "citacoes": [
+        {
+          "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+          "titulo": "Sepse: atualidades e perspectivas",
+          "orgao": "Revista Brasileira de Terapia Intensiva",
+          "trecho": "A ativação do sistema de coagulação - desencadeada a partir da expressão do FT (fator tecidual), evento mediado por proteínas de microrganismos e por citocinas proinflamatórias",
+          "sustenta": "Ativação da coagulação na sepse."
+        },
+        {
+          "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+          "titulo": "Sepse: atualidades e perspectivas",
+          "orgao": "Revista Brasileira de Terapia Intensiva",
+          "trecho": "têm papel decisivo na fisiopatologia da sepse grave e do choque séptico.",
+          "sustenta": "Papel da coagulação na sepse."
+        },
+        {
+          "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+          "titulo": "Sepse: atualidades e perspectivas",
+          "orgao": "Revista Brasileira de Terapia Intensiva",
+          "trecho": "Tal cenário pode culminar na instalação da CID - caracterizada por (1) ativação intravascular da coagulação, (2) formação e deposição de fibrina na microvasculatura, (3) consumo de plaquetas",
+          "sustenta": "CID: fibrina e consumo de plaquetas."
+        },
+        {
+          "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+          "titulo": "Sepse: atualidades e perspectivas",
+          "orgao": "Revista Brasileira de Terapia Intensiva",
+          "trecho": "Além disso, o consumo de fibrina e de plaquetas (devido à ativação intravascular da coagulação) pode desencadear hemorragias graves, complicando ainda mais este panorama.",
+          "sustenta": "Hemorragias graves por consumo."
+        },
+        {
+          "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+          "titulo": "Sepse: atualidades e perspectivas",
+          "orgao": "Revista Brasileira de Terapia Intensiva",
+          "trecho": "medidas terapêuticas que se baseiam, fundamentalmente, em reposição volêmica, antibioticoterapia, emprego de costicosteróides, tratamento anticoagulante, medidas de manutenção da viabilidade biológica e suporte nutricional.",
+          "sustenta": "Tratamento."
+        }
+      ]
+    }
+  ],
+  "pontos_revisor": [
+    "Estas relações misturam trechos de fontes brasileiras (Ministério da Saúde, Conitec e revistas SciELO) com a fisiologia que explica cada elo. Onde a fonte não traz o elo, ele está só na explicação da carta.",
+    "ce-sulfonilureia-hipoglicemia: o trecho cita o risco de hipoglicemia e a gliclazida de liberação prolongada; a descarga adrenérgica (suor, tremor) é fisiologia clássica, sem trecho.",
+    "ce-dpoc-hipoxemia-cor-pulmonale: o protocolo cita hipoxemia, cor pulmonale e hipertensão pulmonar como indicações de oxigenoterapia; a ligação \"hipoxemia → hipertensão pulmonar → coração direito\" é fisiologia clássica.",
+    "ce-sifilis-gestacao: a dose de penicilina benzatina é a do capítulo para sífilis primária, secundária e latente recente.",
+    "ce-sepse-civd: \"considerar o tratamento anticoagulante\" vem da lista de medidas do artigo (2011); verifique se a conduta atual ainda inclui isso.",
+    "ce-hellp: o manual diz que a fisiopatologia da HELLP \"não está esclarecida\"; a carta de mecanismo usa a descrição do próprio manual."
+  ]
+}

@@ -1,7 +1,8 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
-import { validarErroMedico, validarCausaEfeito } from './validar-conteudo.mjs';
+import { validarErroMedico, validarCausaEfeito, validarPlantao } from './validar-conteudo.mjs';
+import { completarDestinos } from '../src/utils/plantao.js';
 
 // Última etapa do fluxo de conteúdo do DDX: um lote aprovado entra no banco com revisado: true.
 //   node scripts/integrar-ddx.mjs erro  content/approved/erro-lote-001.json
@@ -9,18 +10,22 @@ import { validarErroMedico, validarCausaEfeito } from './validar-conteudo.mjs';
 // As citações (url, trecho) ficam no dossiê e no arquivo de fontes; não vão para o banco do jogo.
 // Depois: `node scripts/sincronizar-supabase.mjs` (a API recalcula o resultado).
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const TIPOS = {
-  erro: { arquivo: 'src/utils/erroMedicoBanco.js', exporta: 'AUDITORIAS', campo: 'auditorias', validar: validarErroMedico },
-  causa: { arquivo: 'src/utils/causaEfeitoBanco.js', exporta: 'RELACOES', campo: 'relacoes', validar: validarCausaEfeito },
-};
+
+export const paraBancoPlantao = ({ citacoes, ...caso }) => ({ ...completarDestinos(caso), revisado: true });
 
 export const gerarBancoDdx = (cabecalho, nome, itens) => `${cabecalho}\nexport const ${nome} = ${JSON.stringify(itens, null, 2)};\n`;
 export const paraBanco = ({ citacoes, ...item }) => ({ ...item, revisado: true });
 
+const TIPOS = {
+  erro: { arquivo: 'src/utils/erroMedicoBanco.js', exporta: 'AUDITORIAS', campo: 'auditorias', validar: validarErroMedico },
+  causa: { arquivo: 'src/utils/causaEfeitoBanco.js', exporta: 'RELACOES', campo: 'relacoes', validar: validarCausaEfeito },
+  plantao: { arquivo: 'src/utils/plantaoBanco.js', exporta: 'CASOS_PLANTAO', campo: 'casos', validar: validarPlantao, converter: paraBancoPlantao },
+};
+
 async function main() {
   const [tipo, caminho] = process.argv.slice(2);
   const cfg = TIPOS[tipo];
-  if (!cfg || !caminho) { console.error('Uso: node scripts/integrar-ddx.mjs <erro|causa> content/approved/lote.json'); process.exitCode = 2; return; }
+  if (!cfg || !caminho) { console.error('Uso: node scripts/integrar-ddx.mjs <erro|causa|plantao> content/approved/lote.json'); process.exitCode = 2; return; }
   const lote = JSON.parse(await readFile(resolve(caminho), 'utf8'));
   const { errors } = cfg.validar(lote);
   if (errors.length) throw new Error(`Lote com erros; rode content:validate:\n${errors.join('\n')}`);
@@ -28,7 +33,7 @@ async function main() {
   const modulo = await import(`${pathToFileURL(arquivo).href}?t=${Date.now()}`);
   const texto = await readFile(arquivo, 'utf8');
   const cabecalho = texto.split('export const')[0].trimEnd();
-  const novos = lote[cfg.campo].map(paraBanco);
+  const novos = lote[cfg.campo].map(cfg.converter || paraBanco);
   await writeFile(arquivo, gerarBancoDdx(cabecalho, cfg.exporta, [...modulo[cfg.exporta], ...novos]));
   console.log(`${novos.length} itens integrados como revisados em ${cfg.arquivo}.`);
 }

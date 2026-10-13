@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import { BANCO_QUIZ, BANCO_FRASES } from '../src/utils/bancoTreinos.js';
 import { TEMAS_TREINO, conceitoDoQuiz } from '../src/utils/treinos.js';
-import { CASOS_PLANTAO, executarPlantao } from '../src/utils/plantao.js';
+import { CASOS_PLANTAO, DESTINOS, completarDestinos, executarPlantao } from '../src/utils/plantao.js';
 import { AUDITORIAS, CATEGORIAS_FALHA } from '../src/utils/erroMedico.js';
 import { RELACOES } from '../src/utils/causaEfeito.js';
 import { lerVitais, xpCaminhoCompleto } from '../src/utils/ddxVisual.js';
@@ -79,7 +79,8 @@ export function validarPlantao(data) {
   if (!data || !Array.isArray(data.casos) || !Array.isArray(data.pontos_revisor)) return { errors: ['Esperado objeto com casos e pontos_revisor (arrays).'], warnings };
   unico(data.casos, 'id', 'ID de caso', errors);
   const existentes = new Set(CASOS_PLANTAO.map(c => c.id));
-  for (const [i, c] of data.casos.entries()) {
+  for (const [i, bruto] of data.casos.entries()) {
+    const c = Array.isArray(bruto?.acoes) ? completarDestinos(bruto) : bruto;
     const label = `casos[${i}] (${c?.id})`;
     stringFields(c, ['id', 'sistema', 'titulo', 'paciente', 'queixa', 'fonte', 'vitais', 'hipoteseCorreta', 'destinoAdequado', 'estadoInicial'], label, errors);
     if (!idValido(c.id) || existentes.has(c.id)) errors.push(`${label}: ID inválido ou já existente.`);
@@ -94,18 +95,17 @@ export function validarPlantao(data) {
       if (!idValido(a.id) || !GRUPOS_PLANTAO.includes(a.grupo) || !CRITERIOS_PLANTAO.includes(a.criterio)) errors.push(`${label}.${a.id}: id, grupo ou critério inválido.`);
       if (!Number.isInteger(a.pontos) || !Number.isInteger(a.minutos) || a.minutos < 1) errors.push(`${label}.${a.id}: pontos e minutos inteiros.`);
       if ((a.exige || []).some(x => !ids.has(x))) errors.push(`${label}.${a.id}: exige ação inexistente.`);
-      if (Boolean(a.terminal) !== ['alta', 'encaminhar'].includes(a.id) || (a.terminal && a.grupo !== 'Encerramento')) errors.push(`${label}.${a.id}: só alta e encaminhar encerram, no grupo Encerramento.`);
+      if (Boolean(a.terminal) !== DESTINOS.includes(a.id) || (a.terminal && a.grupo !== 'Encerramento')) errors.push(`${label}.${a.id}: só ${DESTINOS.join(', ')} encerram, no grupo Encerramento.`);
       if (DOSE.test(`${a.texto} ${a.resposta}`)) warnings.push(`${label}.${a.id}: parece citar dose; o Plantão não prescreve doses.`);
     }
-    if (!ids.has('alta') || !ids.has('encaminhar')) errors.push(`${label}: precisa das ações alta e encaminhar.`);
-    if (!['alta', 'encaminhar'].includes(c.destinoAdequado)) errors.push(`${label}: destinoAdequado deve ser alta ou encaminhar.`);
+    if (!ids.has('alta') || !ids.has('encaminhar')) errors.push(`${label}: precisa das ações alta e encaminhar (uti e observacao são acrescentadas na integração).`);
+    if (!DESTINOS.includes(c.destinoAdequado)) errors.push(`${label}: destinoAdequado deve ser um de ${DESTINOS.join(', ')}.`);
     const hipoteses = acoes.filter(a => a.grupo === 'Hipóteses');
     const certa = hipoteses.find(a => a.id === c.hipoteseCorreta);
     if (hipoteses.length < 2 || !certa || certa.pontos <= 0 || hipoteses.some(a => a !== certa && a.pontos !== 0)) errors.push(`${label}: ao menos 2 hipóteses; só a correta pontua.`);
-    if (!acoes.some(a => a.grupo === 'Exames' && a.pontos < 0)) warnings.push(`${label}: nenhum exame desnecessário com penalidade.`);
+    if (!acoes.some(a => a.pontos < 0)) warnings.push(`${label}: nenhuma ação com penalidade (exame desnecessário ou conduta errada).`);
     if (!Array.isArray(c.essenciais) || !c.essenciais.includes(c.hipoteseCorreta) || c.essenciais.some(x => !ids.has(x) || acoes.find(a => a.id === x).pontos <= 0)) errors.push(`${label}: essenciais devem ser ações positivas e incluir a hipótese correta.`);
     if (!Array.isArray(c.criteriosAlta) || c.criteriosAlta.some(x => !ids.has(x)) || (c.destinoAdequado === 'alta' && !c.criteriosAlta.length)) errors.push(`${label}: criteriosAlta inválidos.`);
-    if (c.destinoAdequado === 'alta' && !ids.has('reavaliar')) warnings.push(`${label}: caso de alta sem a ação reavaliar (o monitor usa os vitais dela).`);
     if (!Array.isArray(c.citacoes) || c.citacoes.length < 2) errors.push(`${label}: ao menos 2 citações com trecho.`);
     if (errors.some(e => e.startsWith(label))) continue;
     try {
@@ -113,7 +113,8 @@ export function validarPlantao(data) {
       const feitas = acoes.filter(a => !a.terminal && a.pontos > 0).map(a => a.id);
       const r = executarPlantao(c, ordenarPorExige(c, feitas).concat(c.destinoAdequado));
       if (!r.seguro) errors.push(`${label}: caminho completo não sai seguro (omissões: ${r.omissoes.join(', ') || 'nenhuma'}).`);
-      if (xp !== 250) warnings.push(`${label}: caminho completo vale ${xp} XP; o piloto vale 250.`);
+      const esperado = c.desempenho ? 300 : 250;
+      if (xp !== esperado) warnings.push(`${label}: caminho completo vale ${xp} XP; o esperado é ${esperado}.`);
     } catch (e) {
       errors.push(`${label}: motor recusou o caminho completo (${e.message}).`);
     }

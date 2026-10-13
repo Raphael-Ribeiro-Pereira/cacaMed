@@ -11,12 +11,14 @@ export function lerVitais(texto) {
   return { fc: numero(texto, 'FC'), fr: numero(texto, 'FR'), spo2: numero(texto, 'SpO₂') ?? numero(texto, 'SpO2'), pa, t: numero(texto, 'T') };
 }
 
-// Depois de reavaliar, o monitor mostra os valores novos que a resposta da reavaliação traz.
-export function vitaisDoCaso(caso, reavaliado) {
+// O monitor mostra os valores da admissão, depois os que as ações trouxeram (`vitais` da ação ou da piora por demora)
+// e, nos casos antigos, os da resposta da reavaliação. `overlay` vem do motor: { fc, fr, spo2, pa, t }.
+export function vitaisDoCaso(caso, reavaliado, overlay = {}) {
   const base = lerVitais(caso.vitais);
-  if (!reavaliado) return base;
-  const novo = lerVitais(caso.acoes.find(a => a.id === 'reavaliar')?.resposta);
-  return Object.fromEntries(Object.entries(base).map(([k, v]) => [k, novo[k] ?? v]));
+  const novo = reavaliado ? lerVitais(caso.acoes.find(a => a.id === 'reavaliar')?.resposta) : {};
+  const juntos = {};
+  for (const k of Object.keys(base)) juntos[k] = overlay[k] ?? novo[k] ?? base[k];
+  return juntos;
 }
 
 // "08:10 — Paciente chegou..." vira ["08:10", "Paciente chegou..."].
