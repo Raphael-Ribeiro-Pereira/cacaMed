@@ -37,3 +37,7 @@ Publicado em produção em 07/10/2026, a pedido do usuário: deploy `dpl_C3Ni3PR
 - tela de login abrindo, sem erros no console.
 
 A instalação num aparelho real e o login com a conta real ainda não foram testados por mim. Para voltar à versão anterior, promover `dpl_3SHAdbbc2VasNiycApMEBExtFKeF` (commit d028855). O service worker continua instalado nos aparelhos, mas as páginas vêm da rede primeiro, então a versão promovida aparece normalmente.
+
+## Nota de 13/10/2026
+
+O usuário instalou o PWA no celular: ele abriu como web app, jogável, mas **sem ir para a tela principal** do aparelho e pouco prático. Decisão: fazer o [app offline](app-offline.md) primeiro; depois comparar Capacitor e React Native; publicar nas duas lojas, sem data.

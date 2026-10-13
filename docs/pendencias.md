@@ -38,8 +38,15 @@ Registros: [PWA](app-instalavel.md), [cadastro Google e e-mail](incidente-cadast
 
 ## 3. Decisões que dependem do usuário
 
+**Respondidas em 13/10/2026** (detalhe no [cronograma](cronograma-recuperacao-caca-med.md#decisões-de-13102026--ddx-completo-e-liberado-na-quinta-1510)):
+- **DDX liberado na quinta 15/10**, com a cara nova e as metas 25 Paciente DDX + 25 Erro médico + 50 Causa e efeito. **Só a Batalha fica desligada** para jogadores.
+- **Tempo = bônus de desempenho, sem cronômetro na tela.** Doses só quando a fonte brasileira citar a quantidade.
+- **App:** offline primeiro; depois Capacitor x React Native; as duas lojas. Quinta de 22/10: design web.
+- Ainda abertas, assumindo o recomendado: B1, B2, B5 a B9, A2, A3, A5, D e E do [questionário](decisoes-para-responder.md).
+
+
 1. **Domínio para o e-mail do app** (cadastro e recuperação de senha). Sem ele, só a equipe do projeto recebe e-mail. `cacomed.com.br` e `cacamed.com.br` são só sugestões, sem disponibilidade consultada. Ver [proposta](proposta-email-autenticacao.md).
-2. ~~**Liberar o DDX para o público**~~ **adiado** (11/10/2026). Antes, arrumar os modos, principalmente os casos, que hoje são poucos. Decidido: **um modo por vez, 15 casos por lote**, para a revisão não ficar grande. Plantão, Erro médico e Causa e efeito têm 1 caso cada; o Erro médico e o Causa e efeito dependem de um caso do Plantão (`casoId`), então a ordem é Plantão → Erro médico → Causa e efeito. O Paciente DDX tem 17.
+2. ~~**Liberar o DDX para o público**~~ **liberação decidida para 15/10** (a de 11/10, de adiar, foi trocada em 13/10). Histórico: adiado em 11/10. Antes, arrumar os modos, principalmente os casos, que hoje são poucos. Decidido: **um modo por vez, 15 casos por lote**, para a revisão não ficar grande. Plantão, Erro médico e Causa e efeito têm 1 caso cada; o Erro médico e o Causa e efeito dependem de um caso do Plantão (`casoId`), então a ordem é Plantão → Erro médico → Causa e efeito. O Paciente DDX tem 17.
 3. **Silhueta no mapa da história:** forma real da doença escurecida (revela o tipo de agente) ou forma genérica até a descoberta.
 4. **Botão "Pular" nas cutscenes** a partir da segunda vez: sim ou não.
 5. **Itens da Batalha na Revisão:** entram nas cartas do Quiz, ganham carta própria ou deixam de ser gerados.

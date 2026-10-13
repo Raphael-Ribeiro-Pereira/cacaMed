@@ -1,6 +1,19 @@
 # Caça-Med — diagnóstico e cronograma de recuperação
 
-> **Lista mestra de pendências, decisões abertas e como retomar o trabalho: [pendencias.md](pendencias.md)** (09/10/2026). Quando ela e um bloco antigo deste cronograma discordarem, vale a lista mestra.
+> **Lista mestra de pendências, decisões abertas e como retomar o trabalho: [pendencias.md](pendencias.md)** (09/10/2026, revista em 13/10). Quando ela e um bloco antigo deste cronograma discordarem, vale a lista mestra.
+
+## Decisões de 13/10/2026 — DDX completo e liberado na quinta (15/10)
+
+Respostas do usuário ao [questionário](decisoes-para-responder.md). **Mudam o plano**: o DDX deixa de ser adiado.
+- **Quinta 15/10:** o DDX inteiro com a cara nova (os 3 modos do [protótipo](../prototipos/ddx-modos.html): Plantão, Erro médico e Causa e efeito) e **liberado para os jogadores**. A **Batalha continua desligada** para quem não é administrador até ficar completa.
+- **Metas de conteúdo para a quinta (mínimo):** 25 casos do Paciente DDX, 25 auditorias do Erro médico e 50 relações do Causa e efeito. O Plantão fica com os 16 casos já aprovados. Fontes brasileiras primeiro (CDC e NIH só para doença que não existe no Brasil).
+- **Tempo no Plantão (B3):** conta como **"bônus de desempenho"**, e **o cronômetro não aparece na tela**. O jogador vê o efeito no monitor, não o relógio.
+- **Doses (B4):** colocar quando a fonte brasileira citar a quantidade; se não citar e virar dificuldade grande, o caso fica sem dose.
+- **Quinta seguinte (22/10):** revisão do design web, que hoje tem falhas e falta de pensamento de UX para quem joga no computador.
+- **App de verdade (C):** o PWA instalou como web app, jogável mas fora da tela principal do celular. Ordem: **app offline primeiro**, depois a análise de prós e contras de Capacitor x React Native. Lojas: **as duas** (Play Store e App Store), sem data.
+- **Quiz e V ou M:** a meta de 50 itens novos não foi repetida nesta resposta. Fica **abaixo do DDX** e só entra se sobrar fôlego.
+
+**Não respondido ainda** (assumo o recomendado e registro): B1 (variações de seleção e investigação), B2, B5, B6, B7, B8, B9, A2, A3, A5, D e E.
 
 ## Ajustes de 11/10/2026 — deploys às quintas, conteúdo com fontes e casos antes do DDX
 

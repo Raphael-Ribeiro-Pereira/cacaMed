@@ -1,0 +1,459 @@
+<title>DDX em Jogo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: uma coluna de celular (o jogo) + painel lateral com o porquê de cada escolha de UX; empilha no mobile. */
+:root{
+  --canvas:#0b0f19;--surface:#111827;--elev:#1a2234;--monitor:#070b14;
+  --line:rgba(220,226,247,.09);--line-strong:#3a4a46;
+  --text:#dce2f7;--soft:#c3cbe0;--muted:#8d9bb3;
+  --mint:#00f5d4;--mint-2:#06d6a0;--mint-ink:#00382f;
+  --violet:#8b5cf6;--violet-soft:#b49cff;--violet-pale:#c9b8ff;
+  --amber:#ffb703;--crimson:#ff3366;--crimson-soft:#ff8fa8;--hr:#3dffb0;--spo2:#5cc8ff;
+  --sans:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--canvas);color:var(--text);font:400 14px/1.45 var(--sans);padding:24px 16px 48px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:32px;align-items:start}
+@media (max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)}}
+header.top{max-width:1040px;margin:0 auto 20px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:end;justify-content:space-between}
+header.top h1{margin:0;font-weight:800;font-size:28px;letter-spacing:-.02em}
+header.top h1 b{color:var(--mint)}
+header.top p{margin:4px 0 0;color:var(--muted);max-width:52ch}
+.modes{display:flex;gap:6px;padding:4px;border-radius:999px;background:var(--surface);border:1px solid var(--line);flex-wrap:wrap}
+.modes button{padding:8px 14px;border-radius:999px;font-weight:700;font-size:13px;color:var(--muted)}
+.modes button[aria-selected=true]{background:rgba(139,92,246,.18);color:var(--violet-pale)}
+
+/* celular */
+.phone{background:var(--canvas);border:1px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:720px;box-shadow:0 30px 60px -30px rgba(0,0,0,.9)}
+.bar{display:flex;align-items:center;gap:10px;padding:16px 18px 10px}
+.bar h2{margin:0;font-size:17px;font-weight:800;line-height:1.2;flex:1;min-width:0}
+.bar h2 small{display:block;font:600 10px var(--mono);letter-spacing:.08em;color:var(--violet-soft);text-transform:uppercase}
+.clock{font:700 20px var(--mono);color:var(--text)}
+.clock small{display:block;font:600 9px var(--mono);color:var(--muted);letter-spacing:.08em;text-align:right}
+.body{flex:1;padding:0 18px 18px;display:grid;gap:12px;align-content:start}
+.dock{padding:12px 18px 20px;border-top:1px solid var(--line);display:grid;gap:10px;background:rgba(11,15,25,.92)}
+.kicker{font:600 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.primary{width:100%;padding:15px;border-radius:14px;font-weight:800;font-size:15px;color:#fff;background:linear-gradient(135deg,#9b72ff,var(--violet));box-shadow:0 4px 0 #5b33c9,0 10px 24px rgba(139,92,246,.35);transition:transform .12s,opacity .2s}
+.primary:active{transform:translateY(3px);box-shadow:0 1px 0 #5b33c9}
+.primary[disabled]{opacity:.4;cursor:not-allowed}
+.ghost{width:100%;padding:12px;border-radius:14px;font-weight:700;background:var(--elev);border:1px solid rgba(220,226,247,.12)}
+
+/* monitor */
+.monitor{position:relative;padding:12px 14px 8px;border-radius:18px;background:var(--monitor);border:1px solid rgba(0,245,212,.22);overflow:hidden;transition:border-color .4s}
+.monitor.alarm{border-color:rgba(255,51,102,.6);animation:alarm 1.2s ease-in-out infinite}
+@keyframes alarm{50%{box-shadow:inset 0 0 30px rgba(255,51,102,.18)}}
+.mhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mhead b{font-size:15px}.mhead small{display:block;color:var(--muted);font-size:11.5px}
+.pill{font:700 9.5px var(--mono);letter-spacing:.05em;padding:4px 8px;border-radius:999px;text-transform:uppercase;white-space:nowrap;background:rgba(255,183,3,.12);color:var(--amber)}
+.pill.good{background:rgba(0,245,212,.12);color:var(--mint)}
+.pill.bad{background:rgba(255,51,102,.14);color:var(--crimson-soft)}
+.vitals{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:8px}
+.vital small{display:block;font:600 9px var(--mono);color:var(--muted);letter-spacing:.06em}
+.vital b{font:700 16px var(--mono);display:inline-block;transition:color .3s}
+.vital.hr b{color:var(--hr)}.vital.sp b{color:var(--spo2)}.vital.rr b{color:var(--amber)}
+.vital.warn b{color:var(--crimson)}
+.vital b.flash{animation:vflash 1.2s ease}
+@keyframes vflash{15%{color:#fff;text-shadow:0 0 12px var(--mint)}}
+.ecg{height:34px;margin-top:2px}.ecg svg{width:100%;height:100%;overflow:visible}
+.ecg path{fill:none;stroke:var(--hr);stroke-width:2;stroke-linejoin:round;filter:drop-shadow(0 0 4px rgba(61,255,176,.6));stroke-dasharray:420;stroke-dashoffset:420;animation:trace var(--beat,1s) linear infinite}
+@keyframes trace{60%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:0;opacity:0}}
+
+/* plantão */
+.golden{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.golden .track{flex:1;height:6px;border-radius:3px;background:var(--elev);overflow:hidden}
+.golden .track span{display:block;height:100%;background:var(--amber);transition:width .6s var(--ease),background .3s}
+.golden b{font:700 12px var(--mono);white-space:nowrap}
+.golden small{font:600 10px var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.tray-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.tray-tabs button{flex:none;padding:7px 12px;border-radius:999px;font-weight:700;font-size:12.5px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.tray-tabs button[aria-selected=true]{background:rgba(0,245,212,.1);border-color:rgba(0,245,212,.45);color:var(--mint)}
+.tray{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.card-act{text-align:left;padding:11px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);display:grid;gap:4px;transition:transform .12s,border-color .2s}
+.card-act:hover{border-color:rgba(0,245,212,.35)}
+.card-act:active{transform:scale(.97)}
+.card-act b{font-size:13px;line-height:1.3}
+.card-act span{font:600 10.5px var(--mono);color:var(--muted)}
+.card-act span i{font-style:normal;color:var(--amber)}
+.card-act.done{opacity:.45;pointer-events:none}
+.card-act.done span::after{content:" · feito";color:var(--mint)}
+.feed{display:grid;gap:8px}
+.ev{padding:10px 12px;border-radius:14px;background:var(--surface);border-left:3px solid var(--mint);animation:rise .5s var(--ease) both}
+.ev.neg{border-left-color:var(--amber)}.ev.crit{border-left-color:var(--crimson)}
+.ev small{display:block;font:600 10px var(--mono);color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.ev b{display:block;font-size:12.5px;margin:2px 0 2px}
+.ev p{margin:0;font-size:12.5px;color:var(--soft)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+.dest{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dest button{padding:12px 6px;border-radius:14px;background:var(--surface);border:1.5px solid var(--line);font-weight:800;font-size:13px}
+.dest button:hover{border-color:var(--violet)}
+
+/* erro médico */
+.sheet{border-radius:18px;background:#f3efe6;color:#1d1f26;padding:14px 14px 6px;position:relative}
+.sheet .hd{display:flex;justify-content:space-between;font:700 10px var(--mono);letter-spacing:.08em;color:#5a5f6e;text-transform:uppercase;border-bottom:1px solid #d4cdbd;padding-bottom:8px;margin-bottom:4px}
+.row{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:9px 6px;border-radius:10px;text-align:left;width:100%;color:#1d1f26;position:relative;transition:background .2s}
+.row time{font:700 12px var(--mono);color:#0d6b5f}
+.row p{margin:0;font-size:13px;line-height:1.4}
+.row:hover{background:rgba(139,92,246,.08)}
+.row.flag{background:rgba(255,51,102,.12);box-shadow:inset 0 0 0 2px #d61f4f}
+.row.flag::after{content:"FALHA";position:absolute;right:8px;top:-8px;font:800 10px var(--mono);letter-spacing:.08em;color:#fff;background:#d61f4f;padding:2px 6px;border-radius:5px;transform:rotate(3deg)}
+.row.ok-mark{background:rgba(6,214,160,.12)}
+.row.shake{animation:shake .32s ease}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.row .note{grid-column:2;font:600 11px var(--mono);color:#7a5a00;margin-top:4px}
+.hint{padding:10px 12px;border-radius:12px;background:rgba(255,183,3,.08);border:1px dashed rgba(255,183,3,.35);color:var(--amber);font-size:12.5px;font-weight:600}
+.hint.good{background:rgba(0,245,212,.07);border-color:rgba(0,245,212,.35);color:var(--mint)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{padding:9px 14px;border-radius:999px;font-weight:700;font-size:13px;background:var(--surface);border:1.5px solid var(--line)}
+.chips button.on{border-color:var(--mint);color:var(--mint);background:rgba(0,245,212,.08)}
+.chips button.no{border-color:var(--crimson);color:var(--crimson-soft);animation:shake .32s ease}
+.slider{display:grid;gap:8px;padding:14px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.slider input{width:100%;accent-color:var(--violet)}
+.slider .scale{display:flex;justify-content:space-between;font:600 10.5px var(--mono);color:var(--muted)}
+.slider output{font:800 28px var(--mono);color:var(--violet-pale)}
+.steps{display:flex;gap:5px}.steps span{flex:1;height:5px;border-radius:3px;background:var(--elev);transition:background .4s}
+.steps span.done{background:var(--mint)}.steps span.cur{background:rgba(139,92,246,.7)}
+.q{font-size:17px;font-weight:800;line-height:1.3;margin:0;text-wrap:balance}
+
+/* causa e efeito */
+.map{display:grid;gap:0;padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.slot{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:center;min-height:56px}
+.slot .dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:700 11px var(--mono);background:var(--elev);color:var(--muted);border:2px solid var(--line-strong);transition:all .4s var(--ease)}
+.slot .lab{font:600 9.5px var(--mono);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.slot .fill{min-height:36px;border-radius:12px;border:1.5px dashed var(--line-strong);padding:8px 10px;font-size:13px;font-weight:600;display:flex;align-items:center;text-align:left;width:100%;color:var(--muted);transition:all .3s}
+.slot.next .fill{border-color:var(--violet);color:var(--violet-soft)}
+.slot.has .fill{border-style:solid;border-color:rgba(139,92,246,.5);background:rgba(139,92,246,.1);color:var(--text)}
+.slot.has .dot{background:rgba(139,92,246,.2);color:var(--violet-pale);border-color:var(--violet);box-shadow:0 0 14px rgba(139,92,246,.5)}
+.slot.ok .dot{background:var(--mint);color:var(--mint-ink);border-color:var(--mint);box-shadow:0 0 14px rgba(0,245,212,.5)}
+.slot.ok .fill{border-color:rgba(0,245,212,.5);background:rgba(0,245,212,.08)}
+.slot.miss .dot{background:rgba(255,51,102,.16);color:var(--crimson);border-color:var(--crimson)}
+.slot.miss .fill{border-color:var(--crimson);background:rgba(255,51,102,.08)}
+.wire{margin-left:16px;width:2px;height:14px;background:var(--line-strong);position:relative;overflow:hidden}
+.wire::after{content:"";position:absolute;inset:0;background:var(--violet);transform:scaleY(0);transform-origin:top;transition:transform .5s var(--ease)}
+.wire.lit::after{transform:scaleY(1)}
+.wire.broken{background:repeating-linear-gradient(180deg,var(--crimson) 0 3px,transparent 3px 6px)}
+.why{grid-column:2;font-size:12px;color:var(--crimson-soft);margin:-2px 0 6px}
+.deck{display:flex;flex-wrap:wrap;gap:8px}
+.deck button{padding:10px 12px;border-radius:12px;background:var(--elev);border:1px solid rgba(220,226,247,.12);font-size:13px;font-weight:600;text-align:left;max-width:100%;transition:transform .12s,border-color .2s}
+.deck button:hover{border-color:var(--violet)}
+.deck button:active{transform:scale(.96)}
+
+/* resultado */
+.stamp{justify-self:center;margin:6px 0 4px;padding:10px 18px;border-radius:12px;border:2.5px solid var(--violet);color:var(--violet-pale);font:800 18px var(--mono);letter-spacing:.06em;transform:rotate(-4deg);box-shadow:0 0 26px rgba(139,92,246,.4);animation:stamp .55s cubic-bezier(.5,1.8,.5,1) both}
+.stamp.mint{border-color:var(--mint);color:var(--mint);box-shadow:0 0 26px rgba(0,245,212,.35)}
+.stamp.amber{border-color:var(--amber);color:var(--amber);box-shadow:0 0 26px rgba(255,183,3,.3)}
+@keyframes stamp{from{transform:rotate(-4deg) scale(2.2);opacity:0}}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.compare div{padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.compare small{display:block;font:600 9.5px var(--mono);color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.compare b{font:800 20px var(--mono)}
+.xp{display:flex;justify-content:space-between;font:700 12px var(--mono);color:var(--muted)}
+.xp b{color:var(--amber)}
+
+/* painel lateral */
+.why-panel{display:grid;gap:18px;padding-top:6px}
+.why-panel h3{margin:0;font-size:22px;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+.why-panel .lead{margin:0;color:var(--soft);max-width:60ch}
+.why-panel ol{margin:0;padding:0;list-style:none;display:grid;gap:12px;counter-reset:w}
+.why-panel li{display:grid;grid-template-columns:28px 1fr;gap:10px;counter-increment:w}
+.why-panel li::before{content:counter(w);width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font:700 11px var(--mono);background:rgba(139,92,246,.18);color:var(--violet-pale)}
+.why-panel li b{display:block;font-size:14px}
+.why-panel li span{color:var(--muted);font-size:13px}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vs div{padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surface)}
+.vs small{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.vs div:last-child small{color:var(--mint)}
+.vs p{margin:6px 0 0;font-size:13px;color:var(--soft)}
+.fineprint{font:500 11px var(--mono);color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="top">
+  <div>
+    <h1>caca<b>Med</b> · DDX em jogo</h1>
+    <p>Protótipo jogável dos três modos. Cada um tem uma ação própria no lugar das alternativas A–D.</p>
+  </div>
+  <div class="modes" role="tablist" aria-label="Modo">
+    <button role="tab" id="tab-plantao" aria-selected="true" data-mode="plantao">Plantão médico</button>
+    <button role="tab" id="tab-erro" aria-selected="false" data-mode="erro">Erro médico</button>
+    <button role="tab" id="tab-causa" aria-selected="false" data-mode="causa">Causa e efeito</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="phone" id="phone" aria-live="polite"></section>
+  <aside class="why-panel" id="why"></aside>
+</div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
+const ECG = '<div class="ecg" aria-hidden="true"><svg viewBox="0 0 280 40" preserveAspectRatio="none"><path d="M0 24h60l8-3 6 3h16l7-20 8 34 7-24 5 10h24l10-6 8 6h101"/></svg></div>';
+const hhmm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const phone = $('#phone'), why = $('#why');
+
+/* ---------- textos do painel ---------- */
+const WHY = {
+  plantao: {
+    t: 'Plantão: o tempo é a pergunta',
+    lead: 'Em vez de perguntar "qual a conduta?", o relógio corre e a paciente reage. Cada ação custa minutos e o monitor responde na hora.',
+    vs: ['Etapa com 4 alternativas e um botão Confirmar.', 'Bandeja de ações com custo em minutos. A paciente piora se você demora.'],
+    li: [['Relógio e hora de ouro', 'A barra âmbar mostra quanto falta para a primeira hora do antibiótico. Ninguém precisa avisar que é sepse.'],
+         ['O monitor é o feedback', 'Volume sobe a PA, O₂ sobe a SpO₂. O jogador entende o efeito sem ler explicação.'],
+         ['Errar é demorar', 'A TC antes do antibiótico custa 40 min e o alarme dispara. O erro aparece como consequência, sem "resposta errada".'],
+         ['Debrief comparativo', 'No fim, o seu tempo até o antibiótico ao lado da meta. O número é o aprendizado.']]
+  },
+  erro: {
+    t: 'Erro médico: auditar é marcar o papel',
+    lead: 'O prontuário tem cara de papel, separado da interface escura do app. O jogador toca na linha onde o cuidado falhou, como um auditor de caneta na mão.',
+    vs: ['"Qual foi a falha?" com 4 textos para ler e comparar.', 'Achar a falha no próprio documento, depois classificar e corrigir o horário.'],
+    li: [['Três gestos diferentes', 'Tocar na linha, escolher a categoria em chips e arrastar o horário correto. Cada etapa tem uma interação própria.'],
+         ['Erro gentil', 'Tocar numa linha certa dá uma dica ("dentro do protocolo") e conta a tentativa, sem tela de erro.'],
+         ['Resposta numérica', 'O slider de horário trata o tempo como contínuo. Quem acerta "até 09:40" entendeu a regra, não decorou o texto.'],
+         ['O relatório é o próprio prontuário', 'A falha fica carimbada no documento, com a anotação do auditor.']]
+  },
+  causa: {
+    t: 'Causa e efeito: montar o circuito',
+    lead: 'A cadeia deixa de ser um indicador de progresso e vira o tabuleiro. O jogador monta o circuito com cartas e liga a corrente para testar.',
+    vs: ['Quatro perguntas em sequência, com a cadeia só como enfeite.', 'Cartas em slots, com distratores. "Testar circuito" mostra onde a corrente quebra.'],
+    li: [['Vê o todo antes', 'Os cinco slots ficam visíveis desde o começo. O jogador pensa na fisiologia inteira, não numa pergunta isolada.'],
+         ['Distratores plausíveis', 'Bradicardia vagal e diurético parecem caber. Escolher exige raciocínio.'],
+         ['Falha localizada', 'O fio quebra exatamente no elo errado e mostra o porquê. Só esse elo volta para a mão.'],
+         ['Recompensa visual', 'Circuito fechado: fios acendem em sequência e o monitor normaliza.']]
+  }
+};
+function renderWhy(m) {
+  const w = WHY[m];
+  why.innerHTML = `<div class="kicker" style="color:var(--violet-soft)">Por que não parece quiz</div><h3>${w.t}</h3><p class="lead">${w.lead}</p>
+  <div class="vs"><div><small>Hoje</small><p>${w.vs[0]}</p></div><div><small>Protótipo</small><p>${w.vs[1]}</p></div></div>
+  <ol>${w.li.map(([b, s]) => `<li><div><b>${b}</b><span>${s}</span></div></li>`).join('')}</ol>
+  <p class="fineprint">Caso de exemplo (sepse e choque hipovolêmico) só para demonstrar a interação. O conteúdo clínico real continua passando pela revisão com fontes.</p>`;
+}
+
+/* ---------- PLANTÃO ---------- */
+const ACOES = {
+  'Avaliação': [
+    { id: 'exame', n: 'Exame físico dirigido', t: 5, ev: ['Exame', 'Dor lombar à direita, Giordano +', 'Pele fria, enchimento capilar 4 s.'] },
+    { id: 'o2', n: 'O₂ por cateter 3 L/min', t: 2, ev: ['Conduta', 'Oxigênio iniciado', 'SpO₂ responde em minutos.'], fx: v => { v.spo2 = 95; } },
+  ],
+  'Exames': [
+    { id: 'hemo', n: 'Hemoculturas (2 pares)', t: 10, ev: ['Coleta', 'Hemoculturas colhidas', 'Antes do antibiótico, como manda o pacote.'] },
+    { id: 'lactato', n: 'Lactato arterial', t: 15, ev: ['Resultado', 'Lactato 4,1 mmol/L', 'Hipoperfusão: indica volume agressivo.'], neg: true },
+    { id: 'tc', n: 'TC de abdome', t: 40, ev: ['Imagem', 'TC: pielonefrite à direita', 'Informação útil, mas custou 40 minutos.'], neg: true },
+  ],
+  'Conduta': [
+    { id: 'atb', n: 'Ceftriaxona 2 g IV', t: 5, ev: ['Conduta', 'Antibiótico iniciado', 'A contagem da hora de ouro para aqui.'] },
+    { id: 'vol', n: 'Cristaloide 30 mL/kg', t: 30, ev: ['Conduta', 'Ringer lactato 2 L', 'PA melhora, FC cai.'], fx: v => { v.pas += 20; v.pad += 10; v.fc -= 16; } },
+    { id: 'nora', n: 'Noradrenalina', t: 10, ev: ['Conduta', 'Noradrenalina 0,1 mcg/kg/min', 'PAM acima de 65.'], fx: v => { v.pas += 14; v.pad += 8; } },
+  ]
+};
+let P;
+function plantaoInit() {
+  P = { clock: 8 * 60 + 40, start: 8 * 60 + 40, atb: null, done: new Set(), grupo: 'Avaliação', v: { fc: 118, fr: 26, spo2: 91, pas: 84, pad: 50, t: 38.9 }, feed: [['08:40 · Triagem', 'Dona Lúcia, 68 anos', 'Febre há 2 dias, disúria, confusa desde a manhã.']], end: null };
+  plantaoRender();
+}
+const pam = v => Math.round((v.pas + 2 * v.pad) / 3);
+function plantaoAct(a) {
+  const before = P.clock;
+  P.clock += a.t; P.done.add(a.id);
+  if (a.fx) a.fx(P.v);
+  if (a.id === 'atb') P.atb = P.clock;
+  // sem volume nem antibiótico, a paciente piora a cada 15 min que passam
+  const ticks = Math.floor((P.clock - P.start) / 15) - Math.floor((before - P.start) / 15);
+  for (let i = 0; i < ticks; i++) if (!P.done.has('vol')) { P.v.pas -= 3; P.v.pad -= 2; P.v.fc += 3; }
+  P.feed.unshift([`${hhmm(P.clock)} · ${a.ev[0]}`, a.ev[1], a.ev[2], a.neg ? 'neg' : '']);
+  if (pam(P.v) < 60 && !P.done.has('vol')) P.feed.unshift([`${hhmm(P.clock)} · Alarme`, `PAM ${pam(P.v)} mmHg`, 'A pressão está caindo. O que falta?', 'crit']);
+  plantaoRender(a.id);
+}
+function plantaoRender(changed) {
+  const v = P.v, m = pam(v), passou = P.clock - P.start;
+  const gold = P.atb ? P.atb - P.start : passou, pct = Math.min(100, gold / 60 * 100);
+  const alarm = m < 65 && !P.end;
+  if (P.end) return plantaoEnd();
+  phone.innerHTML = '';
+  phone.append(h(`<div class="bar"><h2><small>Plantão médico · pronto atendimento</small>Febre e confusão</h2><div class="clock">${hhmm(P.clock)}<small>+${passou} MIN</small></div></div>`));
+  const body = h('<div class="body"></div>');
+  body.append(h(`<div class="monitor ${alarm ? 'alarm' : ''}" style="--beat:${(60 / v.fc * 1.6).toFixed(2)}s"><div class="mhead"><div><b>Dona Lúcia, 68 a</b><small>Box 3 · PAM ${m} mmHg</small></div><span class="pill ${m >= 65 ? 'good' : alarm ? 'bad' : ''}">${m >= 65 ? 'Estável' : 'Instável'}</span></div>
+    <div class="vitals"><div class="vital hr"><small>FC</small><b class="${changed ? 'flash' : ''}">${v.fc}</b></div><div class="vital rr"><small>FR</small><b>${v.fr}</b></div><div class="vital sp"><small>SpO₂</small><b class="${changed === 'o2' ? 'flash' : ''}">${v.spo2}%</b></div><div class="vital ${m < 65 ? 'warn' : ''}"><small>PA</small><b style="font-size:13px" class="${changed ? 'flash' : ''}">${v.pas}/${v.pad}</b></div><div class="vital"><small>T °C</small><b style="font-size:13px">${String(v.t).replace('.', ',')}</b></div></div>${ECG}</div>`));
+  body.append(h(`<div class="golden"><small>Hora de ouro</small><div class="track"><span style="width:${pct}%;background:${P.atb ? 'var(--mint)' : pct >= 100 ? 'var(--crimson)' : 'var(--amber)'}"></span></div><b style="color:${P.atb ? 'var(--mint)' : pct >= 100 ? 'var(--crimson)' : 'var(--amber)'}">${P.atb ? `ATB em ${gold} min` : `${Math.max(0, 60 - passou)} min`}</b></div>`));
+  const tabs = h('<div class="tray-tabs" role="tablist"></div>');
+  Object.keys(ACOES).forEach(g => { const b = h(`<button role="tab" aria-selected="${g === P.grupo}">${g}</button>`); b.onclick = () => { P.grupo = g; plantaoRender(); }; tabs.append(b); });
+  body.append(tabs);
+  const tray = h('<div class="tray"></div>');
+  ACOES[P.grupo].forEach(a => {
+    const b = h(`<button class="card-act ${P.done.has(a.id) ? 'done' : ''}"><b>${a.n}</b><span><i>+${a.t} min</i></span></button>`);
+    b.onclick = () => plantaoAct(a); tray.append(b);
+  });
+  body.append(tray);
+  body.append(h(`<div class="kicker">Evolução</div>`));
+  const feed = h('<div class="feed"></div>');
+  P.feed.slice(0, 4).forEach(([s, b, p, c]) => feed.append(h(`<div class="ev ${c || ''}"><small>${s}</small><b>${b}</b><p>${p}</p></div>`)));
+  body.append(feed);
+  phone.append(body);
+  const dock = h(`<div class="dock"><div class="kicker">Definir destino e encerrar</div><div class="dest"><button data-d="alta">Alta</button><button data-d="enf">Enfermaria</button><button data-d="uti">UTI</button></div></div>`);
+  dock.querySelectorAll('button').forEach(b => b.onclick = () => { P.end = b.dataset.d; plantaoRender(); });
+  phone.append(dock);
+}
+function plantaoEnd() {
+  const v = P.v, m = pam(v), atbMin = P.atb ? P.atb - P.start : null;
+  const bom = P.end === 'uti' && atbMin != null && atbMin <= 60 && P.done.has('vol');
+  const parcial = !bom && P.end !== 'alta' && P.atb;
+  const ideal = ['exame', 'hemo', 'atb', 'vol', 'lactato'];
+  phone.innerHTML = '';
+  phone.append(h(`<div class="bar"><h2><small>Plantão médico · debrief</small>Febre e confusão</h2><div class="clock">${hhmm(P.clock)}<small>FIM</small></div></div>`));
+  const body = h('<div class="body"></div>');
+  body.append(h(`<div class="stamp ${bom ? 'mint' : 'amber'}">${bom ? 'PACIENTE SEGURA' : parcial ? 'DESFECHO PARCIAL' : 'DESFECHO RUIM'}</div>`));
+  body.append(h(`<div class="compare"><div><small>Seu ATB</small><b style="color:${atbMin != null && atbMin <= 60 ? 'var(--mint)' : 'var(--crimson)'}">${atbMin == null ? '—' : atbMin + ' min'}</b></div><div><small>Meta</small><b>≤ 60 min</b></div><div><small>PAM final</small><b style="color:${m >= 65 ? 'var(--mint)' : 'var(--crimson)'}">${m}</b></div><div><small>Destino</small><b>${{ alta: 'Alta', enf: 'Enferm.', uti: 'UTI' }[P.end]}</b></div></div>`));
+  body.append(h(`<div class="kicker">O que um plantonista experiente faria</div>`));
+  const f = h('<div class="feed"></div>');
+  [['Hemoculturas e antibiótico na primeira hora', P.done.has('hemo') && atbMin != null && atbMin <= 60],
+   ['30 mL/kg de cristaloide pela hipotensão e lactato ≥ 4', P.done.has('vol')],
+   ['Imagem só depois de estabilizar', !P.done.has('tc') || (P.atb && true)],
+   ['Choque séptico vai para a UTI', P.end === 'uti']].forEach(([t, ok]) =>
+    f.append(h(`<div class="ev ${ok ? '' : 'crit'}"><small>${ok ? 'Você fez' : 'Faltou'}</small><b>${t}</b></div>`)));
+  body.append(f);
+  body.append(h(`<div class="xp"><span>RECIBO DDX-PL-0412</span><span>XP <b>+${bom ? 100 : parcial ? 50 : 10}</b></span></div>`));
+  phone.append(body);
+  const d = h('<div class="dock"><button class="primary">Jogar de novo</button></div>');
+  d.querySelector('button').onclick = plantaoInit; phone.append(d);
+}
+
+/* ---------- ERRO MÉDICO ---------- */
+const PRONT = [
+  ['08:40', 'Admitida com febre, FC 118, PA 84/50, confusa.', 'Registro de admissão completo.'],
+  ['08:55', 'Hemoculturas colhidas. Solicitados lactato e urina I.', 'Coleta antes do antibiótico. Correto.'],
+  ['09:10', 'Lactato 4,1. Iniciado Ringer lactato 30 mL/kg.', 'Volume adequado para lactato ≥ 4.'],
+  ['09:40', 'Solicitada TC de abdome para investigar foco.', 'Pedir imagem não é erro em si.'],
+  ['11:30', 'Retorno da TC. Iniciada ceftriaxona 2 g IV.', null],
+  ['12:00', 'PAM 63 após volume. Noradrenalina e vaga de UTI.', 'Conduta correta para choque.'],
+];
+const ERR = 4;
+let E;
+function erroInit() { E = { step: 0, tries: 0, flagged: null, wrongRow: null, cat: null, catWrong: null, time: 11 * 60 + 30, hint: null }; erroRender(); }
+function erroRender() {
+  phone.innerHTML = '';
+  phone.append(h(`<div class="bar"><h2><small>Erro médico · auditoria</small>Sepse de foco urinário</h2><div class="clock" style="font-size:14px">${E.step < 3 ? `${E.step + 1}/3` : 'OK'}<small>ETAPA</small></div></div>`));
+  const body = h('<div class="body"></div>');
+  body.append(h(`<div class="steps">${[0, 1, 2].map(k => `<span class="${k < E.step ? 'done' : k === E.step ? 'cur' : ''}"></span>`).join('')}</div>`));
+  const prompts = ['Toque no registro onde o cuidado falhou.', 'Que tipo de falha foi essa?', 'Até que horas o antibiótico deveria ter começado?'];
+  if (E.step < 3) body.append(h(`<p class="q">${prompts[E.step]}</p>`));
+  else body.append(h(`<div class="stamp">AUDITORIA CONCLUÍDA</div>`));
+  const sheet = h(`<div class="sheet"><div class="hd"><span>Prontuário · Box 3</span><span>D. Lúcia, 68 a</span></div></div>`);
+  PRONT.forEach(([t, txt, ok], k) => {
+    const flag = E.flagged === k, wrong = E.wrongRow === k;
+    const r = h(`<button class="row ${flag ? 'flag' : ''} ${wrong ? 'shake ok-mark' : ''}" ${E.step > 0 ? 'tabindex="-1"' : ''}><time>${t}</time><p>${txt}</p>${flag && E.step >= 2 ? `<span class="note">Auditor: ATB ${E.step >= 3 ? `deveria iniciar até ${hhmm(E.ans)}` : 'atrasado'} · ${Math.round((11 * 60 + 30 - 8 * 60 - 40) / 60 * 10) / 10} h após a admissão</span>` : ''}</button>`);
+    if (E.step === 0) r.onclick = () => {
+      if (k === ERR) { E.flagged = k; E.step = 1; E.hint = null; }
+      else { E.tries++; E.wrongRow = k; E.hint = ok; }
+      erroRender();
+    };
+    sheet.append(r);
+  });
+  body.append(sheet);
+  if (E.step === 0 && E.hint) body.append(h(`<div class="hint">${E.hint} Procure outro registro.</div>`));
+  if (E.step === 1) {
+    const c = h('<div class="chips"></div>');
+    ['Atraso', 'Omissão', 'Dose errada', 'Indicação errada'].forEach(n => {
+      const b = h(`<button class="${E.catWrong === n ? 'no' : ''}">${n}</button>`);
+      b.onclick = () => { if (n === 'Atraso') { E.cat = n; E.step = 2; } else { E.catWrong = n; E.tries++; } erroRender(); };
+      c.append(b);
+    });
+    body.append(c);
+    if (E.catWrong) body.append(h(`<div class="hint">O antibiótico foi feito, na dose certa. O problema é quando.</div>`));
+  }
+  if (E.step === 2) {
+    const s = h(`<div class="slider"><span class="kicker">Arraste até o limite</span><output class="mono">${hhmm(E.time)}</output><input id="hora" type="range" min="${8 * 60 + 40}" max="${12 * 60}" step="10" value="${E.time}" aria-label="Horário limite para o antibiótico"><div class="scale"><span>08:40 admissão</span><span>12:00</span></div></div>`);
+    s.querySelector('input').oninput = e => { E.time = +e.target.value; s.querySelector('output').textContent = hhmm(E.time); };
+    body.append(s);
+  }
+  if (E.step === 3) {
+    const ok = E.ans <= 9 * 60 + 40;
+    body.append(h(`<div class="hint ${ok ? 'good' : ''}">${ok ? 'Isso. Em sepse com choque, o antibiótico entra na primeira hora após o reconhecimento: até 09:40.' : `Você marcou ${hhmm(E.ans)}. O limite é 09:40, uma hora após o reconhecimento na admissão.`} A TC poderia esperar o antibiótico correr.</div>`));
+    body.append(h(`<div class="xp"><span>${E.tries} tentativa${E.tries === 1 ? '' : 's'} extra${E.tries === 1 ? '' : 's'}</span><span>XP <b>+${Math.max(25, 75 - E.tries * 10 + (ok ? 25 : 0))}</b></span></div>`));
+  }
+  phone.append(body);
+  const dock = h('<div class="dock"></div>');
+  if (E.step === 2) { const b = h('<button class="primary">Registrar parecer</button>'); b.onclick = () => { E.ans = E.time; E.step = 3; erroRender(); }; dock.append(b); }
+  else if (E.step === 3) { const b = h('<button class="primary">Auditar outro caso</button>'); b.onclick = erroInit; dock.append(b); }
+  else dock.append(h(`<div class="xp"><span>3 ETAPAS · SEM ALTERNATIVAS</span><span>TENTATIVAS EXTRAS <b>${E.tries}</b></span></div>`));
+  phone.append(dock);
+}
+
+/* ---------- CAUSA E EFEITO ---------- */
+const SLOTS = ['Mecanismo', 'Consequência', 'Compensação', 'Intervenção'];
+const CARTAS = [
+  { id: 'a', t: 'Queda da volemia e da pré-carga', slot: 0 },
+  { id: 'b', t: 'Débito cardíaco e PA caem', slot: 1 },
+  { id: 'c', t: 'Barorreflexo: taquicardia e vasoconstrição', slot: 2 },
+  { id: 'd', t: 'Repor volume e hemoderivados, controlar o sangramento', slot: 3 },
+  { id: 'x', t: 'Bradicardia vagal', slot: -1, why: 'Na hipovolemia o barorreflexo acelera o coração. Bradicardia aparece tarde, perto da parada.' },
+  { id: 'y', t: 'Furosemida para poupar o rim', slot: -1, why: 'Diurético tira mais volume de quem já está sem. Piora a perfusão.' },
+];
+const WHYS = { 0: 'O que a hemorragia muda primeiro é o volume dentro dos vasos.', 1: 'Menos retorno venoso leva a menos débito. A pressão cai depois disso.', 2: 'É a resposta do corpo para segurar a pressão, antes de qualquer tratamento.', 3: 'A intervenção corrige a causa, que é o volume perdido.' };
+let C;
+function causaInit() { C = { placed: [null, null, null, null], tested: null, tries: 0 }; causaRender(); }
+function causaRender() {
+  const done = C.tested && C.tested.every(Boolean);
+  phone.innerHTML = '';
+  phone.append(h(`<div class="bar"><h2><small>Causa e efeito · mapa fisiológico</small>Hemorragia aguda</h2><div class="clock" style="font-size:14px">${C.placed.filter(Boolean).length}/4<small>ELOS</small></div></div>`));
+  const body = h('<div class="body"></div>');
+  const v = done ? { fc: 92, pa: '112/70', sp: 97, cls: 'good', s: 'Compensado' } : { fc: 128, pa: '86/58', sp: 94, cls: 'bad', s: 'Choque' };
+  body.append(h(`<div class="monitor ${done ? '' : ''}" style="--beat:${(60 / v.fc * 1.6).toFixed(2)}s"><div class="mhead"><div><b>Sr. Antônio, 34 a</b><small>Ferimento em coxa, perda estimada 1,5 L</small></div><span class="pill ${v.cls}">${v.s}</span></div><div class="vitals"><div class="vital hr"><small>FC</small><b>${v.fc}</b></div><div class="vital rr"><small>FR</small><b>${done ? 18 : 24}</b></div><div class="vital sp"><small>SpO₂</small><b>${v.sp}%</b></div><div class="vital ${done ? '' : 'warn'}"><small>PA</small><b style="font-size:13px">${v.pa}</b></div><div class="vital"><small>T °C</small><b style="font-size:13px">36,4</b></div></div>${ECG}</div>`));
+  if (!done) body.append(h(`<p class="q">Monte o circuito da hemorragia até o tratamento.</p>`));
+  else body.append(h(`<div class="stamp">MAPA CONCLUÍDO</div>`));
+  const map = h('<div class="map"></div>');
+  map.append(h(`<div class="slot ok"><span class="dot">♥</span><div><div class="lab">Estímulo</div><div class="fill" style="border-style:solid;color:var(--text)">Hemorragia aguda de 1,5 L</div></div></div>`));
+  const next = C.placed.findIndex(p => !p);
+  SLOTS.forEach((lab, k) => {
+    const card = C.placed[k] && CARTAS.find(c => c.id === C.placed[k]);
+    const res = C.tested ? C.tested[k] : null;
+    map.append(h(`<div class="wire ${card ? (res === false ? 'broken' : 'lit') : ''}"></div>`));
+    const st = res === true ? 'ok' : res === false ? 'miss' : card ? 'has' : k === next ? 'next' : '';
+    const s = h(`<div class="slot ${st}"><span class="dot">${k + 1}</span><div><div class="lab">${lab}</div><button class="fill">${card ? card.t : k === next ? 'Escolha uma carta abaixo' : '—'}</button></div></div>`);
+    if (card && res !== true) s.querySelector('button').onclick = () => { C.placed[k] = null; if (C.tested) C.tested[k] = null; causaRender(); };
+    map.append(s);
+    if (res === false) map.append(h(`<div class="slot" style="min-height:0"><span></span><p class="why">${card.why || WHYS[k]} Toque no elo para devolver a carta.</p></div>`));
+  });
+  body.append(map);
+  if (!done) {
+    body.append(h(`<div class="kicker">Sua mão · ${CARTAS.length - C.placed.filter(Boolean).length} cartas</div>`));
+    const deck = h('<div class="deck"></div>');
+    CARTAS.filter(c => !C.placed.includes(c.id)).forEach(c => {
+      const b = h(`<button ${next < 0 ? 'disabled style="opacity:.5"' : ''}>${c.t}</button>`);
+      b.onclick = () => { if (next >= 0) { C.placed[next] = c.id; if (C.tested) C.tested[next] = null; causaRender(); } };
+      deck.append(b);
+    });
+    body.append(deck);
+  } else {
+    body.append(h(`<div class="xp"><span>${C.tries} teste${C.tries === 1 ? '' : 's'} do circuito</span><span>XP <b>+${Math.max(40, 100 - (C.tries - 1) * 20)}</b></span></div>`));
+  }
+  phone.append(body);
+  const dock = h('<div class="dock"></div>');
+  if (done) { const b = h('<button class="primary">Montar outro mapa</button>'); b.onclick = causaInit; dock.append(b); }
+  else {
+    const full = C.placed.every(Boolean);
+    const b = h(`<button class="primary" ${full ? '' : 'disabled'}>${full ? 'Testar circuito' : `Faltam ${4 - C.placed.filter(Boolean).length} elos`}</button>`);
+    b.onclick = () => { C.tries++; C.tested = C.placed.map((id, k) => CARTAS.find(c => c.id === id).slot === k); causaRender(); };
+    dock.append(b);
+  }
+  phone.append(dock);
+}
+
+/* ---------- troca de modo ---------- */
+const INIT = { plantao: plantaoInit, erro: erroInit, causa: causaInit };
+function go(m) {
+  document.querySelectorAll('.modes button').forEach(b => b.setAttribute('aria-selected', b.dataset.mode === m));
+  renderWhy(m); INIT[m]();
+  try { localStorage.setItem('ddx-modo', m); } catch (e) {}
+}
+document.querySelectorAll('.modes button').forEach(b => b.onclick = () => go(b.dataset.mode));
+let first = 'plantao';
+try { first = localStorage.getItem('ddx-modo') || first; } catch (e) {}
+if (location.hash && INIT[location.hash.slice(1)]) first = location.hash.slice(1);
+go(first);
+</script>
