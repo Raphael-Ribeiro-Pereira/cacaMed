@@ -1,0 +1,242 @@
+{
+  "fontes": [
+    {
+      "conceito": "aud-lepto-doxiciclina-gestante#1",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/l/leptospirose/publicacoes/roteiro-para-capacitacao-de-profissionais-medicos-no-diagnostico-e-tratamento-da-leptospirose-guia-do-aluno.pdf",
+      "titulo": "Roteiro para capacitação de profissionais médicos no diagnóstico e tratamento da leptospirose: guia do aluno",
+      "orgao": "Ministério da Saúde",
+      "trecho": "DOXICICLINA 100mg, VO 12/12hs por 5 a 7 dias (não deve ser utilizada em crianças menores de 9 anos, mulheres grávidas"
+    },
+    {
+      "conceito": "aud-lepto-doxiciclina-gestante#2",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/l/leptospirose/publicacoes/roteiro-para-capacitacao-de-profissionais-medicos-no-diagnostico-e-tratamento-da-leptospirose-guia-do-aluno.pdf",
+      "titulo": "Roteiro para capacitação de profissionais médicos no diagnóstico e tratamento da leptospirose: guia do aluno",
+      "orgao": "Ministério da Saúde",
+      "trecho": "AMOXICILINA - Adultos: 500mg, VO 8/8hs, por 5 a 7 dias"
+    },
+    {
+      "conceito": "aud-lepto-amoxicilina-dose#1",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/l/leptospirose/publicacoes/roteiro-para-capacitacao-de-profissionais-medicos-no-diagnostico-e-tratamento-da-leptospirose-guia-do-aluno.pdf",
+      "titulo": "Roteiro para capacitação de profissionais médicos no diagnóstico e tratamento da leptospirose: guia do aluno",
+      "orgao": "Ministério da Saúde",
+      "trecho": "AMOXICILINA - Adultos: 500mg, VO 8/8hs, por 5 a 7 dias"
+    },
+    {
+      "conceito": "aud-lepto-amoxicilina-dose#2",
+      "url": "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/l/leptospirose/publicacoes/roteiro-para-capacitacao-de-profissionais-medicos-no-diagnostico-e-tratamento-da-leptospirose-guia-do-aluno.pdf",
+      "titulo": "Roteiro para capacitação de profissionais médicos no diagnóstico e tratamento da leptospirose: guia do aluno",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Exames laboratoriais complementares: hemograma completo, ureia e creatina, bilirrubinas e transaminases, sódio e potássio."
+    },
+    {
+      "conceito": "aud-nifedipino-dose#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Dose inicial: 10 mg, via oral"
+    },
+    {
+      "conceito": "aud-nifedipino-dose#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Repetir, se necessário: 10 mg a cada 20 a 30 Comprimido de 10 mg minutos (via oral) Dose máxima: 30 mg"
+    },
+    {
+      "conceito": "aud-pe-sem-gravidade-casa#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "No momento em que se faz o diagnóstico de pré-eclâmpsia sem sinais de gravidade"
+    },
+    {
+      "conceito": "aud-pe-sem-gravidade-casa#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Após a avaliação diagnóstica intra-hospitalar inicial, o atendimento ambulatorial é uma opção econômica e suficiente para se manter a gestante sob controle."
+    },
+    {
+      "conceito": "aud-sulfato-monitoramento#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Durante a administração, o monitoramento materno e fetal deve ser realizado (controle de diurese, verificação de reflexo patelar, registro da frequência respiratória"
+    },
+    {
+      "conceito": "aud-sulfato-monitoramento#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Esquema de uso: dose de ataque de 4g IV em 20 a 30 minutos, e seguir com dose de manutenção em infusão de 1 g IV, por hora, até o nascimento ou máximo de 24 horas de utilização"
+    },
+    {
+      "conceito": "aud-ieca-gestante#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "excluindo-se os inibidores da enzima conversora de angiotensina II (Ieca) e antagonistas da angiotensina II, em razão dos efeitos teratogênicos"
+    },
+    {
+      "conceito": "aud-ieca-gestante#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Quadro 3 – Anti-hipertensivos recomendados para uso na gestação"
+    },
+    {
+      "conceito": "aud-metformina-dose#1",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "Sugere-se iniciar o tratamento com doses baixas (500 mg ou 850 mg), em dose única diária, durante ou após as refeições (café da manhã ou jantar), para prevenir sintomas gastrointestinais"
+    },
+    {
+      "conceito": "aud-metformina-dose#2",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "O cloridrato de metformina é indicado como primeira opção terapêutica no tratamento de pacientes com DM2"
+    },
+    {
+      "conceito": "aud-sulfonilureia-idosa#1",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "Esta classe medicamentosa promove a liberação de insulina a partir das células beta pancreáticas, o que também aumenta o risco de hipoglicemia."
+    },
+    {
+      "conceito": "aud-sulfonilureia-idosa#2",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/pcdt-diabete-melito-tipo-2/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas do Diabete Melito Tipo 2 (2026)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "a gliclazida liberação pronlongada está associada a uma menor taxa de hipoglicemia, sendo preferível em pacientes com episódios de hipoglicemia recorrente ou risco aumentado de hipoglicemia"
+    },
+    {
+      "conceito": "aud-dmg-insulina-peso#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A dose inicial deve ser calculada pelo peso atual, sendo recomendada 0,5 UI/kg/dia, f racionada em duas a três aplicações"
+    },
+    {
+      "conceito": "aud-dmg-insulina-peso#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/manual_gestacao_alto_risco.pdf",
+      "titulo": "Manual de Gestação de Alto Risco",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A associação de insulina está indicada sempre que as medidas não farmacológicas (adequação nutricional e exercício) não forem suficientes para atingir as metas do controle glicêmico materno (30% ou mais dos valores glicêmicos alterados"
+    },
+    {
+      "conceito": "aud-dpoc-sem-espirometria#1",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "o diagnóstico clínico requer espirometria pósbroncodilatador, que confirma a presença de obstrução persistente ao fluxo aéreo"
+    },
+    {
+      "conceito": "aud-dpoc-sem-espirometria#2",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/pcdt-da-doenca-pulmonar-obstrutiva-cronica/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Doença Pulmonar Obstrutiva Crônica (2025)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "a relação entre volume expiratório forçado em 1 segundo (VEF1) e a capacidade vital forçada (CVF) é um valor inferior a 0,7"
+    },
+    {
+      "conceito": "aud-dengue-notificacao#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A dengue é uma doença de notificação compulsória, sendo obrigatória sua comunicação pelos profissionais de saúde às vigilâncias locais, seja de um caso suspeito ou confirmado."
+    },
+    {
+      "conceito": "aud-dengue-notificacao#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Essa informação, quando recebida de forma oportuna, permite a adoção de medidas de prevenção e controle."
+    },
+    {
+      "conceito": "aud-dengue-idoso-edema#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Apesar do risco maior de complicações e choque, pacientes desse grupo correm um risco maior de sobrecarga de fluidos, em parte pela presença de comorbidades, pelo maior risco de lesão renal e redução da função miocárdica."
+    },
+    {
+      "conceito": "aud-dengue-idoso-edema#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A hidratação deve ser minuciosmanete acompanhada, na busca de sinais de edema pulmonar (crepitação à ausculta"
+    },
+    {
+      "conceito": "aud-asma-so-saba#1",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/asma-portaria-conjunta-saes-sctie-no-43.pdf/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Asma (Portaria Conjunta SAES/SCTIE nº 43/2026)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "Não é recomendado tratar a asma apenas com SABA, devido ao risco aumentado de exacerbações graves e morte"
+    },
+    {
+      "conceito": "aud-asma-so-saba#2",
+      "url": "https://www.gov.br/conitec/pt-br/midias/protocolos/2026/asma-portaria-conjunta-saes-sctie-no-43.pdf/@@display-file/file",
+      "titulo": "Protocolo Clínico e Diretrizes Terapêuticas da Asma (Portaria Conjunta SAES/SCTIE nº 43/2026)",
+      "orgao": "Ministério da Saúde/Conitec",
+      "trecho": "Todos os pacientes devem receber tratamento contendo corticoide inalatório"
+    },
+    {
+      "conceito": "aud-sca-ecg-atraso#1",
+      "url": "https://saude.es.gov.br/Media/sesa/Protocolo/Diretriz%20Estadual%20de%20S%C3%ADndromes%20Coronarianas%20Agudas%20%E2%80%93%202025.pdf",
+      "titulo": "Diretriz Estadual de Síndromes Coronarianas Agudas (2025)",
+      "orgao": "Secretaria de Estado da Saúde do Espírito Santo",
+      "trecho": "Esse tempo não deve ser superior a 10 minutos."
+    },
+    {
+      "conceito": "aud-sca-ecg-atraso#2",
+      "url": "https://saude.es.gov.br/Media/sesa/Protocolo/Diretriz%20Estadual%20de%20S%C3%ADndromes%20Coronarianas%20Agudas%20%E2%80%93%202025.pdf",
+      "titulo": "Diretriz Estadual de Síndromes Coronarianas Agudas (2025)",
+      "orgao": "Secretaria de Estado da Saúde do Espírito Santo",
+      "trecho": "Orientar a realização e interpretação do ECG em até 10 minutos da chegada do paciente no estabelecimento de saúde."
+    },
+    {
+      "conceito": "aud-sca-aas-dose#1",
+      "url": "https://saude.es.gov.br/Media/sesa/Protocolo/Diretriz%20Estadual%20de%20S%C3%ADndromes%20Coronarianas%20Agudas%20%E2%80%93%202025.pdf",
+      "titulo": "Diretriz Estadual de Síndromes Coronarianas Agudas (2025)",
+      "orgao": "Secretaria de Estado da Saúde do Espírito Santo",
+      "trecho": "Administração de ácido acetilsalicílico – AAS 300 mg (160 a 320 mg mastigado VO)"
+    },
+    {
+      "conceito": "aud-sca-aas-dose#2",
+      "url": "https://saude.es.gov.br/Media/sesa/Protocolo/Diretriz%20Estadual%20de%20S%C3%ADndromes%20Coronarianas%20Agudas%20%E2%80%93%202025.pdf",
+      "titulo": "Diretriz Estadual de Síndromes Coronarianas Agudas (2025)",
+      "orgao": "Secretaria de Estado da Saúde do Espírito Santo",
+      "trecho": "Ácido acetilsalicílico 160 a 300 mg por via oral, mastigável, o mais cedo possível"
+    },
+    {
+      "conceito": "aud-sca-oxigenio#1",
+      "url": "https://saude.es.gov.br/Media/sesa/Protocolo/Diretriz%20Estadual%20de%20S%C3%ADndromes%20Coronarianas%20Agudas%20%E2%80%93%202025.pdf",
+      "titulo": "Diretriz Estadual de Síndromes Coronarianas Agudas (2025)",
+      "orgao": "Secretaria de Estado da Saúde do Espírito Santo",
+      "trecho": "Oxigênio somente se SpO₂ menor que 90%, dispneia relevante ou congestão pulmonar"
+    },
+    {
+      "conceito": "aud-sca-oxigenio#2",
+      "url": "https://saude.es.gov.br/Media/sesa/Protocolo/Diretriz%20Estadual%20de%20S%C3%ADndromes%20Coronarianas%20Agudas%20%E2%80%93%202025.pdf",
+      "titulo": "Diretriz Estadual de Síndromes Coronarianas Agudas (2025)",
+      "orgao": "Secretaria de Estado da Saúde do Espírito Santo",
+      "trecho": "O2 suplementar por cateter nasal ou máscara (2 a 4 L/min) se Sat02 < 90%, dispneia ou congestão pulmonar"
+    },
+    {
+      "conceito": "aud-sca-nitrato-vd#1",
+      "url": "https://saude.es.gov.br/Media/sesa/Protocolo/Diretriz%20Estadual%20de%20S%C3%ADndromes%20Coronarianas%20Agudas%20%E2%80%93%202025.pdf",
+      "titulo": "Diretriz Estadual de Síndromes Coronarianas Agudas (2025)",
+      "orgao": "Secretaria de Estado da Saúde do Espírito Santo",
+      "trecho": "Nitrato sublingual 0,4 mg a cada 5 minutos, máximo três doses, se pressão arterial sistólica adequada, sem uso recente de inibidor da fosfodiesterase tipo 5 e sem suspeita de infarto do ventrículo direito"
+    },
+    {
+      "conceito": "aud-sca-nitrato-vd#2",
+      "url": "https://saude.es.gov.br/Media/sesa/Protocolo/Diretriz%20Estadual%20de%20S%C3%ADndromes%20Coronarianas%20Agudas%20%E2%80%93%202025.pdf",
+      "titulo": "Diretriz Estadual de Síndromes Coronarianas Agudas (2025)",
+      "orgao": "Secretaria de Estado da Saúde do Espírito Santo",
+      "trecho": "Hipotensão arterial (PAS < 85mmHg"
+    }
+  ]
+}

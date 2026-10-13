@@ -1,0 +1,242 @@
+{
+  "fontes": [
+    {
+      "conceito": "ce-cad-cetose#1",
+      "url": "https://www.scielo.br/j/abem/a/yk7dNDjrkBbBcjvq8C8TFLv/?lang=pt",
+      "titulo": "Cetoacidose diabética em adultos: atualização de uma complicação antiga",
+      "orgao": "Arquivos Brasileiros de Endocrinologia & Metabologia",
+      "trecho": "A lipólise resulta em liberação de ácidos graxos livres (AGL), que são oxidados no sistema microssomal hepático."
+    },
+    {
+      "conceito": "ce-cad-cetose#2",
+      "url": "https://www.scielo.br/j/abem/a/yk7dNDjrkBbBcjvq8C8TFLv/?lang=pt",
+      "titulo": "Cetoacidose diabética em adultos: atualização de uma complicação antiga",
+      "orgao": "Arquivos Brasileiros de Endocrinologia & Metabologia",
+      "trecho": "Essa diurese osmótica é a principal causa de perda de fluidos na CAD (31,32), embora outros fatores como vômito e hiperventilação também estejam envolvidos. Estima-se que haja perda de aproximadamente 5 a 10% do peso corporal durante um episódio de CAD"
+    },
+    {
+      "conceito": "ce-cad-cetose#3",
+      "url": "https://www.scielo.br/j/abem/a/yk7dNDjrkBbBcjvq8C8TFLv/?lang=pt",
+      "titulo": "Cetoacidose diabética em adultos: atualização de uma complicação antiga",
+      "orgao": "Arquivos Brasileiros de Endocrinologia & Metabologia",
+      "trecho": "Em todos casos, é necessária hidratação, insulinoterapia e correção de possíveis anormalidades hidro-eletrolíticas."
+    },
+    {
+      "conceito": "ce-cad-potassio#1",
+      "url": "https://www.scielo.br/j/abem/a/yk7dNDjrkBbBcjvq8C8TFLv/?lang=pt",
+      "titulo": "Cetoacidose diabética em adultos: atualização de uma complicação antiga",
+      "orgao": "Arquivos Brasileiros de Endocrinologia & Metabologia",
+      "trecho": "a insulinopenia diminui a entrada de íon potássio nas células, provocando permanência destes no meio extracelular"
+    },
+    {
+      "conceito": "ce-cad-potassio#2",
+      "url": "https://www.scielo.br/j/abem/a/yk7dNDjrkBbBcjvq8C8TFLv/?lang=pt",
+      "titulo": "Cetoacidose diabética em adultos: atualização de uma complicação antiga",
+      "orgao": "Arquivos Brasileiros de Endocrinologia & Metabologia",
+      "trecho": "hipocalemia severa após início da insulinoterapia, que irá deslocar o potássio do meio extracelular para o intracelular."
+    },
+    {
+      "conceito": "ce-cad-potassio#3",
+      "url": "https://www.scielo.br/j/abem/a/yk7dNDjrkBbBcjvq8C8TFLv/?lang=pt",
+      "titulo": "Cetoacidose diabética em adultos: atualização de uma complicação antiga",
+      "orgao": "Arquivos Brasileiros de Endocrinologia & Metabologia",
+      "trecho": "A reposição de potássio deve ser iniciada assim que o paciente apresentar a primeira diurese."
+    },
+    {
+      "conceito": "ce-cad-potassio#4",
+      "url": "https://www.scielo.br/j/abem/a/yk7dNDjrkBbBcjvq8C8TFLv/?lang=pt",
+      "titulo": "Cetoacidose diabética em adultos: atualização de uma complicação antiga",
+      "orgao": "Arquivos Brasileiros de Endocrinologia & Metabologia",
+      "trecho": "Recomenda-se monitorização eletrocardiográfica durante a reposição desse eletrólito."
+    },
+    {
+      "conceito": "ce-tep-ventriculo-direito#1",
+      "url": "https://www.scielo.br/j/jbpneu/a/KfVmdJn7P393GhnWkZmkrtf/?lang=pt",
+      "titulo": "Reperfusão no tromboembolismo pulmonar agudo",
+      "orgao": "Jornal Brasileiro de Pneumologia",
+      "trecho": "No TEP agudo, há um aumento súbito da RVP, representando a pós-carga ventricular, por obstrução da luz arterial pulmonar e por vasoconstrição, mediada por disfunção endotelial induzida pela presença de coágulo."
+    },
+    {
+      "conceito": "ce-tep-ventriculo-direito#2",
+      "url": "https://www.scielo.br/j/jbpneu/a/KfVmdJn7P393GhnWkZmkrtf/?lang=pt",
+      "titulo": "Reperfusão no tromboembolismo pulmonar agudo",
+      "orgao": "Jornal Brasileiro de Pneumologia",
+      "trecho": "O aumento da pressão arterial pulmonar, decorrente do aumento da RVP, transmite-se à parede do VD, levando à dilatação do mesmo e consequente perda de sua melhor posição de distensão, diminuindo sua eficiência contrátil (Lei de Frank-Starling)."
+    },
+    {
+      "conceito": "ce-tep-ventriculo-direito#3",
+      "url": "https://www.scielo.br/j/jbpneu/a/KfVmdJn7P393GhnWkZmkrtf/?lang=pt",
+      "titulo": "Reperfusão no tromboembolismo pulmonar agudo",
+      "orgao": "Jornal Brasileiro de Pneumologia",
+      "trecho": "reperfusão pulmonar imediata é mandatória para reduzir a pós-carga do ventrículo direito e restaurar a condição hemodinâmica do paciente."
+    },
+    {
+      "conceito": "ce-falciforme-vasoclusao#1",
+      "url": "https://www.scielo.br/j/jvb/a/SVCg83xq3YYZx8SYxGBQL5G/?lang=pt",
+      "titulo": "Úlceras de perna em pacientes com anemia falciforme",
+      "orgao": "Jornal Vascular Brasileiro",
+      "trecho": "Após a redução dos níveis de oxigênio tecidual, a hemoglobina S polimeriza, se aglomera e distorce a membrana dos glóbulos vermelhos, resultando em hemácias com formato típico de foice."
+    },
+    {
+      "conceito": "ce-falciforme-vasoclusao#2",
+      "url": "https://www.scielo.br/j/jvb/a/SVCg83xq3YYZx8SYxGBQL5G/?lang=pt",
+      "titulo": "Úlceras de perna em pacientes com anemia falciforme",
+      "orgao": "Jornal Vascular Brasileiro",
+      "trecho": "Como consequência, algumas hemácias se tornam mais densas e perdem sua capacidade de deformar para fluir pela microvascularização, o que implica em vaso-oclusão, inflamação, isquemia, dano tecidual e anemia hemolítica"
+    },
+    {
+      "conceito": "ce-falciforme-hemolise-no#1",
+      "url": "https://www.scielo.br/j/jvb/a/SVCg83xq3YYZx8SYxGBQL5G/?lang=pt",
+      "titulo": "Úlceras de perna em pacientes com anemia falciforme",
+      "orgao": "Jornal Vascular Brasileiro",
+      "trecho": "Ocorre hemólise intravascular, que permite que a hemoglobina livre sequestre o óxido nítrico (ON), reduzindo sua ação vasodilatadora sobre o endotélio vascular e, assim, intensificando a vasoconstrição crônica, a hipóxia e a dor"
+    },
+    {
+      "conceito": "ce-falciforme-hemolise-no#2",
+      "url": "https://www.scielo.br/j/jvb/a/SVCg83xq3YYZx8SYxGBQL5G/?lang=pt",
+      "titulo": "Úlceras de perna em pacientes com anemia falciforme",
+      "orgao": "Jornal Vascular Brasileiro",
+      "trecho": "A vasculopatia da DF pode provocar hipertensão pulmonar, crise álgica, síndrome pé-mão, acidente vascular cerebral isquêmico, priapismo e úlcera de membros inferiores"
+    },
+    {
+      "conceito": "ce-ascite-vasodilatacao#1",
+      "url": "https://www.scielo.br/j/ramb/a/bhH9F9xSpJfDD9NXdTRg59L/?lang=pt",
+      "titulo": "Ascite: estado da arte baseado em evidências",
+      "orgao": "Revista da Associação Médica Brasileira",
+      "trecho": "A teoria da vasodilatação estaria presente desde a fase pré-ascítica até a ascite de longa data."
+    },
+    {
+      "conceito": "ce-ascite-vasodilatacao#2",
+      "url": "https://www.scielo.br/j/ramb/a/bhH9F9xSpJfDD9NXdTRg59L/?lang=pt",
+      "titulo": "Ascite: estado da arte baseado em evidências",
+      "orgao": "Revista da Associação Médica Brasileira",
+      "trecho": "A remoção da ascite e do edema periférico requer a indução de balanço negativo de sódio."
+    },
+    {
+      "conceito": "ce-ascite-vasodilatacao#3",
+      "url": "https://www.scielo.br/j/ramb/a/bhH9F9xSpJfDD9NXdTRg59L/?lang=pt",
+      "titulo": "Ascite: estado da arte baseado em evidências",
+      "orgao": "Revista da Associação Médica Brasileira",
+      "trecho": "necessita pouco estímulo diurético (apenas espironolactona) para eliminar o excesso de líquido"
+    },
+    {
+      "conceito": "ce-ascite-hiponatremia#1",
+      "url": "https://www.scielo.br/j/ramb/a/bhH9F9xSpJfDD9NXdTRg59L/?lang=pt",
+      "titulo": "Ascite: estado da arte baseado em evidências",
+      "orgao": "Revista da Associação Médica Brasileira",
+      "trecho": "Hiponatremia: pode ocorrer no início do quadro ou após o emprego de diuréticos como a espironolactona. É devido à grande queda na excreção de água livre que ocorre em muitos casos, principalmente devido aos altos níveis de ADH"
+    },
+    {
+      "conceito": "ce-ascite-hiponatremia#2",
+      "url": "https://www.scielo.br/j/ramb/a/bhH9F9xSpJfDD9NXdTRg59L/?lang=pt",
+      "titulo": "Ascite: estado da arte baseado em evidências",
+      "orgao": "Revista da Associação Médica Brasileira",
+      "trecho": "Estes pacientes devem ser submetidos a restrição da ingesta de água livre"
+    },
+    {
+      "conceito": "ce-ira-hipovolemia-nta#1",
+      "url": "https://www.scielo.br/j/jbn/a/8X55FWkGzxNH4s3nchLgYbh/?lang=pt",
+      "titulo": "Preditores de injúria renal aguda e de mortalidade em uma Unidade de Terapia Intensiva",
+      "orgao": "Jornal Brasileiro de Nefrologia",
+      "trecho": "Na primeira, geralmente há uma hipovolemia que resulta em hipoperfusão de diversos órgãos, inclusive dos rins, ocorrendo principalmente por sepse, outros estados inflamatórios sistêmicos, cirurgias e traumas."
+    },
+    {
+      "conceito": "ce-ira-hipovolemia-nta#2",
+      "url": "https://www.scielo.br/j/jbn/a/8X55FWkGzxNH4s3nchLgYbh/?lang=pt",
+      "titulo": "Preditores de injúria renal aguda e de mortalidade em uma Unidade de Terapia Intensiva",
+      "orgao": "Jornal Brasileiro de Nefrologia",
+      "trecho": "Caso haja manutenção da doença de base e da hipoperfusão, o estado transitório de azotemia pré-renal torna-se constante, com lesão celular isquêmica, culminando em necrose tubular aguda, a principal causa de IRA intrínseca."
+    },
+    {
+      "conceito": "ce-ira-hipovolemia-nta#3",
+      "url": "https://www.scielo.br/j/jbn/a/8X55FWkGzxNH4s3nchLgYbh/?lang=pt",
+      "titulo": "Preditores de injúria renal aguda e de mortalidade em uma Unidade de Terapia Intensiva",
+      "orgao": "Jornal Brasileiro de Nefrologia",
+      "trecho": "Dentre todas estas causas, o choque séptico é o fator que mais comumente contribui para a IRA."
+    },
+    {
+      "conceito": "ce-malaria-citoaderencia#1",
+      "url": "https://www.scielo.br/j/rbti/a/fF8CRKZ9TBX6X8MD4WvVTqS/?lang=pt",
+      "titulo": "Malária grave por Plasmodium falciparum",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "as células infectadas aderem a células não-infectadas, havendo, portanto, o efeito sinérgico dos dois fenômenos na patogênese da malária grave, com formação de agregados celulares que interferem na microcirculação."
+    },
+    {
+      "conceito": "ce-malaria-citoaderencia#2",
+      "url": "https://www.scielo.br/j/rbti/a/fF8CRKZ9TBX6X8MD4WvVTqS/?lang=pt",
+      "titulo": "Malária grave por Plasmodium falciparum",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "Os derivados da artemisinina - artesunato e artemeter - são as substâncias comumente utilizadas, sendo a primeira de uso intravenoso, intramuscular e retal e a segunda disponível apenas para uso intramuscular."
+    },
+    {
+      "conceito": "ce-malaria-citoaderencia#3",
+      "url": "https://www.scielo.br/j/rbti/a/fF8CRKZ9TBX6X8MD4WvVTqS/?lang=pt",
+      "titulo": "Malária grave por Plasmodium falciparum",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "O início do tratamento deve ser o mais precoce possível, o qual tem impacto na sobrevida do paciente, e é baseado na combinação de drogas antimaláricas e medidas de suporte."
+    },
+    {
+      "conceito": "ce-malaria-anemia#1",
+      "url": "https://www.scielo.br/j/rbti/a/fF8CRKZ9TBX6X8MD4WvVTqS/?lang=pt",
+      "titulo": "Malária grave por Plasmodium falciparum",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "Trata-se de uma manifestação frequente e precoce da malária, a qual ocorre devido a múltiplos fatores, incluindo destruição ou sequestro dos eritrócitos, alteração da eritropoese e perda sanguínea decorrente de eventual coagulopatia."
+    },
+    {
+      "conceito": "ce-malaria-anemia#2",
+      "url": "https://www.scielo.br/j/rbti/a/fF8CRKZ9TBX6X8MD4WvVTqS/?lang=pt",
+      "titulo": "Malária grave por Plasmodium falciparum",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "O início do tratamento deve ser o mais precoce possível, o qual tem impacto na sobrevida do paciente, e é baseado na combinação de drogas antimaláricas e medidas de suporte."
+    },
+    {
+      "conceito": "ce-chagas-miocardiopatia#1",
+      "url": "https://www.scielo.br/j/abc/a/pMFYVgNkwkgDMPbyrhZmZKR/",
+      "titulo": "I Diretriz Latino-Americana para o diagnóstico e tratamento da cardiopatia chagásica: resumo executivo",
+      "orgao": "Arquivos Brasileiros de Cardiologia",
+      "trecho": "A cardiopatia chagásica crônica (CCC) é essencialmente uma miocardiopatia dilatada em que inflamação crônica, usualmente de baixa intensidade, mas incessante, provoca destruição tissular progressiva e fibrose extensa no coração."
+    },
+    {
+      "conceito": "ce-chagas-miocardiopatia#2",
+      "url": "https://www.scielo.br/j/abc/a/pMFYVgNkwkgDMPbyrhZmZKR/",
+      "titulo": "I Diretriz Latino-Americana para o diagnóstico e tratamento da cardiopatia chagásica: resumo executivo",
+      "orgao": "Arquivos Brasileiros de Cardiologia",
+      "trecho": "Com o progressivo dano miocárdico sobrevém a insuficiência cardíaca de padrão cardiomiopático dilatado e caracteristicamente biventricular."
+    },
+    {
+      "conceito": "ce-chagas-miocardiopatia#3",
+      "url": "https://www.scielo.br/j/abc/a/pMFYVgNkwkgDMPbyrhZmZKR/",
+      "titulo": "I Diretriz Latino-Americana para o diagnóstico e tratamento da cardiopatia chagásica: resumo executivo",
+      "orgao": "Arquivos Brasileiros de Cardiologia",
+      "trecho": "Dois fármacos são comprovadamente tripanosomicidas, o nifurtimox e o benznidazol."
+    },
+    {
+      "conceito": "ce-avc-penumbra#1",
+      "url": "https://scielo.br/j/anp/a/kYmfDTsc3bYT48sgNCQ8gVR/?lang=pt",
+      "titulo": "Primeiro consenso brasileiro do tratamento da fase aguda do acidente vascular cerebral",
+      "orgao": "Arquivos de Neuro-Psiquiatria",
+      "trecho": "As consequências celulares da isquemia, ou seja, falência energética com alterações metabólicas: liberação de aminoácidos excitatórios e de radicais livres, com proteólise e morte celular ocorrem em rápida seqüência"
+    },
+    {
+      "conceito": "ce-avc-penumbra#2",
+      "url": "https://scielo.br/j/anp/a/kYmfDTsc3bYT48sgNCQ8gVR/?lang=pt",
+      "titulo": "Primeiro consenso brasileiro do tratamento da fase aguda do acidente vascular cerebral",
+      "orgao": "Arquivos de Neuro-Psiquiatria",
+      "trecho": "bem como as evidências do benefício do uso do ativador do plasminogênio tissular recombinante (rtPA) nas primeiras três horas do infarto cerebral"
+    },
+    {
+      "conceito": "ce-avc-penumbra#3",
+      "url": "https://scielo.br/j/anp/a/kYmfDTsc3bYT48sgNCQ8gVR/?lang=pt",
+      "titulo": "Primeiro consenso brasileiro do tratamento da fase aguda do acidente vascular cerebral",
+      "orgao": "Arquivos de Neuro-Psiquiatria",
+      "trecho": "possibilidade de se iniciar a infusão do rt-PA dentro de 3 horas do início dos sintomas"
+    },
+    {
+      "conceito": "ce-avc-penumbra#4",
+      "url": "https://scielo.br/j/anp/a/kYmfDTsc3bYT48sgNCQ8gVR/?lang=pt",
+      "titulo": "Primeiro consenso brasileiro do tratamento da fase aguda do acidente vascular cerebral",
+      "orgao": "Arquivos de Neuro-Psiquiatria",
+      "trecho": "TC de crânio sem evidência de hemorragia ou outra doença de risco"
+    }
+  ]
+}
