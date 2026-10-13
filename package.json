@@ -12,6 +12,7 @@
     "test": "node --test src/utils/*.test.js",
     "content:validate": "node scripts/validar-conteudo.mjs",
     "content:fontes": "node scripts/conferir-fontes.mjs",
+    "content:integrar": "node scripts/integrar-ddx.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

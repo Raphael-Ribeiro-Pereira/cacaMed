@@ -38,6 +38,12 @@ export function obterCasoPlantao(id) {
   return caso;
 }
 
+// Destinos possíveis ao encerrar (13/10/2026): alta, UTI, encaminhamento e retorno/observação. Cada caso traz os quatro.
+export const DESTINOS = ['alta', 'uti', 'encaminhar', 'observacao'];
+
+// Evolução dos sinais vitais sem mostrar relógio: ações podem trazer `vitais` (valores novos) e o caso pode trazer
+// `agravamentos` ({ apos, antes, vitais, estado }): passados `apos` minutos simulados sem a ação `antes`, o paciente piora.
+// `desempenho` ({ acao, limite }) define o bônus escondido: até +50 XP se a ação-marco vem dentro do limite, em caso seguro.
 export function executarPlantao(caso, escolhas = []) {
   if (!Array.isArray(escolhas) || escolhas.length > caso.acoes.length) throw new Error('Registro de ações inválido.');
   const feitas = new Set();
@@ -48,16 +54,24 @@ export function executarPlantao(caso, escolhas = []) {
   let hipotese = '';
   let destino = '';
   let estadoPaciente = caso.estadoInicial;
+  let vitais = {};
+  let piorando = false;
+  let minutosMarco = null;
   for (const id of escolhas) {
     const acao = caso.acoes.find(item => item.id === id);
     if (!acao || feitas.has(id) || encerrado) throw new Error('Ação inválida ou repetida.');
     if ((acao.exige || []).some(item => !feitas.has(item))) throw new Error('Complete as avaliações necessárias antes desta ação.');
     feitas.add(id);
     if (acao.grupo === 'Hipóteses') hipotese = id;
-    if (acao.estadoPaciente) estadoPaciente = acao.estadoPaciente;
+    if (acao.estadoPaciente) { estadoPaciente = acao.estadoPaciente; piorando = false; }
+    if (acao.vitais) { vitais = { ...vitais, ...acao.vitais }; piorando = false; }
     pontos[acao.criterio] += acao.pontos;
     minutos += acao.minutos;
+    if (caso.desempenho && id === caso.desempenho.acao) minutosMarco = minutos;
     eventos.push({ id, texto: acao.texto, resposta: acao.resposta, minutos });
+    for (const ag of [...(caso.agravamentos || [])].sort((a, b) => a.apos - b.apos)) {
+      if (minutos >= ag.apos && !feitas.has(ag.antes)) { vitais = { ...vitais, ...ag.vitais }; if (ag.estado) estadoPaciente = ag.estado; piorando = true; }
+    }
     if (acao.terminal) { encerrado = true; destino = id; }
   }
   // Rever a hipótese é permitido, mas somente a hipótese final pontua.
@@ -68,10 +82,16 @@ export function executarPlantao(caso, escolhas = []) {
   if (hipotese !== caso.hipoteseCorreta && feitas.has(caso.hipoteseCorreta)) omissoes.push(caso.hipoteseCorreta);
   const altaInsegura = destino === 'alta' && caso.criteriosAlta.some(id => !feitas.has(id));
   const seguro = encerrado && destino === caso.destinoAdequado && !altaInsegura && hipotese === caso.hipoteseCorreta && !omissoes.length;
-  // Alta indevida (sem os critérios, ou quando o caso pedia encaminhar) desconta 80; encaminhar sem necessidade, 20.
+  // Alta indevida (sem os critérios, ou quando o caso pedia outro destino) desconta 80; outro destino sem necessidade, 20.
   const altaIndevida = altaInsegura || (destino === 'alta' && caso.destinoAdequado !== 'alta');
-  const desconto = altaIndevida ? 80 : destino === 'encaminhar' && caso.destinoAdequado !== 'encaminhar' ? 20 : 0;
-  const xp = encerrado ? Math.max(0, pontos.raciocinio + pontos.seguranca + pontos.eficiencia - desconto) : 0;
-  return { escolhas: [...escolhas], eventos, minutos, encerrado, hipotese, destino, seguro, altaInsegura, omissoes, pontos, desconto, xp,
-    estadoPaciente };
+  const desconto = altaIndevida ? 80 : destino && destino !== caso.destinoAdequado ? 20 : 0;
+  const base = encerrado ? Math.max(0, pontos.raciocinio + pontos.seguranca + pontos.eficiencia - desconto) : 0;
+  // Bônus de desempenho: não aparece em cronômetro nenhum; só entra no relatório como "bônus de desempenho".
+  let bonus = 0;
+  if (seguro && caso.desempenho && minutosMarco != null) {
+    const { limite } = caso.desempenho;
+    bonus = minutosMarco <= limite ? 50 : minutosMarco >= limite * 2 ? 0 : Math.round((50 * (limite * 2 - minutosMarco)) / limite);
+  }
+  return { escolhas: [...escolhas], eventos, minutos, encerrado, hipotese, destino, seguro, altaInsegura, omissoes, pontos, desconto, bonus, xp: base + bonus,
+    estadoPaciente, vitais, piorando };
 }

@@ -1,0 +1,608 @@
+{
+  "auditorias": [
+    {
+      "id": "aud-dengue-reavaliacao",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Infeccioso",
+      "titulo": "Hidratação sem reavaliação na dengue",
+      "paciente": "Dona Marta, 47 anos",
+      "cenario": "Dengue com sinal de alarme atendida no pronto atendimento.",
+      "contexto": "Não há informação sobre a evolução depois. Analise o processo documentado: um resultado ruim, sozinho, não prova erro.",
+      "registros": [
+        "08:10 — Chegou no 5º dia de febre, que cedeu ontem, com dor abdominal contínua e tontura ao levantar.",
+        "08:15 — Hipotensão postural. Classificada como grupo C (sinal de alarme).",
+        "08:20 — Iniciado soro fisiológico 0,9%, 10 mL/kg na primeira hora.",
+        "08:30 — Solicitados hemograma completo, albumina e transaminases.",
+        "08:45 — Amostras colhidas e enviadas ao laboratório.",
+        "10:00 — Hemograma recebido e arquivado. Sem registro de sinais vitais, diurese ou novo hematócrito desde o início da hidratação."
+      ],
+      "falha": {
+        "linha": 6,
+        "categoria": "omissao",
+        "correcao": "k1",
+        "explicacoes": {
+          "linha": "O registro das 10:00 mostra duas horas sem reavaliação depois de iniciar a reposição de volume. As linhas anteriores seguem o grupo C.",
+          "categoria": "Faltou a reavaliação programada (sinais vitais, pressão, diurese e hematócrito): é omissão de cuidado, não erro de dose nem de horário.",
+          "correcao": "No grupo C, reavalia-se após a primeira hora (sinais vitais, pressão e diurese) e o hematócrito em duas horas; sem melhora, repete-se a fase de expansão."
+        }
+      },
+      "correcoes": [
+        {
+          "id": "k1",
+          "texto": "Reavaliar sinais vitais e diurese após a primeira hora e repetir o hematócrito em duas horas"
+        },
+        {
+          "id": "k2",
+          "texto": "Dar alta com hidratação oral em casa porque o hemograma já foi colhido"
+        },
+        {
+          "id": "k3",
+          "texto": "Suspender a hidratação até o hematócrito voltar ao normal"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Reavaliação Alta Após uma hora: reavaliar o paciente (sinais vitais, PA, avaliar diurese – desejável 1 mL/kg/h)",
+          "sustenta": "Reavaliação após a primeira hora."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Manter a hidratação de 10 mL/kg/hora na segunda hora até a avaliação do hematócrito, que deverá ocorrer em duas horas após a etapa de reposição volêmica.",
+          "sustenta": "Hematócrito duas horas depois da reposição."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Se não houver melhora do hematócrito ou dos sinais hemo­ dinâmicos, repetir a fase de expansão até três vezes.",
+          "sustenta": "Repetir a expansão sem melhora."
+        }
+      ]
+    },
+    {
+      "id": "aud-dengue-atraso-reposicao",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Infeccioso",
+      "titulo": "Espera pelo hemograma no grupo C",
+      "paciente": "Seu Valter, 52 anos",
+      "cenario": "Dengue com sinais de alarme no pronto atendimento.",
+      "contexto": "Não há informação sobre a evolução depois. Analise o processo documentado: um resultado ruim, sozinho, não prova erro.",
+      "registros": [
+        "09:00 — Chegou com vômitos persistentes, dor abdominal intensa e hipotensão postural.",
+        "09:10 — Classificado como grupo C. Solicitados hemograma e albumina.",
+        "09:20 — Mantido na maca, sem soro, aguardando o resultado do hemograma.",
+        "10:40 — Hemograma com hematócrito em alta.",
+        "10:45 — Iniciado soro fisiológico 0,9%, 10 mL/kg na primeira hora.",
+        "11:45 — Reavaliado: pressão em melhora e diurese presente."
+      ],
+      "falha": {
+        "linha": 3,
+        "categoria": "atraso",
+        "correcao": "k2",
+        "explicacoes": {
+          "linha": "A linha das 09:20 mostra que a hidratação ficou parada mais de uma hora esperando exame. O restante da sequência está correto, mas começou tarde.",
+          "categoria": "O cuidado correto foi feito, só que tarde: é atraso. A reposição só começou às 10:45, depois do resultado do exame.",
+          "correcao": "No grupo C a reposição de volume é imediata, em qualquer ponto de atenção, mesmo sem exames complementares."
+        }
+      },
+      "correcoes": [
+        {
+          "id": "k1",
+          "texto": "Trocar a reposição por hidratação oral até o exame ficar pronto"
+        },
+        {
+          "id": "k2",
+          "texto": "Iniciar a reposição volêmica imediata, sem esperar o resultado dos exames"
+        },
+        {
+          "id": "k3",
+          "texto": "Esperar o hematócrito e só então decidir se hidrata"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Iniciar a reposição volêmica imediata, em qualquer ponto de atenção, independentemente do nível de complexidade, inclusive durante eventual transferência para uma unidade de referência (mesmo na ausência de exames complementares)",
+          "sustenta": "Reposição imediata, mesmo sem exames."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Hemoconcentração ou sinais de alarme Conduzir como grupo C.",
+          "sustenta": "Sinais de alarme levam ao grupo C."
+        }
+      ]
+    },
+    {
+      "id": "aud-dengue-aas",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Infeccioso",
+      "titulo": "Dengue leve com AAS na receita",
+      "paciente": "Rafael, 26 anos",
+      "cenario": "Dengue sem sinais de alarme atendida na unidade básica.",
+      "contexto": "Não há informação sobre a evolução depois. Analise o processo documentado: um resultado ruim, sozinho, não prova erro.",
+      "registros": [
+        "08:20 — Chegou no 3º dia de febre alta, dor atrás dos olhos e dor no corpo.",
+        "08:30 — Sem sinais de alarme e prova do laço negativa. Classificado como grupo A.",
+        "08:40 — Prescrita hidratação oral e orientado repouso.",
+        "08:45 — Prescrito AAS para a dor no corpo e a febre.",
+        "08:50 — Orientado a procurar o serviço se surgirem sinais de alarme ou sangramento.",
+        "08:55 — Caso suspeito notificado."
+      ],
+      "falha": {
+        "linha": 4,
+        "categoria": "conduta",
+        "correcao": "k3",
+        "explicacoes": {
+          "linha": "A prescrição das 08:45 é a única que foge do manual. As demais linhas seguem o grupo A.",
+          "categoria": "O medicamento foi dado em dose e horário que não estão em questão: o erro é a escolha do fármaco, ou seja, conduta inadequada.",
+          "correcao": "No grupo A usam-se paracetamol ou dipirona; salicilatos e anti-inflamatórios não esteroides ficam de fora, porque podem causar ou agravar sangramentos."
+        }
+      },
+      "correcoes": [
+        {
+          "id": "k1",
+          "texto": "Manter o AAS e acrescentar corticoide"
+        },
+        {
+          "id": "k2",
+          "texto": "Trocar o AAS por ibuprofeno"
+        },
+        {
+          "id": "k3",
+          "texto": "Prescrever paracetamol ou dipirona e não usar salicilatos nem anti-inflamatórios"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Prescrever paracetamol e/ou dipirona, conforme orientações do Apêndice H. c. Não utilizar salicilatos ou anti-inflamatórios não esteroides e corticosteroides.",
+          "sustenta": "Sem salicilatos nem Aine no grupo A."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Se for no aparelho digestivo, será mais frequente seu surgimento em pacientes com histórico de úlcera péptica ou gastrites, assim como da ingestão de ácido acetilsalicílico (AAS), anti-inflamatórios não esteroides (Aine) e anticoagulantes.",
+          "sustenta": "Hemorragia digestiva com AAS, Aine e anticoagulantes."
+        }
+      ]
+    },
+    {
+      "id": "aud-dengue-dipirona-adulto",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Infeccioso",
+      "titulo": "Dipirona em dose dez vezes maior",
+      "paciente": "Dona Tereza, 39 anos",
+      "cenario": "Dengue sem sinais de alarme atendida na unidade básica.",
+      "contexto": "Não há informação sobre a evolução depois. Analise o processo documentado: um resultado ruim, sozinho, não prova erro.",
+      "registros": [
+        "14:00 — Chegou no 3º dia de febre, sem sinais de alarme. Classificada como grupo A.",
+        "14:10 — Prescrita hidratação oral conforme o cartão de acompanhamento.",
+        "14:15 — Prescrito: dipirona 500 mg, 10 comprimidos de 6/6 horas, se dor ou febre.",
+        "14:20 — Orientações de retorno entregues.",
+        "14:25 — Cartão de acompanhamento preenchido.",
+        "14:30 — Notificação registrada."
+      ],
+      "falha": {
+        "linha": 3,
+        "categoria": "medicacao",
+        "correcao": "k3",
+        "explicacoes": {
+          "linha": "A prescrição das 14:15 traz 10 comprimidos por dose, quando o manual indica 1.",
+          "categoria": "Dez vezes a dose é erro grande de medicação: o fármaco é o certo, a quantidade é que está errada.",
+          "correcao": "A dipirona do adulto é 1 comprimido de 500 mg (ou 20 gotas) até de 6 em 6 horas."
+        }
+      },
+      "correcoes": [
+        {
+          "id": "k1",
+          "texto": "Trocar a dipirona por AAS 500 mg de 6/6 horas"
+        },
+        {
+          "id": "k2",
+          "texto": "Dipirona 500 mg, 5 comprimidos de 6/6 horas, se dor ou febre"
+        },
+        {
+          "id": "k3",
+          "texto": "Dipirona 500 mg, 1 comprimido até de 6/6 horas, se dor ou febre"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "20 gotas ou 1 comprimido (500 mg) até de 6/6 horas.",
+          "sustenta": "Dose da dipirona no adulto."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Não utilizar doses maiores que a recomendada, considerando que doses elevadas são hepatotóxicas.",
+          "sustenta": "Doses acima da recomendada não devem ser usadas."
+        }
+      ]
+    },
+    {
+      "id": "aud-dengue-dipirona-crianca",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Infeccioso",
+      "titulo": "Vírgula errada na dose da criança",
+      "paciente": "Alice, 4 anos",
+      "cenario": "Dengue sem sinais de alarme atendida na unidade básica.",
+      "contexto": "Não há informação sobre a evolução depois. Analise o processo documentado: um resultado ruim, sozinho, não prova erro.",
+      "registros": [
+        "09:00 — Menina de 4 anos, 2º dia de febre, sem sinais de alarme. Grupo A.",
+        "09:10 — Peso registrado: 15 kg.",
+        "09:15 — Prescrito: dipirona 100 mg/kg/dose de 6/6 horas, se febre.",
+        "09:20 — Mãe orientada a oferecer hidratação oral, 100 mL/kg por dia.",
+        "09:25 — Orientados sinais de alarme e retorno.",
+        "09:30 — Caso suspeito notificado."
+      ],
+      "falha": {
+        "linha": 3,
+        "categoria": "medicacao",
+        "correcao": "k2",
+        "explicacoes": {
+          "linha": "A prescrição das 09:15 usa 100 mg/kg por dose; para 15 kg isso dá 1.500 mg de uma vez.",
+          "categoria": "Dose dez vezes maior que a indicada: erro grande de medicação, não de conduta nem de registro.",
+          "correcao": "A dipirona da criança é 10 mg/kg por dose, até de 6 em 6 horas, respeitando a dose máxima por peso e idade (150 mg por dose aos 15 kg)."
+        }
+      },
+      "correcoes": [
+        {
+          "id": "k1",
+          "texto": "Dipirona 50 mg/kg/dose, até de 6/6 horas"
+        },
+        {
+          "id": "k2",
+          "texto": "Dipirona 10 mg/kg/dose, até de 6/6 horas, respeitando a dose máxima"
+        },
+        {
+          "id": "k3",
+          "texto": "Dipirona 100 mg/kg/dose, mas só uma vez por dia"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "10 mg/kg/dose até de 6/6 horas (respeitar a dose máxima por peso e idade).",
+          "sustenta": "Dose da dipirona na criança."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Acima de 10 kg a 20 kg: 100 mL/kg/dia",
+          "sustenta": "Hidratação oral de 100 mL/kg/dia para 10 a 20 kg."
+        }
+      ]
+    },
+    {
+      "id": "aud-dengue-furosemida",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Infeccioso",
+      "titulo": "Furosemida no choque da dengue",
+      "paciente": "Seu Bento, 49 anos",
+      "cenario": "Dengue com choque no pronto atendimento.",
+      "contexto": "Não há informação sobre a evolução depois. Analise o processo documentado: um resultado ruim, sozinho, não prova erro.",
+      "registros": [
+        "10:00 — 5º dia de dengue. PA 80/50, pele fria e enchimento capilar de 5 segundos.",
+        "10:05 — Anotado: perda de plasma por extravasamento, com hipovolemia.",
+        "10:10 — Acesso venoso obtido.",
+        "10:15 — Prescrita furosemida venosa para melhorar a pressão.",
+        "10:20 — Colhido hematócrito.",
+        "10:30 — Paciente mais hipotenso, urina escassa."
+      ],
+      "falha": {
+        "linha": 4,
+        "categoria": "logica",
+        "correcao": "k2",
+        "explicacoes": {
+          "linha": "A prescrição das 10:15 contradiz o raciocínio anotado às 10:05: o problema é falta de volume, e a furosemida o tira ainda mais.",
+          "categoria": "O erro está no raciocínio de causa e efeito: tratar hipovolemia com um diurético, que perde mais líquido.",
+          "correcao": "No choque da dengue a causa é a perda de plasma, então o tratamento é repor volume com cristaloide, com reavaliação frequente."
+        }
+      },
+      "correcoes": [
+        {
+          "id": "k1",
+          "texto": "Restringir líquidos para evitar edema pulmonar"
+        },
+        {
+          "id": "k2",
+          "texto": "Repor volume com soro fisiológico e reavaliar a perfusão"
+        },
+        {
+          "id": "k3",
+          "texto": "Manter a furosemida e acrescentar um vasodilatador"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "De um modo geral, os óbitos por dengue ocorrem em pacientes com dengue grave em que o choque está presente. Este, por sua vez, é resultante do extravasamento plasmático, complicado por sangramento e/ou sobrecarga hídrica.",
+          "sustenta": "Choque pelo extravasamento de plasma."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Ocorre quando um volume crítico de plasma é perdido por meio do extravasamento ou sangramento",
+          "sustenta": "Choque pela perda de volume de plasma."
+        }
+      ]
+    },
+    {
+      "id": "aud-dengue-volume-hidratacao",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Infeccioso",
+      "titulo": "Hidratação oral sem o volume na receita",
+      "paciente": "Joana, 31 anos",
+      "cenario": "Dengue sem sinais de alarme atendida na unidade básica.",
+      "contexto": "Não há informação sobre a evolução depois. Analise o processo documentado: um resultado ruim, sozinho, não prova erro.",
+      "registros": [
+        "15:00 — Chegou no 2º dia de febre, dor no corpo e dor atrás dos olhos.",
+        "15:10 — Sem sinais de alarme, prova do laço negativa. Grupo A.",
+        "15:15 — Prescrito paracetamol conforme o manual.",
+        "15:20 — Registrado: \"beber bastante líquido\".",
+        "15:25 — Orientados sinais de alarme e retorno.",
+        "15:30 — Caso suspeito notificado."
+      ],
+      "falha": {
+        "linha": 4,
+        "categoria": "registro",
+        "correcao": "k3",
+        "explicacoes": {
+          "linha": "A linha das 15:20 é vaga: não diz quanto beber, nem como dividir o volume ao longo do dia.",
+          "categoria": "O cuidado foi lembrado, mas o registro não dá a instrução que o manual pede: falha de registro.",
+          "correcao": "O manual pede especificar, na receita ou no cartão de acompanhamento, o volume a ser ingerido (80 mL/kg por dia para adultos, com um terço em soro de reidratação nas primeiras horas)."
+        }
+      },
+      "correcoes": [
+        {
+          "id": "k1",
+          "texto": "Registrar apenas \"hidratação oral\" para não confundir a paciente"
+        },
+        {
+          "id": "k2",
+          "texto": "Trocar a hidratação oral por soro venoso em casa"
+        },
+        {
+          "id": "k3",
+          "texto": "Registrar na receita ou no cartão o volume por dia (80 mL/kg/dia no adulto)"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Especificar, em receita médica ou no cartão de acompanhamento da dengue, o volume a ser ingerido.",
+          "sustenta": "Registro do volume a ser ingerido."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Nas primeiras 4 a 6 horas do atendimento, considerar a oferta de 1/3 do volume.",
+          "sustenta": "Um terço do volume nas primeiras horas."
+        }
+      ]
+    },
+    {
+      "id": "aud-ieca-bra",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Cardiovascular",
+      "titulo": "Dois bloqueadores do mesmo sistema",
+      "paciente": "Seu Ademar, 62 anos",
+      "cenario": "Hipertenso em acompanhamento na unidade básica.",
+      "contexto": "Não há informação sobre a evolução depois. Analise o processo documentado: um resultado ruim, sozinho, não prova erro.",
+      "registros": [
+        "09:00 — Hipertenso há 8 anos. PA 158/96. Em uso de IECA.",
+        "09:10 — Sem queixa de tosse. Creatinina anterior normal.",
+        "09:15 — Orientadas dieta com menos sal e atividade física.",
+        "09:20 — Prescrito, além do IECA, um bloqueador do receptor de angiotensina II.",
+        "09:25 — Orientada adesão e retorno em 30 dias.",
+        "09:30 — Solicitados creatinina e potássio."
+      ],
+      "falha": {
+        "linha": 4,
+        "categoria": "conduta",
+        "correcao": "k1",
+        "explicacoes": {
+          "linha": "A associação prescrita às 09:20 é a que o caderno manda evitar. As outras linhas estão adequadas.",
+          "categoria": "A dose e o registro estão certos; a escolha de juntar duas drogas do mesmo sistema é conduta inadequada.",
+          "correcao": "A associação de IECA com bloqueador do receptor de angiotensina II deve ser evitada porque aumenta o risco de disfunção renal; associa-se, em vez disso, tiazídico ou bloqueador de canal de cálcio."
+        }
+      },
+      "correcoes": [
+        {
+          "id": "k1",
+          "texto": "Evitar a associação e acrescentar um diurético tiazídico ou um bloqueador de canal de cálcio"
+        },
+        {
+          "id": "k2",
+          "texto": "Trocar o IECA por betabloqueador de primeira linha"
+        },
+        {
+          "id": "k3",
+          "texto": "Manter os dois e dobrar a dose de ambos"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "A associação da Ieca com antagonistas da angiotensina II, defendida com base em estudos distorcidos pelo viés corporativo e pela propaganda, deve ser evitada, pois aumenta o risco de disfunção renal",
+          "sustenta": "Evitar IECA com antagonista da angiotensina II."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "A associação entre diuréticos tiazídicos (ou ACC) e Ieca (ou antagonistas da angiotensina II, ou betabloqueadores) é extremamente racional",
+          "sustenta": "Associação racional com tiazídico ou bloqueador de cálcio."
+        }
+      ]
+    },
+    {
+      "id": "aud-ieca-creatinina-omissao",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Cardiovascular",
+      "titulo": "IECA mantido sem exames de controle",
+      "paciente": "Dona Zilda, 68 anos",
+      "cenario": "Hipertensa em retorno de seis meses na unidade básica.",
+      "contexto": "Não há informação sobre a evolução depois. Analise o processo documentado: um resultado ruim, sozinho, não prova erro.",
+      "registros": [
+        "10:00 — Retorno após seis meses do início do IECA. PA 132/80.",
+        "10:10 — Sem tosse nem edema. Adesão boa.",
+        "10:15 — Peso estável.",
+        "10:20 — Mantida a dose do IECA e renovada a receita.",
+        "10:25 — Orientada dieta com menos sal.",
+        "10:30 — Retorno agendado para seis meses."
+      ],
+      "falha": {
+        "linha": 4,
+        "categoria": "omissao",
+        "correcao": "k3",
+        "explicacoes": {
+          "linha": "A linha das 10:20 renova a receita sem ter pedido creatinina nem potássio, que não aparecem em nenhuma linha.",
+          "categoria": "O que deveria ter sido feito não consta no atendimento: é omissão, não erro de dose nem de registro.",
+          "correcao": "Ao usar IECA, a creatinina deve ser medida entre três e seis meses, junto com o potássio, para detectar queda da função renal ou hiperpotassemia."
+        }
+      },
+      "correcoes": [
+        {
+          "id": "k1",
+          "texto": "Suspender o IECA por precaução"
+        },
+        {
+          "id": "k2",
+          "texto": "Renovar a receita e pedir os exames só se surgir sintoma"
+        },
+        {
+          "id": "k3",
+          "texto": "Solicitar creatinina e potássio antes de renovar a receita"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Quando do emprego de Ieca e antagonistas da angiotensina II ou de seu aumento de dose, deve-se aferir creatinina após três a seis meses.",
+          "sustenta": "Medir a creatinina entre três e seis meses."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Hiperpotassemia pode decorrer de associação de agentes poupadores de potássio (Ieca ou diuréticos poupadores) ou de insuficiência renal.",
+          "sustenta": "Risco de hiperpotassemia com IECA."
+        }
+      ]
+    },
+    {
+      "id": "aud-tontura-hipotensao",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Cardiovascular",
+      "titulo": "Tontura tratada com mais remédio",
+      "paciente": "Seu Raul, 71 anos",
+      "cenario": "Hipertenso com tontura ao levantar, na unidade básica.",
+      "contexto": "Não há informação sobre a evolução depois. Analise o processo documentado: um resultado ruim, sozinho, não prova erro.",
+      "registros": [
+        "08:30 — Hipertenso em uso de dois anti-hipertensivos. Queixa de tontura ao levantar da cama.",
+        "08:40 — PA deitado 150/90.",
+        "08:45 — PA em pé: 118/76, com tontura.",
+        "08:50 — Anotado: queda de mais de 20 mmHg na sistólica ao levantar.",
+        "08:55 — Aumentada a dose dos dois anti-hipertensivos para melhorar o controle.",
+        "09:00 — Retorno marcado para 30 dias."
+      ],
+      "falha": {
+        "linha": 5,
+        "categoria": "logica",
+        "correcao": "k1",
+        "explicacoes": {
+          "linha": "A linha das 08:55 aumenta o remédio justamente quando a medida das 08:50 mostrou que a pressão cai demais ao levantar.",
+          "categoria": "O raciocínio de causa e efeito foi invertido: a tontura vem de excesso de efeito hipotensor, e aumentar a dose o piora.",
+          "correcao": "Se há hipotensão postural real, titula-se a dose para baixo, evitando deixar a pressão descontrolada."
+        }
+      },
+      "correcoes": [
+        {
+          "id": "k1",
+          "texto": "Titular as doses em uso para reduzir o efeito hipotensor e reavaliar"
+        },
+        {
+          "id": "k2",
+          "texto": "Manter as doses e orientar levantar mais depressa"
+        },
+        {
+          "id": "k3",
+          "texto": "Trocar por um vasodilatador direto"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "A pesquisa de hipotensão postural (queda de mais de 20 mmHg na pressão sistólica ao levantar da posição deitada) deve ser feita nesses casos",
+          "sustenta": "Pesquisar a hipotensão postural diante da tontura."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Se houver real hipotensão postural, deve-se titular as doses em uso",
+          "sustenta": "Titular as doses se a hipotensão for real."
+        }
+      ]
+    }
+  ],
+  "pontos_revisor": [
+    "Todas as histórias são fictícias. As decisões centrais (a falha, a categoria e a correção) seguem os trechos citados; os horários e os detalhes do atendimento são do roteiro.",
+    "Doses: só aparecem as que o manual do Ministério da Saúde traz (dipirona 500 mg até 6/6 h no adulto, 10 mg/kg/dose na criança, 10 mL/kg de soro fisiológico na primeira hora, 80 e 100 mL/kg/dia de hidratação oral).",
+    "aud-dengue-dipirona-adulto e aud-dengue-dipirona-crianca: o erro de dez vezes é a \"ordem de grandeza\" pedida; confira se a quantidade absurda de comprimidos (10 de 500 mg) é suficientemente óbvia para o aluno.",
+    "aud-ieca-bra: a fonte manda evitar a associação IECA + antagonista da angiotensina II; \"acrescentar tiazídico ou bloqueador de cálcio\" vem do mesmo caderno, que chama essa associação de racional.",
+    "aud-dengue-furosemida: o caderno descreve o choque como perda de plasma; \"repor volume\" é a conduta do mesmo manual. A furosemida como erro é raciocínio fisiológico, sem trecho que a cite."
+  ]
+}

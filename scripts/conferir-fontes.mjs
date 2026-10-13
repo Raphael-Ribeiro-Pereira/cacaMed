@@ -1,4 +1,7 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile, rm } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import { TEMAS_TREINO } from '../src/utils/treinos.js';
@@ -6,7 +9,9 @@ import { TEMAS_TREINO } from '../src/utils/treinos.js';
 // Etapa 1 do fluxo de conteúdo: cada conceito traz a URL da fonte e um trecho copiado dela.
 // O script abre a página e procura o trecho literalmente; trecho ou URL inventados são recusados.
 // Só domínios de domínio público, governo ou reuso livre (ver docs/prompts/prompt-vou-m-frases.md).
-export const DOMINIOS_PERMITIDOS = ['cdc.gov', 'nih.gov', 'cancer.gov', 'medlineplus.gov', 'gov.br', 'planalto.gov.br'];
+export const DOMINIOS_PERMITIDOS = ['cdc.gov', 'nih.gov', 'cancer.gov', 'medlineplus.gov', 'gov.br', 'planalto.gov.br',
+  // Fontes brasileiras (13/10/2026): Fiocruz, SciELO e as sociedades médicas.
+  'fiocruz.br', 'scielo.br', 'cardiol.br', 'abccardiol.org', 'sbp.com.br', 'diabetes.org.br', 'infectologia.org.br', 'ilas.org.br', 'sbpt.org.br', 'sbn.org.br', 'febrasgo.org.br'];
 // O NCBI (PubMed, PMC, Bookshelf/StatPearls) está em nih.gov, mas o texto é das editoras, não do governo.
 const DOMINIOS_EXCLUIDOS = ['ncbi.nlm.nih.gov'];
 const noDominio = (hostname, d) => hostname === d || hostname.endsWith(`.${d}`);
@@ -31,10 +36,10 @@ const decodificar = texto => texto
   .replace(/&([a-zA-Z]+);/g, (original, nome) => ENTIDADES[nome] ?? original);
 
 // Página e trecho passam pela mesma limpeza: sem tags, sem espaço antes da pontuação, minúsculas.
-export function normalizar(texto) {
-  return decodificar(String(texto || '')
-    .replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, ' ')
-    .replace(/<[^>]+>/g, ' '))
+// Em PDF e texto puro não há marcação: "<13 anos" ou "≤20" não podem ser tratados como tag (html: false).
+export function normalizar(texto, { html = true } = {}) {
+  const limpo = html ? String(texto || '').replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ') : String(texto || '');
+  return decodificar(limpo)
     .replace(/ /g, ' ').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-')
     .normalize('NFC')
     .replace(/\s+/g, ' ').replace(/\s+([.,;:)])/g, '$1').replace(/\(\s+/g, '(')
@@ -58,16 +63,26 @@ export function validarListaFontes(data) {
   return errors;
 }
 
+// PDF (protocolos e diretrizes): vira texto com o pdftotext, juntando as palavras hifenizadas na quebra de linha.
+function textoDoPdf(bytes) {
+  const arquivo = join(tmpdir(), `fonte-${process.pid}-${Date.now()}.pdf`);
+  return writeFile(arquivo, bytes).then(() => {
+    try { return execFileSync('pdftotext', ['-q', '-enc', 'UTF-8', arquivo, '-'], { maxBuffer: 256 * 1024 * 1024 }).toString('utf8').replace(/-\n(?=\p{Ll})/gu, ''); }
+    finally { rm(arquivo, { force: true }); }
+  });
+}
+
 async function baixar(url) {
   // O Planalto derruba conexões sem User-Agent; este se identifica como o script.
-  const resposta = await fetch(url, { signal: AbortSignal.timeout(60000), redirect: 'follow',
+  const resposta = await fetch(url, { signal: AbortSignal.timeout(120000), redirect: 'follow',
     headers: { 'User-Agent': 'Mozilla/5.0 (compatible; cacaMed-conferir-fontes/1.0)' } });
   if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
   const bytes = new Uint8Array(await resposta.arrayBuffer());
+  if (/application\/pdf/i.test(resposta.headers.get('content-type') || '') || String.fromCharCode(...bytes.slice(0, 4)) === '%PDF') return { texto: await textoDoPdf(bytes), html: false };
   try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    return { texto: new TextDecoder('utf-8', { fatal: true }).decode(bytes), html: true };
   } catch {
-    return new TextDecoder('windows-1252').decode(bytes);
+    return { texto: new TextDecoder('windows-1252').decode(bytes), html: true };
   }
 }
 
@@ -85,7 +100,7 @@ async function main() {
   const paginas = new Map();
   let falhas = 0;
   for (const f of data.fontes) {
-    if (!paginas.has(f.url)) paginas.set(f.url, baixar(f.url).then(normalizar).catch(e => ({ erro: e.message })));
+    if (!paginas.has(f.url)) paginas.set(f.url, baixar(f.url).then(({ texto, html }) => normalizar(texto, { html })).catch(e => ({ erro: e.message })));
     const pagina = await paginas.get(f.url);
     const problema = pagina.erro ? `página não abriu (${pagina.erro})` : trechosAusentes(pagina, f.trecho).map(p => `trecho ausente: "${p}"`).join('; ');
     if (problema) { falhas++; console.error(`FALHA ${f.conceito}: ${problema}`); } else console.log(`OK    ${f.conceito}`);

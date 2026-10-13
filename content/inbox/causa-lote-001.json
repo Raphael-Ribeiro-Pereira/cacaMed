@@ -1,0 +1,1174 @@
+{
+  "relacoes": [
+    {
+      "id": "ce-dengue-extravasamento",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Infeccioso",
+      "titulo": "Dengue: a febre cede e o paciente piora",
+      "paciente": "Dona Marta, 47 anos",
+      "cenario": "Quinto dia de dengue. A febre sumiu ontem, mas ela está com dor abdominal e tontura ao levantar.",
+      "vitais": "FC 108 bpm · FR 22 irpm · SpO₂ 97% em ar ambiente · PA 100/70 mmHg · T 36,8°C",
+      "estimulo": "Dengue: a febre cede entre o 3º e o 7º dia",
+      "contexto": "Monte o circuito, do estímulo ao tratamento. Pense no que acontece com o plasma nesta fase.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c4",
+          "explicacao": "Os sinais de alarme resultam, na maioria, do aumento da permeabilidade vascular, que marca o início da deterioração clínica."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c5",
+          "explicacao": "O choque ocorre quando um volume crítico de plasma é perdido por extravasamento ou sangramento."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c1",
+          "explicacao": "O corpo tenta manter a pressão com taquicardia; pressão de pulso baixa e queda ao levantar mostram que a perda de volume está evoluindo."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c2",
+          "explicacao": "Com sinais de alarme, a conduta é iniciar a reposição de volume já, em qualquer ponto de atenção, mesmo sem exames."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Taquicardia, queda da pressão de pulso e hipotensão postural"
+        },
+        {
+          "id": "c2",
+          "texto": "Reposição volêmica imediata com soro fisiológico, sem esperar exames"
+        },
+        {
+          "id": "c3",
+          "texto": "Antibiótico venoso de amplo espectro para um foco bacteriano"
+        },
+        {
+          "id": "c4",
+          "texto": "Aumento da permeabilidade vascular, com saída de plasma dos vasos"
+        },
+        {
+          "id": "c5",
+          "texto": "Perda de plasma e hemoconcentração, com risco de choque"
+        },
+        {
+          "id": "c6",
+          "texto": "Anti-inflamatório não esteroide para controlar a febre e a dor"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Tem início com a defervescência (declínio) da febre, entre três e sete dias do início da doença. Os sinais de alarme, quando presentes, surgem nessa fase da doença.",
+          "sustenta": "Os sinais de alarme surgem quando a febre cede."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "A maioria dos sinais de alarme é resultante do aumento da permeabilidade vascular, que marca o início da deterioração clínica do paciente e sua possível evolução para o choque por extravasamento plasmático.",
+          "sustenta": "Mecanismo: permeabilidade vascular e extravasamento."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Ocorre quando um volume crítico de plasma é perdido por meio do extravasamento ou sangramento",
+          "sustenta": "Choque pela perda de volume de plasma."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Pressão de pulso ≤20 mmHg. Em adultos, é muito significativa a diminuição da PAM associada à taquicardia.",
+          "sustenta": "Taquicardia e queda da pressão como sinais do choque."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Iniciar reposição volêmica imediata (10 mL/kg de soro fisiológico na primeira hora), em qualquer ponto de atenção, independente do nível e complexidade, mesmo na ausência de exames complementares.",
+          "sustenta": "Reposição volêmica imediata, com a dose do manual."
+        }
+      ]
+    },
+    {
+      "id": "ce-dengue-aine",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Infeccioso",
+      "titulo": "Dengue e o comprimido para a dor no corpo",
+      "paciente": "Rafael, 26 anos",
+      "cenario": "Terceiro dia de dengue. Tomou ácido acetilsalicílico por conta própria para a dor no corpo e agora vomita com sangue.",
+      "vitais": "FC 112 bpm · FR 22 irpm · SpO₂ 98% em ar ambiente · PA 104/66 mmHg · T 37,9°C",
+      "estimulo": "Uso de AAS durante a dengue",
+      "contexto": "Monte o circuito. Pense no que o AAS faz com a coagulação e o que o manual orienta usar no lugar.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c4",
+          "explicacao": "Na dengue, AAS e anti-inflamatórios somam-se às alterações da coagulação e aumentam o risco de hemorragia."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c6",
+          "explicacao": "A hemorragia no aparelho digestivo é mais frequente em quem tem úlcera ou gastrite e toma AAS, anti-inflamatórios ou anticoagulantes."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c2",
+          "explicacao": "A perda de sangue reduz o volume circulante e o hematócrito, e o corpo responde com taquicardia; a pressão cai se a perda continua."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c5",
+          "explicacao": "Salicilatos e anti-inflamatórios não devem ser usados; paracetamol ou dipirona controlam a dor e a febre, e o sangramento com choque exige terapia antichoque."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Associar um anticoagulante para evitar a trombose"
+        },
+        {
+          "id": "c2",
+          "texto": "Queda do hematócrito, taquicardia e hipotensão"
+        },
+        {
+          "id": "c3",
+          "texto": "Manter o AAS porque protege o coração"
+        },
+        {
+          "id": "c4",
+          "texto": "AAS e anti-inflamatórios agravam a tendência a sangramento"
+        },
+        {
+          "id": "c5",
+          "texto": "Suspender o AAS, tratar o choque e usar paracetamol ou dipirona para dor e febre"
+        },
+        {
+          "id": "c6",
+          "texto": "Sangramento digestivo, principalmente em quem tem gastrite ou úlcera"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Se for no aparelho digestivo, será mais frequente seu surgimento em pacientes com histórico de úlcera péptica ou gastrites, assim como da ingestão de ácido acetilsalicílico (AAS), anti-inflamatórios não esteroides (Aine) e anticoagulantes.",
+          "sustenta": "Hemorragia digestiva com AAS, Aine e anticoagulantes."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Consequentemente, pode levar a hemorragias graves, causando diminuição de hematócrito e agravando-o ainda mais.",
+          "sustenta": "Hemorragia reduz o hematócrito."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Prescrever paracetamol e/ou dipirona, conforme orientações do Apêndice H. c. Não utilizar salicilatos ou anti-inflamatórios não esteroides e corticosteroides.",
+          "sustenta": "Sem salicilatos nem Aine; paracetamol ou dipirona."
+        }
+      ]
+    },
+    {
+      "id": "ce-dengue-choque-prolongado",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Infeccioso",
+      "titulo": "Dengue: choque que dura demais",
+      "paciente": "Seu Valter, 52 anos",
+      "cenario": "Dengue grave com choque há horas. Pele fria, urina escassa e pontos de sangramento nas punções.",
+      "vitais": "FC 124 bpm · FR 28 irpm · SpO₂ 94% em ar ambiente · PA 78/52 mmHg · T 36,2°C",
+      "estimulo": "Choque da dengue sem terapia adequada",
+      "contexto": "Monte o circuito. Siga o que acontece com os órgãos quando a perfusão fica ruim por muito tempo.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c2",
+          "explicacao": "Quando o choque se prolonga, os órgãos recebem pouco sangue e passam a produzir ácidos, gerando acidose metabólica."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c3",
+          "explicacao": "A hipoperfusão leva a acidose e CIVD, que causam hemorragias graves e agravam o choque."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c1",
+          "explicacao": "A respiração rápida e profunda é a tentativa do corpo de compensar a acidose metabólica eliminando gás carbônico."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c5",
+          "explicacao": "O choque da dengue é de rápida instalação e curta duração: pode levar à morte em 12 a 24 horas ou à recuperação rápida com a terapia antichoque."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Taquipneia e respiração de Kussmaul para eliminar ácido"
+        },
+        {
+          "id": "c2",
+          "texto": "Hipoperfusão dos órgãos, com acidose metabólica"
+        },
+        {
+          "id": "c3",
+          "texto": "Coagulação intravascular disseminada e hemorragias graves"
+        },
+        {
+          "id": "c4",
+          "texto": "Restrição de líquidos para evitar edema"
+        },
+        {
+          "id": "c5",
+          "texto": "Terapia antichoque apropriada, com recuperação rápida"
+        },
+        {
+          "id": "c6",
+          "texto": "Corticoide em dose alta para conter a inflamação"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Quando prolongado, o choque leva à hipoperfusão de órgãos, resultando no comprometimento progressivo destes, acidose metabólica e coagulação intravascular disseminada (CIVD).",
+          "sustenta": "Hipoperfusão, acidose metabólica e CIVD."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Consequentemente, pode levar a hemorragias graves, causando diminuição de hematócrito e agravando-o ainda mais.",
+          "sustenta": "Hemorragias graves e queda do hematócrito."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+          "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+          "orgao": "Ministério da Saúde",
+          "trecho": "O choque na dengue é de rápida instalação e tem curta duração. Pode levar o paciente ao óbito em um intervalo de 12 a 24 horas ou à sua recuperação rápida, após terapia antichoque apropriada.",
+          "sustenta": "Duração do choque e recuperação com terapia antichoque."
+        }
+      ]
+    },
+    {
+      "id": "ce-ieca-estenose-renal",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Cardiovascular",
+      "titulo": "Creatinina que sobe depois do IECA",
+      "paciente": "Seu Osvaldo, 66 anos",
+      "cenario": "Hipertenso, começou um inibidor da ECA há duas semanas. A creatinina subiu bem acima da basal. Tem estenose de artéria renal.",
+      "vitais": "FC 84 bpm · FR 16 irpm · SpO₂ 97% em ar ambiente · PA 150/90 mmHg · T 36,6°C",
+      "estimulo": "IECA em paciente com obstrução das artérias renais",
+      "contexto": "Monte o circuito. Pense em como o rim mantém a filtração quando a artéria renal está estreitada.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c3",
+          "explicacao": "O IECA dilata as arteríolas eferentes, o que reduz a pressão que mantém a filtração glomerular."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c4",
+          "explicacao": "Em hipertensão renovascular, a redução da filtração aumenta os níveis de ureia e creatinina."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c1",
+          "explicacao": "Com a artéria renal obstruída, o fluxo não aumenta para compensar a dilatação das arteríolas eferentes."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c5",
+          "explicacao": "Elevação abrupta da creatinina (mais de 50% do basal) pede suspensão e encaminhamento ao especialista."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "A dilatação não é compensada por mais fluxo de sangue renal"
+        },
+        {
+          "id": "c2",
+          "texto": "Dobrar a dose do IECA para controlar melhor a pressão"
+        },
+        {
+          "id": "c3",
+          "texto": "Dilatação das arteríolas eferentes pelo IECA"
+        },
+        {
+          "id": "c4",
+          "texto": "Queda da filtração glomerular, com ureia e creatinina em alta"
+        },
+        {
+          "id": "c5",
+          "texto": "Suspender o medicamento se a creatinina subir mais de 50% e investigar"
+        },
+        {
+          "id": "c6",
+          "texto": "Associar um bloqueador do receptor de angiotensina ao IECA"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Esses agentes podem deteriorar acentuadamente a função renal de pacientes com obstrução de artérias renais, pois a dilatação que provocam em arteríolas eferentes não pode ser compensada por aumento de fluxo sanguíneo renal.",
+          "sustenta": "Mecanismo e falta de compensação."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Em pessoas com hipertensão renovascular conversora de angiotensina bilateral ou unilateral associada a rim único, podem promover redução da filtração glomerular com aumento dos níveis séricos da ureia",
+          "sustenta": "Queda da filtração glomerular e aumento de ureia e creatinina."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "A elevação abrupta de creatinina (mais do que 50% do valor basal) requer suspensão desses medicamentos e encaminhamento ao especialista para investigar hipertensão secundária.",
+          "sustenta": "Conduta diante da creatinina em alta."
+        }
+      ]
+    },
+    {
+      "id": "ce-tiazidico-hipocalemia",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Cardiovascular",
+      "titulo": "Diurético tiazídico e o potássio",
+      "paciente": "Dona Lúcia, 61 anos",
+      "cenario": "Hipertensa, usa hidroclorotiazida há dois meses. Tem câimbras e o exame mostra potássio baixo.",
+      "vitais": "FC 88 bpm · FR 16 irpm · SpO₂ 98% em ar ambiente · PA 132/84 mmHg · T 36,5°C",
+      "estimulo": "Uso de diurético tiazídico",
+      "contexto": "Monte o circuito. Siga o potássio, do efeito do remédio ao que fazer.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c2",
+          "explicacao": "Os diuréticos tiazídicos podem espoliar potássio e acentuar a hiperuricemia."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c3",
+          "explicacao": "A perda de potássio leva à hipopotassemia, que por sua vez reduz a eficácia do tratamento."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c4",
+          "explicacao": "A hipopotassemia reduz a eficácia da terapia provavelmente porque aumenta o risco de arritmias, e é o provável mecanismo da hiperglicemia."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c1",
+          "explicacao": "O potássio deve ser medido após três a seis meses do início, e IECA ou diurético poupador de potássio corrige a perda."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Aferir o potássio e associar IECA ou poupador de potássio"
+        },
+        {
+          "id": "c2",
+          "texto": "O tiazídico espolia potássio na urina"
+        },
+        {
+          "id": "c3",
+          "texto": "Hipopotassemia, mesmo discreta"
+        },
+        {
+          "id": "c4",
+          "texto": "Maior risco de arritmias e de hiperglicemia"
+        },
+        {
+          "id": "c5",
+          "texto": "Dar um betabloqueador para proteger o coração das arritmias"
+        },
+        {
+          "id": "c6",
+          "texto": "Suspender todo líquido para reduzir a diurese"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Diuréticos tiazídicos podem acentuar quadros de hiperuricemia e espoliar potássio. Os níveis séricos de potássio devem ser aferidos após três a seis meses do início do tratamento.",
+          "sustenta": "Perda de potássio e controle do potássio."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "A hipopotassemia, mesmo discreta, reduz a eficácia da terapia, provavelmente porque aumenta o risco de arritmias, e é o provável mecanismo de indução de hiperglicemia",
+          "sustenta": "Hipopotassemia, arritmias e hiperglicemia."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Diante dela, deve-se associar Ieca ou diuréticos poupadores de potássio, como espironolactona",
+          "sustenta": "Conduta diante da hipopotassemia."
+        }
+      ]
+    },
+    {
+      "id": "ce-ieca-hipercalemia",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Cardiovascular",
+      "titulo": "IECA, espironolactona e o potássio alto",
+      "paciente": "Seu Nelson, 70 anos",
+      "cenario": "Hipertenso e com insuficiência renal. Usa IECA e espironolactona. Chegou fraco e o exame mostra potássio elevado.",
+      "vitais": "FC 52 bpm · FR 16 irpm · SpO₂ 97% em ar ambiente · PA 128/80 mmHg · T 36,4°C",
+      "estimulo": "IECA somado a diurético poupador de potássio",
+      "contexto": "Monte o circuito. Pense em quem excreta o potássio e no que cada remédio retém.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c4",
+          "explicacao": "Ieca e diuréticos poupadores de potássio retêm potássio; a insuficiência renal piora a retenção."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c6",
+          "explicacao": "A associação de agentes poupadores de potássio, ou a insuficiência renal, pode causar hiperpotassemia."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c3",
+          "explicacao": "O excesso de potássio altera a condução elétrica do coração, o que explica a fraqueza e o pulso lento."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c2",
+          "explicacao": "Ao usar IECA ou aumentar a dose, deve-se medir a creatinina entre três e seis meses."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Oferecer suplemento de potássio por via oral"
+        },
+        {
+          "id": "c2",
+          "texto": "Aferir a creatinina e o potássio ao iniciar ou aumentar a dose"
+        },
+        {
+          "id": "c3",
+          "texto": "Fraqueza e bradicardia pelo efeito do potássio sobre a condução cardíaca"
+        },
+        {
+          "id": "c4",
+          "texto": "Os dois medicamentos reduzem a perda de potássio na urina"
+        },
+        {
+          "id": "c5",
+          "texto": "Aumentar a dose da espironolactona para tratar a fraqueza"
+        },
+        {
+          "id": "c6",
+          "texto": "Hiperpotassemia"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Hiperpotassemia pode decorrer de associação de agentes poupadores de potássio (Ieca ou diuréticos poupadores) ou de insuficiência renal.",
+          "sustenta": "Causa da hiperpotassemia."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Quando do emprego de Ieca e antagonistas da angiotensina II ou de seu aumento de dose, deve-se aferir creatinina após três a seis meses.",
+          "sustenta": "Controle da creatinina."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Em indivíduos com insuficiência renal crônica, podem eventualmente, Inibidores da enzima agravar a hiperpotassemia.",
+          "sustenta": "IECA pode agravar a hiperpotassemia na insuficiência renal."
+        }
+      ]
+    },
+    {
+      "id": "ce-betabloqueador-diabetes1",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Endócrino e metabólico",
+      "titulo": "Betabloqueador e hipoglicemia que não avisa",
+      "paciente": "Bruno, 34 anos",
+      "cenario": "Diabético tipo 1 em uso de betabloqueador. Chegou confuso e suado, e a glicemia está muito baixa, mas ele diz que não sentiu nada antes.",
+      "vitais": "FC 76 bpm · FR 18 irpm · SpO₂ 98% em ar ambiente · PA 124/78 mmHg · T 36,4°C",
+      "estimulo": "Betabloqueador em paciente com diabetes tipo 1",
+      "contexto": "Monte o circuito. Pense no que a hipoglicemia faz com o corpo e no que o betabloqueador bloqueia.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c6",
+          "explicacao": "Parte dos sinais de alerta da hipoglicemia, como o coração acelerado e o tremor, vem da resposta adrenérgica, que o betabloqueador esconde."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c1",
+          "explicacao": "Sem os sinais de alerta, o paciente só percebe a queda quando já está confuso."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c5",
+          "explicacao": "O betabloqueador também bloqueia a glicogenólise, que é uma das formas de o corpo subir a glicemia."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c2",
+          "explicacao": "A contraindicação relativa em diabéticos do tipo 1 decorre de mascarar os sinais de hipoglicemia e bloquear a glicogenólise."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "A hipoglicemia passa sem aviso e chega à confusão"
+        },
+        {
+          "id": "c2",
+          "texto": "Evitar o betabloqueador em diabético tipo 1 e preferir outra classe"
+        },
+        {
+          "id": "c3",
+          "texto": "Dar insulina em dose maior para corrigir a glicemia"
+        },
+        {
+          "id": "c4",
+          "texto": "Aumentar a dose do betabloqueador para controlar os tremores"
+        },
+        {
+          "id": "c5",
+          "texto": "O bloqueio da glicogenólise atrasa a recuperação da glicose"
+        },
+        {
+          "id": "c6",
+          "texto": "O betabloqueador mascara os sinais de hipoglicemia"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Sua contraindicação relativa em diabéticos do tipo 1 decorre de mascaramento dos sinais de hipoglicemia",
+          "sustenta": "Mascaramento dos sinais de hipoglicemia."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "e bloqueio da glicogenólise.",
+          "sustenta": "Bloqueio da glicogenólise e contraindicação relativa no diabetes tipo 1."
+        }
+      ]
+    },
+    {
+      "id": "ce-betabloqueador-dpoc",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Respiratório",
+      "titulo": "Betabloqueador na DPOC",
+      "paciente": "Seu Armando, 64 anos",
+      "cenario": "Tabagista com DPOC. Começou um betabloqueador para a pressão e há dois dias tem mais chiado e falta de ar.",
+      "vitais": "FC 58 bpm · FR 24 irpm · SpO₂ 91% em ar ambiente · PA 134/82 mmHg · T 36,7°C",
+      "estimulo": "Betabloqueador em paciente com doença pulmonar obstrutiva crônica",
+      "contexto": "Monte o circuito. Pense no que acontece com o calibre dos brônquios.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c4",
+          "explicacao": "O betabloqueador atua nos receptores beta, que mantêm os brônquios dilatados."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c5",
+          "explicacao": "Os betabloqueadores podem exacerbar a doença pulmonar obstrutiva crônica e causam broncoespasmo."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c3",
+          "explicacao": "A obstrução maior faz o paciente respirar com mais esforço e mais rápido para manter a ventilação."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c2",
+          "explicacao": "Como o betabloqueador agrava a DPOC, o tratamento da pressão passa para uma classe sem esse efeito."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Aumentar a dose do betabloqueador, que também trata a falta de ar"
+        },
+        {
+          "id": "c2",
+          "texto": "Suspender o betabloqueador e escolher outra classe para a pressão"
+        },
+        {
+          "id": "c3",
+          "texto": "Aumento do esforço respiratório e da frequência respiratória"
+        },
+        {
+          "id": "c4",
+          "texto": "O bloqueio dos receptores beta nos brônquios favorece a broncoconstrição"
+        },
+        {
+          "id": "c5",
+          "texto": "Broncoespasmo e piora da obstrução ao fluxo de ar"
+        },
+        {
+          "id": "c6",
+          "texto": "Associar outro betabloqueador"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Betabloqueadores podem exacerbar doença pulmonar obstrutiva crônica, distúrbios de condução atrioventricular e insuficiência circulatória periférica.",
+          "sustenta": "Betabloqueador piora a DPOC."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Broncoespasmo, bradicardia, distúrbios da condução atrioventricular, Betabloqueadores vasoconstrição periférica, insônia, pesadelos, depressão psíquica, astenia e disfunção sexual.",
+          "sustenta": "Broncoespasmo é efeito adverso do betabloqueador."
+        }
+      ]
+    },
+    {
+      "id": "ce-vasodilatador-direto",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Cardiovascular",
+      "titulo": "Vasodilatador direto e o coração acelerado",
+      "paciente": "Dona Rita, 58 anos",
+      "cenario": "Hipertensa grave, começou um vasodilatador arterial direto. Agora tem palpitações e as pernas incharam.",
+      "vitais": "FC 112 bpm · FR 18 irpm · SpO₂ 98% em ar ambiente · PA 126/78 mmHg · T 36,5°C",
+      "estimulo": "Vasodilatação arterial direta",
+      "contexto": "Monte o circuito. Siga a reação do corpo à queda da resistência arterial.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c5",
+          "explicacao": "O medicamento age relaxando diretamente o músculo liso arteriolar."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c2",
+          "explicacao": "A vasodilatação arterial direta promove retenção hídrica e taquicardia reflexa."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c3",
+          "explicacao": "A queda da pressão ativa mecanismos que retêm líquido e aumentam a frequência cardíaca."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c4",
+          "explicacao": "Diurético corrige a retenção de líquido e betabloqueador reduz a taquicardia reflexa."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Restringir o potássio da dieta"
+        },
+        {
+          "id": "c2",
+          "texto": "Retenção hídrica e taquicardia reflexa"
+        },
+        {
+          "id": "c3",
+          "texto": "O corpo retém sal e água e acelera o coração para compensar a queda da pressão"
+        },
+        {
+          "id": "c4",
+          "texto": "Associar um diurético e um betabloqueador para conter os efeitos"
+        },
+        {
+          "id": "c5",
+          "texto": "Relaxamento direto do músculo liso das arteríolas"
+        },
+        {
+          "id": "c6",
+          "texto": "Dobrar a dose do vasodilatador para controlar a pressão"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Pela vasodilatação arterial direta promovem retenção hídrica e",
+          "sustenta": "Vasodilatação arterial direta promove retenção hídrica."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "músculo liso arteriolar taquicardia reflexa.",
+          "sustenta": "Taquicardia reflexa (a extração do quadro intercala texto da coluna ao lado)."
+        }
+      ]
+    },
+    {
+      "id": "ce-sepse-lesao-endotelial",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Infeccioso",
+      "titulo": "Sepse que evolui para choque",
+      "paciente": "Dona Cleide, 74 anos",
+      "cenario": "Infecção urinária que piorou: confusa, febril, com pressão baixa e pele fria.",
+      "vitais": "FC 124 bpm · FR 28 irpm · SpO₂ 93% em ar ambiente · PA 86/50 mmHg · T 38,9°C",
+      "estimulo": "Infecção grave com resposta inflamatória sistêmica",
+      "contexto": "Monte o circuito. Siga o que a inflamação faz com o endotélio e com o volume.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c6",
+          "explicacao": "O mecanismo provável da progressão da sepse é a lesão endotelial disseminada."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c4",
+          "explicacao": "O extravasamento causa edema e hipovolemia, e os microtrombos reduzem o aporte de oxigênio aos tecidos."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c2",
+          "explicacao": "Esses mecanismos juntos levam à hipóxia tissular, à acidose láctica e à morte celular."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c5",
+          "explicacao": "O tratamento baseia-se em reposição volêmica e antibioticoterapia, e a reavaliação orienta a terapia."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Anticoagulante em dose alta como tratamento principal"
+        },
+        {
+          "id": "c2",
+          "texto": "Hipóxia tecidual, com acidose láctica e lactato elevado"
+        },
+        {
+          "id": "c3",
+          "texto": "Restrição de líquidos para evitar edema"
+        },
+        {
+          "id": "c4",
+          "texto": "Edema intersticial, hipovolemia e microtrombos"
+        },
+        {
+          "id": "c5",
+          "texto": "Reposição volêmica e antibiótico precoces, com reavaliação frequente"
+        },
+        {
+          "id": "c6",
+          "texto": "Lesão endotelial disseminada, com extravasamento de líquido"
+        }
+      ],
+      "fonte": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+      "citacoes": [
+        {
+          "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+          "titulo": "Sepse: atualidades e perspectivas",
+          "orgao": "Revista Brasileira de Terapia Intensiva",
+          "trecho": "O mecanismo provável resulta da lesão endotelial disseminada, com extravasamento de fluidos e, em consequência, edema intersticial e hipovolemia, além dos já descritos distúrbios da coagulação (com formação de microtrombos, que diminuem o aporte de oxigênio e nutrientes para os tecidos atingidos).",
+          "sustenta": "Lesão endotelial, extravasamento, hipovolemia e microtrombos."
+        },
+        {
+          "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+          "titulo": "Sepse: atualidades e perspectivas",
+          "orgao": "Revista Brasileira de Terapia Intensiva",
+          "trecho": "Todos esses mecanismos, em conjunto, levam à hipóxia tissular, acidose láctica - a hiperlactatemia associa-se com gravidade da doença - e a morte celular.",
+          "sustenta": "Hipóxia, acidose láctica e morte celular."
+        },
+        {
+          "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+          "titulo": "Sepse: atualidades e perspectivas",
+          "orgao": "Revista Brasileira de Terapia Intensiva",
+          "trecho": "medidas terapêuticas que se baseiam, fundamentalmente, em reposição volêmica, antibioticoterapia, emprego de costicosteróides, tratamento anticoagulante, medidas de manutenção da viabilidade biológica e suporte nutricional.",
+          "sustenta": "Tratamento da sepse."
+        }
+      ]
+    },
+    {
+      "id": "ce-sepse-lactato",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Infeccioso",
+      "titulo": "Lactato alto na sepse",
+      "paciente": "Seu Eduardo, 59 anos",
+      "cenario": "Pneumonia grave com choque séptico. O lactato de entrada está elevado e a pele está mosqueada.",
+      "vitais": "FC 128 bpm · FR 30 irpm · SpO₂ 90% em ar ambiente · PA 82/48 mmHg · T 39,2°C",
+      "estimulo": "Choque séptico com baixa perfusão",
+      "contexto": "Monte o circuito. Siga a origem do lactato e o que ele mostra sobre o paciente.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c4",
+          "explicacao": "A hipóxia tecidual global vem da distribuição heterogênea do fluxo microvascular, do baixo fluxo sistêmico e da falência do metabolismo celular."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c6",
+          "explicacao": "Sem oxigênio, as células produzem energia por via anaeróbia e liberam lactato."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c2",
+          "explicacao": "O aumento do lactato é muito rápido e proporcional ao defeito oxidativo e à gravidade do choque."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c3",
+          "explicacao": "A medida seriada do lactato tem valor prognóstico bem estabelecido e mostra se a perfusão melhora."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Dosar o lactato apenas uma vez, na entrada"
+        },
+        {
+          "id": "c2",
+          "texto": "O lactato sobe depressa e acompanha a gravidade do choque"
+        },
+        {
+          "id": "c3",
+          "texto": "Dosar o lactato em série para avaliar a resposta ao tratamento"
+        },
+        {
+          "id": "c4",
+          "texto": "Distribuição irregular do fluxo na microcirculação e baixo fluxo sistêmico"
+        },
+        {
+          "id": "c5",
+          "texto": "Lactato alto significa que a perfusão está normal"
+        },
+        {
+          "id": "c6",
+          "texto": "Anaerobiose, com aumento do lactato sérico"
+        }
+      ],
+      "fonte": "https://www.scielo.br/j/rbti/a/JSCFFZXBbwP68TxR75GmQdv/?lang=pt",
+      "citacoes": [
+        {
+          "url": "https://www.scielo.br/j/rbti/a/JSCFFZXBbwP68TxR75GmQdv/?lang=pt",
+          "titulo": "Diretrizes para tratamento da sepse grave/choque séptico: avaliação da perfusão tecidual",
+          "orgao": "Revista Brasileira de Terapia Intensiva",
+          "trecho": "A hipóxia tecidual global que ocorre na sepse grave e choque séptico é decorrência da associação entre distribuição heterogênea do fluxo sanguíneo microvascular, baixo fluxo sistêmico (hipóxia isquêmica) e falência no metabolismo celular (hipóxia citopática).",
+          "sustenta": "Origem da hipóxia tecidual."
+        },
+        {
+          "url": "https://www.scielo.br/j/rbti/a/JSCFFZXBbwP68TxR75GmQdv/?lang=pt",
+          "titulo": "Diretrizes para tratamento da sepse grave/choque séptico: avaliação da perfusão tecidual",
+          "orgao": "Revista Brasileira de Terapia Intensiva",
+          "trecho": "Consequentemente há anaerobiose e aumento dos níveis de lactato sérico, sendo este último decorrente de múltiplos fatores. Ainda, o aumento do lactato é muito rápido, proporcional ao defeito oxidativo do metabolismo e à gravidade do choque",
+          "sustenta": "Anaerobiose, lactato e gravidade."
+        },
+        {
+          "url": "https://www.scielo.br/j/rbti/a/JSCFFZXBbwP68TxR75GmQdv/?lang=pt",
+          "titulo": "Diretrizes para tratamento da sepse grave/choque séptico: avaliação da perfusão tecidual",
+          "orgao": "Revista Brasileira de Terapia Intensiva",
+          "trecho": "O valor prognóstico da mensuração seriada do lactato em pacientes graves está bem estabelecido ( D ) (1) ( B ).",
+          "sustenta": "Lactato seriado."
+        }
+      ]
+    },
+    {
+      "id": "ce-ic-congestao-diuretico",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Cardiovascular",
+      "titulo": "Insuficiência cardíaca com falta de ar e inchaço",
+      "paciente": "Seu Domingos, 72 anos",
+      "cenario": "Insuficiência cardíaca. Ganhou 4 kg em uma semana, tem falta de ar deitado e as pernas estão inchadas.",
+      "vitais": "FC 104 bpm · FR 26 irpm · SpO₂ 91% em ar ambiente · PA 118/74 mmHg · T 36,5°C",
+      "estimulo": "Insuficiência cardíaca descompensada",
+      "contexto": "Monte o circuito. Pense no rim, no sal e na água quando o débito cardíaco cai.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c4",
+          "explicacao": "A redução do débito cardíaco leva à retenção de sódio e água pelos rins, o que aumenta a volemia e as pressões de enchimento."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c3",
+          "explicacao": "O excesso de volume e as pressões altas congestionam os pulmões e o corpo."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c5",
+          "explicacao": "O corpo ativa o sistema renina-angiotensina-aldosterona e o sistema simpático para manter a perfusão."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c1",
+          "explicacao": "Os diuréticos de alça promovem natriurese e diurese, o que alivia a congestão e os sintomas."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Diurético de alça, que inibe o transporte de sódio e cloro na alça de Henle"
+        },
+        {
+          "id": "c2",
+          "texto": "Aumentar a ingestão de líquidos para melhorar a circulação"
+        },
+        {
+          "id": "c3",
+          "texto": "Congestão pulmonar e sistêmica, com falta de ar e edema"
+        },
+        {
+          "id": "c4",
+          "texto": "A queda do débito cardíaco faz o rim reter sódio e água"
+        },
+        {
+          "id": "c5",
+          "texto": "A ativação neuro-hormonal e a taquicardia tentam sustentar o débito"
+        },
+        {
+          "id": "c6",
+          "texto": "Betabloqueador em dose alta para tirar o líquido dos pulmões"
+        }
+      ],
+      "fonte": "https://scielo.br/j/abc/a/6CWscRNFQdbmnHBVMqjBtfC/?lang=pt",
+      "citacoes": [
+        {
+          "url": "https://scielo.br/j/abc/a/6CWscRNFQdbmnHBVMqjBtfC/?lang=pt",
+          "titulo": "II Diretriz Brasileira de Insuficiência Cardíaca Aguda",
+          "orgao": "Sociedade Brasileira de Cardiologia",
+          "trecho": "Diuréticos de alça: inibem o transporte de sódio e cloro para o intracelular por inibirem a bomba de Na + K + 2Cl - na porção espessa da alça de Henle.",
+          "sustenta": "Mecanismo dos diuréticos de alça."
+        },
+        {
+          "url": "https://scielo.br/j/abc/a/6CWscRNFQdbmnHBVMqjBtfC/?lang=pt",
+          "titulo": "II Diretriz Brasileira de Insuficiência Cardíaca Aguda",
+          "orgao": "Sociedade Brasileira de Cardiologia",
+          "trecho": "promove natriurese e diurese, o que gera alívio dos sintomas.",
+          "sustenta": "Natriurese, diurese e alívio dos sintomas."
+        },
+        {
+          "url": "https://scielo.br/j/abc/a/6CWscRNFQdbmnHBVMqjBtfC/?lang=pt",
+          "titulo": "II Diretriz Brasileira de Insuficiência Cardíaca Aguda",
+          "orgao": "Sociedade Brasileira de Cardiologia",
+          "trecho": "Os diuréticos exercem efeito sobre o sistema renina-angiotensina-aldosterona (SRAA), aumentam agudamente os níveis de norepinefrina, de arginina-vasopressina, aumentam a frequência cardíaca",
+          "sustenta": "Ativação neuro-hormonal e taquicardia."
+        }
+      ]
+    },
+    {
+      "id": "ce-choque-hemorragico",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Cardiovascular",
+      "titulo": "Trauma com hemorragia e choque",
+      "paciente": "Sr. Antônio, 34 anos",
+      "cenario": "Ferimento na coxa em acidente de moto, sangramento intenso, pele fria e pálida.",
+      "vitais": "FC 128 bpm · FR 24 irpm · SpO₂ 94% em ar ambiente · PA 86/58 mmHg · T 36,0°C",
+      "estimulo": "Hemorragia aguda por trauma",
+      "contexto": "Monte o circuito. Siga a perda de sangue até o que se deve controlar primeiro.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c2",
+          "explicacao": "A perda de sangue reduz o volume dentro dos vasos e a perfusão dos tecidos."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c5",
+          "explicacao": "Sem perfusão, os tecidos passam a metabolismo anaeróbio e acidose, e a coagulação piora com a perda de fatores e a hipotermia."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c6",
+          "explicacao": "O corpo acelera o coração e contrai os vasos para sustentar a perfusão; um índice de choque acima de 1 mostra a falha da compensação."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c4",
+          "explicacao": "A reanimação com controle de danos busca controlar a fonte do sangramento e repor o volume, revertendo hipotermia, hipocalcemia, acidose e coagulopatia."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Aquecer só o membro ferido com compressas quentes"
+        },
+        {
+          "id": "c2",
+          "texto": "Queda do volume circulante e da perfusão dos tecidos"
+        },
+        {
+          "id": "c3",
+          "texto": "Dar apenas analgésico e observar a evolução"
+        },
+        {
+          "id": "c4",
+          "texto": "Controlar o sangramento e repor volume, revertendo hipotermia, acidose e coagulopatia"
+        },
+        {
+          "id": "c5",
+          "texto": "Metabolismo anaeróbio, acidose e coagulopatia"
+        },
+        {
+          "id": "c6",
+          "texto": "Taquicardia e vasoconstrição tentam manter a pressão"
+        }
+      ],
+      "fonte": "https://www.scielo.br/j/rcbc/a/gsycGkbjmHYMWG8b5CJ4cbR/?lang=pt",
+      "citacoes": [
+        {
+          "url": "https://www.scielo.br/j/rcbc/a/gsycGkbjmHYMWG8b5CJ4cbR/?lang=pt",
+          "titulo": "Reanimação durante o controle de danos no trauma, pesquisa com a Sociedade Brasileira de Trauma",
+          "orgao": "Revista do Colégio Brasileiro de Cirurgiões",
+          "trecho": "centra-se no controle precoce da hemorragia e na reposição de volume para combater o “diamante da morte” (hipotermia, hipocalcemia, acidose, coagulopatia).",
+          "sustenta": "Tratamento e o \"diamante da morte\"."
+        },
+        {
+          "url": "https://www.scielo.br/j/rcbc/a/gsycGkbjmHYMWG8b5CJ4cbR/?lang=pt",
+          "titulo": "Reanimação durante o controle de danos no trauma, pesquisa com a Sociedade Brasileira de Trauma",
+          "orgao": "Revista do Colégio Brasileiro de Cirurgiões",
+          "trecho": "índice de choque (FC/PAS) maior que 1 ou relação FC > PAS em adultos",
+          "sustenta": "Índice de choque como indicador de choque hemorrágico."
+        },
+        {
+          "url": "https://www.scielo.br/j/rcbc/a/gsycGkbjmHYMWG8b5CJ4cbR/?lang=pt",
+          "titulo": "Reanimação durante o controle de danos no trauma, pesquisa com a Sociedade Brasileira de Trauma",
+          "orgao": "Revista do Colégio Brasileiro de Cirurgiões",
+          "trecho": "Essa coagulopatia ocorre devido à depleção dos fatores de coagulação por hemorragia maciça e à redução da eficácia dos fatores de coagulação e das plaquetas por hipotermia e hemodiluição, hipoperfusão e choque, o que leva à acidose e prejudica a formação de coágulos, associada à tríade letal tardia do trauma",
+          "sustenta": "Origem da coagulopatia do trauma."
+        }
+      ]
+    },
+    {
+      "id": "ce-diidropiridinico-curta",
+      "versao": 2,
+      "revisado": false,
+      "tema": "Cardiovascular",
+      "titulo": "Bloqueador de canal de cálcio de ação curta",
+      "paciente": "Seu Júlio, 63 anos",
+      "cenario": "Hipertenso que usa nifedipino de ação curta. Refere palpitações e dor no peito logo depois das doses.",
+      "vitais": "FC 102 bpm · FR 16 irpm · SpO₂ 98% em ar ambiente · PA 138/84 mmHg · T 36,5°C",
+      "estimulo": "Diidropiridínico de ação curta",
+      "contexto": "Monte o circuito. Pense na queda rápida da pressão e na reação do sistema simpático.",
+      "elos": [
+        {
+          "id": "mecanismo",
+          "correta": "c4",
+          "explicacao": "O diidropiridínico de curta duração dilata as artérias de modo rápido e intenso."
+        },
+        {
+          "id": "consequencia",
+          "correta": "c3",
+          "explicacao": "Os diidropiridínicos de ação curta provocam importante estimulação simpática reflexa."
+        },
+        {
+          "id": "compensacao",
+          "correta": "c5",
+          "explicacao": "O reflexo acelera o coração e aumenta o trabalho cardíaco, o que explica as palpitações e a dor no peito."
+        },
+        {
+          "id": "intervencao",
+          "correta": "c6",
+          "explicacao": "Formulações de ação longa evitam picos e reduzem a estimulação simpática reflexa."
+        }
+      ],
+      "cartas": [
+        {
+          "id": "c1",
+          "texto": "Aumentar a dose do nifedipino de ação curta"
+        },
+        {
+          "id": "c2",
+          "texto": "Associar um vasodilatador direto"
+        },
+        {
+          "id": "c3",
+          "texto": "Estimulação simpática reflexa, deletéria para o sistema cardiovascular"
+        },
+        {
+          "id": "c4",
+          "texto": "Vasodilatação rápida pelo bloqueio dos canais de cálcio"
+        },
+        {
+          "id": "c5",
+          "texto": "Taquicardia e aumento do consumo de oxigênio do coração"
+        },
+        {
+          "id": "c6",
+          "texto": "Trocar por um fármaco de ação longa"
+        }
+      ],
+      "fonte": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "citacoes": [
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "Os diidropiridínicos de ação curta provocam importante estimulação simpática reflexa",
+          "sustenta": "Estimulação simpática reflexa com diidropiridínicos de ação curta."
+        },
+        {
+          "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+          "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+          "orgao": "Ministério da Saúde",
+          "trecho": "rubor facial – mais frequente com diidropiridínicos de curta duração",
+          "sustenta": "Efeito vasodilatador mais frequente com os de curta duração."
+        }
+      ]
+    }
+  ],
+  "pontos_revisor": [
+    "Estas relações misturam trechos de fontes brasileiras (Ministério da Saúde e Sociedade Brasileira de Cardiologia) com a fisiologia que explica cada elo. Onde a fonte não traz a explicação do elo, ela está só na explicação da carta, sem citação.",
+    "ce-diidropiridinico-curta: a fonte descreve a estimulação simpática reflexa, mas não diz \"trocar por ação longa\"; essa conduta é a prática usual e precisa da sua conferência.",
+    "ce-vasodilatador-direto: a fonte não diz \"associar diurético e betabloqueador\"; é a prática usual com esse tipo de fármaco.",
+    "ce-betabloqueador-dpoc: a fonte descreve o broncoespasmo e a piora da DPOC; \"escolher outra classe\" é conduta decorrente.",
+    "ce-choque-hemorragico: o artigo é uma pesquisa com a Sociedade Brasileira de Trauma sobre reanimação com controle de danos; o índice de choque e a tríade letal vêm dele.",
+    "Doses: só a reposição inicial da dengue (10 mL/kg de soro fisiológico) aparece, porque o manual traz o número."
+  ]
+}

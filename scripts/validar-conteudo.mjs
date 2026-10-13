@@ -4,6 +4,8 @@ import { resolve } from 'node:path';
 import { BANCO_QUIZ, BANCO_FRASES } from '../src/utils/bancoTreinos.js';
 import { TEMAS_TREINO, conceitoDoQuiz } from '../src/utils/treinos.js';
 import { CASOS_PLANTAO, executarPlantao } from '../src/utils/plantao.js';
+import { AUDITORIAS, CATEGORIAS_FALHA } from '../src/utils/erroMedico.js';
+import { RELACOES } from '../src/utils/causaEfeito.js';
 import { lerVitais, xpCaminhoCompleto } from '../src/utils/ddxVisual.js';
 import { CASOS_PACIENTE, FONTES_PACIENTE, MODULOS_PACIENTE } from '../src/utils/pacienteDdxConteudo.js';
 
@@ -66,6 +68,8 @@ export function validarFrases(data, { pronto = false } = {}) {
 
 // Casos do Plantão: o caminho completo (todas as ações com ponto positivo e o destino adequado) roda no
 // motor real e precisa sair seguro. Citações seguem o formato de content:fontes e são conferidas por ele.
+// Temas do DDX: sistemas do corpo ou áreas clínicas. O hub agrupa os casos por esses temas.
+export const TEMAS_DDX = ['Respiratório', 'Cardiovascular', 'Neurológico', 'Endócrino e metabólico', 'Infeccioso', 'Renal e urinário', 'Gastrointestinal', 'Hematológico', 'Obstétrico', 'Pediátrico', 'Toxicológico e ambiental', 'Pele e partes moles', 'Zoonoses e acidentes por animais', 'Vascular'];
 const GRUPOS_PLANTAO = ['Avaliação', 'Anamnese', 'Exame físico', 'Exames', 'Hipóteses', 'Conduta', 'Evolução', 'Encerramento'];
 const CRITERIOS_PLANTAO = ['raciocinio', 'seguranca', 'eficiencia'];
 // mg/dL é unidade de exame (glicemia), não de dose.
@@ -128,6 +132,79 @@ function ordenarPorExige(caso, ids) {
   return feitas;
 }
 
+// Erro médico (v2): cada auditoria é um caso próprio, com uma linha de falha, uma categoria e a correção entre 3 ou 4 opções.
+const citacoesOk = (c, label, errors) => {
+  if (!Array.isArray(c.citacoes) || c.citacoes.length < 2) errors.push(`${label}: ao menos 2 citações com trecho.`);
+  for (const [j, f] of (c.citacoes || []).entries()) stringFields(f, ['url', 'titulo', 'orgao', 'trecho', 'sustenta'], `${label}.citacoes[${j}]`, errors);
+};
+const HORA = /^\d{2}:\d{2} — \S/;
+export function validarErroMedico(data) {
+  const errors = [], warnings = [];
+  if (!data || !Array.isArray(data.auditorias) || !Array.isArray(data.pontos_revisor)) return { errors: ['Esperado objeto com auditorias e pontos_revisor (arrays).'], warnings };
+  unico(data.auditorias, 'id', 'ID de auditoria', errors);
+  const existentes = new Set(AUDITORIAS.map(a => a.id));
+  const titulos = new Set(AUDITORIAS.map(a => normalizar(a.titulo)));
+  for (const [i, a] of data.auditorias.entries()) {
+    const label = `auditorias[${i}] (${a?.id})`;
+    stringFields(a, ['id', 'tema', 'titulo', 'paciente', 'cenario', 'contexto', 'fonte'], label, errors);
+    if (!idValido(a.id) || existentes.has(a.id)) errors.push(`${label}: ID inválido ou já existente.`);
+    if (titulos.has(normalizar(a.titulo))) errors.push(`${label}: título já existe.`);
+    titulos.add(normalizar(a.titulo));
+    if (a.versao !== 2 || a.revisado !== false) errors.push(`${label}: versao deve ser 2 e revisado false.`);
+    if (!TEMAS_DDX.includes(a.tema)) errors.push(`${label}: tema "${a.tema}" fora da lista (${TEMAS_DDX.join(', ')}).`);
+    const regs = Array.isArray(a.registros) ? a.registros : [];
+    if (regs.length < 5 || regs.length > 8 || regs.some(r => !HORA.test(r))) errors.push(`${label}: de 5 a 8 registros no formato "08:10 — texto".`);
+    const horas = regs.map(r => r.slice(0, 5));
+    if (horas.some((h, k) => k && h < horas[k - 1])) errors.push(`${label}: horários fora de ordem.`);
+    const f = a.falha || {};
+    if (!Number.isInteger(f.linha) || f.linha < 1 || f.linha > regs.length) errors.push(`${label}: falha.linha deve apontar um registro.`);
+    if (!CATEGORIAS_FALHA.some(c => c.id === f.categoria)) errors.push(`${label}: categoria inválida.`);
+    const cor = Array.isArray(a.correcoes) ? a.correcoes : [];
+    if (cor.length < 3 || cor.length > 4 || !cor.some(c => c.id === f.correcao) || new Set(cor.map(c => normalizar(c.texto))).size !== cor.length) errors.push(`${label}: de 3 a 4 correções distintas, uma delas certa.`);
+    for (const k of ['linha', 'categoria', 'correcao']) if (!texto(f.explicacoes?.[k])) errors.push(`${label}: explicação de ${k} obrigatória.`);
+    if (a.falha && a.falha.categoria === 'medicacao' && !/\d/.test(regs[f.linha - 1] || '')) warnings.push(`${label}: erro de medicação sem número na linha da falha.`);
+    if (DOSE.test(regs.join(' '))) warnings.push(`${label}: registros citam dose; confira se a fonte brasileira traz a quantidade.`);
+    citacoesOk(a, label, errors);
+  }
+  const contagem = {};
+  for (const a of data.auditorias) contagem[a.falha?.categoria] = (contagem[a.falha?.categoria] || 0) + 1;
+  warnings.push(`Categorias do lote: ${Object.entries(contagem).map(([k, v]) => `${k}=${v}`).join(', ')}.`);
+  return { errors, warnings };
+}
+
+// Causa e efeito (v2): quatro elos, seis cartas (duas distratoras) e cada carta com texto único.
+export function validarCausaEfeito(data) {
+  const errors = [], warnings = [];
+  if (!data || !Array.isArray(data.relacoes) || !Array.isArray(data.pontos_revisor)) return { errors: ['Esperado objeto com relacoes e pontos_revisor (arrays).'], warnings };
+  unico(data.relacoes, 'id', 'ID de relação', errors);
+  const existentes = new Set(RELACOES.map(r => r.id));
+  const titulos = new Set(RELACOES.map(r => normalizar(r.titulo)));
+  for (const [i, r] of data.relacoes.entries()) {
+    const label = `relacoes[${i}] (${r?.id})`;
+    stringFields(r, ['id', 'tema', 'titulo', 'paciente', 'cenario', 'vitais', 'estimulo', 'contexto', 'fonte'], label, errors);
+    if (!idValido(r.id) || existentes.has(r.id)) errors.push(`${label}: ID inválido ou já existente.`);
+    if (titulos.has(normalizar(r.titulo))) errors.push(`${label}: título já existe.`);
+    titulos.add(normalizar(r.titulo));
+    if (r.versao !== 2 || r.revisado !== false) errors.push(`${label}: versao deve ser 2 e revisado false.`);
+    if (!TEMAS_DDX.includes(r.tema)) errors.push(`${label}: tema "${r.tema}" fora da lista (${TEMAS_DDX.join(', ')}).`);
+    const v = lerVitais(r.vitais);
+    if ([v.fc, v.fr, v.spo2, v.t].some(x => x == null) || !v.pa) errors.push(`${label}: vitais devem trazer FC, FR, SpO₂, PA e T.`);
+    if (r.elos?.map(e => e.id).join() !== 'mecanismo,consequencia,compensacao,intervencao') errors.push(`${label}: elos devem ser mecanismo, consequencia, compensacao e intervencao, nessa ordem.`);
+    const cartas = Array.isArray(r.cartas) ? r.cartas : [];
+    if (cartas.length !== 6 || new Set(cartas.map(c => normalizar(c.texto))).size !== 6 || new Set(cartas.map(c => c.id)).size !== 6) errors.push(`${label}: seis cartas com id e texto únicos.`);
+    const certas = (r.elos || []).map(e => e.correta);
+    if (new Set(certas).size !== 4 || certas.some(c => !cartas.some(x => x.id === c))) errors.push(`${label}: quatro cartas certas distintas, todas na mão.`);
+    for (const e of r.elos || []) if (!texto(e.explicacao)) errors.push(`${label}.${e.id}: explicação obrigatória.`);
+    const palavras = cartas.map(c => String(c.texto).split(/\s+/).length);
+    if (palavras.some(n => n > 18)) warnings.push(`${label}: carta com mais de 18 palavras (difícil de ler no celular).`);
+    const certasIdx = new Set(certas);
+    const distratoras = cartas.filter(c => !certasIdx.has(c.id));
+    if (distratoras.some(c => palavras[cartas.indexOf(c)] < 3)) warnings.push(`${label}: distrator curto demais.`);
+    citacoesOk(r, label, errors);
+  }
+  return { errors, warnings };
+}
+
 export function validarCasos(data, { pronto = false } = {}) {
   const errors = [], warnings = [];
   if (!data || !Array.isArray(data.casos) || !Array.isArray(data.fontes_novas) || !Array.isArray(data.modulos_novos) || !Array.isArray(data.pontos_revisor)) return { errors: ['Esperado objeto com casos, fontes_novas, modulos_novos e pontos_revisor (arrays).'], warnings };
@@ -184,14 +261,14 @@ export function validarCasos(data, { pronto = false } = {}) {
 async function main() {
   const args = process.argv.slice(2);
   const kind = args[0], path = args[1], ready = args.includes('--ready');
-  if (!['frases', 'casos', 'plantao'].includes(kind) || !path) {
-    console.error('Uso: npm run content:validate -- <frases|casos|plantao> arquivo.json [--ready]');
+  if (!['frases', 'casos', 'plantao', 'erro', 'causa'].includes(kind) || !path) {
+    console.error('Uso: npm run content:validate -- <frases|casos|plantao|erro|causa> arquivo.json [--ready]');
     process.exitCode = 2;
     return;
   }
   try {
     const data = JSON.parse(await readFile(resolve(path), 'utf8'));
-    const result = kind === 'frases' ? validarFrases(data, { pronto: ready }) : kind === 'plantao' ? validarPlantao(data) : validarCasos(data, { pronto: ready });
+    const result = kind === 'frases' ? validarFrases(data, { pronto: ready }) : kind === 'plantao' ? validarPlantao(data) : kind === 'erro' ? validarErroMedico(data) : kind === 'causa' ? validarCausaEfeito(data) : validarCasos(data, { pronto: ready });
     for (const error of result.errors) console.error(`ERRO: ${error}`);
     for (const warning of result.warnings) console.warn(`AVISO: ${warning}`);
     console.log(`${result.errors.length} erros, ${result.warnings.length} avisos.`);

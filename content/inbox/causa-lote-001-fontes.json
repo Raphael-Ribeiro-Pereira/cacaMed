@@ -1,0 +1,284 @@
+{
+  "fontes": [
+    {
+      "conceito": "ce-dengue-extravasamento#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Tem início com a defervescência (declínio) da febre, entre três e sete dias do início da doença. Os sinais de alarme, quando presentes, surgem nessa fase da doença."
+    },
+    {
+      "conceito": "ce-dengue-extravasamento#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A maioria dos sinais de alarme é resultante do aumento da permeabilidade vascular, que marca o início da deterioração clínica do paciente e sua possível evolução para o choque por extravasamento plasmático."
+    },
+    {
+      "conceito": "ce-dengue-extravasamento#3",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Ocorre quando um volume crítico de plasma é perdido por meio do extravasamento ou sangramento"
+    },
+    {
+      "conceito": "ce-dengue-extravasamento#4",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Pressão de pulso ≤20 mmHg. Em adultos, é muito significativa a diminuição da PAM associada à taquicardia."
+    },
+    {
+      "conceito": "ce-dengue-extravasamento#5",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Iniciar reposição volêmica imediata (10 mL/kg de soro fisiológico na primeira hora), em qualquer ponto de atenção, independente do nível e complexidade, mesmo na ausência de exames complementares."
+    },
+    {
+      "conceito": "ce-dengue-aine#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Se for no aparelho digestivo, será mais frequente seu surgimento em pacientes com histórico de úlcera péptica ou gastrites, assim como da ingestão de ácido acetilsalicílico (AAS), anti-inflamatórios não esteroides (Aine) e anticoagulantes."
+    },
+    {
+      "conceito": "ce-dengue-aine#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Consequentemente, pode levar a hemorragias graves, causando diminuição de hematócrito e agravando-o ainda mais."
+    },
+    {
+      "conceito": "ce-dengue-aine#3",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Prescrever paracetamol e/ou dipirona, conforme orientações do Apêndice H. c. Não utilizar salicilatos ou anti-inflamatórios não esteroides e corticosteroides."
+    },
+    {
+      "conceito": "ce-dengue-choque-prolongado#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Quando prolongado, o choque leva à hipoperfusão de órgãos, resultando no comprometimento progressivo destes, acidose metabólica e coagulação intravascular disseminada (CIVD)."
+    },
+    {
+      "conceito": "ce-dengue-choque-prolongado#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Consequentemente, pode levar a hemorragias graves, causando diminuição de hematócrito e agravando-o ainda mais."
+    },
+    {
+      "conceito": "ce-dengue-choque-prolongado#3",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "O choque na dengue é de rápida instalação e tem curta duração. Pode levar o paciente ao óbito em um intervalo de 12 a 24 horas ou à sua recuperação rápida, após terapia antichoque apropriada."
+    },
+    {
+      "conceito": "ce-ieca-estenose-renal#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Esses agentes podem deteriorar acentuadamente a função renal de pacientes com obstrução de artérias renais, pois a dilatação que provocam em arteríolas eferentes não pode ser compensada por aumento de fluxo sanguíneo renal."
+    },
+    {
+      "conceito": "ce-ieca-estenose-renal#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Em pessoas com hipertensão renovascular conversora de angiotensina bilateral ou unilateral associada a rim único, podem promover redução da filtração glomerular com aumento dos níveis séricos da ureia"
+    },
+    {
+      "conceito": "ce-ieca-estenose-renal#3",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A elevação abrupta de creatinina (mais do que 50% do valor basal) requer suspensão desses medicamentos e encaminhamento ao especialista para investigar hipertensão secundária."
+    },
+    {
+      "conceito": "ce-tiazidico-hipocalemia#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Diuréticos tiazídicos podem acentuar quadros de hiperuricemia e espoliar potássio. Os níveis séricos de potássio devem ser aferidos após três a seis meses do início do tratamento."
+    },
+    {
+      "conceito": "ce-tiazidico-hipocalemia#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A hipopotassemia, mesmo discreta, reduz a eficácia da terapia, provavelmente porque aumenta o risco de arritmias, e é o provável mecanismo de indução de hiperglicemia"
+    },
+    {
+      "conceito": "ce-tiazidico-hipocalemia#3",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Diante dela, deve-se associar Ieca ou diuréticos poupadores de potássio, como espironolactona"
+    },
+    {
+      "conceito": "ce-ieca-hipercalemia#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Hiperpotassemia pode decorrer de associação de agentes poupadores de potássio (Ieca ou diuréticos poupadores) ou de insuficiência renal."
+    },
+    {
+      "conceito": "ce-ieca-hipercalemia#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Quando do emprego de Ieca e antagonistas da angiotensina II ou de seu aumento de dose, deve-se aferir creatinina após três a seis meses."
+    },
+    {
+      "conceito": "ce-ieca-hipercalemia#3",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Em indivíduos com insuficiência renal crônica, podem eventualmente, Inibidores da enzima agravar a hiperpotassemia."
+    },
+    {
+      "conceito": "ce-betabloqueador-diabetes1#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Sua contraindicação relativa em diabéticos do tipo 1 decorre de mascaramento dos sinais de hipoglicemia"
+    },
+    {
+      "conceito": "ce-betabloqueador-diabetes1#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "e bloqueio da glicogenólise."
+    },
+    {
+      "conceito": "ce-betabloqueador-dpoc#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Betabloqueadores podem exacerbar doença pulmonar obstrutiva crônica, distúrbios de condução atrioventricular e insuficiência circulatória periférica."
+    },
+    {
+      "conceito": "ce-betabloqueador-dpoc#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Broncoespasmo, bradicardia, distúrbios da condução atrioventricular, Betabloqueadores vasoconstrição periférica, insônia, pesadelos, depressão psíquica, astenia e disfunção sexual."
+    },
+    {
+      "conceito": "ce-vasodilatador-direto#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Pela vasodilatação arterial direta promovem retenção hídrica e"
+    },
+    {
+      "conceito": "ce-vasodilatador-direto#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "músculo liso arteriolar taquicardia reflexa."
+    },
+    {
+      "conceito": "ce-sepse-lesao-endotelial#1",
+      "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+      "titulo": "Sepse: atualidades e perspectivas",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "O mecanismo provável resulta da lesão endotelial disseminada, com extravasamento de fluidos e, em consequência, edema intersticial e hipovolemia, além dos já descritos distúrbios da coagulação (com formação de microtrombos, que diminuem o aporte de oxigênio e nutrientes para os tecidos atingidos)."
+    },
+    {
+      "conceito": "ce-sepse-lesao-endotelial#2",
+      "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+      "titulo": "Sepse: atualidades e perspectivas",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "Todos esses mecanismos, em conjunto, levam à hipóxia tissular, acidose láctica - a hiperlactatemia associa-se com gravidade da doença - e a morte celular."
+    },
+    {
+      "conceito": "ce-sepse-lesao-endotelial#3",
+      "url": "https://www.scielo.br/j/rbti/a/gdrF6hVjgcxfYc3LWNxxCQS/?lang=pt",
+      "titulo": "Sepse: atualidades e perspectivas",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "medidas terapêuticas que se baseiam, fundamentalmente, em reposição volêmica, antibioticoterapia, emprego de costicosteróides, tratamento anticoagulante, medidas de manutenção da viabilidade biológica e suporte nutricional."
+    },
+    {
+      "conceito": "ce-sepse-lactato#1",
+      "url": "https://www.scielo.br/j/rbti/a/JSCFFZXBbwP68TxR75GmQdv/?lang=pt",
+      "titulo": "Diretrizes para tratamento da sepse grave/choque séptico: avaliação da perfusão tecidual",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "A hipóxia tecidual global que ocorre na sepse grave e choque séptico é decorrência da associação entre distribuição heterogênea do fluxo sanguíneo microvascular, baixo fluxo sistêmico (hipóxia isquêmica) e falência no metabolismo celular (hipóxia citopática)."
+    },
+    {
+      "conceito": "ce-sepse-lactato#2",
+      "url": "https://www.scielo.br/j/rbti/a/JSCFFZXBbwP68TxR75GmQdv/?lang=pt",
+      "titulo": "Diretrizes para tratamento da sepse grave/choque séptico: avaliação da perfusão tecidual",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "Consequentemente há anaerobiose e aumento dos níveis de lactato sérico, sendo este último decorrente de múltiplos fatores. Ainda, o aumento do lactato é muito rápido, proporcional ao defeito oxidativo do metabolismo e à gravidade do choque"
+    },
+    {
+      "conceito": "ce-sepse-lactato#3",
+      "url": "https://www.scielo.br/j/rbti/a/JSCFFZXBbwP68TxR75GmQdv/?lang=pt",
+      "titulo": "Diretrizes para tratamento da sepse grave/choque séptico: avaliação da perfusão tecidual",
+      "orgao": "Revista Brasileira de Terapia Intensiva",
+      "trecho": "O valor prognóstico da mensuração seriada do lactato em pacientes graves está bem estabelecido ( D ) (1) ( B )."
+    },
+    {
+      "conceito": "ce-ic-congestao-diuretico#1",
+      "url": "https://scielo.br/j/abc/a/6CWscRNFQdbmnHBVMqjBtfC/?lang=pt",
+      "titulo": "II Diretriz Brasileira de Insuficiência Cardíaca Aguda",
+      "orgao": "Sociedade Brasileira de Cardiologia",
+      "trecho": "Diuréticos de alça: inibem o transporte de sódio e cloro para o intracelular por inibirem a bomba de Na + K + 2Cl - na porção espessa da alça de Henle."
+    },
+    {
+      "conceito": "ce-ic-congestao-diuretico#2",
+      "url": "https://scielo.br/j/abc/a/6CWscRNFQdbmnHBVMqjBtfC/?lang=pt",
+      "titulo": "II Diretriz Brasileira de Insuficiência Cardíaca Aguda",
+      "orgao": "Sociedade Brasileira de Cardiologia",
+      "trecho": "promove natriurese e diurese, o que gera alívio dos sintomas."
+    },
+    {
+      "conceito": "ce-ic-congestao-diuretico#3",
+      "url": "https://scielo.br/j/abc/a/6CWscRNFQdbmnHBVMqjBtfC/?lang=pt",
+      "titulo": "II Diretriz Brasileira de Insuficiência Cardíaca Aguda",
+      "orgao": "Sociedade Brasileira de Cardiologia",
+      "trecho": "Os diuréticos exercem efeito sobre o sistema renina-angiotensina-aldosterona (SRAA), aumentam agudamente os níveis de norepinefrina, de arginina-vasopressina, aumentam a frequência cardíaca"
+    },
+    {
+      "conceito": "ce-choque-hemorragico#1",
+      "url": "https://www.scielo.br/j/rcbc/a/gsycGkbjmHYMWG8b5CJ4cbR/?lang=pt",
+      "titulo": "Reanimação durante o controle de danos no trauma, pesquisa com a Sociedade Brasileira de Trauma",
+      "orgao": "Revista do Colégio Brasileiro de Cirurgiões",
+      "trecho": "centra-se no controle precoce da hemorragia e na reposição de volume para combater o “diamante da morte” (hipotermia, hipocalcemia, acidose, coagulopatia)."
+    },
+    {
+      "conceito": "ce-choque-hemorragico#2",
+      "url": "https://www.scielo.br/j/rcbc/a/gsycGkbjmHYMWG8b5CJ4cbR/?lang=pt",
+      "titulo": "Reanimação durante o controle de danos no trauma, pesquisa com a Sociedade Brasileira de Trauma",
+      "orgao": "Revista do Colégio Brasileiro de Cirurgiões",
+      "trecho": "índice de choque (FC/PAS) maior que 1 ou relação FC > PAS em adultos"
+    },
+    {
+      "conceito": "ce-choque-hemorragico#3",
+      "url": "https://www.scielo.br/j/rcbc/a/gsycGkbjmHYMWG8b5CJ4cbR/?lang=pt",
+      "titulo": "Reanimação durante o controle de danos no trauma, pesquisa com a Sociedade Brasileira de Trauma",
+      "orgao": "Revista do Colégio Brasileiro de Cirurgiões",
+      "trecho": "Essa coagulopatia ocorre devido à depleção dos fatores de coagulação por hemorragia maciça e à redução da eficácia dos fatores de coagulação e das plaquetas por hipotermia e hemodiluição, hipoperfusão e choque, o que leva à acidose e prejudica a formação de coágulos, associada à tríade letal tardia do trauma"
+    },
+    {
+      "conceito": "ce-diidropiridinico-curta#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Os diidropiridínicos de ação curta provocam importante estimulação simpática reflexa"
+    },
+    {
+      "conceito": "ce-diidropiridinico-curta#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "rubor facial – mais frequente com diidropiridínicos de curta duração"
+    }
+  ]
+}

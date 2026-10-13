@@ -1,0 +1,151 @@
+{
+  "fontes": [
+    {
+      "conceito": "aud-dengue-reavaliacao#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Reavaliação Alta Após uma hora: reavaliar o paciente (sinais vitais, PA, avaliar diurese – desejável 1 mL/kg/h)"
+    },
+    {
+      "conceito": "aud-dengue-reavaliacao#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Manter a hidratação de 10 mL/kg/hora na segunda hora até a avaliação do hematócrito, que deverá ocorrer em duas horas após a etapa de reposição volêmica."
+    },
+    {
+      "conceito": "aud-dengue-reavaliacao#3",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Se não houver melhora do hematócrito ou dos sinais hemo­ dinâmicos, repetir a fase de expansão até três vezes."
+    },
+    {
+      "conceito": "aud-dengue-atraso-reposicao#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Iniciar a reposição volêmica imediata, em qualquer ponto de atenção, independentemente do nível de complexidade, inclusive durante eventual transferência para uma unidade de referência (mesmo na ausência de exames complementares)"
+    },
+    {
+      "conceito": "aud-dengue-atraso-reposicao#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Hemoconcentração ou sinais de alarme Conduzir como grupo C."
+    },
+    {
+      "conceito": "aud-dengue-aas#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Prescrever paracetamol e/ou dipirona, conforme orientações do Apêndice H. c. Não utilizar salicilatos ou anti-inflamatórios não esteroides e corticosteroides."
+    },
+    {
+      "conceito": "aud-dengue-aas#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Se for no aparelho digestivo, será mais frequente seu surgimento em pacientes com histórico de úlcera péptica ou gastrites, assim como da ingestão de ácido acetilsalicílico (AAS), anti-inflamatórios não esteroides (Aine) e anticoagulantes."
+    },
+    {
+      "conceito": "aud-dengue-dipirona-adulto#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "20 gotas ou 1 comprimido (500 mg) até de 6/6 horas."
+    },
+    {
+      "conceito": "aud-dengue-dipirona-adulto#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Não utilizar doses maiores que a recomendada, considerando que doses elevadas são hepatotóxicas."
+    },
+    {
+      "conceito": "aud-dengue-dipirona-crianca#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "10 mg/kg/dose até de 6/6 horas (respeitar a dose máxima por peso e idade)."
+    },
+    {
+      "conceito": "aud-dengue-dipirona-crianca#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Acima de 10 kg a 20 kg: 100 mL/kg/dia"
+    },
+    {
+      "conceito": "aud-dengue-furosemida#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "De um modo geral, os óbitos por dengue ocorrem em pacientes com dengue grave em que o choque está presente. Este, por sua vez, é resultante do extravasamento plasmático, complicado por sangramento e/ou sobrecarga hídrica."
+    },
+    {
+      "conceito": "aud-dengue-furosemida#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Ocorre quando um volume crítico de plasma é perdido por meio do extravasamento ou sangramento"
+    },
+    {
+      "conceito": "aud-dengue-volume-hidratacao#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Especificar, em receita médica ou no cartão de acompanhamento da dengue, o volume a ser ingerido."
+    },
+    {
+      "conceito": "aud-dengue-volume-hidratacao#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/dengue_diagnostico_manejo_clinico_6ed.pdf",
+      "titulo": "Dengue: diagnóstico e manejo clínico, adulto e criança (6ª ed.)",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Nas primeiras 4 a 6 horas do atendimento, considerar a oferta de 1/3 do volume."
+    },
+    {
+      "conceito": "aud-ieca-bra#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A associação da Ieca com antagonistas da angiotensina II, defendida com base em estudos distorcidos pelo viés corporativo e pela propaganda, deve ser evitada, pois aumenta o risco de disfunção renal"
+    },
+    {
+      "conceito": "aud-ieca-bra#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A associação entre diuréticos tiazídicos (ou ACC) e Ieca (ou antagonistas da angiotensina II, ou betabloqueadores) é extremamente racional"
+    },
+    {
+      "conceito": "aud-ieca-creatinina-omissao#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Quando do emprego de Ieca e antagonistas da angiotensina II ou de seu aumento de dose, deve-se aferir creatinina após três a seis meses."
+    },
+    {
+      "conceito": "aud-ieca-creatinina-omissao#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Hiperpotassemia pode decorrer de associação de agentes poupadores de potássio (Ieca ou diuréticos poupadores) ou de insuficiência renal."
+    },
+    {
+      "conceito": "aud-tontura-hipotensao#1",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "A pesquisa de hipotensão postural (queda de mais de 20 mmHg na pressão sistólica ao levantar da posição deitada) deve ser feita nesses casos"
+    },
+    {
+      "conceito": "aud-tontura-hipotensao#2",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/hipertensao_arterial_sistemica_cab37.pdf",
+      "titulo": "Cadernos de Atenção Básica nº 37: Estratégias para o cuidado da pessoa com doença crônica, hipertensão arterial sistêmica",
+      "orgao": "Ministério da Saúde",
+      "trecho": "Se houver real hipotensão postural, deve-se titular as doses em uso"
+    }
+  ]
+}
