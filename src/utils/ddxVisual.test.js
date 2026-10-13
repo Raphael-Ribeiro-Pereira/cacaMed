@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cadeiaDe, lerVitais, nomeEtapa, registrosComHora, vitaisDoCaso, xpCaminhoCompleto } from './ddxVisual.js';
 import { CASOS_PLANTAO, executarPlantao } from './plantao.js';
-import { AUDITORIAS } from './erroMedico.js';
-import { RELACOES } from './causaEfeito.js';
+import { AUDITORIAS, obterAuditoria } from './erroMedico.js';
+import { RELACOES, obterRelacao } from './causaEfeito.js';
 
 test('lê os sinais vitais do texto do caso e os da reavaliação', () => {
   const caso = CASOS_PLANTAO[0];
@@ -20,9 +20,10 @@ test('separa a hora dos registros auditados', () => {
 });
 
 test('nomeia as etapas e monta a cadeia com um elo por pergunta', () => {
-  assert.deepEqual(AUDITORIAS[0].perguntas.map(p => nomeEtapa(p.id)), ['Falha', 'Evidência', 'Correção', 'Justificativa']);
-  const cadeia = cadeiaDe(RELACOES[0]);
-  assert.equal(cadeia.length, RELACOES[0].perguntas.length + 1);
+  assert.deepEqual(obterAuditoria(AUDITORIAS[0].id).perguntas.map(p => nomeEtapa(p.id)), ['Linha', 'Categoria', 'Correção']);
+  const cadeia = cadeiaDe(obterRelacao(RELACOES[0].id));
+  assert.equal(cadeia.length, 5);
+  assert.equal(cadeia[0], RELACOES[0].estimulo);
   assert.deepEqual(cadeiaDe({ id: 'outra', perguntas: [{ id: 'mecanismo' }, { id: 'novo' }] }), ['Estímulo', 'Mecanismo', 'Novo']);
 });
 

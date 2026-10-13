@@ -23,6 +23,8 @@ Respostas do usuário ao [questionário](decisoes-para-responder.md). **Mudam o 
 - **B7:** o Erro médico e o Causa e efeito **não** são presos a um caso do Plantão: cada auditoria e cada relação tem o seu próprio caso.
 - **Efeitos na documentação:** a Revisão v2 fala em cartas do Paciente DDX; se ele for fundido, a carta passa a ser do Plantão. A economia v3 mantém 300 XP + bônus para os 3 modos do DDX e 500 XP na Batalha.
 
+**Confirmado em 13/10/2026:** o Paciente DDX é fundido no Plantão (os 17 casos viram casos do Plantão) e a meta "25 paciente" é de **25 casos do Plantão**. Com a fusão, o Plantão chega a 33.
+
 **Ainda não respondido** (assumo o recomendado e registro): B1, B8, B9, A2, A3, A5, D e E.
 
 ## Ajustes de 11/10/2026 — deploys às quintas, conteúdo com fontes e casos antes do DDX

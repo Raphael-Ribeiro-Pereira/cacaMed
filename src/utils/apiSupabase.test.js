@@ -87,10 +87,10 @@ test('API Supabase: duas rodadas, recuperação de concorrência e recibo perman
   assert.equal((await f.call({ acao: 'admin', operacao: 'setXP', valor: 999 })).status, 400);
 });
 
-test('DDX na nova API cobra uma vez, confirma quatro etapas e não recompensa repetição', () => {
+test('DDX na nova API cobra uma vez, confirma as etapas (uma a uma ou em bloco) e não recompensa repetição', () => {
   for (const config of [
-    { campo: 'erroMedico', iniciar: 'iniciarAuditoria', responder: 'responderAuditoria', chave: 'auditoriaId', caso: obterAuditoria('resp-asma-auditoria-1') },
-    { campo: 'causaEfeito', iniciar: 'iniciarRelacao', responder: 'responderRelacao', chave: 'relacaoId', caso: obterRelacao('resp-asma-relacoes-1') },
+    { campo: 'erroMedico', iniciar: 'iniciarAuditoria', responder: 'responderAuditoria', chave: 'auditoriaId', caso: obterAuditoria('aud-asma-alta-1') },
+    { campo: 'causaEfeito', iniciar: 'iniciarRelacao', responder: 'responderRelacao', chave: 'relacaoId', caso: obterRelacao('ce-asma-1') },
   ]) {
     let p = { uid: 'admin', role: 'admin', tickets: 10, pontuacaoTotal: 0, economia: { versao: 2, ultimoNivelPremiado: 1 }, dataUltimoLogin: dataLocalHoje(), missoesDiarias: criarMissoesDiarias() };
     for (let rodada = 0; rodada < 2; rodada++) {
@@ -100,12 +100,17 @@ test('DDX na nova API cobra uma vez, confirma quatro etapas e não recompensa re
       const saldo = p.tickets;
       assert.equal(executarPedidoSupabase(p, inicio).perfil.tickets, saldo);
       const respostas = [];
-      for (const pergunta of config.caso.perguntas) {
-        respostas.push(pergunta.correta);
+      const certas = config.caso.perguntas.map(pergunta => pergunta.correta);
+      if (rodada) {
+        for (const resposta of certas) { respostas.push(resposta); p = executarPedidoSupabase(p, { acao: config.responder, entradaId, respostas: [...respostas] }).perfil; }
+      } else {
+        // A tela nova envia todas as etapas de uma vez ("Testar circuito" e "Marcar a falha").
+        respostas.push(...certas);
         p = executarPedidoSupabase(p, { acao: config.responder, entradaId, respostas: [...respostas] }).perfil;
       }
-      assert.equal(p[config.campo].entrada.xpConcedido, rodada ? 0 : 100);
-      assert.equal(p.pontuacaoTotal, 100);
+      const xpEsperado = config.caso.perguntas.length * 25;
+      assert.equal(p[config.campo].entrada.xpConcedido, rodada ? 0 : xpEsperado);
+      assert.equal(p.pontuacaoTotal, xpEsperado);
       assert.equal(p.tickets, 9 - rodada);
       assert.deepEqual(executarPedidoSupabase(p, { acao: config.responder, entradaId, respostas }).perfil, p);
     }

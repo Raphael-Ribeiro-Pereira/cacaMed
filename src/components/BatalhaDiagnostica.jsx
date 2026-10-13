@@ -56,10 +56,10 @@ export default function BatalhaDiagnostica({ usuario, dadosUsuario, setDadosUsua
   let conteudo;
   const semApi = !USAR_SUPABASE && servicoPerfil === chamarPerfilPlanilha;
   if (semApi || !admin) {
-    conteudo = <div className="cbt-scr"><Topo voltar={() => setTelaAtual('selecaoDDX')} kicker="DDX · Modo secreto" titulo="Batalha diagnóstica" />
+    conteudo = <div className="cbt-scr"><Topo voltar={() => setTelaAtual('menu')} kicker="Modo secreto" titulo="Batalha diagnóstica" />
       <div className="scroll"><section className="card" style={{ display: 'grid', gap: 10 }}><span className="kicker">Em piloto</span>
         <p>{semApi ? 'A Batalha diagnóstica usa a API do Supabase. Ative VITE_FONTE_DADOS=supabase para testar.' : 'A Batalha diagnóstica está em teste com o administrador enquanto o conteúdo passa por revisão médica.'}</p>
-        <button className="ghost" onClick={() => setTelaAtual('selecaoDDX')}>Voltar aos modos DDX</button></section></div></div>;
+        <button className="ghost" onClick={() => setTelaAtual('menu')}>Voltar ao início</button></section></div></div>;
   } else if (tela.id === 'arena' && aberta) {
     conteudo = <BatalhaArena key={entrada.id} entrada={entrada} doenca={obterDoenca(entrada.doencaId)} web={web} usuario={usuario} servicoPerfil={servicoPerfil}
       setDadosUsuario={setDadosUsuario} onSair={sair} onFim={() => setTela({ id: 'resultado' })} />;
@@ -74,7 +74,7 @@ export default function BatalhaDiagnostica({ usuario, dadosUsuario, setDadosUsua
     conteudo = <Fontes onVoltar={() => setTela({ id: 'mapa' })} />;
   } else {
     conteudo = <Hub stats={stats} aberta={aberta} entrada={entrada} tickets={Number(dadosUsuario?.tickets) || 0} ocupado={ocupado}
-      onVoltar={() => setTelaAtual('selecaoDDX')}
+      onVoltar={() => setTelaAtual('menu')}
       onTutorial={() => iniciar('tutorial', 'cocobi')}
       onPularTutorial={() => enviar('pularTutorialBatalha', {})}
       onRetomar={() => setTela({ id: 'arena' })}
@@ -109,7 +109,7 @@ function Hub({ stats, aberta, entrada, tickets, ocupado, onVoltar, onTutorial, o
   const treinar = !stats.tutorial;
   const travado = treinar || aberta || ocupado;
   return <div className="cbt-scr">
-    <Topo voltar={onVoltar} kicker="DDX · Modo secreto" titulo="Batalha diagnóstica"><span className="chip"><Ticket /><span>{tickets}</span></span></Topo>
+    <Topo voltar={onVoltar} kicker="Modo secreto" titulo="Batalha diagnóstica"><span className="chip"><Ticket /><span>{tickets}</span></span></Topo>
     <div className="scroll bh-grid">
       <div className="bh-hero rise">
         <div className="bh-stage" aria-hidden="true"><span className="pad foe-pad" /><span className="bh-blob"><Blob /></span></div>

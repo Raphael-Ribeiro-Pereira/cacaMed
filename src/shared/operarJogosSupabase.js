@@ -185,7 +185,7 @@ export function operarAuditoriaSupabase(perfil, pedido, recibos = []) {
 
     return perfil;
   }
-  if (entrada.relatorio || respostas.length !== entrada.respostas.length + 1 ||
+  if (entrada.relatorio || respostas.length <= entrada.respostas.length ||
       respostas.length > auditoria.perguntas.length || entrada.respostas.some((id, indice) => respostas[indice] !== id)) {
     throw new Error('A análise mudou em outra aba. Atualize o perfil antes de continuar.');
   }
@@ -238,7 +238,7 @@ export function operarRelacaoSupabase(perfil, pedido, recibos = []) {
 
     return perfil;
   }
-  if (entrada.relatorio || respostas.length !== entrada.respostas.length + 1 ||
+  if (entrada.relatorio || respostas.length <= entrada.respostas.length ||
       respostas.length > auditoria.perguntas.length || entrada.respostas.some((id, indice) => respostas[indice] !== id)) {
     throw new Error('A análise mudou em outra aba. Atualize o perfil antes de continuar.');
   }

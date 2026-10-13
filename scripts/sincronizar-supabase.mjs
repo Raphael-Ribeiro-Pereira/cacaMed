@@ -6,7 +6,7 @@ const modules = [
   'utils/missoes.js', 'utils/bancoTreinos.js', 'utils/revisaoInteligente.js', 'shared/operarRevisaoSupabase.js',
   'shared/operarJogosSupabase.js', 'shared/executarPedidoSupabase.js',
   'shared/apiSupabase.js', 'shared/migrarSenhaSupabase.js',
-  'utils/plantao.js', 'utils/erroMedico.js', 'utils/causaEfeito.js', 'utils/importarBancoCSV.js',
+  'utils/plantao.js', 'utils/erroMedico.js', 'utils/erroMedicoBanco.js', 'utils/causaEfeito.js', 'utils/causaEfeitoBanco.js', 'utils/importarBancoCSV.js',
   'utils/batalha.js', 'utils/batalhaConteudo.js', 'utils/batalhaRevisao.js', 'utils/coroas.js', 'utils/estatisticasPainel.js',
   'utils/pacienteDdxNota.js', 'utils/pacienteDdxGabarito.js',
 ];

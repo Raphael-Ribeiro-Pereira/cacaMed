@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, ChevronLeft, ExternalLink, FileSearch, GitBranch, Lock, Stethoscope, Swords, Ticket, X } from 'lucide-react';
+import { Check, ChevronLeft, ExternalLink, FileSearch, GitBranch, Lock, Stethoscope, Ticket, X } from 'lucide-react';
 import { CASOS_PLANTAO, executarPlantao, obterCasoPlantao } from '../utils/plantao';
 import { AUDITORIAS, obterAuditoria } from '../utils/erroMedico';
 import { RELACOES, obterRelacao } from '../utils/causaEfeito';
+import { ListaCasos } from './ddxLista';
 import { nivelPorXP } from '../utils/economia';
-import { lerVitais, vitaisDoCaso, xpCaminhoCompleto } from '../utils/ddxVisual';
+import { lerVitais, vitaisDoCaso } from '../utils/ddxVisual';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { animar, fmt, registrarLatencia, useLargo } from '../utils/prototipo';
 import { Vitais } from './ddxUi';
@@ -16,9 +17,9 @@ import { Resultado, SubiuNivel } from './resultadoUi';
 // encerramento gravam, com um selo de gravação em vez de travar a tela.
 const espera = ms => new Promise(ok => setTimeout(ok, ms));
 const MODOS = [
-  { id: 'plantao', nome: 'Plantão médico', desc: 'Acompanhe a paciente, investigue e decida a conduta.', Icone: Stethoscope, acao: 'iniciarPlantao', abrindo: 'Chegando ao pronto atendimento' },
-  { id: 'erroMedico', nome: 'Erro médico', desc: 'Audite um atendimento já feito e aponte a falha.', Icone: FileSearch, acao: 'iniciarAuditoria', abrindo: 'Abrindo prontuário para auditoria' },
-  { id: 'causaEfeito', nome: 'Causa e efeito', desc: 'Ligue mecanismo, consequência, compensação e intervenção.', Icone: GitBranch, acao: 'iniciarRelacao', abrindo: 'Montando o mapa fisiológico' },
+  { id: 'plantao', nome: 'Plantão médico', desc: 'Atenda o paciente, investigue, trate e decida o destino.', Icone: Stethoscope, acao: 'iniciarPlantao', abrindo: 'Chegando ao pronto atendimento' },
+  { id: 'erroMedico', nome: 'Erro médico', desc: 'Leia o prontuário, ache a falha, classifique e corrija.', Icone: FileSearch, acao: 'iniciarAuditoria', abrindo: 'Abrindo prontuário para auditoria' },
+  { id: 'causaEfeito', nome: 'Causa e efeito', desc: 'Monte o circuito: mecanismo, consequência, compensação e intervenção.', Icone: GitBranch, acao: 'iniciarRelacao', abrindo: 'Montando o mapa fisiológico' },
 ];
 const PASSOS_ADMISSAO = ['Validando ticket', 'Registrando entrada', 'Carregando prontuário', 'Paciente na sala'];
 
@@ -31,6 +32,7 @@ export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, 
   const casoEntrada = entrada ? obterCasoPlantao(entrada.casoId) : null;
   const [vista, setVista] = useState(() => entrada && !entrada.relatorio.encerrado ? 'plantao' : 'hub');
   const [admissao, setAdmissao] = useState(null);
+  const [lista, setLista] = useState(null);
   const [subiu, setSubiu] = useState(null);
   const [escolhasLocais, setEscolhasLocais] = useState(null);
   const [sync, setSync] = useState('idle');
@@ -63,10 +65,10 @@ export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, 
   };
 
   // Admissão: a abertura do caso (1 ticket) grava enquanto o monitor liga. Reenviar com o mesmo id não cobra de novo.
-  const admitir = async (modo, entradaId = crypto.randomUUID()) => {
+  const admitir = async (modo, casoId, entradaId = crypto.randomUUID()) => {
     const m = MODOS.find(x => x.id === modo);
-    const dados = modo === 'plantao' ? { casoId: CASOS_PLANTAO[0].id } : modo === 'erroMedico' ? { auditoriaId: AUDITORIAS[0].id } : { relacaoId: RELACOES[0].id };
-    setAdmissao({ modo, entradaId, passo: 0, erro: '' });
+    const dados = modo === 'plantao' ? { casoId } : modo === 'erroMedico' ? { auditoriaId: casoId } : { relacaoId: casoId };
+    setAdmissao({ modo, casoId, entradaId, passo: 0, erro: '' });
     const masked = animar();
     const ts = masked ? [1, 2, 3, 4, 5].map(i => setTimeout(() => setAdmissao(a => a && a.entradaId === entradaId ? { ...a, passo: i } : a), i * 320)) : [];
     const inicio = performance.now();
@@ -102,7 +104,7 @@ export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, 
 
   if (admissao) {
     const m = MODOS.find(x => x.id === admissao.modo);
-    const caso = admissao.modo === 'plantao' ? CASOS_PLANTAO[0] : admissao.modo === 'erroMedico' ? obterAuditoria(AUDITORIAS[0].id).caso : obterRelacao(RELACOES[0].id).caso;
+    const caso = admissao.modo === 'plantao' ? obterCasoPlantao(admissao.casoId) : admissao.modo === 'erroMedico' ? obterAuditoria(admissao.casoId).caso : obterRelacao(admissao.casoId).caso;
     const v = lerVitais(caso.vitais);
     const valores = [['FC', v.fc, 'hr'], ['FR', v.fr, 'rr'], ['SpO₂', v.spo2 == null ? '--' : `${v.spo2}%`, 'sp'], ['PA', v.pa, ''], ['T °C', v.t == null ? '--' : v.t.toFixed(1).replace('.', ','), '']];
     const passo = animar() ? admissao.passo : 5;
@@ -116,7 +118,7 @@ export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, 
       {admissao.erro ? <div className="fb no" role="alert" style={{ display: 'grid', gap: 10, width: '100%', maxWidth: 540 }}>
         <span>{admissao.erro} Tentar de novo não cobra outro ticket.</span>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button className="primary violet" style={{ width: 'auto', padding: '10px 16px' }} onClick={() => admitir(admissao.modo, admissao.entradaId)}>Tentar de novo</button>
+          <button className="primary violet" style={{ width: 'auto', padding: '10px 16px' }} onClick={() => admitir(admissao.modo, admissao.casoId, admissao.entradaId)}>Tentar de novo</button>
           <button className="ghost" style={{ width: 'auto', padding: '10px 16px' }} onClick={() => setAdmissao(null)}>Voltar ao DDX</button>
         </div>
       </div> : <div className="boot-line">{PASSOS_ADMISSAO[Math.min(passo, 3)]}</div>}
@@ -124,55 +126,49 @@ export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, 
   }
 
   if (vista === 'hub' || !entrada) {
-    const caso = CASOS_PLANTAO[0];
-    const estados = {
-      plantao: { aberta: Boolean(entrada && !entrada.relatorio.encerrado), concluido: (ddx.concluidos || []).includes(`${caso.id}:${caso.versao}`), revisado: caso.revisado, regra: `Caminho completo: ${fmt(xpCaminhoCompleto(caso, executarPlantao))} XP` },
-      erroMedico: (() => { const a = obterAuditoria(AUDITORIAS[0].id), e = dadosUsuario?.erroMedico; return { aberta: Boolean(e?.entrada && !e.entrada.relatorio), concluido: (e?.concluidos || []).includes(`${a.id}:${a.versao}`), revisado: a.caso.revisado, regra: `${a.perguntas.length} etapas · até ${a.perguntas.length * 25} XP` }; })(),
-      causaEfeito: (() => { const r = obterRelacao(RELACOES[0].id), e = dadosUsuario?.causaEfeito; return { aberta: Boolean(e?.entrada && !e.entrada.relatorio), concluido: (e?.concluidos || []).includes(`${r.id}:${r.versao}`), revisado: r.caso.revisado, regra: `${r.perguntas.length} etapas · até ${r.perguntas.length * 25} XP` }; })(),
+    const catalogo = {
+      plantao: CASOS_PLANTAO.map(c => ({ id: c.id, titulo: c.titulo, tema: c.sistema, revisado: Boolean(c.revisado), concluido: (ddx.concluidos || []).includes(`${c.id}:${c.versao}`) })),
+      erroMedico: AUDITORIAS.map(a => ({ id: a.id, titulo: a.titulo, tema: a.tema, revisado: Boolean(a.revisado), concluido: (dadosUsuario?.erroMedico?.concluidos || []).includes(`${a.id}:${a.versao}`) })),
+      causaEfeito: RELACOES.map(r => ({ id: r.id, titulo: r.titulo, tema: r.tema, revisado: Boolean(r.revisado), concluido: (dadosUsuario?.causaEfeito?.concluidos || []).includes(`${r.id}:${r.versao}`) })),
     };
-    const abrir = modo => {
-      if (estados[modo].aberta) { if (modo === 'plantao') setVista('plantao'); else setTelaAtual(modo); }
-      else admitir(modo);
+    const abertaDe = { plantao: entrada && !entrada.relatorio.encerrado ? entrada.casoId : null, erroMedico: dadosUsuario?.erroMedico?.entrada && !dadosUsuario.erroMedico.entrada.relatorio ? dadosUsuario.erroMedico.entrada.auditoriaId : null,
+      causaEfeito: dadosUsuario?.causaEfeito?.entrada && !dadosUsuario.causaEfeito.entrada.relatorio ? dadosUsuario.causaEfeito.entrada.relacaoId : null };
+    const abrirCaso = (modo, id) => {
+      if (abertaDe[modo] === id) { if (modo === 'plantao') setVista('plantao'); else setTelaAtual(modo); }
+      else admitir(modo, id);
     };
+    if (lista) return raiz(<div className="cbt-scr">
+      <div className="topbar"><button className="icon-btn" onClick={() => setLista(null)} aria-label="Voltar aos modos"><ChevronLeft /></button>
+        <h1><small>DDX · {MODOS.find(m => m.id === lista).nome}</small>Escolha um caso</h1><span className="chip"><Ticket /><span>{fmt(tickets)}</span></span></div>
+      <div className="scroll"><ListaCasos itens={catalogo[lista]} abertaId={abertaDe[lista]} admin={admin} tickets={tickets} aoEscolher={id => abrirCaso(lista, id)} /></div>
+    </div>);
     return raiz(<div className="cbt-scr">
       <div className="topbar"><button className="icon-btn" onClick={() => setTelaAtual('menu')} aria-label="Voltar"><ChevronLeft /></button>
-        <h1><small>DDX · {caso.sistema}</small>Casos clínicos</h1><span className="chip"><Ticket /><span>{fmt(tickets)}</span></span></div>
+        <h1><small>DDX · Casos clínicos</small>Três modos, um raciocínio</h1><span className="chip"><Ticket /><span>{fmt(tickets)}</span></span></div>
       <div className="scroll hub-grid">
-        <div className="hub-left">
-          <div className="monitor rise" style={{ '--i': 0 }}>
-            <div className="mon-head"><div><b>{caso.paciente}</b><small>“{caso.queixa}”</small></div><span className="state">{caso.revisado ? 'LIBERADO' : 'EM REVISÃO CLÍNICA'}</span></div>
-            <Vitais v={lerVitais(caso.vitais)} />
-          </div>
-          <p className="note">Mesma paciente nos três modos.{caso.revisado ? '' : ' Só o administrador joga até a revisão clínica.'}</p>
-        </div>
-        <div className="hub-right">
+        <div className="hub-right" style={{ gridColumn: '1 / -1' }}>
           {MODOS.map((m, i) => {
-            const st = estados[m.id];
-            const bloqueado = !st.revisado && !admin;
+            const itens = catalogo[m.id];
+            const liberados = itens.filter(c => c.revisado).length;
+            const concluidos = itens.filter(c => c.concluido).length;
+            const disponiveis = admin ? itens.length : liberados;
             const { Icone } = m;
-            return <div key={m.id} className="card rise" style={{ '--i': i + 1, display: 'grid', gap: 10 }}>
+            return <div key={m.id} className="card rise" style={{ '--i': i, display: 'grid', gap: 10 }}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                 <span style={{ width: 40, height: 40, borderRadius: 12, display: 'grid', placeItems: 'center', background: 'rgba(139,92,246,.14)', color: '#b49cff', flex: 'none' }}><Icone size={20} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}><b style={{ fontSize: 15 }}>{m.nome}</b><div style={{ color: 'var(--muted)', fontSize: 12.5 }}>{m.desc}</div></div>
               </div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}><span className="chip violet" style={{ fontSize: 11, padding: '4px 8px' }}>{st.regra}</span>{st.concluido && <span className="chip" style={{ fontSize: 11, padding: '4px 8px' }}>Concluído · repetir não dá XP</span>}{st.aberta && <span className="chip mint" style={{ fontSize: 11, padding: '4px 8px' }}>Em andamento</span>}</div>
-              <button className="primary violet" disabled={bloqueado || (!st.aberta && tickets < 1)} onClick={() => abrir(m.id)}>
-                {bloqueado ? <><Lock size={16} /> Em revisão clínica</> : st.aberta ? 'Retomar' : tickets < 1 ? 'Sem tickets. Jogue cruzadinhas' : <><Ticket size={17} /> Iniciar · 1 ticket</>}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <span className="chip violet" style={{ fontSize: 11, padding: '4px 8px' }}>{disponiveis} {disponiveis === 1 ? 'caso' : 'casos'}</span>
+                {concluidos > 0 && <span className="chip" style={{ fontSize: 11, padding: '4px 8px' }}>{concluidos} concluído{concluidos === 1 ? '' : 's'}</span>}
+                {abertaDe[m.id] && <span className="chip mint" style={{ fontSize: 11, padding: '4px 8px' }}>Em andamento</span>}
+                {admin && liberados < itens.length && <span className="chip" style={{ fontSize: 11, padding: '4px 8px' }}>{itens.length - liberados} em revisão (só admin)</span>}
+              </div>
+              <button className="primary violet" disabled={disponiveis === 0} onClick={() => abertaDe[m.id] ? abrirCaso(m.id, abertaDe[m.id]) : setLista(m.id)}>
+                {disponiveis === 0 ? <><Lock size={16} /> Em revisão clínica</> : abertaDe[m.id] ? 'Retomar' : 'Escolher caso'}
               </button>
             </div>;
           })}
-          {admin && <>
-            <button className="card secret rise" style={{ '--i': 4 }} onClick={() => setTelaAtual('batalha')}>
-              <span className="secret-ico"><Swords size={18} /></span>
-              <span><span className="kicker" style={{ color: '#ff8fab' }}>Piloto do administrador</span><b>Batalha diagnóstica</b><small>Enfrente a doença em um duelo por turnos.</small></span>
-              <span className="secret-go">Entrar</span>
-            </button>
-            <button className="card secret rise" style={{ '--i': 5, borderColor: 'rgba(139,92,246,.4)', background: 'linear-gradient(120deg, rgba(139,92,246,.1), var(--surface) 60%)' }} onClick={() => setTelaAtual('pacienteDdx')}>
-              <span className="secret-ico" style={{ background: 'rgba(139,92,246,.16)', color: '#b49cff' }}><Stethoscope size={18} /></span>
-              <span><span className="kicker" style={{ color: '#b49cff' }}>Em teste</span><b>Paciente DDX</b><small>17 casos em consulta: pergunte, peça exames, feche o diagnóstico e escolha a conduta.</small></span>
-              <span className="secret-go">Abrir</span>
-            </button>
-          </>}
         </div>
       </div>
     </div>);

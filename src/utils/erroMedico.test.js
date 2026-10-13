@@ -1,36 +1,36 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { obterAuditoria, avaliarAuditoria } from './erroMedico.js';
-import { CASOS_PLANTAO } from './plantao.js';
+import { AUDITORIAS, CATEGORIAS_FALHA, obterAuditoria, avaliarAuditoria } from './erroMedico.js';
 
-test('auditoria compartilha paciente e bloqueio de revisão com o Plantão', () => {
-  const analise = obterAuditoria('resp-asma-auditoria-1');
-  assert.equal(analise.caso.id, 'resp-asma-1');
+test('auditoria é independente, tem três etapas e fica bloqueada até a revisão própria', () => {
+  const analise = obterAuditoria('aud-asma-alta-1');
   assert.equal(analise.caso.revisado, false);
+  assert.deepEqual(analise.perguntas.map(p => p.id), ['linha', 'categoria', 'correcao']);
+  assert.equal(analise.perguntas[0].alternativas.length, analise.registros.length);
+  assert.equal(analise.perguntas[1].alternativas.length, CATEGORIAS_FALHA.length);
   assert.throws(() => obterAuditoria('inexistente'), /não encontrada/);
 });
 
-test('análise exige todas as respostas e rejeita alternativas fora do caso', () => {
-  const analise = obterAuditoria('resp-asma-auditoria-1');
-  assert.throws(() => avaliarAuditoria(analise, ['alta']), /todas as etapas/);
-  assert.throws(() => avaliarAuditoria(analise, ['inventada', 'resposta', 'reavaliar', 'criterios']), /inválida/);
+test('análise exige todas as etapas e rejeita alternativas de fora', () => {
+  const analise = obterAuditoria('aud-asma-alta-1');
+  assert.throws(() => avaliarAuditoria(analise, ['l6']), /todas as etapas/);
+  assert.throws(() => avaliarAuditoria(analise, ['l9', 'omissao', 'k1']), /inválida/);
 });
 
-test('aprovar o Plantão sozinho não libera a variante de auditoria não revisada', () => {
-  const caso = CASOS_PLANTAO.find(item => item.id === 'resp-asma-1');
-  const revisadoAnterior = caso.revisado;
-  try {
-    caso.revisado = true;
-    assert.equal(obterAuditoria('resp-asma-auditoria-1').caso.revisado, false);
-  } finally { caso.revisado = revisadoAnterior; }
+test('relatório marca a linha, a categoria e a correção', () => {
+  const analise = obterAuditoria('aud-asma-alta-1');
+  assert.equal(avaliarAuditoria(analise, ['l6', 'omissao', 'k1']).acertos, 3);
+  const parcial = avaliarAuditoria(analise, ['l4', 'atraso', 'k1']);
+  assert.deepEqual(parcial.etapas.map(e => e.acertou), [false, false, true]);
 });
 
-test('relatório diferencia evidência documentada de desfecho presumido', () => {
-  const analise = obterAuditoria('resp-asma-auditoria-1');
-  const completo = avaliarAuditoria(analise, ['alta', 'resposta', 'reavaliar', 'criterios']);
-  assert.equal(completo.acertos, 4);
-  const presumido = avaliarAuditoria(analise, ['alta', 'desfecho', 'reavaliar', 'certeza']);
-  assert.equal(presumido.acertos, 2);
-  assert.equal(presumido.etapas[1].acertou, false);
-  assert.match(presumido.etapas[1].explicacao, /presumir/);
+test('todo o banco: falha em linha existente, categoria válida, correção existente e ids únicos', () => {
+  assert.equal(new Set(AUDITORIAS.map(a => a.id)).size, AUDITORIAS.length);
+  for (const a of AUDITORIAS) {
+    assert.ok(a.falha.linha >= 1 && a.falha.linha <= a.registros.length, a.id);
+    assert.ok(CATEGORIAS_FALHA.some(c => c.id === a.falha.categoria), a.id);
+    assert.ok(a.correcoes.some(c => c.id === a.falha.correcao), a.id);
+    assert.ok(a.correcoes.length >= 3 && a.correcoes.length <= 4, a.id);
+    assert.match(a.fonte, /^https:\/\//);
+  }
 });

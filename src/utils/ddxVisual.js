@@ -25,14 +25,13 @@ export const registrosComHora = registros => registros.map(r => {
   return m ? [m[1], m[2]] : ['', String(r)];
 });
 
-const NOMES = { falha: 'Falha', evidencia: 'Evidência', correcao: 'Correção', justificativa: 'Justificativa',
+const NOMES = { linha: 'Linha', categoria: 'Categoria', falha: 'Falha', evidencia: 'Evidência', correcao: 'Correção', justificativa: 'Justificativa',
   mecanismo: 'Mecanismo', consequencia: 'Consequência', compensacao: 'Compensação', intervencao: 'Intervenção' };
 export const nomeEtapa = id => NOMES[id] || String(id).replace(/^./, l => l.toUpperCase());
 
 // Rótulos curtos da cadeia causal do Causa e efeito (o primeiro é o estímulo; os demais, uma etapa cada).
 // Só exibição: resumem as perguntas da relação, sem gabarito.
-const CADEIAS = { 'resp-asma-relacoes-1': ['Poeira', 'Broncoespasmo', 'Resistência ↑', 'Esforço ↑', 'Beta-2'] };
-export const cadeiaDe = relacao => CADEIAS[relacao.id] || ['Estímulo', ...relacao.perguntas.map(p => nomeEtapa(p.id))];
+export const cadeiaDe = relacao => [relacao.estimulo || 'Estímulo', ...relacao.perguntas.map(p => nomeEtapa(p.id))];
 
 // XP do caminho completo do Plantão, mostrado no hub: todas as ações que somam pontos, na ordem
 // que os pré-requisitos permitem, e o encerramento adequado. Usa o mesmo motor do servidor.
