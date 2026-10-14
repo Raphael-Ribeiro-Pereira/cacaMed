@@ -83,6 +83,8 @@ export function validarPlantao(data) {
     const c = Array.isArray(bruto?.acoes) ? completarDestinos(bruto) : bruto;
     const label = `casos[${i}] (${c?.id})`;
     stringFields(c, ['id', 'sistema', 'titulo', 'paciente', 'queixa', 'fonte', 'vitais', 'hipoteseCorreta', 'destinoAdequado', 'estadoInicial'], label, errors);
+    // S-15 de docs/seguranca.md: a fonte vira link na tela; só https (nada de javascript:, data: ou http:).
+    if (/^[a-z][a-z0-9+.-]*:/i.test(c.fonte || '') && !/^https:\/\/\S+$/.test(c.fonte)) errors.push(`${label}: link da fonte precisa ser https.`);
     if (!idValido(c.id) || existentes.has(c.id)) errors.push(`${label}: ID inválido ou já existente.`);
     if (c.versao !== 1 || c.revisado !== false) errors.push(`${label}: versao deve ser 1 e revisado false.`);
     const v = lerVitais(c.vitais);
@@ -148,6 +150,7 @@ export function validarErroMedico(data) {
   for (const [i, a] of data.auditorias.entries()) {
     const label = `auditorias[${i}] (${a?.id})`;
     stringFields(a, ['id', 'tema', 'titulo', 'paciente', 'cenario', 'contexto', 'fonte'], label, errors);
+    if (/^[a-z][a-z0-9+.-]*:/i.test(a.fonte || '') && !/^https:\/\/\S+$/.test(a.fonte)) errors.push(`${label}: link da fonte precisa ser https.`);
     if (!idValido(a.id) || existentes.has(a.id)) errors.push(`${label}: ID inválido ou já existente.`);
     if (titulos.has(normalizar(a.titulo))) errors.push(`${label}: título já existe.`);
     titulos.add(normalizar(a.titulo));
@@ -183,6 +186,7 @@ export function validarCausaEfeito(data) {
   for (const [i, r] of data.relacoes.entries()) {
     const label = `relacoes[${i}] (${r?.id})`;
     stringFields(r, ['id', 'tema', 'titulo', 'paciente', 'cenario', 'vitais', 'estimulo', 'contexto', 'fonte'], label, errors);
+    if (/^[a-z][a-z0-9+.-]*:/i.test(r.fonte || '') && !/^https:\/\/\S+$/.test(r.fonte)) errors.push(`${label}: link da fonte precisa ser https.`);
     if (!idValido(r.id) || existentes.has(r.id)) errors.push(`${label}: ID inválido ou já existente.`);
     if (titulos.has(normalizar(r.titulo))) errors.push(`${label}: título já existe.`);
     titulos.add(normalizar(r.titulo));

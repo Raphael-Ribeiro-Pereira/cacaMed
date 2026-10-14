@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validarFrases, validarCasos } from '../../scripts/validar-conteudo.mjs';
+import { readFileSync } from 'node:fs';
+import { validarFrases, validarCasos, validarErroMedico } from '../../scripts/validar-conteudo.mjs';
 
 const frase = (verdadeira, texto) => ({ id: `frase-pressao-pulso-${verdadeira ? 'v' : 'f'}`, conceito: 'pressao-pulso', versao: 1,
   tema: 'Fisiologia', texto, verdadeira, explicacao: 'A diferença entre as pressões define a pressão de pulso.', fonte: null });
@@ -55,4 +56,13 @@ test('conferência de fontes acha o trecho literal, recusa trecho inventado e do
   assert.ok(!dominioPermitido('https://pmc.ncbi.nlm.nih.gov/articles/PMC1/'));
   assert.match(validarListaFontes({ fontes: [{ conceito: 'x', url: 'https://openstax.org/a', titulo: 't', orgao: 'o', trecho: 'algo' }] }).join(' '), /domínio fora/);
   assert.match(validarListaFontes({ fontes: [{ conceito: 'x', area: 'Fisiologia renal', url: 'https://www.cdc.gov/a', titulo: 't', orgao: 'o', trecho: 'algo' }] }).join(' '), /área/);
+});
+
+test('S-15: fonte com link precisa ser https; texto sem link continua aceito', () => {
+  const lote = JSON.parse(readFileSync(new URL('../../content/inbox/erro-lote-001.json', import.meta.url), 'utf8'));
+  const erros = fonte => validarErroMedico({ auditorias: [{ ...lote.auditorias[0], fonte }], pontos_revisor: [] }).errors.filter(e => /link da fonte/.test(e));
+  assert.deepEqual(erros('https://bvsms.saude.gov.br/x.pdf'), []);
+  assert.deepEqual(erros('Biblioteca do caso (ver referências no relatório)'), []);
+  assert.equal(erros('javascript:alert(1)').length, 1);
+  assert.equal(erros('http://exemplo.gov.br').length, 1);
 });

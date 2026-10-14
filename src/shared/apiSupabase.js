@@ -36,6 +36,8 @@ async function usernameEmUso(database, username, uid) {
 
 // Cadastro (S-09 de docs/seguranca.md): o nome vem do Auth, que o próprio jogador pode editar; sem controles,
 // no máximo 80 caracteres e sem começar por =, +, - ou @ (fórmula de planilha).
+const erroDePrograma = erro => [TypeError, ReferenceError, RangeError, SyntaxError].some(tipo => erro instanceof tipo);
+
 export const limparNome = texto => String(texto || '').replace(/\p{Cc}/gu, '').replace(/\s+/g, ' ').trim()
   .replace(/^[=+\-@]+/, '').trim().slice(0, 80);
 // Apps antigos pedem o primeiro nome do Google como username: vira um username válido pela regra do crachá.
@@ -172,7 +174,11 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         try {
           alteracao = executarPedidoSupabase(row.profile, pedido, { recibos: recibo.length ? [id] : [],
             tentativas: historico.filter(r => r.kind === 'resposta').map(r => r.data), revisoes: historico.filter(r => r.kind === 'revisao').map(r => r.data) });
-        } catch (erro) { return answer({ erro: erro.message }, 400); }
+        } catch (erro) {
+          // S-12: erro de programa (TypeError e afins) não vai para o cliente; o detalhe fica só no log.
+          if (erroDePrograma(erro)) { log({ acao, erroInterno: String(erro.stack || erro).slice(0, 500) }); return answer({ erro: 'Pedido inválido.' }, 400); }
+          return answer({ erro: erro.message }, 400);
+        }
         if (alteracao.perfil === row.profile) return answer({ resultado: row.profile });
         try {
           await database('rpc/cacamed_commit', { method: 'POST', body: JSON.stringify({ p_player_id: user.uid, p_expected_version: row.version,

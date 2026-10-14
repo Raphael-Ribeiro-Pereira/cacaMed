@@ -203,7 +203,7 @@ export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, 
         {caso.alerta && <div className="det"><b>Alerta: {caso.alerta.nome}</b><p>{caso.alerta.quando}. {caso.alerta.resposta}.</p><p style={{ color: 'var(--muted)' }}>{caso.alerta.porque}</p></div>}
         {caso.notificar && <div className="det"><b>Notificação</b><p>{caso.notificar}</p></div>}
         {caso.referencias?.length > 0 && <div className="det"><b>Referências</b>{caso.referencias.map((f, k) => <p key={k}>• {f.fonte}, p. {f.pag}: {f.sobre}</p>)}</div>}
-        {/^https?:/.test(caso.fonte || '') && <a className="det" href={caso.fonte} target="_blank" rel="noreferrer" style={{ color: 'var(--mint)', display: 'flex', gap: 6, alignItems: 'center' }}>Fonte do caso <ExternalLink size={13} /></a>}
+        {/^https:\/\//.test(caso.fonte || '') && <a className="det" href={caso.fonte} target="_blank" rel="noreferrer" style={{ color: 'var(--mint)', display: 'flex', gap: 6, alignItems: 'center' }}>Fonte do caso <ExternalLink size={13} /></a>}
       </>} />);
   }
 

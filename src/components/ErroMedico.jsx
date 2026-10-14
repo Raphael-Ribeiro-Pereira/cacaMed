@@ -64,7 +64,7 @@ export default function ErroMedico({ usuario, dadosUsuario, setDadosUsuario, set
           {!e.acertou && <p>Esperada: {e.correta}</p>}
           <p style={{ color: 'var(--muted)' }}>{e.explicacao}</p>
         </div>)}
-        {auditoria.fonte && <a className="det" href={auditoria.fonte} target="_blank" rel="noreferrer" style={{ color: 'var(--mint)', display: 'flex', gap: 6, alignItems: 'center' }}>Fonte do caso <ExternalLink size={13} /></a>}
+        {/^https:\/\//.test(auditoria.fonte || '') && <a className="det" href={auditoria.fonte} target="_blank" rel="noreferrer" style={{ color: 'var(--mint)', display: 'flex', gap: 6, alignItems: 'center' }}>Fonte do caso <ExternalLink size={13} /></a>}
       </>} />);
   }
 

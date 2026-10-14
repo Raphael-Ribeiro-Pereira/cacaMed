@@ -68,7 +68,7 @@ export default function CausaEfeito({ usuario, dadosUsuario, setDadosUsuario, se
           {!e.acertou && <><p>Sua carta: {e.escolha}</p><p>Carta certa: {e.correta}</p></>}
           <p style={{ color: 'var(--muted)' }}>{e.explicacao}</p>
         </div>)}
-        {relacao.fonte && <a className="det" href={relacao.fonte} target="_blank" rel="noreferrer" style={{ color: 'var(--mint)', display: 'flex', gap: 6, alignItems: 'center' }}>Fonte do caso <ExternalLink size={13} /></a>}
+        {/^https:\/\//.test(relacao.fonte || '') && <a className="det" href={relacao.fonte} target="_blank" rel="noreferrer" style={{ color: 'var(--mint)', display: 'flex', gap: 6, alignItems: 'center' }}>Fonte do caso <ExternalLink size={13} /></a>}
       </>} />);
   }
 
