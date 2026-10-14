@@ -34,6 +34,16 @@ async function usernameEmUso(database, username, uid) {
   return rows.some(r => r.player_id !== uid && !String(r.player_id).startsWith('homologacao:'));
 }
 
+// Cadastro (S-09 de docs/seguranca.md): o nome vem do Auth, que o próprio jogador pode editar; sem controles,
+// no máximo 80 caracteres e sem começar por =, +, - ou @ (fórmula de planilha).
+export const limparNome = texto => String(texto || '').replace(/\p{Cc}/gu, '').replace(/\s+/g, ' ').trim()
+  .replace(/^[=+\-@]+/, '').trim().slice(0, 80);
+// Apps antigos pedem o primeiro nome do Google como username: vira um username válido pela regra do crachá.
+export const usernameDoNome = nome => {
+  const base = String(nome || '').split(/\s+/)[0].normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9._]/g, '').slice(0, 20);
+  return usernameValido(base) ? base : 'plantonista';
+};
+
 export function criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras, log = () => {},
   limitador = criarLimitador(), limites = LIMITES_API }) {
   return async req => {
@@ -121,10 +131,15 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         if (!row) {
           if (acao === 'obterPerfil') return answer({ resultado: null });
           if (acao !== 'cadastrar') return answer({ erro: 'Cadastro não concluído.' }, 409);
-          const username = pedido.usarNomeGoogle ? user.nome.split(/\s+/)[0].toLocaleLowerCase('pt-BR') : String(pedido.username || '').trim();
+          let username = pedido.usarNomeGoogle ? usernameDoNome(user.nome) : String(pedido.username || '').trim();
           if (!['Doutor', 'Doutora'].includes(pedido.titulo) || !['anatomia', 'neurologia', 'farmaco', 'micro', 'clinica', 'patologia'].includes(pedido.materiaPreferida) ||
-              username.length < 2 || username.length > 40 || /^[=+\-@]/.test(username)) return answer({ erro: 'Cadastro inválido.' }, 400);
-          const perfil = { uid: user.uid, email: user.email, nome: user.nome || user.email.split('@')[0] || 'Plantonista', username, titulo: pedido.titulo, role: 'jogador',
+              !usernameValido(username)) return answer({ erro: 'Cadastro inválido.' }, 400);
+          if (await usernameEmUso(database, username, user.uid)) {
+            if (!pedido.usarNomeGoogle) return answer({ erro: 'Este username já está em uso por outro plantonista.' }, 409);
+            username = `${username.slice(0, 16)}${Math.floor(Math.random() * 9000) + 1000}`;
+          }
+          const nome = limparNome(user.nome) || limparNome(String(user.email || '').split('@')[0]) || 'Plantonista';
+          const perfil = { uid: user.uid, email: user.email, nome, username, titulo: pedido.titulo, role: 'jogador',
             materiaPreferida: pedido.materiaPreferida, especialidade: pedido.materiaPreferida,
             pontuacaoTotal: 0, tickets: 0, xpTopicos: {}, estatisticas: {}, estatisticasGerais: {},
             economia: { versao: 2, ultimoNivelPremiado: 1 }, missoesDiarias: criarMissoesDiarias(),

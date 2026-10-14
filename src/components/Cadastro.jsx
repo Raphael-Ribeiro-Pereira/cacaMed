@@ -8,6 +8,7 @@ import { criarMissoesDiarias, dataLocalHoje } from '../utils/missoes';
 import { useLargo } from '../utils/prototipo';
 import { CascaEntrada, Campo, Erro, Escolhas, GoogleG, Impressao, LadoCracha, MiniCracha, Ok, Olho } from './entradaUi';
 import '../prototipo.css';
+import { SENHA_MINIMA } from '../utils/senha';
 
 // Cadastro por e-mail portado do protótipo de movimento. Depois de criar a credencial, o crachá
 // sai da impressora enquanto o servidor grava o perfil; se falhar, o formulário continua preenchido.
@@ -39,7 +40,7 @@ export default function Cadastro({ setTelaAtual, onConcluido, aoCriarConta = () 
   const [desde] = useState(() => desdeDe(new Date()));
   const [google, setGoogle] = useState(false);
 
-  const ok = { nome: nome.trim().length >= 3, email: emailOk(email), senha: senha.length >= 6, conf: conf.length > 0 && conf === senha };
+  const ok = { nome: nome.trim().length >= 3, email: emailOk(email), senha: senha.length >= SENHA_MINIMA, conf: conf.length > 0 && conf === senha };
   const sugerido = sugestoes(nome)[0] ?? '';
   const pronto = ok.nome && ok.email && ok.senha && ok.conf && !!titulo && !!materia;
   const fotoAtual = foto ?? fotoPadrao(titulo);
@@ -169,7 +170,7 @@ export default function Cadastro({ setTelaAtual, onConcluido, aoCriarConta = () 
           {ok.email && <span className="okdot"><Check size={11} strokeWidth={3} /></span>}
         </Campo>
         <div className="au-two">
-          <Campo id="cd-senha" label="Senha" icon={Lock} estado={est('senha', senha)} ajuda={<Ok on={ok.senha}>6 caracteres ou mais</Ok>}>
+          <Campo id="cd-senha" label="Senha" icon={Lock} estado={est('senha', senha)} ajuda={<Ok on={ok.senha}>{SENHA_MINIMA} caracteres ou mais</Ok>}>
             <input id="cd-senha" type={ver ? 'text' : 'password'} autoComplete="new-password" value={senha} onChange={e => setSenha(e.target.value)} />
             <Olho ver={ver} set={setVer} />
           </Campo>

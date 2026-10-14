@@ -147,7 +147,7 @@ export default function Login({ setTelaAtual, conta = contaPadrao }) {
           <input id="lg-mail" type="email" inputMode="email" autoComplete="username" spellCheck={false} placeholder="doutor@cacomed.com" value={email} onChange={e => setEmail(e.target.value)} />
         </Campo>
         <Campo id="lg-senha" label="Senha de acesso" icon={Lock}>
-          <input id="lg-senha" type={ver ? 'text' : 'password'} autoComplete="current-password" placeholder="Mín. 6 caracteres" value={senha} onChange={e => setSenha(e.target.value)} />
+          <input id="lg-senha" type={ver ? 'text' : 'password'} autoComplete="current-password" placeholder="Sua senha" value={senha} onChange={e => setSenha(e.target.value)} />
           <Olho ver={ver} set={setVer} />
         </Campo>
         <button type="button" className="au-forgot" onClick={() => { setAberturas(a => a + 1); setEsqueci(true); }}>Esqueceu a senha?</button>

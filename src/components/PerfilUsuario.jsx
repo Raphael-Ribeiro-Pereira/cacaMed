@@ -13,6 +13,7 @@ import { Retrato } from './batalhaArte';
 import { CrachaFrente, QR, StatusUser } from './crachaUi';
 import { FlameIcon, MiniEcg, Tabbar } from './prototipoUi';
 import '../prototipo.css';
+import { SENHA_MINIMA } from '../utils/senha';
 
 // Crachá do plantonista, portado do protótipo de movimento: frente e verso, prévia ao vivo,
 // username conferido no servidor e salvamento otimista que volta atrás se a gravação falhar.
@@ -101,7 +102,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   const solta = () => { card.current?.style.setProperty('--rx', '0deg'); card.current?.style.setProperty('--ry', '0deg'); };
 
   const trocarSenha = async () => {
-    if ((possuiSenha && !senhaAtual) || senhaNova.length < 6 || salvandoSenha) return;
+    if ((possuiSenha && !senhaAtual) || senhaNova.length < SENHA_MINIMA || salvandoSenha) return;
     if (!possuiSenha && senhaNova !== senhaConfirma) { setSenhaErro('As senhas não coincidem.'); return; }
     if (possuiSenha && senhaAtual === senhaNova) { setSenhaErro('A nova senha precisa ser diferente da atual.'); return; }
     setSenhaErro('');
@@ -222,12 +223,12 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
           {sheet === 'senha' ? <>
             <span className="cr-key"><KeyRound size={20} /></span>
             <h3 id="pf-sheet-t">{possuiSenha ? 'Alterar senha de acesso' : 'Criar senha de acesso'}</h3>
-            <p>{possuiSenha ? 'Confirme a senha atual e defina uma nova, com pelo menos 6 caracteres.' : 'Depois você poderá entrar também com e-mail e senha.'}</p>
+            <p>{possuiSenha ? `Confirme a senha atual e defina uma nova, com pelo menos ${SENHA_MINIMA} caracteres.` : 'Depois você poderá entrar também com e-mail e senha.'}</p>
             {possuiSenha && <label className="cr-f" htmlFor="pf-senha-atual"><span className="cr-l">Senha atual</span><span className="cr-in"><input id="pf-senha-atual" type="password" autoComplete="current-password" autoFocus value={senhaAtual} onChange={e => setSenhaAtual(e.target.value)} /></span></label>}
-            <label className="cr-f" htmlFor="pf-senha-nova"><span className="cr-l">{possuiSenha ? 'Nova senha' : 'Senha'}</span><span className={`cr-in ${senhaNova.length >= 6 ? 'good' : ''}`}><input id="pf-senha-nova" type="password" autoComplete="new-password" autoFocus={!possuiSenha} placeholder="Mínimo de 6 caracteres" value={senhaNova} onChange={e => setSenhaNova(e.target.value)} />{senhaNova.length >= 6 && <span className="okdot"><Check size={11} strokeWidth={3} /></span>}</span></label>
+            <label className="cr-f" htmlFor="pf-senha-nova"><span className="cr-l">{possuiSenha ? 'Nova senha' : 'Senha'}</span><span className={`cr-in ${senhaNova.length >= SENHA_MINIMA ? 'good' : ''}`}><input id="pf-senha-nova" type="password" autoComplete="new-password" autoFocus={!possuiSenha} placeholder={`Mínimo de ${SENHA_MINIMA} caracteres`} value={senhaNova} onChange={e => setSenhaNova(e.target.value)} />{senhaNova.length >= SENHA_MINIMA && <span className="okdot"><Check size={11} strokeWidth={3} /></span>}</span></label>
             {!possuiSenha && <label className="cr-f" htmlFor="pf-senha-conf"><span className="cr-l">Confirmar senha</span><span className="cr-in"><input id="pf-senha-conf" type="password" autoComplete="new-password" value={senhaConfirma} onChange={e => setSenhaConfirma(e.target.value)} /></span></label>}
             {senhaErro && <p className="cr-err" role="alert">{senhaErro}</p>}
-            <button className="primary" disabled={(possuiSenha && senhaAtual.length < 4) || senhaNova.length < 6 || (!possuiSenha && senhaNova !== senhaConfirma) || salvandoSenha} onClick={trocarSenha}>
+            <button className="primary" disabled={(possuiSenha && senhaAtual.length < 4) || senhaNova.length < SENHA_MINIMA || (!possuiSenha && senhaNova !== senhaConfirma) || salvandoSenha} onClick={trocarSenha}>
               {salvandoSenha ? <><MiniEcg />Gravando senha</> : <><Save size={17} />{possuiSenha ? 'Confirmar alteração' : 'Criar senha'}</>}
             </button>
             <button className="ghost" disabled={salvandoSenha} onClick={() => setSheet(null)}>Cancelar</button>

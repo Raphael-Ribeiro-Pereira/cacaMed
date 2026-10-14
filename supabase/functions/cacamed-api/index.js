@@ -158,13 +158,17 @@ const migratePassword = criarMigracaoSenha({
 // com "Entre novamente na conta" (incidente de 07/10/2026).
 async function definePassword(user, pedido, token) {
   if (user.source !== 'supabase' || !user.authId || !token) throw Object.assign(new Error('Entre novamente para atualizar a senha.'), { status: 401 });
-  if (typeof pedido.senha !== 'string' || pedido.senha.length < 6 || pedido.senha.length > 4096) throw Object.assign(new Error('Senha inválida.'), { status: 400 });
+  // Senha nova com 8 caracteres ou mais (S-07 de docs/seguranca.md; src/utils/senha.js no app).
+  if (typeof pedido.senha !== 'string' || pedido.senha.length < 8 || pedido.senha.length > 4096) throw Object.assign(new Error('Use uma senha com pelo menos 8 caracteres.'), { status: 400 });
+  // Só a chave pública: a service_role nunca vai num pedido feito em nome do jogador (falha fechado se faltar).
+  const anon = Deno.env.get('SUPABASE_ANON_KEY');
+  if (!anon) throw new Error('Configuração da API incompleta.');
   const response = await fetch(base + '/auth/v1/user', { method: 'PUT', signal: AbortSignal.timeout(10000),
-    headers: { apikey: Deno.env.get('SUPABASE_ANON_KEY') || secret, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    headers: { apikey: anon, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
     body: JSON.stringify({ password: pedido.senha }) });
   if (!response.ok) {
     const { error_code: codigo } = await response.json().catch(() => ({}));
-    if (codigo === 'weak_password') throw Object.assign(new Error('Senha fraca. Use pelo menos 6 caracteres.'), { status: 400 });
+    if (codigo === 'weak_password') throw Object.assign(new Error('Senha fraca. Escolha outra, com pelo menos 8 caracteres.'), { status: 400 });
     if (codigo === 'reauthentication_needed') throw Object.assign(new Error('Entre novamente com o Google e tente outra vez.'), { status: 401 });
     // same_password: a senha pedida já é a atual, então o objetivo foi cumprido.
     if (codigo !== 'same_password') throw new Error('Não foi possível atualizar a senha.');

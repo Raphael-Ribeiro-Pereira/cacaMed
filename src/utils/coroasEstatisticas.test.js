@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { criarApiSupabase } from '../shared/apiSupabase.js';
+import { criarApiSupabase, limparNome, usernameDoNome } from '../shared/apiSupabase.js';
 import { executarPedidoSupabase } from '../shared/executarPedidoSupabase.js';
 import { BANCO_QUIZ } from './bancoTreinos.js';
 import { fimDaSemana, materiaDoTopico, montarCoroas, registrarXpSemanal, semanaCoroas } from './coroas.js';
@@ -110,7 +110,9 @@ function fixture() {
 test('crachá: username único sem diferenciar maiúsculas, regra nova só ao trocar e foto validada', async () => {
   const f = fixture();
   await f.call({ acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'clinica', username: 'ana' });
-  await f.call({ acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'micro', username: 'Bia_Med' }, 'bia');
+  await f.call({ acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'micro', username: 'bia_med' }, 'bia');
+  // Username de antes da regra do crachá (maiúsculas): o cadastro novo já não aceita, mas o antigo continua.
+  f.states.get('bia').profile.username = 'Bia_Med';
   assert.deepEqual((await f.call({ acao: 'verificarUsername', username: 'bia_med' })).resultado, { disponivel: false });
   assert.deepEqual((await f.call({ acao: 'verificarUsername', username: 'biaxmed' })).resultado, { disponivel: true }, '_ não vira curinga');
   assert.deepEqual((await f.call({ acao: 'verificarUsername', username: 'ana' })).resultado, { disponivel: true }, 'o próprio username continua disponível');
@@ -124,6 +126,21 @@ test('crachá: username único sem diferenciar maiúsculas, regra nova só ao tr
   assert.equal((await f.call({ acao: 'editarPerfil', nome: 'Ana Souza', username: 'ana.souza', foto: 9 })).status, 400);
   const antigo = await f.call({ acao: 'editarPerfil', nome: 'Bia Lima', username: 'Bia_Med' }, 'bia');
   assert.equal(antigo.status, 200, 'username antigo fora da regra nova continua válido se não mudar');
+});
+
+test('S-09: cadastro exige username válido e livre e limpa o nome vindo do Auth', async () => {
+  const f = fixture();
+  await f.call({ acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'clinica', username: 'ana' });
+  assert.equal((await f.call({ acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'micro', username: 'Bia Med' }, 'bia')).status, 400, 'espaço e maiúscula');
+  assert.equal((await f.call({ acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'micro', username: 'ANA' }, 'bia')).status, 400);
+  assert.equal((await f.call({ acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'micro', username: 'ana' }, 'bia')).status, 409, 'username de outro jogador');
+  const google = await f.call({ acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'micro', usarNomeGoogle: true }, 'bia');
+  assert.equal(google.status, 200);
+  assert.equal(google.resultado.username, 'bia', 'app antigo: primeiro nome vira username válido');
+  assert.equal(limparNome('  =Dra.\u0007 Ana   Lima  '), 'Dra. Ana Lima');
+  assert.equal(limparNome('x'.repeat(200)).length, 80);
+  assert.equal(usernameDoNome('José da Silva'), 'jose');
+  assert.equal(usernameDoNome('Ô'), 'plantonista');
 });
 
 test('painel: obterEstatisticas lê só o histórico do próprio jogador e não grava nada', async () => {

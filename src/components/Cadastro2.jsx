@@ -8,13 +8,14 @@ import { useLargo } from '../utils/prototipo';
 import { CascaEntrada, Campo, Erro, Escolhas, GoogleG, Impressao, LadoCracha, MiniCracha, Ok, Olho } from './entradaUi';
 import { StatusUser } from './crachaUi';
 import '../prototipo.css';
+import { SENHA_MINIMA } from '../utils/senha';
 
 // Cadastro 2.0 portado do protótipo de movimento: conta já autenticada (Google ou e-mail confirmado)
 // sem perfil. Username conferido no servidor, sugestões livres e o crachá impresso durante o cadastrar.
 const MENSAGENS = {
   'auth/email-already-in-use': 'Este e-mail já tem senha em outra conta. Entre pela conta antiga e vincule o Google por lá.',
   'auth/credential-already-in-use': 'Esta credencial já pertence a outra conta. Entre pela conta antiga para vincular o Google.',
-  'auth/weak-password': 'Escolha uma senha com pelo menos 6 caracteres.',
+  'auth/weak-password': `Escolha uma senha com pelo menos ${SENHA_MINIMA} caracteres.`,
 };
 
 // Quando o username está em uso, confere as sugestões do nome e mostra só as livres.
@@ -57,7 +58,7 @@ export default function Cadastro2({ usuario, onConcluido, conta = contaPadrao, s
   const u = usarPrimeiro ? primeiro : username;
   const check = useDisponibilidade(u, true, conferir);
   const livres = useSugestoesLivres(nomeConta, check === 'taken', u, conferir);
-  const senhaOk = senha.length >= 6, confOk = conf.length > 0 && conf === senha;
+  const senhaOk = senha.length >= SENHA_MINIMA, confOk = conf.length > 0 && conf === senha;
   const pronto = check === 'ok' && !!titulo && !!materia && (!precisaSenha || (senhaOk && confOk));
   const fotoAtual = foto ?? fotoPadrao(titulo);
   const cracha = { p: { uid: usuario.uid, titulo, materiaPreferida: materia, pontuacaoTotal: 0, estatisticas: {} },
@@ -123,7 +124,7 @@ export default function Cadastro2({ usuario, onConcluido, conta = contaPadrao, s
           <span className="au-pw-h"><KeyRound size={15} /><b>Crie uma senha</b></span>
           <p>Para também entrar pelo formulário de e-mail. Ela fica no serviço de autenticação, não no seu perfil.</p>
           <div className="au-two">
-            <Campo id="cg-senha" label="Senha" icon={Lock} estado={senhaOk ? 'good' : tentou ? 'bad' : ''} ajuda={<Ok on={senhaOk}>6 caracteres ou mais</Ok>}>
+            <Campo id="cg-senha" label="Senha" icon={Lock} estado={senhaOk ? 'good' : tentou ? 'bad' : ''} ajuda={<Ok on={senhaOk}>{SENHA_MINIMA} caracteres ou mais</Ok>}>
               <input id="cg-senha" type={ver ? 'text' : 'password'} autoComplete="new-password" value={senha} onChange={e => setSenha(e.target.value)} />
               <Olho ver={ver} set={setVer} />
             </Campo>
