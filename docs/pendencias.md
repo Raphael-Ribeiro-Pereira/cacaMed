@@ -103,6 +103,8 @@ Detalhe e caixas de seleção no [cronograma de 09/10](cronograma-recuperacao-ca
 
 ## 6. Arrumação técnica
 
+0. **Segurança (14/10/2026):** [[seguranca|auditoria completa]] com 16 achados e o plano por quinta. **Primeiro, do usuário:** revogar a chave do Google do histórico do GitHub (S-01). Depois, do agente: casos revisados para o pacote do cliente (bloqueia a liberação do DDX), cabeçalhos, limites e contenção da cruzadinha.
+
 1. **Dicas de IA da cruzadinha quebradas em produção:** a rota `/api/ia` só existe no servidor local (responde 404 no site). Mover a chamada à OpenRouter para a Edge Function, com a chave nos segredos do Supabase. A Revisão v2 usa a mesma rota.
 2. ~~Limpeza de CSS~~ **feita em 13/10/2026 na `main`**: um script achou as classes sem uso em `src/index.css` (410 → 160 linhas, quase tudo do visual antigo `stitch-*` e `treino-*`) e em `src/prototipo.css` (1.705 → 1.524 linhas). Sobraram só as classes `stitch-page`, `stitch-loading`, `stitch-primary`, `stitch-integrated` e `stitch-auth` (telas de carregamento, login Google e admin) e as variáveis `--stitch-*`. Conferido no build e nas telas da homologação; vale uma passada visual no celular antes de publicar.
 3. ~~Apagar `StitchBrand.jsx` e os estilos `stitch-header` e `stitch-brand`~~ **feito** em 13/10/2026.

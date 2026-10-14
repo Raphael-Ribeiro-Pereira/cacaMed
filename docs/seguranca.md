@@ -14,19 +14,26 @@ Auditoria de **14/10/2026**, pedida pelo usuário. Voltar ao [[Inicio|Início]] 
 
 ## Resumo
 
-| ID | Gravidade | Achado | Onde | Esforço |
+Dois auditores trabalharam **separados**: a equipe do projeto (achados marcados **E**) e um agente independente (**A**). Os que aparecem nos dois têm mais confiança. A comparação está no fim do documento.
+
+| ID | Gravidade | Achado | Quem achou | Esforço |
 | --- | --- | --- | --- | --- |
-| S-01 | **Crítica** | Chave de API do Google escrita no código, no histórico **público** do GitHub | `motorDDX.js` e `Jogo.jsx` (histórico) | Você + 30 min |
-| S-02 | **Alta** | Qualquer jogador cria XP e tickets à vontade pela cruzadinha | `operarJogosSupabase.js:9` | 1 dia |
-| S-03 | **Alta** | Nenhum limite de frequência em nenhuma rota da API | `apiSupabase.js` | 0,5 dia |
-| S-04 | **Alta** | Faltam cabeçalhos de segurança no site (CSP, anti-frame, nosniff) | `vercel.json` | 2 h |
-| S-05 | Média | Senha mínima de 6 caracteres e proteção contra senhas vazadas desligada | `index.js:152`, Auth do Supabase | 30 min + decisão |
-| S-06 | Média | Respostas e casos vão no pacote do navegador | `bancoTreinos.js`, `plantaoBanco.js` | Decisão de produto |
-| S-07 | Média | Apps Script antigo ainda público, com regras antigas | `perfilPlanilha.js:5`, `rankingPublico.js:5` | Decisão |
-| S-08 | Média | Duas identidades ao mesmo tempo (Firebase e Supabase) e regras do Firestore frouxas | `index.js:16`, `firestore.rules` | Decisão |
-| S-09 | Baixa | `idPublico` do ranking é um hash sem sal | `index.js:97` e `:109` | 30 min |
-| S-10 | Baixa | Link da fonte do caso sem checar `https` | `ErroMedico.jsx:67`, `CausaEfeito.jsx:71` | 30 min |
-| S-11 | Info | 16 vulnerabilidades em dependências (2 críticas) | `package.json` | A analisar |
+| S-01 | **Crítica** | Chave de API do Google escrita no código, no histórico **público** do GitHub | E | Você + 30 min |
+| S-02 | **Alta** | Qualquer jogador cria XP e tickets à vontade pela cruzadinha | E e A | 1 dia |
+| S-03 | **Alta** | Sem limite de frequência nem teto diário; robôs farmam XP em Quiz, V ou M e Batalha | E e A | 1 dia |
+| S-04 | **Alta** | Faltam cabeçalhos de segurança no site (CSP, anti-frame, nosniff) | E e A | 2 h |
+| S-05 | **Alta (latente)** | Gabaritos e casos **não revisados** vão no pacote público do site | A | 0,5 a 2 dias |
+| S-06 | Média | Aprovação de migração permite pré-sequestro de conta | A | 0,5 dia |
+| S-07 | Média | Trocar senha só com o token; senha de 6 caracteres; fallback para a chave mestra | E e A | 2 h + painel |
+| S-08 | Média | Ranking e coroas sem cache, com nome real do Google (LGPD) e hash sem sal | E e A | 0,5 dia |
+| S-09 | Média | Cadastro sem validar username e nome, sem unicidade | A | 2 h |
+| S-10 | Baixa | Firebase legado: regras do Firestore frouxas, qualquer provedor, sem revogação | E e A | Decisão |
+| S-11 | Baixa | Apps Script antigo ainda público | E e A | Decisão |
+| S-12 | Baixa | Mensagens de erro internas devolvidas ao cliente | A | 1 h |
+| S-13 | Baixa | CORS com localhost em produção e `/api/ia` sem login | A | 1 h |
+| S-14 | Baixa | Perfil e eventos crescem sem teto | A | 2 h |
+| S-15 | Baixa | Link da fonte sem checar `https` | E e A | 30 min |
+| S-16 | Info | 16 vulnerabilidades em dependências, **nenhuma no site publicado** | E e A | 1 h |
 
 ## Achados
 
@@ -44,21 +51,23 @@ Auditoria de **14/10/2026**, pedida pelo usuário. Voltar ao [[Inicio|Início]] 
 ### S-02 · Alta · XP e tickets forjáveis pela cruzadinha
 
 - **Evidência:** `registrarPartidaSupabase` (`src/shared/operarJogosSupabase.js:9`) calcula o XP a partir de números que o **navegador** informa: `palavras` (até 40), `letras` (até 400), `tempo` (aceita 0), `erros` e `chaveXP` (qualquer texto de 3 a 80 letras maiúsculas, números, espaço ou hífen). O servidor só confere limites e se o `id` é um UUID novo. Não há partida emitida pelo servidor, nem custo em ticket, nem tempo mínimo, nem teto por dia.
-- **Como explorar:** um jogador logado envia, em laço, partidas com `palavras: 40`, `letras: 400`, `tempo: 0`, cada uma com um UUID novo. Cada uma rende cerca de 2.400 XP ou mais, 2 tickets e progresso de missões. O ranking é público, então basta isso para chegar ao topo. Os tickets pagam o DDX, o Quiz e a Batalha, e as chaves `chaveXP` novas incham o perfil do jogador.
-- **Por que só aqui:** o Quiz, o V ou M, o DDX e a Batalha usam rodadas **emitidas pelo servidor**, e o XP sai das respostas conferidas no servidor. A cruzadinha é a exceção.
+- **Como explorar:** um jogador logado envia, em laço, partidas com `palavras: 40`, `letras: 400`, `tempo: 0`, cada uma com um UUID novo. Cada uma rende cerca de 2.400 XP ou mais, 2 tickets e progresso de missões. O ranking e as Coroas são públicos, então basta isso para chegar ao topo. Os tickets pagam o DDX, o Quiz e a Batalha, e as chaves `chaveXP` novas incham o perfil.
 - **Correção:**
-  1. A cruzadinha passa a ter início emitido pelo servidor (`iniciarCruzadinha` devolve um `partidaId` e as palavras sorteadas no servidor) e a conclusão manda só as respostas.
+  1. A cruzadinha passa a ter início emitido pelo servidor (devolve um `partidaId` e as palavras sorteadas no servidor), e a conclusão manda só as respostas.
   2. Limites plausíveis: tempo mínimo por letra, no máximo N partidas por hora e teto de XP por dia.
   3. `chaveXP` só entre as chaves que existem no banco de palavras.
   4. Um teste que tente o laço acima e falhe.
-- **Fonte:** o guia de segurança de aplicações do Google Cloud para OWASP e a regra de não confiar no cliente (ver [[seguranca#Fontes|Fontes]]).
+- **Contenção rápida, antes da correção completa:** baixar os limites de `palavras` e `letras`, exigir `tempo` mínimo proporcional às letras e limitar o ganho por hora.
 
-### S-03 · Alta · Sem limite de frequência
+### S-03 · Alta · Sem limite de frequência nem teto diário
 
-- **Evidência:** `src/shared/apiSupabase.js` não conta requisições por jogador nem por IP. Testado na produção: `GET ?acao=ranking` responde 200 (1.398 bytes) sem login e dispara uma consulta no banco a cada chamada. `verificarUsername` diz se um nome existe, o que permite listar usernames. A função roda no plano Free do Supabase.
-- **Como explorar:** inundar a API para derrubar o app (negação de serviço) ou esgotar a cota; listar todos os usernames; tentar senhas pela ação `migrarSenha`, que repassa o login ao Firebase (só para o e-mail do próprio token, o que limita o dano).
+- **Evidência:** `src/shared/apiSupabase.js` não conta requisições por jogador nem por IP, e não há teto de XP ou de tickets por dia. Testado na produção: `GET ?acao=ranking` responde 200 (1.398 bytes) sem login e dispara uma consulta no banco a cada chamada. `verificarUsername` diz se um nome existe, o que permite listar usernames. A função roda no plano Free do Supabase.
+- **Como explorar:**
+  - Um robô autenticado joga Quiz, V ou M e Batalha o dia inteiro: um acerto basta para andar o medidor de ticket (`treinos.js:90-105`) e os tickets viram XP na Batalha. As rodadas são emitidas pelo servidor, mas nada limita quantas por hora.
+  - Inundar a API para derrubar o app (negação de serviço) ou esgotar a cota.
+  - Tentar senhas pela ação `migrarSenha`, que repassa o login ao Firebase, só para o e-mail do próprio token, o que limita o dano.
 - **Fonte:** o Google Cloud explica que picos de carga podem vir de "malicious requests" e recomenda "rate-limiting mechanisms".
-- **Correção:** contador por jogador (tabela com janela de tempo, ou o limitador do Supabase) nas ações de escrita e em `verificarUsername` e `migrarSenha`. Cache de alguns segundos do ranking e das coroas na própria função e `Cache-Control` público nesse `GET`. Considerar o Cloudflare ou o Vercel Firewall na frente.
+- **Correção:** contador por jogador (tabela com janela de tempo) nas ações de escrita, em `verificarUsername` e em `migrarSenha`; tempo mínimo por rodada; teto diário de XP e de tickets por modo; cache do ranking (ver S-08). Considerar o Vercel Firewall ou o Cloudflare na frente.
 
 ### S-04 · Alta · Sem cabeçalhos de segurança
 
@@ -71,38 +80,67 @@ Auditoria de **14/10/2026**, pedida pelo usuário. Voltar ao [[Inicio|Início]] 
   - `Referrer-Policy: strict-origin-when-cross-origin`
   - `Permissions-Policy` desligando câmera, microfone e geolocalização
 
-### S-05 · Média · Senhas fracas
+### S-05 · Alta (latente) · Gabaritos e casos não revisados no pacote público
 
-- **Evidência:** a API aceita senha de 6 a 4.096 caracteres (`index.js` e `migrarSenhaSupabase.js`). O relatório de segurança do Supabase (lido hoje) aponta `auth_leaked_password_protection`: a checagem contra o HaveIBeenPwned está **desligada**.
-- **Correção:** subir o mínimo para 8 caracteres no frontend e no Supabase Auth. A proteção contra senhas vazadas pode exigir plano pago do Supabase; **não contratar sem decisão do usuário** (já anotado na [[historico/registros/auditoria-supabase-2026-09-30|homologação de 30/09]]).
+- **Evidência (conferida em `dist/assets`):** o chunk principal, servido **antes do login**, contém `CASOS_PLANTAO` inteiro, com `revisado:false`, `hipoteseCorreta`, `criteriosAlta`, `essenciais` e os pontos de cada ação. Os bancos de Erro médico e de Causa e efeito (com `correta`, `falha`, `elos[].correta`) e as 12 doenças da Batalha (com a cura e o porquê) também estão lá. A regra "caso não revisado é só do administrador" vale no servidor (`operarJogosSupabase.js:113,163,216,302`) e na lista da tela (`ddxLista.jsx:6`), mas o **conteúdo** continua legível por qualquer visitante.
+- **Por que importa na quinta:** os lotes dos dossiês entram no banco do cliente. Hoje há só pilotos; depois de integrar, o pacote público leva o gabarito de tudo.
+- **Impacto:** (a) cola: os quatro modos se resolvem por script; (b) conteúdo clínico ainda não revisado fica publicado e indexável; (c) subir a `versao` de um caso reabre o XP dele.
+- **Correto, para não mexer:** o Quiz e o V ou M **não** estão no pacote: `bancoTreinos.js` só é usado no servidor (conferido: um trecho do banco não aparece em nenhum arquivo de `dist/`).
+- **Correção:** seguir o modelo do Quiz. O cliente recebe só o que a etapa atual precisa (texto das ações e das opções) e o servidor devolve o resultado. No Plantão, tirar do cliente `pontos`, `essenciais`, `hipoteseCorreta`, `criteriosAlta`, `agravamentos` e `desempenho`; no Erro médico e no Causa e efeito, `correta` e `falha`; na Batalha, `cura`, `porque` e `chave`. Até lá, **não colocar casos `revisado:false` no cliente** (um módulo só com os revisados para o pacote). Isso conflita com o [[app-offline|app offline]], que quer o conteúdo no aparelho: decidir junto.
 
-### S-06 · Média · Respostas e casos no pacote do navegador
+### S-06 · Média · Pré-sequestro de conta pela aprovação de migração
 
-- **Evidência:** os bancos do Quiz e do V ou M (`bancoTreinos.js`), os casos do DDX e as relações vão no JavaScript do site, com os gabaritos. O servidor sorteia a rodada e confere as respostas, mas um robô lê o pacote e responde sempre certo.
-- **Impacto:** a integridade do XP e do ranking, limitada pelos tickets. Para estudar, não há dano; para o ranking competitivo, há.
-- **Correção:** depende do produto. Para a rede, mover os bancos para a função e entregar só a pergunta de cada rodada. **Isso entra em conflito com o plano do [[app-offline|app offline]]**, que precisa do conteúdo no aparelho. Decidir junto com o offline, por exemplo: o gabarito sai do pacote e o servidor valida quando houver rede.
+- **Evidência:** `index.js:57-65`: a aprovação é um booleano `profile.migracaoAprovada`, que nunca é limpo depois do uso e não registra **qual e-mail** foi aprovado. `index.js:74-75` cria o usuário no Supabase com o e-mail do token do Firebase e `email_confirm: true`, mesmo que o e-mail não tenha sido verificado. `cadastrar` (`apiSupabase.js:105`) grava `email` do token sem exigir `email_verified`.
+- **Cenários:** (1) o atacante cria uma conta no Firebase com o e-mail da vítima (não verificado) e pede ao administrador para aprovar a migração; o Supabase cria o usuário confirmado com a **senha do atacante**, e a vítima, ao entrar com o Google, pode ter a identidade ligada a essa conta. (2) Sem aprovação alguma, basta um perfil cadastrado com o e-mail da vítima para bloquear o login Google dela (`index.js:45-47`, resposta 409).
+- **Correção:** gravar `migracaoAprovadaEmail` (minúsculo) e exigir que seja igual ao e-mail do token; limpar a aprovação depois do vínculo; criar o usuário com `email_confirm:false` quando o e-mail não foi verificado; em `cadastrar`, só gravar `email` se estiver verificado; comparar e-mails sempre em minúsculas; **desligar o cadastro novo no Firebase** (a migração é só para contas existentes). **No painel do Firebase:** conferir se "criar conta" (sign-up) está ligado.
 
-### S-07 · Média · Apps Script antigo ainda público
+### S-07 · Média · Senha: troca só com o token, mínimo de 6, fallback para a chave mestra
 
-- **Evidência:** `src/services/perfilPlanilha.js:5` e `src/services/rankingPublico.js:5` chamam uma implantação `script.google.com/macros/s/…/exec`. Código e regras antigas estão em [[historico/Histórico|`docs/historico/apps-script/`]]. Essa implantação é um segundo backend, com suas próprias regras.
-- **Correção:** decidir se o app ainda precisa dele (a pendência 7 da arrumação técnica). Se não, desligar a implantação e remover os serviços do frontend; se sim, auditá-lo com o mesmo rigor (esta auditoria **não** leu o código do Apps Script a fundo).
+- **Evidência:** `definirSenha` (`index.js:150-170`) troca a senha só com o access token do jogador, que fica no `sessionStorage`. O código já trata `reauthentication_needed`, mas nada no repositório prova que a opção está ligada. A API aceita 6 a 4.096 caracteres (`index.js:152`, `migrarSenhaSupabase.js:10`). O relatório do Supabase (lido hoje) mostra `auth_leaked_password_protection`: a checagem contra o HaveIBeenPwned está **desligada**. Na linha 154, `apikey: Deno.env.get('SUPABASE_ANON_KEY') || secret` envia a **service_role** como `apikey` se a variável da chave pública faltar.
+- **Cenário:** um token roubado (XSS ou extensão) permite definir uma senha e manter acesso mesmo depois de o token expirar e do logout.
+- **Correção:** **no painel do Supabase:** ligar a reautenticação para trocar a senha e o mínimo de 8 caracteres. Remover o `|| secret` (falhar fechado). Exigir sessão recente antes de definir a senha. A proteção contra senhas vazadas pode exigir plano pago: **não contratar sem decisão do usuário**.
 
-### S-08 · Média · Duas identidades e as regras do Firestore
+### S-08 · Média · Ranking e Coroas: custo, nome real e hash sem sal
 
-- **Evidência:** `index.js:16-37` aceita tokens do Firebase **e** do Supabase. As regras (`firestore.rules`) deixam o dono de `usuarios/{uid}` gravar qualquer campo do próprio documento, inclusive um `role` falso. Hoje a função lê o papel (`role`) do banco do Supabase, e não do Firestore, então isso não dá privilégio. Mas qualquer código futuro que confie no Firestore herdaria o buraco.
-- **Correção:** concluir o desligamento do Firebase (critério já definido nas [[pendencias|Pendências]], item 10) ou, até lá, trocar as regras por `allow read, write: if false` no que o app não usa mais.
+- **Evidência:** `GET ?acao=ranking|coroas` (`apiSupabase.js:52-56`) é público e responde `Cache-Control: no-store`. O ranking percorre todos os jogadores e só aplica `limit 100` depois de ordenar; `coroas()` (`index.js:104-112`) traz **todos** os perfis da semana, sem `limit`. O `nome` é, por padrão, o nome completo da conta Google e sai público com `atualizadoEm` (**LGPD**). O `idPublico` é um SHA-256 puro do `player_id` (`index.js:97` e `:109`): quem já conhece um `uid` do Firebase confirma se ele está no ranking.
+- **Correção:** `Cache-Control: public, max-age=60` e uma visão materializada atualizada em intervalo; `limit` e paginação nas coroas; mostrar o `username` (ou um apelido opcional) no lugar do nome da conta; HMAC com segredo do servidor no `idPublico`.
 
-### S-09 · Baixa · `idPublico` sem sal
+### S-09 · Média · Cadastro sem validar username e nome
 
-`ranking()` e `coroas()` (`index.js:97` e `:109`) publicam o SHA-256 do `player_id`. Quem já conhece um `uid` do Firebase confirma se ele está no ranking. Correção: HMAC com um segredo do servidor, em vez de SHA-256 puro.
+- **Evidência:** `cadastrar` (`apiSupabase.js:102-109`) aceita username de 2 a 40 caracteres e **não** passa por `usernameValido` nem por `usernameEmUso` (só `editarPerfil` passa). O `nome` vem de `user_metadata`, que o próprio usuário escreve no Supabase Auth e não tem limite.
+- **Cenário:** username repetido (se passar por outro jogador), nome com 100 KB ou parecido com "Administrador" no ranking, e corrida entre duas contas.
+- **Correção:** aplicar no cadastro as regras de `editarPerfil`, limitar o nome a 2 a 80 caracteres e criar um índice único em `lower(profile->>'username')`.
 
-### S-10 · Baixa · Links de fonte
+### S-10 · Baixa · Firebase legado
+
+- **Evidência:** `firestore.rules:4-6` deixa o dono de `usuarios/{uid}` gravar qualquer campo do próprio documento (inclusive `role`, `tickets`, `pontuacaoTotal`). Hoje a função lê o `role` do Supabase, então não dá privilégio, mas qualquer código futuro que confie no Firestore herdaria o buraco. `src/firebase.js` ainda inicia o Firestore e o Storage, e não há `storage.rules` no repositório. `index.js:22-38` aceita **qualquer provedor** do Firebase (inclusive anônimo) e não checa revogação (uma conta apagada continua valendo por até 1 hora).
+- **Correção:** publicar `allow read, write: if false;` no Firestore **e no Storage** (a ponte só precisa do Firebase Auth); restringir os provedores a `google.com` e `password`; desligar o login anônimo e o cadastro novo. **No painel:** conferir as regras do Storage (o padrão aberto é um risco clássico). Fecha junto com o desligamento do Firebase (item 10 das [[pendencias|Pendências]]).
+
+### S-11 · Baixa · Apps Script antigo ainda público
+
+- **Evidência:** `src/services/perfilPlanilha.js:5` e `rankingPublico.js:5` guardam a URL `…/exec` da implantação. No código arquivado em [[historico/Histórico|`docs/historico/apps-script/`]]: o perfil vira `admin` quando o e-mail é o do dono, **sem exigir e-mail verificado** (`apps-script-ranking.gs:93`, `:438-441`); a verificação do token usa uma `apiKey` enviada pelo cliente (`:427`, `:508-526`); a partida da cruzadinha também confia no cliente. Não há falha explorável concreta confirmada, mas é um segundo backend com as regras antigas.
+- **Correção:** **no Apps Script:** "Gerenciar implantações" e arquivar o app da web se nada mais o usa (pendência 7 da arrumação técnica); depois remover `perfilPlanilha.js`, `rankingPublico.js` e as referências. Se ficar, exigir `email_verified` e ignorar a `apiKey` do cliente.
+
+### S-12 · Baixa · Erros internos devolvidos ao cliente
+
+`apiSupabase.js:138` devolve `erro.message` de qualquer exceção do motor com HTTP 400. Hoje são quase todas mensagens em português controladas, mas um `TypeError` inesperado vazaria detalhes. Correção: uma classe `ErroDeNegocio` para os erros esperados e resposta genérica para o resto, com o detalhe só no `log`.
+
+### S-13 · Baixa · CORS com localhost e `/api/ia` sem login
+
+- `ORIGENS_SUPABASE` (`apiSupabase.js:5`) inclui `localhost` e `127.0.0.1` em produção. Como a autenticação é por token (sem cookies), o risco é pequeno; ler a lista de uma variável de ambiente e tirar as origens locais do deploy.
+- `server/index.js:14-52` (`/api/ia`) não tem login nem limite e usa a chave da OpenRouter. **Não está publicado** (confirmado: a Vercel não tem pasta `api/`), mas, ao mover as dicas de IA da cruzadinha para a Edge Function, exigir o token do jogador, validar `temperature` e o tamanho do `prompt`, e limitar o uso por jogador. A chave da OpenRouter **não** aparece no histórico (`git log -S'sk-or-v1-'` vazio).
+
+### S-14 · Baixa · Dados sem teto
+
+`xpTopicos` aceita chaves arbitrárias (S-02), `cacamed_events` ganha linhas a cada resposta e `obterEstatisticas` lê até 1.500 eventos por pedido. Um jogador pode inflar o próprio perfil. Correção: limitar o número de chaves de `xpTopicos`, o tamanho do `profile` na função do banco e arquivar eventos antigos.
+
+### S-15 · Baixa · Link da fonte sem checar `https`
 
 `ErroMedico.jsx:67` e `CausaEfeito.jsx:71` abrem `href={…fonte}` sem checar o protocolo (o Plantão já checa `https?:`). O conteúdo é nosso, mas um item com `javascript:` viraria XSS. Correção: validar `https:` no validador de conteúdo e no componente.
 
-### S-11 · Informativo · Dependências
+### S-16 · Informativo · Dependências
 
-`npm audit` aponta 16 vulnerabilidades (1 baixa, 3 moderadas, 10 altas e 2 críticas). A análise de **alcance** (o que roda no navegador ou na função, e não só no desenvolvimento) está na [[seguranca#Comparação com a auditoria independente|comparação]] e numa tarefa à parte.
+`npm audit` aponta 16 avisos (1 baixo, 3 moderados, 10 altos e 2 críticos). **Nenhum está no site publicado:** `protobufjs`, `@grpc/grpc-js` e `websocket-driver` vêm do Firebase por caminhos do Node, e uma busca no `dist/` não encontra nenhum deles; o resto é ferramenta de build e lint. A Edge Function usa `jose` e `supabase-js` com versões fixadas, que o `npm audit` não cobre. Correção: `npm audit fix` numa janela de manutenção, sem urgência; manter o `vite` só em `localhost`.
 
 ## O que foi conferido e está bem
 
@@ -113,7 +151,10 @@ Auditoria de **14/10/2026**, pedida pelo usuário. Voltar ao [[Inicio|Início]] 
 - **Idempotência:** recibos por `event_id` e versão do perfil na gravação (`cacamed_commit`) evitam XP duplicado e corrida entre abas.
 - **Corpo da requisição** limitado a 32 kB; **CORS** com lista fixa de origens.
 - **Frontend:** sem `dangerouslySetInnerHTML`, `eval` ou `innerHTML`; token da sessão no `sessionStorage`; links externos com `rel="noreferrer"`. O service worker não guarda a API.
-- **Segredos:** `.env` está no `.gitignore` e só o `.env.example` (sem valores) é versionado.
+- **Segredos:** `.env` está no `.gitignore` e só o `.env.example` (sem valores) é versionado. A chave da OpenRouter e a `service_role` não aparecem no código nem no histórico.
+- **Sem IDOR:** o `uid` vem sempre do token verificado, nunca do corpo do pedido; ninguém lê nem grava o perfil de outro jogador. A escalada para `admin` não é possível pelo cliente.
+- **Injeção no banco:** todos os valores que vão para a URL do PostgREST passam por `encodeURIComponent`, e o username é validado antes de entrar em `ilike`.
+- **Edge Function sincronizada** com `src/utils` e `src/shared` (sem divergência).
 
 ## Fontes
 
@@ -128,11 +169,33 @@ Todas lidas em 14/10/2026; os trechos entre aspas foram conferidos literalmente 
 
 ## Plano de correção, por quinta
 
-1. **Hoje (você):** revogar a chave do Google (S-01). Não depende de deploy.
-2. **Na `main` antes da quinta 15/10:** cabeçalhos em modo `Report-Only` (S-04), limite de frequência (S-03), validações de S-09 e S-10. A cruzadinha (S-02) é a maior e pode ficar para a quinta de 22/10, e até lá dá para reduzir o estrago baixando os limites de `palavras` e `letras` e exigindo `tempo` plausível.
-3. **Decisões suas:** S-05 (plano pago), S-06 (junto do app offline), S-07 e S-08 (desligar o Apps Script e o Firebase).
-4. **Depois:** CSP ativo, verificador de segredos no commit e uma nova rodada desta auditoria.
+**Hoje, você (não depende de deploy):**
+1. Revogar a chave do Google do histórico (S-01).
+2. Conferir nos painéis (itens "verificar no painel" abaixo).
+
+**Na `main` antes da quinta 15/10 (eu faço, com teste):**
+- S-05: um módulo só com os casos **revisados** para o pacote do cliente, para a integração dos lotes não publicar gabarito de conteúdo não revisado. É o único item que bloqueia a liberação do DDX.
+- S-04: cabeçalhos em modo `Report-Only`.
+- S-02, contenção: baixar os limites de `palavras` e `letras` e exigir tempo plausível. S-03: limite de frequência e teto diário.
+- Pequenos: S-07 (remover o `|| secret`), S-09, S-12, S-13, S-15.
+
+**Quinta 22/10, junto do design web:** S-02 completo (cruzadinha emitida pelo servidor), S-05 completo (gabarito fora do pacote, decidido com o app offline), S-06, S-08, CSP ativo.
+
+**Decisões suas:** plano pago do Supabase para a proteção de senhas vazadas (S-07), arquivar o Apps Script (S-11), prazo para desligar o Firebase (S-10), nome real ou apelido no ranking público (S-08, LGPD).
+
+### Verificar no painel (só você alcança)
+
+- **Google Cloud:** a chave do S-01 (revogar), as restrições da chave web do Firebase e o uso e a cobrança dos últimos meses.
+- **Firebase:** "criar conta" ligado? Login anônimo ligado? Regras do Storage.
+- **Supabase Auth:** reautenticação para trocar a senha, mínimo de senha, login anônimo e confirmação de e-mail no cadastro.
+- **Apps Script:** a implantação ainda está como "Qualquer pessoa"?
 
 ## Comparação com a auditoria independente
 
-*(a preencher quando o segundo agente terminar)*
+O agente independente leu o repositório **sem ver** esta auditoria. Resultado: 17 achados, nenhum crítico.
+
+- **Os dois acharam (maior confiança):** a cruzadinha forjável (S-02), a falta de limite de frequência (S-03), os cabeçalhos (S-04), a troca de senha (S-07), o custo e o nome real no ranking (S-08), o Firebase legado (S-10), o Apps Script (S-11) e os links de fonte (S-15).
+- **Só o agente achou:** os gabaritos e casos não revisados no pacote (S-05), o pré-sequestro por aprovação de migração (S-06), o cadastro sem validação (S-09), os erros internos (S-12), o CORS e a rota de IA (S-13), o crescimento de dados (S-14) e o alcance das dependências (S-16). Eu conferi o S-05 e o S-16 no `dist/`.
+- **Só a equipe achou:** a chave do Google no histórico público (S-01). O agente procurou no histórico e achou só a chave web do Firebase; **a chave do Gemini passou despercebida** e eu a confirmei lendo os commits (4 commits, chamada a `generativelanguage.googleapis.com`).
+- **Onde o agente corrigiu a equipe:** o rascunho dizia que o banco do Quiz e do V ou M ia no pacote do site. Não vai (conferido no `dist/`): o problema é dos outros quatro modos.
+- **Limites dos dois:** nenhum dos dois viu os painéis do Supabase, do Firebase, do Google Cloud e do Apps Script, nem testou com conta real. Os itens marcados "verificar no painel" dependem disso.
