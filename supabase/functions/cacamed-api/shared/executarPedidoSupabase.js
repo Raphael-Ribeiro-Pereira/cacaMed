@@ -1,8 +1,7 @@
 import { operarTreinoSupabase, eventosTreino } from './operarTreinoSupabase.js';
 import { operarRevisaoSupabase, eventosRevisao } from './operarRevisaoSupabase.js';
-import { registrarPartidaSupabase, operarAdminSupabase, operarPlantaoSupabase, operarAuditoriaSupabase, operarRelacaoSupabase, operarBatalhaSupabase, operarPacienteSupabase } from './operarJogosSupabase.js';
+import { registrarPartidaSupabase, operarAdminSupabase, operarPlantaoSupabase, operarAuditoriaSupabase, operarRelacaoSupabase, operarBatalhaSupabase } from './operarJogosSupabase.js';
 import { eventosBatalha } from '../utils/batalhaRevisao.js';
-import { nomeDoCaso } from '../utils/pacienteDdxNota.js';
 import { registrarXpSemanal } from '../utils/coroas.js';
 import { migrarEconomia } from '../utils/economia.js';
 import { prepararMissoesDoDia } from '../utils/missoes.js';
@@ -32,11 +31,6 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
   } else if (pedido.acao === 'registrarPartida') {
     perfil = registrarPartidaSupabase(perfil, pedido.partida, recibos, agora);
     eventos = [{ id: `recibo:${pedido.partida.id}`, kind: 'recibo', data: { modo: 'cruzadinha', rodadaId: pedido.partida.id, titulo: tituloCruzadinha(pedido.partida) } }];
-  } else if (pedido.acao === 'concluirCasoPaciente') {
-    const antes = perfil;
-    perfil = operarPacienteSupabase(perfil, pedido, recibos, new Date(agora).toISOString());
-    const feito = perfil.pacienteDdx?.historico?.at(-1);
-    if (perfil !== antes && feito) eventos = [{ id: `recibo:${feito.id}`, kind: 'recibo', data: { modo: 'pacienteDdx', rodadaId: feito.id, casoId: feito.casoId, nota: feito.nota, titulo: `Paciente DDX · ${nomeDoCaso(feito.casoId) || feito.casoId}` } }];
   } else if (pedido.acao === 'tutorial') perfil = { ...perfil, tutorialCruzadinhasConcluido: true };
   else if (pedido.acao === 'editarPerfil') {
     const nome = String(pedido.nome || '').trim();

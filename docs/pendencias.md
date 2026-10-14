@@ -14,7 +14,7 @@ Legenda: **[U]** com o usuário, **[A]** com o agente, **[U+A]** precisa dos doi
   3. `npm run dev` abre o app; `homologacao.html` abre o ambiente de testes com dados fictícios; `npm test`, `npm run lint` e `npm run build -- --configLoader runner` conferem tudo.
 - **Mexeu em regras compartilhadas (`src/utils`, `src/shared`)?** Rode `node scripts/sincronizar-supabase.mjs`: ele copia os arquivos para `supabase/functions/cacamed-api`, e um teste compara as cópias.
 - **Publicar** (sempre manual; o deploy automático da Vercel está desligado de propósito):
-  - API: publicar os 23 arquivos de `supabase/functions/cacamed-api` na função `cacamed-api` (feito até agora pelo conector do Supabase; a CLI do Supabase não está instalada), depois conferir os arquivos publicados contra os locais.
+  - API: publicar os 24 arquivos de `supabase/functions/cacamed-api` na função `cacamed-api` (feito até agora pelo conector do Supabase; a CLI do Supabase não está instalada), depois conferir os arquivos publicados contra os locais.
   - Frontend: deploy de produção na Vercel a partir do commit da `main`, e conferir o site.
   - Registrar cada deploy e o ponto de volta nos docs.
 - **Convenções:** commits no padrão [Conventional Commits](guia_conventional_commits.md); nenhuma chave real no Git nem nos docs.
@@ -93,6 +93,7 @@ Detalhe e caixas de seleção no [cronograma de 09/10](cronograma-recuperacao-ca
    - Corrigido no motor (11/10/2026, falta publicar a API): a alta indevida num caso que pedia encaminhamento rendia mais XP que o encaminhamento correto. Agora a alta indevida desconta 80, o encaminhamento desnecessário 20 e o destino certo nada; o piloto não muda.
    - **Erro médico:** lote 1 (10) e lote 2 (17) aguardando revisão: [dossiê 1](../content/review/erro-lote-001.md) e [dossiê 2](../content/review/erro-lote-002.md).
    - **Causa e efeito:** lotes 1 a 3 (14 + 9 + 12) aguardando revisão: [1](../content/review/causa-lote-001.md), [2](../content/review/causa-lote-002.md) e [3](../content/review/causa-lote-003.md). Com o piloto são 36; para chegar a 50 falta um lote 4, que é opcional.
+   - **Remoção do Paciente DDX (13/10, na `main`):** saíram a tela, o motor, a ação `concluirCasoPaciente` e os arquivos `pacienteDdxNota.js` e `pacienteDdxGabarito.js` da função. **Ao publicar a API, apague esses dois arquivos da função `cacamed-api` também.** Ficaram `pacienteDdxConteudo.js` (origem dos casos `pdx-*`) e o rótulo "Paciente DDX" nas Estatísticas, por causa dos recibos antigos.
    - **Liberar na quinta 15/10:** integrar o aprovado (`integrar-ddx.mjs`), sincronizar com o Supabase, testar com conta comum, rodar testes, lint e build e publicar com o "sim" do usuário. Ponto de volta da Vercel: `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx`. Detalhe em [[ddx|DDX]].
 4. **Economia v3** ([especificação](economia-v3.md)): 100 XP fixos nos jogos, bônus de tempo escondido, ofensiva de login, 4 missões novas por dia, DDX com 300 XP, Batalha com 500 XP, tickets sem saldo negativo, `VERSAO_ECONOMIA = 3`.
 5. **Revisão Inteligente v2** ([especificação](revisao-inteligente.md)): quatro cartas, sessões de 7 itens, erro grave no Paciente DDX, liberação no nível 10, +40 XP por item dominado, explicações da LLM.
@@ -104,7 +105,7 @@ Detalhe e caixas de seleção no [cronograma de 09/10](cronograma-recuperacao-ca
 
 1. **Dicas de IA da cruzadinha quebradas em produção:** a rota `/api/ia` só existe no servidor local (responde 404 no site). Mover a chamada à OpenRouter para a Edge Function, com a chave nos segredos do Supabase. A Revisão v2 usa a mesma rota.
 2. **Limpeza de CSS** (commit `4c7f0b8` na branch `claude/vigorous-vaughan-957477`, **não enviado ao GitHub nem na `main`**): remove estilos sem uso e reduz `src/index.css` de 414 para 168 linhas. Juntar com cuidado e conferir que `color-scheme: dark` e o fundo de `html, body` continuam.
-3. **Apagar `src/components/ui/StitchBrand.jsx`** (não é importado) e os estilos `stitch-header` e `stitch-brand`, que só ele usa.
+3. ~~Apagar `StitchBrand.jsx` e os estilos `stitch-header` e `stitch-brand`~~ **feito** em 13/10/2026.
 4. **Teste que falha há tempos:** "artefato Apps Script é idêntico ao motor do navegador" (diferença de quebra de linha). Não vem das mudanças recentes. Consertar ou aposentar junto com o Apps Script.
 5. **Segurança das dependências:** a auditoria de 30/09 apontou 15 vulnerabilidades em dependências (duas críticas, transitivas). Reavaliar com `npm audit`.
 6. **Retirar o Firebase:** depois da decisão 10, remover o fallback Firebase do frontend e a aceitação de tokens legados na API, publicar, testar e só então desligar o serviço. Preservar backup. Ver [reconciliação](historico/registros/reconciliacao-producao-2026-09-30.md).

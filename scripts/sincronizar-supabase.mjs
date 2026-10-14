@@ -8,7 +8,6 @@ const modules = [
   'shared/apiSupabase.js', 'shared/migrarSenhaSupabase.js',
   'utils/plantao.js', 'utils/plantaoBanco.js', 'utils/erroMedico.js', 'utils/erroMedicoBanco.js', 'utils/causaEfeito.js', 'utils/causaEfeitoBanco.js', 'utils/importarBancoCSV.js',
   'utils/batalha.js', 'utils/batalhaConteudo.js', 'utils/batalhaRevisao.js', 'utils/coroas.js', 'utils/estatisticasPainel.js',
-  'utils/pacienteDdxNota.js', 'utils/pacienteDdxGabarito.js',
 ];
 for (const module of modules) {
   const destination = new URL(`supabase/functions/cacamed-api/${module}`, root);

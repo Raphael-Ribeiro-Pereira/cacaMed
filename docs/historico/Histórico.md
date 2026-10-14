@@ -10,7 +10,7 @@ Documentos que **não valem mais** como especificação e ficam guardados para c
 - [[historico/ddx-antigo/plantao-apps-script|Plantão médico (27/09)]]: o piloto de asma no Apps Script.
 - [[historico/ddx-antigo/erro-medico-apps-script|Erro médico (27/09)]]: 4 etapas, dependia de um caso do Plantão.
 - [[historico/ddx-antigo/causa-efeito-apps-script|Causa e efeito (28/09)]]: 4 etapas com alternativas.
-- [[historico/ddx-antigo/paciente-ddx|Paciente DDX (06/10)]]: modo fundido no Plantão em 13/10. O código (`PacienteDdx.jsx`) ainda está no repositório, mas o hub não tem mais entrada para ele.
+- [[historico/ddx-antigo/paciente-ddx|Paciente DDX (06/10)]]: modo fundido no Plantão em 13/10. O código (tela, motor e ação do servidor) foi removido em 13/10; sobrou só `pacienteDdxConteudo.js`, a origem dos casos `pdx-*`.
 - [[historico/ddx-antigo/prompt-paciente-ddx-casos|Prompt do ChatGPT para o Paciente DDX]]: aposentado. Os lotes agora seguem o [[Fluxo de conteúdo]].
 
 ## Registros datados (setembro e outubro de 2026)

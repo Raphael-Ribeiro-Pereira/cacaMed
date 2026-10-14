@@ -4,7 +4,6 @@ import { obterCasoPlantao, executarPlantao } from '../utils/plantao.js';
 import { obterAuditoria, avaliarAuditoria } from '../utils/erroMedico.js';
 import { obterRelacao, avaliarRelacao } from '../utils/causaEfeito.js';
 import { DOENCAS, executarBatalha, obterDoenca, obterPet, recompensaBatalha, relatorioBatalha } from '../utils/batalha.js';
-import { avaliarRespostas, obterGabarito } from '../utils/pacienteDdxNota.js';
 const criarMissoesCruzadinha = criarMissoesDiarias;
 
 export function registrarPartidaSupabase(perfil, partida, recibos = [], agora = new Date().toISOString()) {
@@ -260,23 +259,6 @@ export function operarRelacaoSupabase(perfil, pedido, recibos = []) {
     } };
 
   return atualizado;
-}
-
-// Paciente DDX: piloto do administrador, sem ticket e sem XP (como no protótipo). O servidor recalcula
-// a nota a partir das escolhas e guarda a melhor nota de cada caso; reenvio com o mesmo id não conta de novo.
-export function operarPacienteSupabase(perfil, pedido, recibos = [], agora = new Date().toISOString()) {
-  if (perfil.role !== 'admin') throw new Error('Paciente DDX em piloto para administrador.');
-  const stats = { casos: {}, historico: [], partidas: 0, ...perfil.pacienteDdx };
-  const id = String(pedido.entradaId || '');
-  if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error('Identificador de entrada inválido.');
-  if (recibos.includes(id) || stats.historico.some(item => item.id === id)) return perfil;
-  const casoId = String(pedido.casoId || '');
-  const gabarito = obterGabarito(casoId);
-  if (gabarito.versao !== Number(pedido.versao)) throw new Error('A versão deste caso mudou. Abra o caso de novo.');
-  const { nota } = avaliarRespostas(gabarito, pedido.respostas);
-  return { ...perfil, pacienteDdx: { ...stats, partidas: (Number(stats.partidas) || 0) + 1,
-    casos: { ...stats.casos, [casoId]: Math.max(nota, Number(stats.casos[casoId]) || 0) },
-    historico: [...stats.historico, { id, casoId, versao: gabarito.versao, nota, data: agora }].slice(-30) } };
 }
 
 // Batalha diagnóstica: piloto do administrador enquanto o conteúdo não tiver revisão clínica.
