@@ -35,6 +35,28 @@ Dois auditores trabalharam **separados**: a equipe do projeto (achados marcados 
 | S-15 | Baixa | Link da fonte sem checar `https` | E e A | 30 min |
 | S-16 | Info | 16 vulnerabilidades em dependências, **nenhuma no site publicado** | E e A | 1 h |
 
+## Andamento (14/10/2026)
+
+Correções na `main`, **ainda não publicadas**. A API e o site vão juntos na quinta 15/10, com o "sim" do usuário. Os testes, o lint e o build passaram em todos os commits.
+
+| ID | Estado | Commit | O que falta |
+| --- | --- | --- | --- |
+| S-01 | Aguarda você | — | Revogar a chave no Google Cloud Console |
+| S-02 | **Contido** | `d1d4ba9` | A partida precisa caber no tópico do banco do servidor (até 20 palavras, letras somadas das maiores e maior palavra); tempo impossível não ganha bônus; até 12 por hora e 40 por dia. Falta a cruzadinha emitida pelo servidor (22/10) |
+| S-03 | **Feito (por instância)** | `d1d4ba9` | Limite em memória por IP e por jogador, com 429 e `Retry-After`; ranking e coroas com cache de 60 s. Falta um limite global no banco e o teto diário de XP do Quiz e do V ou M (decisão da [[economia-v3\|economia v3]]) |
+| S-04 | **Feito (CSP em teste)** | `0aeda3d` | Anti-frame, `nosniff`, `Referrer-Policy` e `Permissions-Policy` valem já. O CSP vai em `Report-Only`: aplicado localmente, não houve bloqueio em 13 telas, num caso do Plantão, na Batalha e no Quiz. Falta conferir o login Google e Supabase na produção e então aplicar |
+| S-05 | **Feito para o DDX** | `4da1957` | O build só leva os casos revisados do Plantão, do Erro médico e do Causa e efeito, e o `postbuild` falha se um não revisado vazar. Os 3 pilotos saem do site, inclusive para o administrador. Falta: a Batalha (as 12 doenças, todas sem revisão) e tirar o gabarito dos casos revisados (22/10) |
+| S-06 | Pendente | — | 22/10 |
+| S-07 | **Feito no código** | `69de946` | Senha nova com 8 caracteres em todas as telas e na API, sem o fallback para a `service_role`. **No painel:** mínimo 8 e reautenticação para trocar a senha |
+| S-08 | Em parte | `d1d4ba9` | Cache feito. Falta decidir nome real ou apelido no ranking (LGPD) e o HMAC no `idPublico` |
+| S-09 | **Feito** | `69de946` | Falta o índice único de username no banco (migração, numa quinta) |
+| S-10, S-11 | Decisão sua | — | Desligar o Firebase e arquivar o Apps Script |
+| S-12 | **Feito** | `9ad1526` | — |
+| S-13 | Aceito por ora | — | O `localhost` fica na lista porque o desenvolvimento local usa a API de produção; o token não é cookie, então o risco é pequeno. `/api/ia` só é tratado quando a dica de IA for para a Edge Function |
+| S-14 | Pendente | — | Junto com a S-02 completa |
+| S-15 | **Feito** | `9ad1526` | — |
+| S-16 | Sem urgência | — | `npm audit fix` numa janela de manutenção |
+
 ## Achados
 
 ### S-01 · Crítica · Chave de API do Google no histórico público
@@ -169,19 +191,17 @@ Todas lidas em 14/10/2026; os trechos entre aspas foram conferidos literalmente 
 
 ## Plano de correção, por quinta
 
-**Hoje, você (não depende de deploy):**
-1. Revogar a chave do Google do histórico (S-01).
-2. Conferir nos painéis (itens "verificar no painel" abaixo).
+**Hoje, você (não depende de deploy):** revogar a chave do Google do histórico (S-01) e conferir os painéis (abaixo).
 
-**Na `main` antes da quinta 15/10 (eu faço, com teste):**
-- S-05: um módulo só com os casos **revisados** para o pacote do cliente, para a integração dos lotes não publicar gabarito de conteúdo não revisado. É o único item que bloqueia a liberação do DDX.
-- S-04: cabeçalhos em modo `Report-Only`.
-- S-02, contenção: baixar os limites de `palavras` e `letras` e exigir tempo plausível. S-03: limite de frequência e teto diário.
-- Pequenos: S-07 (remover o `|| secret`), S-09, S-12, S-13, S-15.
+**Quinta 15/10, na publicação:**
+1. Publicar a Edge Function (traz S-02, S-03, S-07, S-09 e S-12) e, na mesma janela, apagar da função `pacienteDdxNota.js` e `pacienteDdxGabarito.js`.
+2. Publicar o site (traz S-04 em `Report-Only`, S-05 e S-15).
+3. No site publicado: abrir o console, entrar com o Google e com e-mail e procurar avisos `[Report Only]` do CSP. Sem avisos, trocar `Content-Security-Policy-Report-Only` por `Content-Security-Policy` numa quinta seguinte.
+4. Conferir que o hub do DDX abre para o administrador (a entrada antiga do piloto fica de fora sem quebrar a tela).
 
-**Quinta 22/10, junto do design web:** S-02 completo (cruzadinha emitida pelo servidor), S-05 completo (gabarito fora do pacote, decidido com o app offline), S-06, S-08, CSP ativo.
+**Quinta 22/10, junto do design web:** cruzadinha emitida pelo servidor (S-02 e S-14), gabarito fora do pacote (S-05, decidido com o app offline), S-06, o restante da S-08 e o índice único de username.
 
-**Decisões suas:** plano pago do Supabase para a proteção de senhas vazadas (S-07), arquivar o Apps Script (S-11), prazo para desligar o Firebase (S-10), nome real ou apelido no ranking público (S-08, LGPD).
+**Decisões suas:** plano pago do Supabase para a proteção de senhas vazadas (S-07), arquivar o Apps Script (S-11), prazo para desligar o Firebase (S-10), nome real ou apelido no ranking (S-08, LGPD), conteúdo da Batalha no pacote (S-05).
 
 ### Verificar no painel (só você alcança)
 
