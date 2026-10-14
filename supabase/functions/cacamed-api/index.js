@@ -91,7 +91,16 @@ async function migrateIdentity(user) {
   if (error || data.user?.id !== id || !data.properties?.hashed_token) throw new Error('Falha ao criar sessão migrada.');
   return { migrada: true, tokenHash: data.properties.hashed_token };
 }
-async function ranking() {
+// Ranking e Coroas são públicos: guardados por 60 s nesta instância, para uma enxurrada de pedidos
+// não virar uma consulta ao banco por pedido (S-03 e S-08 de docs/seguranca.md).
+const emCache = (calcular, ms = 60000) => {
+  let guardado;
+  return () => {
+    if (!guardado || Date.now() - guardado.instante > ms) guardado = { instante: Date.now(), valor: calcular().catch(erro => { guardado = undefined; throw erro; }) };
+    return guardado.valor;
+  };
+};
+const ranking = emCache(async () => {
   const rows = await database('rpc/cacamed_ranking', { method: 'POST', body: '{}' });
   return Promise.all(rows.map(async r => {
     const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(r.player_id));
@@ -99,9 +108,9 @@ async function ranking() {
       xpGlobal: Number(r.xp_global), nivelGlobal: nivelPorXP(r.xp_global), partidas: Number(r.partidas), letras: Number(r.letras),
       tempoMedio: r.tempo_medio == null ? null : Number(r.tempo_medio), atualizadoEm: r.atualizado_em };
   }));
-}
+});
 // Coroas da semana: lê só o campo semanal dos perfis (sem tabela nova) e expõe o ID público, nunca o UID.
-async function coroas() {
+const coroas = emCache(async () => {
   const semana = semanaCoroas();
   const rows = await database('cacamed_player_state?select=player_id,nome:profile->>nome,username:profile->>username,coroas:profile->coroas'
     + '&profile->coroas->>semana=eq.' + encodeURIComponent(semana) + '&player_id=not.like.homologacao:*');
@@ -109,7 +118,7 @@ async function coroas() {
     const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(r.player_id));
     return { idPublico: Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2,'0')).join(''), nome: r.nome || r.username || 'Plantonista', coroas: r.coroas };
   })));
-}
+});
 let bancoCache;
 async function palavras() {
   if (bancoCache && Date.now() - bancoCache.instante < 300000) return bancoCache.resultado;

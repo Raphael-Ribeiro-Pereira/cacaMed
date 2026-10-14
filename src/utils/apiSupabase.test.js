@@ -6,8 +6,13 @@ import { BANCO_QUIZ } from './bancoTreinos.js';
 import { obterAuditoria } from './erroMedico.js';
 import { obterRelacao } from './causaEfeito.js';
 import { criarMissoesDiarias, dataLocalHoje } from './missoes.js';
+import { LIMITE_CRUZADINHAS } from '../shared/operarJogosSupabase.js';
+import { criarLimitador } from '../shared/limitador.js';
 
-function fixture() {
+// Tópico com 6 palavras: a maior tem 10 letras e as 5 maiores somam 38, o que cabe nas partidas dos testes.
+const BANCO_PALAVRAS = { 'ANATOMIA-OSSOS': ['MANDIBULAS', 'CLAVICULA', 'ESCAPULA', 'FIBULA', 'FEMUR', 'TIBIA'].map(palavra => ({ palavra })) };
+
+function fixture(opcoes = {}) {
   const states = new Map();
   const events = new Map();
   let conflictAfterCommit = false;
@@ -37,7 +42,7 @@ function fixture() {
   const api = criarApiSupabase({ database, identity: async token => {
     if (token !== 'jogador' && token !== 'admin') throw Object.assign(new Error('Entre novamente na conta.'), { status: 401 });
     return { uid: token, email: token + '@example.com', nome: 'Teste' };
-  }, palavras: async () => ({ banco: {} }), ranking: async () => [], migrateIdentity: async () => ({ migrada: false }) });
+  }, palavras: async () => ({ banco: BANCO_PALAVRAS }), ranking: async () => [], migrateIdentity: async () => ({ migrada: false }), ...opcoes });
   async function call(pedido, uid = 'jogador') {
     const r = await api(new Request('https://test/api', { method: 'POST', headers: { Authorization: 'Bearer ' + uid, Origin: 'http://localhost:5174' }, body: JSON.stringify(pedido) }));
     const body = await r.json();
@@ -172,4 +177,61 @@ test('definirSenha recebe o token da sessão para trocar a senha sem encerrá-la
   assert.equal(r.status, 200);
   assert.equal(recebido.token, 'sessao-atual');
   assert.equal(recebido.pedido.senha, 'segredo1');
+});
+
+test('S-02: cruzadinha só aceita partida que cabe no tópico do banco de palavras', async () => {
+  const f = fixture();
+  await f.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'teste' });
+  const partida = extra => ({ id: crypto.randomUUID(), chaveXP: 'ANATOMIA-OSSOS', subMateria: 'Ossos', palavras: 5, letras: 30, tempo: 100, erros: 0, maiorPalavra: 10, ...extra });
+  assert.equal((await f.call({ acao: 'registrarPartida', partida: partida({ chaveXP: 'INVENTADO-QUALQUER' }) })).erro, 'Tópico da cruzadinha desconhecido.');
+  assert.equal((await f.call({ acao: 'registrarPartida', partida: partida({ palavras: 7 }) })).status, 400, 'mais palavras do que o tópico tem');
+  assert.equal((await f.call({ acao: 'registrarPartida', partida: partida({ letras: 39 }) })).status, 400, 'mais letras do que as 5 maiores palavras somam');
+  assert.equal((await f.call({ acao: 'registrarPartida', partida: partida({ maiorPalavra: 11 }) })).status, 400);
+  assert.equal((await f.call({ acao: 'registrarPartida', partida: partida() })).status, 200);
+});
+
+test('S-02: tempo impossível não ganha bônus e há teto de cruzadinhas por hora e por dia', () => {
+  const jogar = (perfil, agora, extra = {}) => executarPedidoSupabase(perfil, { acao: 'registrarPartida', partida: {
+    id: crypto.randomUUID(), chaveXP: 'ANATOMIA-OSSOS', subMateria: 'Ossos', palavras: 5, letras: 30, tempo: 100, erros: 0, maiorPalavra: 10, ...extra } }, { agora: new Date(agora) }).perfil;
+  const base = { uid: 'teste', tickets: 0, pontuacaoTotal: 0, missoesDiarias: [] };
+  const xp = perfil => perfil.xpTopicos['ANATOMIA-OSSOS'];
+  assert.equal(xp(jogar(base, '2026-10-14T12:00:00Z', { tempo: 0 })), 110, 'tempo 0 fica sem multiplicador');
+  assert.equal(xp(jogar(base, '2026-10-14T12:00:00Z', { tempo: 10 })), 220, 'tempo plausível e rápido dobra');
+  let p = base;
+  for (let i = 0; i < LIMITE_CRUZADINHAS.hora; i++) p = jogar(p, `2026-10-14T12:${String(i * 4).padStart(2, '0')}:00Z`);
+  assert.throws(() => jogar(p, '2026-10-14T12:50:00Z'), /Muitas cruzadinhas em uma hora/);
+  p = jogar(p, '2026-10-14T13:05:00Z');
+  for (let h = 14; p.cruzadinhasHorarios.length < LIMITE_CRUZADINHAS.dia; h++) {
+    for (let i = 0; i < 10 && p.cruzadinhasHorarios.length < LIMITE_CRUZADINHAS.dia; i++) p = jogar(p, `2026-10-14T${h}:${String(i * 5).padStart(2, '0')}:00Z`);
+  }
+  assert.throws(() => jogar(p, '2026-10-15T08:00:00Z'), /limite de cruzadinhas de hoje/);
+  assert.doesNotThrow(() => jogar(p, '2026-10-15T14:00:00Z'), 'a janela de 24 h anda');
+});
+
+test('S-03: limite de frequência responde 429 com Retry-After e o ranking público vai com cache', async () => {
+  const limites = { publico: [2, 60000], ip: [100, 60000], jogador: [3, 60000], username: [1, 60000], senha: [1, 900000] };
+  const f = fixture({ limites });
+  await f.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'teste' });
+  assert.equal((await f.call({ acao: 'verificarUsername', username: 'outro' })).status, 200);
+  assert.equal((await f.call({ acao: 'verificarUsername', username: 'outro2' })).status, 429, 'username tem limite próprio');
+  assert.equal((await f.call({ acao: 'obterPerfil' })).status, 429, 'quarto pedido do jogador no minuto');
+  assert.equal((await f.call({ acao: 'obterPerfil' }, 'admin')).status, 200, 'outro jogador não é afetado');
+  const get = () => f.api(new Request('https://test/api?acao=ranking', { headers: { 'cf-connecting-ip': '203.0.113.9' } }));
+  const primeiro = await get();
+  assert.equal(primeiro.headers.get('cache-control'), 'public, max-age=60');
+  await get();
+  const terceiro = await get();
+  assert.equal(terceiro.status, 429);
+  assert.ok(Number(terceiro.headers.get('retry-after')) >= 1);
+});
+
+test('S-03: limitador por janela fixa recomeça depois da janela', () => {
+  let t = 0;
+  const limitar = criarLimitador({ agora: () => t });
+  assert.equal(limitar('a', 2, 1000), 0);
+  assert.equal(limitar('a', 2, 1000), 0);
+  assert.equal(limitar('a', 2, 1000), 1);
+  assert.equal(limitar('b', 2, 1000), 0, 'chaves separadas');
+  t = 1000;
+  assert.equal(limitar('a', 2, 1000), 0);
 });

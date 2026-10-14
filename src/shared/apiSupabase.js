@@ -1,6 +1,8 @@
 import { executarPedidoSupabase, ACOES_REVISAO, usernameValido } from './executarPedidoSupabase.js';
 import { resumirHistorico } from '../utils/estatisticasPainel.js';
 import { criarMissoesDiarias, dataLocalHoje } from '../utils/missoes.js';
+import { validarPartidaNoBanco } from './operarJogosSupabase.js';
+import { criarLimitador, ipDoPedido, LIMITES_API } from './limitador.js';
 
 export const ORIGENS_SUPABASE = new Set(['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'https://caca-med.vercel.app']);
 async function lerPedido(req) {
@@ -32,7 +34,8 @@ async function usernameEmUso(database, username, uid) {
   return rows.some(r => r.player_id !== uid && !String(r.player_id).startsWith('homologacao:'));
 }
 
-export function criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras, log = () => {} }) {
+export function criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras, log = () => {},
+  limitador = criarLimitador(), limites = LIMITES_API }) {
   return async req => {
     const inicio = performance.now();
     let acao = 'desconhecida';
@@ -48,20 +51,39 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
     };
     if (origin && !ORIGENS_SUPABASE.has(origin)) return answer({ erro: 'Origem não autorizada.' }, 403);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers });
+    // Limite de frequência (S-03 de docs/seguranca.md): responde 429 com Retry-After.
+    const ip = ipDoPedido(req);
+    const barrar = (chave, [maximo, janelaMs]) => {
+      const segundos = limitador(chave, maximo, janelaMs);
+      return segundos ? answer({ erro: 'Muitas requisições em pouco tempo. Aguarde um pouco e tente de novo.' }, 429, { 'Retry-After': String(segundos) }) : null;
+    };
     try {
       if (req.method === 'GET') {
         acao = new URL(req.url).searchParams.get('acao');
-        if (acao === 'ranking') return answer({ sucesso: true, ranking: await ranking() });
-        if (acao === 'coroas' && coroas) return answer({ sucesso: true, coroas: await coroas() });
+        const barrado = ip && barrar('get:' + ip, limites.publico);
+        if (barrado) return barrado;
+        const publico = { 'Cache-Control': 'public, max-age=60' };
+        if (acao === 'ranking') return answer({ sucesso: true, ranking: await ranking() }, 200, publico);
+        if (acao === 'coroas' && coroas) return answer({ sucesso: true, coroas: await coroas() }, 200, publico);
         if (acao === 'palavras') return answer({ resultado: await palavras() }, 200, { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400' });
         return answer({ erro: 'Consulta inválida.' }, 400);
       }
       if (req.method !== 'POST') return answer({ erro: 'Método inválido.' }, 405);
       const token = req.headers.get('authorization')?.match(/^Bearer (.+)$/i)?.[1];
       if (!token) return answer({ erro: 'Entre na conta para continuar.' }, 401);
+      const barradoIp = ip && barrar('ip:' + ip, limites.ip);
+      if (barradoIp) return barradoIp;
       let user = await identity(token);
       const pedido = await lerPedido(req);
       acao = pedido.acao;
+      const barrado = barrar('jogador:' + user.uid, limites.jogador)
+        || (['migrarSenha', 'definirSenha'].includes(acao) && barrar('senha:' + user.uid, limites.senha))
+        || (acao === 'verificarUsername' && barrar('username:' + user.uid, limites.username));
+      if (barrado) return barrado;
+      // Cruzadinha (S-02): a partida tem que caber no tópico do banco de palavras do servidor.
+      if (acao === 'registrarPartida' && palavras) {
+        try { validarPartidaNoBanco(pedido.partida, (await palavras()).banco); } catch (erro) { return answer({ erro: erro.message }, 400); }
+      }
       if (acao === 'migrarSenha') return answer({ resultado: await migratePassword(user, pedido) });
       if (acao === 'definirSenha') return answer({ resultado: await definePassword(user, pedido, token) });
       if (acao === 'migrarIdentidade') return answer({ resultado: await migrateIdentity(user, pedido) });

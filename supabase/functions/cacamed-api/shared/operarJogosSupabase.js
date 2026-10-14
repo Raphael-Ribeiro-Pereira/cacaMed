@@ -6,6 +6,25 @@ import { obterRelacao, avaliarRelacao } from '../utils/causaEfeito.js';
 import { DOENCAS, executarBatalha, obterDoenca, obterPet, recompensaBatalha, relatorioBatalha } from '../utils/batalha.js';
 const criarMissoesCruzadinha = criarMissoesDiarias;
 
+// S-02 da auditoria de segurança (docs/seguranca.md), contenção até a cruzadinha ser emitida pelo servidor:
+// a grade tem no máximo 20 palavras do tópico, um tempo menor que o de digitar as letras não ganha bônus e
+// cada jogador registra no máximo `hora` partidas por hora e `dia` por dia, pelo relógio do servidor.
+export const LIMITE_CRUZADINHAS = { palavrasPorGrade: 20, hora: 12, dia: 40, letrasPorSegundo: 3 };
+
+// Confere a partida contra o banco de palavras do servidor: o tópico existe e os números cabem nele.
+export function validarPartidaNoBanco(partida, banco) {
+  const topico = banco?.[String(partida?.chaveXP || '')];
+  if (!Array.isArray(topico) || !topico.length) throw new Error('Tópico da cruzadinha desconhecido.');
+  const tamanhos = topico.map(p => String(p.palavra || '').replace(/\s/g, '').length).sort((a, b) => b - a);
+  const palavras = Number(partida.palavras);
+  const maximoPalavras = Math.min(LIMITE_CRUZADINHAS.palavrasPorGrade, topico.length);
+  const maximoLetras = tamanhos.slice(0, Math.max(0, Math.min(palavras, maximoPalavras))).reduce((a, b) => a + b, 0);
+  const maiorPossivel = Math.max(...topico.map(p => String(p.palavra || '').length));
+  if (palavras > maximoPalavras || Number(partida.letras) > maximoLetras || Number(partida.maiorPalavra) > maiorPossivel) {
+    throw new Error('Dados da partida fora dos limites.');
+  }
+}
+
 export function registrarPartidaSupabase(perfil, partida, recibos = [], agora = new Date().toISOString()) {
   const id = String(partida?.id || '');
   if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error('Identificador de partida inválido.');
@@ -27,12 +46,17 @@ export function registrarPartidaSupabase(perfil, partida, recibos = [], agora = 
       || ![0, 5, 15].includes(penalidade)) {
     throw new Error('Dados da partida fora dos limites.');
   }
+  const instante = new Date(agora).getTime();
+  const horarios = (perfil.cruzadinhasHorarios || []).map(Number).filter(t => Number.isFinite(t) && instante - t < 86400000 && t <= instante);
+  if (horarios.filter(t => instante - t < 3600000).length >= LIMITE_CRUZADINHAS.hora) throw new Error('Muitas cruzadinhas em uma hora. Descanse um pouco e tente de novo.');
+  if (horarios.length >= LIMITE_CRUZADINHAS.dia) throw new Error('Você chegou ao limite de cruzadinhas de hoje. Volte amanhã.');
   const xpAnterior = Number(perfil.xpTopicos?.[chaveXP]) || 0;
   const nivel = xpAnterior === 0 ? 0 : Math.floor(Math.sqrt(xpAnterior / 1000)) + 1;
   const base = letras * 2 + palavras * 10;
   const multNivel = 1 + (Math.max(1, nivel) - 1) * 0.1;
   const ideal = palavras * 15;
-  const multTempo = tempo <= ideal * 0.25 ? 2 : tempo <= ideal * 0.5 ? 1.5 : tempo <= ideal ? 1.2 : 1;
+  const tempoPlausivel = tempo >= Math.ceil(letras / LIMITE_CRUZADINHAS.letrasPorSegundo);
+  const multTempo = !tempoPlausivel ? 1 : tempo <= ideal * 0.25 ? 2 : tempo <= ideal * 0.5 ? 1.5 : tempo <= ideal ? 1.2 : 1;
   const xp = Math.max(10, Math.floor(base * multNivel * multTempo) - penalidade);
   const stats = { ...(perfil.estatisticas || {}) };
   const anterior = stats[chaveXP] || {};
@@ -66,6 +90,7 @@ export function registrarPartidaSupabase(perfil, partida, recibos = [], agora = 
     medidorTicketsCruzadinha: 0,
     missoesDiarias: progresso.missoes, estatisticas: stats, estatisticasGerais: gerais,
     cruzadinhasRegistradas: [...(perfil.cruzadinhasRegistradas || []), id].slice(-100),
+    cruzadinhasHorarios: [...horarios, instante].slice(-LIMITE_CRUZADINHAS.dia),
   };
 
   return atualizado;
