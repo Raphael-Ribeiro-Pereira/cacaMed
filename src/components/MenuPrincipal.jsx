@@ -91,10 +91,10 @@ function Ddx({ p, web, ir }) {
   const caso = CASOS_PLANTAO[0];
   return <button className="mode wide ddx-ring rise" style={{ '--i': 4 }} onClick={() => ir('selecaoDDX')}>
     <span className="ico" style={{ background: 'rgba(139,92,246,.14)', color: '#b49cff' }}><HeartPulse /></span>
-    <span style={{ display: 'grid', gap: 2, minWidth: 0 }}><b>DDX · Casos clínicos</b><small>{caso.paciente} · {caso.sistema} · 1 ticket por caso</small>
+    <span style={{ display: 'grid', gap: 2, minWidth: 0 }}><b>DDX · Casos clínicos</b><small>{caso ? `${caso.paciente} · ${caso.sistema} · ` : ''}1 ticket por caso</small>
       {web && <span className="ddx-modes"><span><Stethoscope size={13} />Plantão médico</span><span><ClipboardCheck size={13} />Erro médico</span><span><GitBranch size={13} />Causa e efeito</span></span>}
     </span>
-    <span className="ddx-side">{!caso.revisado && <span className="tag">EM REVISÃO</span>}{web && <span className="chip" style={{ fontSize: 11.5, padding: '4px 9px' }}><Ticket />{n(p.tickets)} tickets</span>}</span>
+    <span className="ddx-side">{caso && !caso.revisado && <span className="tag">EM REVISÃO</span>}{web && <span className="chip" style={{ fontSize: 11.5, padding: '4px 9px' }}><Ticket />{n(p.tickets)} tickets</span>}</span>
   </button>;
 }
 

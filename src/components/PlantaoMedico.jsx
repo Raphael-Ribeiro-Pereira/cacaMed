@@ -29,8 +29,10 @@ export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, 
   const admin = dadosUsuario?.role === 'admin';
   const tickets = Number(dadosUsuario?.tickets) || 0;
   const ddx = dadosUsuario?.ddx || {};
-  const entrada = ddx.entrada;
-  const casoEntrada = entrada ? obterCasoPlantao(entrada.casoId) : null;
+  // O pacote do navegador só traz casos revisados (S-05 de docs/seguranca.md): uma entrada antiga de um caso
+  // que ficou fora dele (o piloto, por exemplo) é ignorada aqui em vez de quebrar a tela.
+  const casoEntrada = (() => { try { return ddx.entrada ? obterCasoPlantao(ddx.entrada.casoId) : null; } catch { return null; } })();
+  const entrada = casoEntrada ? ddx.entrada : null;
   const [vista, setVista] = useState(() => entrada && !entrada.relatorio.encerrado ? 'plantao' : 'hub');
   const [admissao, setAdmissao] = useState(null);
   const [lista, setLista] = useState(null);
@@ -134,6 +136,7 @@ export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, 
     };
     const abertaDe = { plantao: entrada && !entrada.relatorio.encerrado ? entrada.casoId : null, erroMedico: dadosUsuario?.erroMedico?.entrada && !dadosUsuario.erroMedico.entrada.relatorio ? dadosUsuario.erroMedico.entrada.auditoriaId : null,
       causaEfeito: dadosUsuario?.causaEfeito?.entrada && !dadosUsuario.causaEfeito.entrada.relatorio ? dadosUsuario.causaEfeito.entrada.relacaoId : null };
+    for (const modo of Object.keys(abertaDe)) if (!catalogo[modo].some(c => c.id === abertaDe[modo])) abertaDe[modo] = null;
     const abrirCaso = (modo, id) => {
       if (abertaDe[modo] === id) { if (modo === 'plantao') setVista('plantao'); else setTelaAtual(modo); }
       else admitir(modo, id);

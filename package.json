@@ -8,6 +8,7 @@
     "dev": "vite",
     "server": "node server/index.js",
     "build": "vite build",
+    "postbuild": "node scripts/conferir-pacote.mjs",
     "lint": "eslint .",
     "test": "node --test src/utils/*.test.js",
     "content:validate": "node scripts/validar-conteudo.mjs",
