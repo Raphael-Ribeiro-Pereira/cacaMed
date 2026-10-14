@@ -104,7 +104,7 @@ Detalhe e caixas de seleção no [cronograma de 09/10](cronograma-recuperacao-ca
 ## 6. Arrumação técnica
 
 1. **Dicas de IA da cruzadinha quebradas em produção:** a rota `/api/ia` só existe no servidor local (responde 404 no site). Mover a chamada à OpenRouter para a Edge Function, com a chave nos segredos do Supabase. A Revisão v2 usa a mesma rota.
-2. **Limpeza de CSS** (commit `4c7f0b8` na branch `claude/vigorous-vaughan-957477`, **não enviado ao GitHub nem na `main`**): remove estilos sem uso e reduz `src/index.css` de 414 para 168 linhas. Juntar com cuidado e conferir que `color-scheme: dark` e o fundo de `html, body` continuam.
+2. ~~Limpeza de CSS~~ **feita em 13/10/2026 na `main`**: um script achou as classes sem uso em `src/index.css` (410 → 160 linhas, quase tudo do visual antigo `stitch-*` e `treino-*`) e em `src/prototipo.css` (1.705 → 1.524 linhas). Sobraram só as classes `stitch-page`, `stitch-loading`, `stitch-primary`, `stitch-integrated` e `stitch-auth` (telas de carregamento, login Google e admin) e as variáveis `--stitch-*`. Conferido no build e nas telas da homologação; vale uma passada visual no celular antes de publicar.
 3. ~~Apagar `StitchBrand.jsx` e os estilos `stitch-header` e `stitch-brand`~~ **feito** em 13/10/2026.
 4. **Teste que falha há tempos:** "artefato Apps Script é idêntico ao motor do navegador" (diferença de quebra de linha). Não vem das mudanças recentes. Consertar ou aposentar junto com o Apps Script.
 5. **Segurança das dependências:** a auditoria de 30/09 apontou 15 vulnerabilidades em dependências (duas críticas, transitivas). Reavaliar com `npm audit`.
