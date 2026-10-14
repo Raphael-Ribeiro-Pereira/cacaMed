@@ -8,6 +8,7 @@ Voltar ao [[Inicio|Início]].
 - [[decisoes-para-responder|Decisões para responder]]: o questionário do usuário.
 - [[cronograma-recuperacao-caca-med|Cronograma]]: o histórico das decisões.
 - [[guia_conventional_commits|Commits]].
+- [[seguranca|Segurança]]: auditoria de 14/10/2026 e plano de correção.
 
 ## Arquitetura e publicação
 

@@ -10,6 +10,7 @@ Este cofre do Obsidian é a pasta `docs/`; abra sempre ela como cofre. Todo docu
 - [[Produto e jogos]]: regras e experiência dos modos, incluindo o [[ddx|DDX]].
 - [[Prompts e conteúdo]]: geração, conferência de fontes e revisão médica dos lotes.
 - [[Desenvolvimento e operação]]: arquitetura, testes, publicação às quintas e o app.
+- [[seguranca|Segurança]]: vulnerabilidades do app, fontes do Google e plano de correção (14/10/2026).
 - [[historico/Histórico|Histórico]]: documentos que não valem mais (Apps Script, Paciente DDX e registros datados).
 
 ## Agora (13/10/2026)
