@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cadastro com código</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Protótipo (15/10/2026): confirmação do e-mail por código de 6 dígitos e a tela de completar o crachá.
+   Arte e animação originais; o vídeo de referência só deu a ideia das casinhas que se juntam num ponto. */
+:root{
+  --canvas:#0b0f19;--surface:#111827;--elev:#1a2234;--field:#0d1422;
+  --line:rgba(220,226,247,.09);--line-strong:#2c3a4f;
+  --text:#dce2f7;--soft:#c3cbe0;--muted:#8d9bb3;
+  --mint:#00f5d4;--mint-2:#06d6a0;--mint-ink:#00382f;
+  --violet:#8b5cf6;--violet-pale:#c9b8ff;--crimson:#ff3366;--crimson-soft:#ff8fa8;
+  --sans:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--canvas);color:var(--text);font:400 14px/1.45 var(--sans);padding:20px 16px 48px;min-height:100vh}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* barra do protótipo */
+.proto{max-width:1180px;margin:0 auto 18px;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;justify-content:space-between}
+.proto h1{margin:0;font-size:18px;font-weight:800}
+.proto h1 b{color:var(--mint)}
+.proto p{margin:2px 0 0;color:var(--muted);font-size:12.5px;max-width:62ch}
+.seg{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.seg button{padding:7px 13px;border-radius:999px;font-weight:700;font-size:12.5px;color:var(--muted)}
+.seg button[aria-pressed=true]{background:rgba(0,245,212,.13);color:var(--mint)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px}
+
+/* moldura: web (duas colunas) ou celular (375 px) */
+.stage{max-width:1180px;margin:0 auto;display:flex;justify-content:center}
+.screen{width:100%;border:1px solid var(--line);border-radius:22px;overflow:visible;background:radial-gradient(120% 80% at 80% 0%,rgba(0,245,212,.06),transparent 60%),var(--canvas);
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);min-height:640px}
+.screen.cel{width:375px;grid-template-columns:minmax(0,1fr);border-radius:32px;min-height:760px}
+.side{border-radius:22px 0 0 22px;background:linear-gradient(180deg,#0e1424,#0a0f1b);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;gap:14px}
+.screen.cel .side{display:none}
+.main{padding:48px 56px;display:flex;flex-direction:column;justify-content:center}
+.screen.cel .main{padding:28px 18px 24px;justify-content:flex-start}
+.eyebrow{font:700 11px var(--mono);letter-spacing:.12em;color:var(--mint);text-transform:uppercase;margin:0 0 8px}
+h2.t{margin:0;font-size:30px;line-height:1.12;font-weight:800;letter-spacing:-.02em}
+.screen.cel h2.t{font-size:25px}
+.lead{color:var(--muted);margin:8px 0 22px;max-width:46ch}
+.lead b{color:var(--soft);font-weight:700}
+
+/* ----- etapa 1: código ----- */
+.otp-wrap{position:relative;display:flex;justify-content:center;margin:6px 0 4px;height:84px}
+.otp{display:flex;gap:10px;position:relative}
+.screen.cel .otp{gap:7px}
+.slot{width:54px;height:66px;border-radius:14px;background:var(--field);border:1.5px solid var(--line-strong);display:grid;place-items:center;
+  font:800 28px var(--mono);color:var(--text);position:relative;transition:border-color .2s,transform .5s var(--ease),opacity .4s,background .2s}
+.screen.cel .slot{width:46px;height:58px;font-size:24px}
+.slot.cur{border-color:var(--mint);box-shadow:0 0 0 4px rgba(0,245,212,.12)}
+.slot.cur:empty::after{content:"";width:2px;height:26px;background:var(--mint);animation:pisca 1s steps(1) infinite}
+.slot.on{border-color:rgba(0,245,212,.45)}
+.slot.salta{animation:pop .22s var(--ease)}
+.slot:nth-child(3){margin-right:12px}
+.screen.cel .slot:nth-child(3){margin-right:8px}
+.otp.erro .slot{border-color:var(--crimson);color:var(--crimson-soft)}
+.otp.erro{animation:treme .42s}
+.real{position:absolute;inset:0;opacity:0;width:100%;height:100%;border:0;font-size:16px;caret-color:transparent;letter-spacing:40px}
+/* o acerto: as casinhas giram para o centro e viram um anel que desenha o visto */
+.hub{position:absolute;left:50%;top:50%;width:76px;height:76px;margin:-38px 0 0 -38px;pointer-events:none;opacity:0}
+.hub circle{fill:none;stroke:var(--mint);stroke-width:3;stroke-dasharray:240;stroke-dashoffset:240}
+.hub path{fill:none;stroke:var(--mint);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60}
+.ok .hub{opacity:1}
+.ok .hub circle{animation:traco .55s .45s var(--ease) forwards}
+.ok .hub path{animation:traco .35s .9s var(--ease) forwards}
+.msg{min-height:22px;text-align:center;font-size:13px;margin:6px 0 14px;color:var(--muted)}
+.msg.err{color:var(--crimson-soft)}
+.msg.okm{color:var(--mint)}
+.acts{display:flex;flex-direction:column;gap:10px;align-items:center}
+.link{color:var(--mint);font-weight:700;font-size:13px;padding:6px 8px;border-radius:8px}
+.link[disabled]{color:var(--muted);cursor:default}
+.link.sec{color:var(--muted);font-weight:600}
+.dica{margin-top:22px;padding:12px 14px;border-radius:12px;border:1px dashed var(--line-strong);color:var(--muted);font-size:12.5px}
+.dica b{color:var(--soft)}
+@keyframes pisca{50%{opacity:0}}
+@keyframes pop{0%{transform:scale(.86)}100%{transform:scale(1)}}
+@keyframes treme{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+@keyframes traco{to{stroke-dashoffset:0}}
+
+/* ícone do envelope (lado esquerdo, web) */
+.env{width:150px;height:150px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(0,245,212,.14),transparent 70%)}
+.env svg{width:84px;height:84px;stroke:var(--mint);fill:none;stroke-width:1.6}
+.side h3{margin:0;font-size:17px;font-weight:800;text-align:center}
+.side p{margin:0;color:var(--muted);text-align:center;max-width:32ch;font-size:13px}
+
+/* ----- etapa 2: completar o crachá ----- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px}
+.screen.cel .card{padding:16px}
+.lbl{display:block;font:700 10.5px var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin:0 0 8px}
+.campo{margin-bottom:18px}
+.campo:last-child{margin-bottom:0}
+.inp{display:flex;align-items:center;gap:8px;height:50px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--field);padding:0 14px}
+.inp:focus-within{border-color:var(--mint)}
+.inp input{flex:1;min-width:0;border:0;background:none;outline:0;font-size:16px}
+.inp .at{color:var(--muted)}
+.chk{display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer;user-select:none;font-size:13.5px}
+.chk input{appearance:none;width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line-strong);background:var(--field);display:grid;place-items:center;margin:0;cursor:pointer;flex:none}
+.chk input:checked{background:var(--mint);border-color:var(--mint)}
+.chk input:checked::after{content:"";width:5px;height:10px;border:solid var(--mint-ink);border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.chk .tag{font:700 12px var(--mono);color:var(--mint)}
+.dupla{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{height:50px;border-radius:12px;border:1.5px solid var(--line);background:var(--field);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;gap:6px}
+.opt small{font-weight:500;font-size:12px;color:var(--muted)}
+.opt[aria-checked=true]{border-color:var(--mint);background:rgba(0,245,212,.08);color:var(--mint)}
+
+/* etapa do curso: número de 1 a 12 com botões, e "já sou formado(a)" */
+.etapa{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.num{display:flex;align-items:center;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--field);height:50px;overflow:hidden;transition:opacity .2s}
+.num:focus-within{border-color:var(--mint)}
+.num button{width:46px;height:100%;font-size:20px;font-weight:700;color:var(--mint)}
+.num button:disabled{color:var(--line-strong);cursor:default}
+.num input{width:64px;text-align:center;border:0;background:none;outline:0;font:800 20px var(--mono)}
+.num.off{opacity:.35;pointer-events:none}
+.etapa .suf{color:var(--muted);font-size:13px}
+
+/* faculdade: menu com busca embutida */
+.combo{position:relative}
+.combo-btn{width:100%;height:50px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--field);display:flex;align-items:center;gap:10px;padding:0 14px;text-align:left}
+.combo-btn[aria-expanded=true]{border-color:var(--mint)}
+.combo-btn .val{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.combo-btn .val.ph{color:var(--muted)}
+.combo-btn svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;transition:transform .2s;flex:none}
+.combo-btn[aria-expanded=true] svg{transform:rotate(180deg)}
+.pop{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:5;background:var(--elev);border:1px solid var(--line-strong);border-radius:14px;box-shadow:0 24px 48px -16px rgba(0,0,0,.8);overflow:hidden;
+  transform-origin:top;animation:abre .18s var(--ease)}
+.pop[hidden]{display:none}
+@keyframes abre{from{opacity:0;transform:scaleY(.94) translateY(-4px)}}
+.busca{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.busca svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;flex:none}
+.busca input{flex:1;min-width:0;border:0;background:none;outline:0;font-size:16px}
+.lista{list-style:none;margin:0;padding:6px;max-height:232px;overflow:auto}
+.lista li{padding:9px 10px;border-radius:9px;cursor:pointer;display:flex;flex-direction:column;gap:1px}
+.lista li small{color:var(--muted);font-size:11.5px}
+.lista li[aria-selected=true],.lista li.ativo{background:rgba(139,92,246,.18)}
+.lista li[aria-selected=true]{color:var(--violet-pale)}
+.lista li mark{background:none;color:var(--mint);font-weight:800}
+.lista .vazio{color:var(--muted);cursor:default;padding:12px 10px}
+.lista .outra{border-top:1px solid var(--line);border-radius:0 0 9px 9px;margin-top:4px;color:var(--mint);font-weight:700}
+.fonte{font-size:11px;color:var(--muted);margin:6px 2px 0}
+.outra-campo{margin-top:10px}
+.outra-campo[hidden]{display:none}
+
+.cta{margin-top:20px;width:100%;height:54px;border-radius:14px;background:linear-gradient(180deg,var(--mint),var(--mint-2));color:var(--mint-ink);font-weight:800;font-size:16px;
+  box-shadow:0 6px 0 #04876f,0 18px 36px -12px rgba(0,245,212,.45);transition:transform .1s,box-shadow .1s,opacity .2s}
+.cta:active{transform:translateY(4px);box-shadow:0 2px 0 #04876f}
+.cta:disabled{opacity:.4;cursor:default;transform:none}
+.sair{display:block;margin:16px auto 0;color:var(--muted);font-size:13px}
+
+/* crachá (só na web, lado esquerdo) */
+.cracha{width:270px;border-radius:20px;border:1px solid rgba(0,245,212,.25);background:linear-gradient(170deg,#14223a,#0c1424 60%);padding:18px;box-shadow:0 30px 60px -20px rgba(0,0,0,.9),0 0 0 6px rgba(0,245,212,.04)}
+.cracha .topo{display:flex;justify-content:space-between;font:700 9px var(--mono);color:var(--muted);letter-spacing:.08em}
+.cracha .topo b{color:var(--text);font:800 13px var(--sans);letter-spacing:0}
+.cracha .topo b i{font-style:normal;color:var(--mint)}
+.ava{width:84px;height:84px;margin:18px auto 10px;border-radius:50%;border:2px solid rgba(0,245,212,.5);display:grid;place-items:center;font:800 30px var(--sans);color:var(--mint);background:radial-gradient(circle,#1d2c48,#0e1626)}
+.cracha .nome{text-align:center;font-weight:800;font-size:18px}
+.cracha .nome small{color:var(--mint);font-size:13px;margin-right:3px}
+.cracha .user{text-align:center;font:700 12px var(--mono);color:var(--mint);margin-top:2px}
+.cracha dl{margin:16px 0 0;display:grid;grid-template-columns:auto 1fr;gap:8px 10px;font-size:12.5px}
+.cracha dt{font:700 9.5px var(--mono);color:var(--muted);letter-spacing:.08em;text-transform:uppercase;align-self:center}
+.cracha dd{margin:0;font-weight:700;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cracha dd.vazio{color:var(--line-strong)}
+.cracha .mud{animation:mud .35s var(--ease)}
+@keyframes mud{from{color:var(--mint);transform:translateY(-3px)}}
+
+/* fim */
+.fim{text-align:center;padding:40px 0}
+.fim .selo{width:96px;height:96px;margin:0 auto 18px;border-radius:50%;display:grid;place-items:center;background:rgba(0,245,212,.12);border:2px solid var(--mint);font-size:44px;animation:pop .5s var(--ease)}
+
+/* troca de tela */
+.vista{animation:entra .45s var(--ease)}
+@keyframes entra{from{opacity:0;transform:translateY(10px)}}
+
+@media (max-width:820px){.screen:not(.cel){grid-template-columns:minmax(0,1fr)}.screen:not(.cel) .side{display:none}.main{padding:28px 18px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<div class="proto">
+  <div>
+    <h1>cacoMed · <b>cadastro com código</b></h1>
+    <p>Protótipo para aprovar. No código, o certo é <b class="mono">482913</b>; qualquer outro mostra o erro. Nada aqui grava dados.</p>
+  </div>
+  <div class="ctrls">
+    <div class="seg" role="group" aria-label="Tamanho">
+      <button aria-pressed="true" data-tam="web">Web</button>
+      <button aria-pressed="false" data-tam="cel">Celular</button>
+    </div>
+    <div class="seg" role="group" aria-label="Tela">
+      <button aria-pressed="true" data-ir="codigo">1 · Código</button>
+      <button aria-pressed="false" data-ir="completar">2 · Completar</button>
+    </div>
+  </div>
+</div>
+
+<div class="stage"><div class="screen" id="screen">
+  <aside class="side" id="side"></aside>
+  <section class="main" id="main"></section>
+</div></div>
+
+<script>
+const CERTO = '482913';
+const EMAIL = 'carolina.souza@exemplo.com';
+const NOME = 'Carolina Souza';
+// Amostra da lista de cursos de Medicina do e-MEC (Ministério da Educação). A versão real traz a lista completa.
+const FACULDADES = [
+  ['Universidade de São Paulo (USP)', 'São Paulo · SP'],
+  ['Universidade Federal de São Paulo (UNIFESP)', 'São Paulo · SP'],
+  ['Universidade Estadual de Campinas (UNICAMP)', 'Campinas · SP'],
+  ['Universidade Estadual Paulista (UNESP)', 'Botucatu · SP'],
+  ['Faculdade de Ciências Médicas da Santa Casa de São Paulo', 'São Paulo · SP'],
+  ['Universidade Federal de Minas Gerais (UFMG)', 'Belo Horizonte · MG'],
+  ['Universidade Federal do Rio de Janeiro (UFRJ)', 'Rio de Janeiro · RJ'],
+  ['Universidade do Estado do Rio de Janeiro (UERJ)', 'Rio de Janeiro · RJ'],
+  ['Universidade Federal Fluminense (UFF)', 'Niterói · RJ'],
+  ['Universidade Federal do Rio Grande do Sul (UFRGS)', 'Porto Alegre · RS'],
+  ['Pontifícia Universidade Católica do Rio Grande do Sul (PUCRS)', 'Porto Alegre · RS'],
+  ['Universidade Federal do Paraná (UFPR)', 'Curitiba · PR'],
+  ['Universidade Federal de Santa Catarina (UFSC)', 'Florianópolis · SC'],
+  ['Universidade Federal da Bahia (UFBA)', 'Salvador · BA'],
+  ['Universidade Federal de Pernambuco (UFPE)', 'Recife · PE'],
+  ['Universidade Federal do Ceará (UFC)', 'Fortaleza · CE'],
+  ['Universidade de Brasília (UnB)', 'Brasília · DF'],
+  ['Universidade Federal de Goiás (UFG)', 'Goiânia · GO'],
+  ['Universidade Federal do Espírito Santo (UFES)', 'Vitória · ES'],
+  ['Universidade Federal do Pará (UFPA)', 'Belém · PA'],
+  ['Universidade Federal do Amazonas (UFAM)', 'Manaus · AM'],
+];
+
+const $ = (s, r = document) => r.querySelector(s);
+const screen = $('#screen'), side = $('#side'), main = $('#main');
+const reduz = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const estado = { username: 'carolina', usarNome: true, titulo: 'Dra.', etapa: 5, formado: false, faculdade: null, outra: '' };
+let espera = 0, timer;
+
+document.querySelectorAll('[data-tam]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-tam]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  screen.classList.toggle('cel', b.dataset.tam === 'cel');
+});
+document.querySelectorAll('[data-ir]').forEach(b => b.onclick = () => ir(b.dataset.ir));
+function marcarAba(t) { document.querySelectorAll('[data-ir]').forEach(x => x.setAttribute('aria-pressed', x.dataset.ir === t)); }
+function ir(t) { marcarAba(t); ({ codigo: telaCodigo, completar: telaCompletar, fim: telaFim })[t](); }
+
+/* ---------- etapa 1: código ---------- */
+function telaCodigo() {
+  side.innerHTML = `<div class="env"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg></div>
+    <h3>Seu código está a caminho</h3><p>Ele vale por 1 hora. Se não achar, olhe no spam ou nas promoções.</p>`;
+  main.innerHTML = `<div class="vista">
+    <p class="eyebrow">Passo 1 de 2 · confirmar e-mail</p>
+    <h2 class="t">Digite o código</h2>
+    <p class="lead">Mandamos 6 números para <b>${EMAIL}</b>.</p>
+    <div class="otp-wrap" id="wrap">
+      <div class="otp" id="otp">${'<div class="slot"></div>'.repeat(6)}</div>
+      <svg class="hub" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="36" transform="rotate(-90 40 40)"/><path d="m26 41 9 9 19-20"/></svg>
+      <input class="real" id="real" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-label="Código de 6 números" autofocus>
+    </div>
+    <p class="msg" id="msg" aria-live="polite"></p>
+    <div class="acts">
+      <button class="link" id="reenviar">Reenviar código</button>
+      <button class="link sec" id="errado">Usei o e-mail errado</button>
+    </div>
+    <p class="dica">No celular, o teclado mostra o código do e-mail para tocar e preencher. Também dá para <b>colar</b> os 6 números de uma vez.</p>
+  </div>`;
+  const real = $('#real'), otp = $('#otp'), wrap = $('#wrap'), msg = $('#msg');
+  const slots = [...otp.children];
+  const pintar = () => {
+    const v = real.value;
+    slots.forEach((s, i) => {
+      const novo = (v[i] || '') !== s.textContent;
+      s.textContent = v[i] || '';
+      s.classList.toggle('on', !!v[i]);
+      s.classList.toggle('cur', document.activeElement === real && i === Math.min(v.length, 5) && v.length < 6);
+      if (novo && v[i]) { s.classList.remove('salta'); void s.offsetWidth; s.classList.add('salta'); }
+    });
+  };
+  real.addEventListener('input', () => {
+    real.value = real.value.replace(/\D/g, '').slice(0, 6);
+    otp.classList.remove('erro'); msg.textContent = ''; msg.className = 'msg';
+    pintar();
+    if (real.value.length === 6) conferir();
+  });
+  real.addEventListener('focus', pintar); real.addEventListener('blur', pintar);
+  wrap.addEventListener('click', () => real.focus());
+  function conferir() {
+    real.disabled = true;
+    msg.textContent = 'Conferindo…';
+    setTimeout(() => {
+      if (real.value !== CERTO) {
+        otp.classList.add('erro'); msg.textContent = 'Código errado. Confira o e-mail e tente de novo.'; msg.className = 'msg err';
+        setTimeout(() => { real.disabled = false; real.value = ''; pintar(); real.focus(); }, 700);
+        return;
+      }
+      // Acerto: as 6 casinhas giram para o centro e viram o anel que desenha o visto.
+      const centro = otp.getBoundingClientRect();
+      const cx = centro.left + centro.width / 2, cy = centro.top + centro.height / 2;
+      slots.forEach((s, i) => {
+        const r = s.getBoundingClientRect();
+        const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2);
+        s.animate([
+          { transform: 'none', opacity: 1 },
+          { transform: `translate(${dx * .55}px, ${dy - 10}px) rotate(${(i - 2.5) * 40}deg) scale(.7)`, opacity: 1, offset: .55 },
+          { transform: `translate(${dx}px, ${dy}px) rotate(${(i - 2.5) * 90}deg) scale(.2)`, opacity: 0 },
+        ], { duration: reduz ? 1 : 620, delay: reduz ? 0 : i * 35, easing: 'cubic-bezier(.6,0,.2,1)', fill: 'forwards' });
+      });
+      wrap.classList.add('ok');
+      msg.textContent = 'E-mail confirmado!'; msg.className = 'msg okm';
+      setTimeout(() => ir('completar'), reduz ? 600 : 1700);
+    }, reduz ? 100 : 450);
+  }
+  const reenviar = $('#reenviar');
+  const contar = () => {
+    reenviar.disabled = espera > 0;
+    reenviar.textContent = espera > 0 ? `Reenviar código em ${espera}s` : 'Reenviar código';
+  };
+  reenviar.onclick = () => {
+    espera = 60; contar(); msg.textContent = 'Código novo enviado.'; msg.className = 'msg okm';
+    clearInterval(timer); timer = setInterval(() => { espera--; if ($('#reenviar')) contar(); if (espera <= 0) clearInterval(timer); }, 1000);
+  };
+  contar();
+  $('#errado').onclick = () => { msg.textContent = 'Na versão real, volta ao formulário com os dados preenchidos.'; msg.className = 'msg'; };
+  pintar();
+}
+
+/* ---------- etapa 2: completar o crachá ---------- */
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const semAcento = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+function telaCompletar() {
+  side.innerHTML = `<p class="eyebrow">Prévia ao vivo</p>
+    <div class="cracha" aria-label="Prévia do crachá">
+      <div class="topo"><b>caco<i>Med</i></b><span>Acesso<br>UTI central</span></div>
+      <div class="ava">${NOME[0]}</div>
+      <div class="nome" id="pNome"></div>
+      <div class="user" id="pUser"></div>
+      <dl>
+        <dt>Etapa</dt><dd id="pEtapa"></dd>
+        <dt>Faculdade</dt><dd id="pFac"></dd>
+      </dl>
+    </div>
+    <p>É assim que você aparece no perfil. No ranking, só o username.</p>`;
+  main.innerHTML = `<div class="vista">
+    <p class="eyebrow">Passo 2 de 2 · seu crachá</p>
+    <h2 class="t">Quase lá, ${NOME.split(' ')[0]}</h2>
+    <p class="lead">Só faltam o seu momento no curso e a sua faculdade.</p>
+    <div class="card">
+      <div class="campo">
+        <label class="chk"><input type="checkbox" id="usarNome" ${estado.usarNome ? 'checked' : ''}> Usar meu primeiro nome <span class="tag">@carolina</span></label>
+      </div>
+      <div class="campo" id="campoUser" ${estado.usarNome ? 'hidden' : ''}>
+        <label class="lbl" for="user">Username</label>
+        <div class="inp"><span class="at">@</span><input id="user" value="${esc(estado.username)}" maxlength="20" autocomplete="username"></div>
+      </div>
+      <div class="campo">
+        <span class="lbl" id="lblTit">Título</span>
+        <div class="dupla" role="radiogroup" aria-labelledby="lblTit">
+          <button class="opt" role="radio" data-tit="Dr.">Dr. <small>Doutor</small></button>
+          <button class="opt" role="radio" data-tit="Dra.">Dra. <small>Doutora</small></button>
+        </div>
+      </div>
+      <div class="campo">
+        <label class="lbl" for="etapa">Etapa do curso</label>
+        <div class="etapa">
+          <div class="num" id="num">
+            <button type="button" id="menos" aria-label="Diminuir etapa">−</button>
+            <input id="etapa" class="mono" inputmode="numeric" value="${estado.etapa}" aria-describedby="sufEtapa">
+            <button type="button" id="mais" aria-label="Aumentar etapa">+</button>
+          </div>
+          <span class="suf" id="sufEtapa">de 12</span>
+          <label class="chk"><input type="checkbox" id="formado" ${estado.formado ? 'checked' : ''}> Já sou formado(a)</label>
+        </div>
+      </div>
+      <div class="campo">
+        <span class="lbl" id="lblFac">Faculdade</span>
+        <div class="combo" id="combo">
+          <button type="button" class="combo-btn" id="facBtn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="lblFac facVal">
+            <span class="val ph" id="facVal">Escolha sua faculdade</span>
+            <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="pop" id="pop" hidden>
+            <div class="busca"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input id="busca" placeholder="Busque por nome, sigla ou cidade" role="combobox" aria-controls="lista" aria-expanded="true" aria-autocomplete="list" autocomplete="off"></div>
+            <ul class="lista" id="lista" role="listbox" aria-labelledby="lblFac"></ul>
+          </div>
+        </div>
+        <div class="outra-campo" id="outraCampo" hidden>
+          <div class="inp"><input id="outra" placeholder="Nome da sua faculdade" maxlength="120" value="${esc(estado.outra)}"></div>
+        </div>
+        <p class="fonte">Lista de cursos de Medicina do e-MEC (MEC).</p>
+      </div>
+    </div>
+    <button class="cta" id="cta">Emitir meu crachá</button>
+    <button class="sair">Sair da conta</button>
+  </div>`;
+
+  const atual = () => estado.faculdade === 'outra' ? (estado.outra.trim() || '') : (estado.faculdade || '');
+  const pinta = (id, txt, vazio) => { const el = $(id); if (!el) return; if (el.textContent !== txt) { el.textContent = txt; el.classList.remove('mud'); void el.offsetWidth; el.classList.add('mud'); } el.classList.toggle('vazio', !!vazio); };
+  const previa = () => {
+    $('#pNome') && ($('#pNome').innerHTML = `<small>${estado.titulo}</small>${NOME.split(' ')[0]}`);
+    pinta('#pUser', '@' + (estado.usarNome ? 'carolina' : (estado.username || '…')));
+    pinta('#pEtapa', estado.formado ? 'Formado(a)' : estado.etapa ? `${estado.etapa}ª etapa` : '—', !estado.formado && !estado.etapa);
+    pinta('#pFac', atual() || '—', !atual());
+    $('#cta').disabled = !(atual() && (estado.formado || estado.etapa) && (estado.usarNome || /^[a-z0-9._]{3,20}$/.test(estado.username)));
+  };
+
+  $('#usarNome').onchange = e => { estado.usarNome = e.target.checked; $('#campoUser').hidden = estado.usarNome; previa(); };
+  $('#user').oninput = e => { estado.username = e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, ''); e.target.value = estado.username; previa(); };
+  document.querySelectorAll('[data-tit]').forEach(b => {
+    b.setAttribute('aria-checked', b.dataset.tit === estado.titulo);
+    b.onclick = () => { estado.titulo = b.dataset.tit; document.querySelectorAll('[data-tit]').forEach(x => x.setAttribute('aria-checked', x === b)); previa(); };
+  });
+
+  const etapa = $('#etapa'), num = $('#num');
+  const pôrEtapa = v => {
+    estado.etapa = v === '' ? null : Math.max(1, Math.min(12, v));
+    etapa.value = estado.etapa ?? '';
+    $('#menos').disabled = !estado.etapa || estado.etapa <= 1;
+    $('#mais').disabled = estado.etapa >= 12;
+    previa();
+  };
+  etapa.oninput = () => { const d = etapa.value.replace(/\D/g, '').slice(0, 2); pôrEtapa(d === '' ? '' : Number(d)); };
+  etapa.onkeydown = e => { if (e.key === 'ArrowUp') { e.preventDefault(); pôrEtapa((estado.etapa || 0) + 1); } if (e.key === 'ArrowDown') { e.preventDefault(); pôrEtapa((estado.etapa || 2) - 1); } };
+  $('#menos').onclick = () => pôrEtapa((estado.etapa || 2) - 1);
+  $('#mais').onclick = () => pôrEtapa((estado.etapa || 0) + 1);
+  const formado = $('#formado');
+  const aplicaFormado = () => { estado.formado = formado.checked; num.classList.toggle('off', estado.formado); etapa.disabled = estado.formado; $('#sufEtapa').style.opacity = estado.formado ? .35 : 1; previa(); };
+  formado.onchange = aplicaFormado;
+
+  // Menu da faculdade: abre com a busca já focada; setas, Enter e Esc funcionam; acentos não importam na busca.
+  const btn = $('#facBtn'), pop = $('#pop'), busca = $('#busca'), lista = $('#lista');
+  let itens = [], ativo = 0;
+  const marca = (txt, q) => {
+    if (!q) return esc(txt);
+    const i = semAcento(txt).indexOf(q);
+    return i < 0 ? esc(txt) : esc(txt.slice(0, i)) + '<mark>' + esc(txt.slice(i, i + q.length)) + '</mark>' + esc(txt.slice(i + q.length));
+  };
+  const montar = () => {
+    const q = semAcento(busca.value.trim());
+    itens = FACULDADES.filter(([n, c]) => !q || semAcento(n + ' ' + c).includes(q));
+    ativo = Math.min(ativo, itens.length);
+    lista.innerHTML = (itens.length ? itens.map(([n, c], i) =>
+      `<li role="option" id="op${i}" data-i="${i}" aria-selected="${estado.faculdade === n}" class="${i === ativo ? 'ativo' : ''}">${marca(n, q)}<small>${esc(c)}</small></li>`).join('')
+      : `<li class="vazio">Nada encontrado para “${esc(busca.value)}”.</li>`)
+      + `<li role="option" id="op${itens.length}" data-i="${itens.length}" class="outra ${ativo === itens.length ? 'ativo' : ''}" aria-selected="${estado.faculdade === 'outra'}">Não achei · digitar outra</li>`;
+    busca.setAttribute('aria-activedescendant', 'op' + ativo);
+    $('#op' + ativo)?.scrollIntoView({ block: 'nearest' });
+  };
+  const abrir = () => { pop.hidden = false; btn.setAttribute('aria-expanded', 'true'); busca.value = ''; ativo = 0; montar(); busca.focus(); };
+  const fechar = (foco = true) => { pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); if (foco) btn.focus(); };
+  const escolher = i => {
+    if (i === itens.length) { estado.faculdade = 'outra'; $('#outraCampo').hidden = false; fechar(false); $('#outra').focus(); }
+    else { estado.faculdade = itens[i][0]; $('#outraCampo').hidden = true; fechar(); }
+    const v = $('#facVal'); v.textContent = estado.faculdade === 'outra' ? 'Outra faculdade' : estado.faculdade; v.classList.remove('ph');
+    previa();
+  };
+  btn.onclick = () => pop.hidden ? abrir() : fechar();
+  busca.oninput = () => { ativo = 0; montar(); };
+  busca.onkeydown = e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); ativo = Math.min(ativo + 1, itens.length); montar(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); ativo = Math.max(ativo - 1, 0); montar(); }
+    else if (e.key === 'Enter') { e.preventDefault(); escolher(ativo); }
+    else if (e.key === 'Escape') { e.preventDefault(); fechar(); }
+  };
+  lista.onclick = e => { const li = e.target.closest('li[data-i]'); if (li) escolher(Number(li.dataset.i)); };
+  document.addEventListener('pointerdown', e => { if (!pop.hidden && !$('#combo')?.contains(e.target)) fechar(false); });
+  $('#outra').oninput = e => { estado.outra = e.target.value; previa(); };
+  if (estado.faculdade) { const v = $('#facVal'); v.textContent = estado.faculdade === 'outra' ? 'Outra faculdade' : estado.faculdade; v.classList.remove('ph'); $('#outraCampo').hidden = estado.faculdade !== 'outra'; }
+
+  $('#cta').onclick = () => ir('fim');
+  pôrEtapa(estado.etapa ?? ''); aplicaFormado();
+}
+
+function telaFim() {
+  marcarAba('completar');
+  main.innerHTML = `<div class="vista fim"><div class="selo" aria-hidden="true">🎉</div>
+    <h2 class="t">Crachá emitido!</h2><p class="lead" style="margin:8px auto 22px">Na versão real, aqui entra o tutorial do plantão.</p>
+    <button class="link" id="denovo">Ver o protótipo de novo</button></div>`;
+  $('#denovo').onclick = () => ir('codigo');
+}
+
+telaCodigo();
+</script>
+</body>
+</html>
