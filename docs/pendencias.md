@@ -21,6 +21,8 @@ Legenda: **[U]** com o usuário, **[A]** com o agente, **[U+A]** precisa dos doi
 - **Protótipo de movimento em risco:** o projeto do protótipo (`cacomed-v2`, usado como referência de design) está só numa pasta temporária desta máquina, fora do repositório. Falta decidir se ele entra no Git (ver decisão 8).
 - **Arquivo local não versionado:** `.claude/launch.json` (configurações dos servidores de teste) não está no Git e aponta para essa pasta temporária.
 
+Cronograma desta semana: [[cronograma-semana-15-a-22-10|15/10 a 22/10]].
+
 ## 2. Estado de produção (09/10/2026)
 
 | Item | Estado |
@@ -29,7 +31,7 @@ Legenda: **[U]** com o usuário, **[A]** com o agente, **[U+A]** precisa dos doi
 | Código ainda **não publicado** (deploy às quintas) | **Cadastro com código do e-mail** (15/10/2026, [[cadastro-com-codigo|detalhes]]): tela de cadastro só com nome, e-mail e senha; código de 6 números com a animação escolhida; Cadastro 2.0 com etapa, "não sou de Medicina", faculdade (lista do INEP) e 18 matérias. Mexe na API (`cadastrar` e `utils/curso.js` novo) e no site. **Adiado pelo usuário em 15/10** (o Supabase só libera o modelo do e-mail com SMTP próprio; tarefa 10 da seção 4). **Cruzadinha:** o site foi publicado em 15/10 (linha abaixo); **falta a API** (`registrarPartida` e `utils/memoriaPalavras.js`), sem a qual a memória só vale dentro da mesma visita. **Atenção:** a API e o site da `main` levam junto o cadastro com código; para publicar sem ele, usar o branch `release/cruzadinha-1510`. O resto da `main` até `bcbb482` foi publicado em 15/10 |
 | Publicação de 15/10/2026, 2ª (site) | Só o site, com o "sim" do usuário: dicas da cruzadinha sem IA e memória de palavras ([[cruzadinha-palavras-e-dicas|detalhes]]). Para não levar o cadastro com código (adiado), saiu do branch `release/cruzadinha-1510` = `764999e` + a correção (`82bd08d`); 154 testes, lint e build ok; conferido no pacote publicado (dicas novas, sem `/api/ia`). A API v15 aceita a partida nova e ignora o campo `respostas` |
 | Publicação de 15/10/2026 | Migrações `ranking_so_username` e `limites_perfil_e_username` aplicadas no banco. API `cacamed-api` **v15** (publicada pela CLI do Supabase, 24 arquivos, sem os dois do Paciente DDX; ranking, coroas e palavras 200, POST sem login 401). Frontend `dpl_Ak8wHt3EzusRgHXh4ZPKoy3nsjNu` (commit `bcbb482`). Ponto de volta do frontend: `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx` |
-| API | Edge Function `cacamed-api`, **versão 14**, no projeto Supabase `lruzndfqfivlvcckvgbw` (São Paulo, plano Free). Inclui a correção da senha no cadastro Google e a aprovação de migração |
+| API | Edge Function `cacamed-api`, **versão 16** (15/10/2026, cruzadinha: memória de palavras; ver [[cruzadinha-palavras-e-dicas|detalhes]]). Antes era a versão 14, no projeto Supabase `lruzndfqfivlvcckvgbw` (São Paulo, plano Free). Inclui a correção da senha no cadastro Google e a aprovação de migração |
 | Vercel | equipe `team_nkI26shDp4jqQSE5MaIZduEE`, projeto `prj_XAluhsTRRiiEuiGabCvqNzaVrWsv` |
 | Voltar o site | promover `dpl_C3Ni3PRx3askHXKa7Wrmbnv9hsPa` (commit `9a7396a`); a API v14 é compatível |
 | Contas | 7 usuários no Supabase Auth e 6 perfis de jogadores, **todos vinculados** ao Supabase (nenhum só no Firebase). A conta de teste `gfire0009@gmail.com` está confirmada e **sem perfil** |
