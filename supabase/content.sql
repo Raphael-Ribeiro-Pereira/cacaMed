@@ -11,7 +11,7 @@ grant select, insert, update on public.cacamed_content to service_role;
 create function public.cacamed_ranking()
 returns table(player_id text, nome text, xp_global bigint, partidas bigint, letras bigint, tempo_medio bigint, atualizado_em timestamptz)
 language sql stable security invoker set search_path = '' as $$
-  select s.player_id, coalesce(s.profile->>'nome',s.profile->>'username','Plantonista'),
+  select s.player_id, coalesce(nullif(s.profile->>'username',''),'Plantonista'),
     coalesce((s.profile->>'pontuacaoTotal')::bigint,0),
     coalesce(t.partidas,0), coalesce(t.letras,0),
     case when t.partidas>0 then t.tempo / t.partidas else null end, s.updated_at

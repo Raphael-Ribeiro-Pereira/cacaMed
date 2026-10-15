@@ -29,7 +29,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual, abaInicia
   const web = useLargo();
   const uid = useId();
   const foto = fotoDoPerfil(dadosUsuario);
-  const meuNome = dadosUsuario?.nome || dadosUsuario?.username || 'Você';
+  const meuNome = dadosUsuario?.username || 'Você';
   const [aba, setAba] = useState(abaInicial);
   const [criterio, setCriterio] = useState('xp');
   const [meuId, setMeuId] = useState(null);

@@ -116,7 +116,7 @@ const coroas = emCache(async () => {
     + '&profile->coroas->>semana=eq.' + encodeURIComponent(semana) + '&player_id=not.like.homologacao:*');
   return montarCoroas(await Promise.all(rows.map(async r => {
     const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(r.player_id));
-    return { idPublico: Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2,'0')).join(''), nome: r.nome || r.username || 'Plantonista', coroas: r.coroas };
+    return { idPublico: Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2,'0')).join(''), nome: r.username || 'Plantonista', coroas: r.coroas };
   })));
 });
 let bancoCache;
