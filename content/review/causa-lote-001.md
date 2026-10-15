@@ -1,6 +1,6 @@
 # Dossiê: Causa e efeito, lote 1
 
-Feito pelo agente em 13/10/2026. Cada trecho citado foi conferido literalmente na página ou no PDF indicado (`npm run content:fontes`). **Aguarda a sua revisão médica**; nada disso está no jogo ainda.
+Feito pelo agente em 13/10/2026. Cada trecho citado foi conferido literalmente na página ou no PDF indicado (`npm run content:fontes`). **Aprovado pela diretoria em 15/10/2026** e integrado ao jogo com `revisado: true` (lote em `content/approved/`).
 
 Os nomes, os sinais vitais e os detalhes das histórias são fictícios. As decisões centrais seguem as fontes brasileiras citadas. Pontos de atenção estão no fim.
 

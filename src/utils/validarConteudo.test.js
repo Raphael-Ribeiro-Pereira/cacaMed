@@ -59,7 +59,7 @@ test('conferência de fontes acha o trecho literal, recusa trecho inventado e do
 });
 
 test('S-15: fonte com link precisa ser https; texto sem link continua aceito', () => {
-  const lote = JSON.parse(readFileSync(new URL('../../content/inbox/erro-lote-001.json', import.meta.url), 'utf8'));
+  const lote = JSON.parse(readFileSync(new URL('../../content/approved/erro-lote-001.json', import.meta.url), 'utf8'));
   const erros = fonte => validarErroMedico({ auditorias: [{ ...lote.auditorias[0], fonte }], pontos_revisor: [] }).errors.filter(e => /link da fonte/.test(e));
   assert.deepEqual(erros('https://bvsms.saude.gov.br/x.pdf'), []);
   assert.deepEqual(erros('Biblioteca do caso (ver referências no relatório)'), []);
