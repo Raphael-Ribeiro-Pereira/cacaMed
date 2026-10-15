@@ -19,9 +19,23 @@ Decidido com o usuário em 15/10/2026 a partir dos protótipos [`prototipos/cada
 
 ## Antes de publicar (painel do Supabase, só o usuário)
 
-1. **Authentication → Emails → "Confirm signup":** incluir o código no corpo, por exemplo `<p>Seu código: <b>{{ .Token }}</b></p>` (pode manter o link junto). Sem isso, o e-mail chega só com o link e a tela do código fica sem uso.
-2. **Authentication → Providers → Email:** conferir "Email OTP Length" = **6** (a tela tem 6 casinhas) e a validade do código.
-3. Continua valendo o limite do envio padrão: sem e-mail próprio (SMTP), só a equipe do projeto recebe o e-mail ([proposta](proposta-email-autenticacao.md)).
+**O e-mail próprio (SMTP) vem primeiro.** Visto em 15/10: sem SMTP próprio, o Supabase trava a edição dos modelos ("Set up custom SMTP to edit templates") e manda o modelo padrão, que só tem o link. E o envio padrão só entrega para a equipe do projeto ([documentação do Supabase](https://supabase.com/docs/guides/auth/auth-smtp)). Então o cadastro com código depende do SMTP.
+
+1. **Authentication → Emails → SMTP Settings:** o usuário preenche e salva (a senha não passa pelo chat). Dois caminhos:
+   - **Domínio + Resend** (o planejado, [proposta](proposta-email-autenticacao.md)): host `smtp.resend.com`, porta `465`, usuário `resend`, senha = chave da API do Resend, remetente no domínio verificado.
+   - **Ponte sem domínio:** uma conta Gmail **só do jogo** (não a pessoal) com verificação em duas etapas e uma "senha de app": host `smtp.gmail.com`, porta `465`, usuário e remetente = esse Gmail, senha = a senha de app. O Google limita a cerca de 500 e-mails por dia. Depois dá para trocar pelo Resend só mudando esses campos.
+2. **Authentication → Emails → "Confirm signup"** (destrava depois do SMTP): assunto `Seu código do cacoMed: {{ .Token }}` e o corpo abaixo. Sem `{{ .Token }}`, o e-mail chega só com o link e a tela do código fica sem uso.
+3. **Authentication → Providers → Email:** conferir "Email OTP Length" = **6** (a tela tem 6 casinhas) e a validade do código.
+4. Testar com um e-mail de fora da equipe (caixa de entrada e spam).
+
+```html
+<h2>Bem-vindo(a) ao plantão!</h2>
+<p>Seu código de confirmação do cacoMed:</p>
+<p style="font-size:28px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
+<p>Digite os 6 números na tela do cadastro. O código vale por tempo limitado.</p>
+<p>Prefere o link? <a href="{{ .ConfirmationURL }}">Confirmar meu e-mail</a></p>
+<p>Se você não pediu este cadastro, ignore este e-mail.</p>
+```
 
 ## Testes
 

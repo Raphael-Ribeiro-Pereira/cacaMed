@@ -80,7 +80,7 @@ Registros: [PWA](app-instalavel.md), [cadastro Google e e-mail](historico/regist
 7. **Testar em aparelho real** (iPhone e Android) seguindo o [roteiro](roteiro-smartphone.md): instalar o app, entrar com a conta real e jogar uma cruzadinha. Depois, testar o cadastro por e-mail de ponta a ponta (a conta de teste `gfire0009` já está confirmada: ao entrar, ela cai no Cadastro 2.0).
 8. **E-mail próprio (quando houver domínio):** registrar o domínio, criar a conta no Resend e colar a credencial **você mesmo** no painel do Supabase (a credencial não passa pelo chat).
 9. **Acessibilidade** (opcional): foco, leitor de tela e zoom de 200% nas telas principais.
-10. **Painel do Supabase, antes de publicar o cadastro com código:** em Authentication → Emails → "Confirm signup", incluir `{{ .Token }}` no corpo do e-mail (por exemplo `<p>Seu código: <b>{{ .Token }}</b></p>`); em Authentication → Providers → Email, conferir "Email OTP Length" = 6. Ver [[cadastro-com-codigo|Cadastro com código]].
+10. **Painel do Supabase, antes de publicar o cadastro com código:** primeiro o e-mail próprio (tarefa 8, ou a ponte com um Gmail só do jogo), porque sem SMTP próprio o Supabase trava a edição dos modelos (visto em 15/10). Depois, em Authentication → Emails → "Confirm signup", colar o modelo com `{{ .Token }}`; em Authentication → Providers → Email, conferir "Email OTP Length" = 6. Passo a passo e modelo pronto em [[cadastro-com-codigo#Antes de publicar (painel do Supabase, só o usuário)|Cadastro com código]].
 
 ## 5. Trabalho do agente, na ordem decidida
 
