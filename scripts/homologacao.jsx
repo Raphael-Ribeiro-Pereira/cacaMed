@@ -169,11 +169,16 @@ const contaFicticia = {
   async criarConta({ nome, email, escolhas }) {
     await espera(900);
     if (email.toLowerCase() === 'homologacao@exemplo.com') throw Object.assign(new Error('Em uso.'), { code: 'auth/email-already-in-use' });
-    // Como o Supabase de verdade: pede a confirmação por e-mail em vez de devolver a conta e guarda nome e escolhas nos metadados.
-    if (email.toLowerCase() === 'confirmar@exemplo.com') { metadadosConfirmacao = { name: nome, ...escolhas }; return { confirmarEmail: true }; }
+    metadadosConfirmacao = { name: nome, ...escolhas };
+    // Como o Supabase de verdade: pede o código do e-mail (o certo é 482913) em vez de devolver a conta.
+    if (email.toLowerCase() === 'confirmar@exemplo.com') return { confirmarEmail: true };
     return { user: { uid: 'cadastro-' + email.toLowerCase(), email, displayName: nome, providerData: [{ providerId: 'password' }] } };
   },
   async reenviarConfirmacao() { await espera(600); },
+  async confirmarCodigo(email, codigo) {
+    await espera(700);
+    if (codigo !== '482913') throw Object.assign(new Error('Token has expired or is invalid'), { code: 'otp_expired', status: 403 });
+  },
   async criarSenha() { await espera(700); },
   async gravarPerfilAntigo() { await espera(700); },
   async sair() { await espera(300); navegarFicticio('login'); },
@@ -188,7 +193,7 @@ async function servicoEntrada(user, acao, pedido = {}) {
   if (acao === 'cadastrar') {
     if (simularFalhaCadastro) { simularFalhaCadastro = false; throw new Error('Falha simulada no cadastro.'); }
     perfilCadastrado = { uid: user.uid, email: user.email, nome: user.displayName || user.email.split('@')[0], username: pedido.username, titulo: pedido.titulo, role: 'jogador',
-      materiaPreferida: pedido.materiaPreferida, especialidade: pedido.materiaPreferida, pontuacaoTotal: 0, tickets: 0, xpTopicos: {}, estatisticas: {}, estatisticasGerais: {},
+      materiaPreferida: pedido.materiaPreferida, especialidade: pedido.materiaPreferida, ...pedido.curso, pontuacaoTotal: 0, tickets: 0, xpTopicos: {}, estatisticas: {}, estatisticasGerais: {},
       economia: { versao: 2, ultimoNivelPremiado: 1 }, missoesDiarias: criarMissoesDiarias(), dataUltimoLogin: dataLocalHoje(), tutorialCruzadinhasConcluido: false, criadoEm: new Date().toISOString() };
     return perfilCadastrado;
   }
@@ -256,7 +261,7 @@ export function Homologacao() {
   : modo === 'causaEfeito' ? <CausaEfeito usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoGenerico} />
   : modo === 'menu' ? <MenuPrincipal usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} buscarRanking={rankingFicticio} />
   : modo === 'login' ? <Login setTelaAtual={navegar} conta={contaFicticia} />
-  : modo === 'cadastro' ? <Cadastro setTelaAtual={navegar} conta={contaFicticia} servicoPerfil={servicoEntrada} onConcluido={perfil => { setDados(perfil); navegar('menu'); }} />
+  : modo === 'cadastro' ? <Cadastro setTelaAtual={navegar} conta={contaFicticia} onContaConfirmada={() => navegar('cadastro2email')} />
   : modo === 'cadastro2' ? <Cadastro2 usuario={usuarioGoogle} conta={contaFicticia} servicoPerfil={servicoEntrada} onConcluido={perfil => { setDados(perfil); navegar('menu'); }} />
   : modo === 'cadastro2email' ? <Cadastro2 key="email" usuario={usuarioEmailConfirmado()} conta={contaFicticia} servicoPerfil={servicoEntrada} onConcluido={perfil => { setDados(perfil); navegar('menu'); }} />
   : modo === 'batalha' ? <BatalhaDiagnostica usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('quiz')} servicoPerfil={servicoBatalha} />

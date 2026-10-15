@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
-import { Check, Eye, EyeOff, Grid3x3, HeartPulse, RotateCw, ScanLine, Sparkles, Stethoscope, Trophy, X } from 'lucide-react';
+import { Check, ChevronDown, Eye, EyeOff, Grid3x3, HeartPulse, RotateCw, ScanLine, Search, Sparkles, Stethoscope, Trophy, X } from 'lucide-react';
 import { tituloEpico } from '../utils/coroas';
-import { MATERIA_CADASTRO, tratamento } from '../utils/cracha';
-import { MATERIAS_CADASTRO } from '../utils/entrada';
+import { MATERIA_CADASTRO, prefixoTitulo, tratamento } from '../utils/cracha';
+import { ETAPA_MAXIMA, MATERIAS_CADASTRO, tituloVisitante } from '../utils/curso';
 import { FOTOS } from '../utils/fotosCracha';
 import { animar } from '../utils/prototipo';
 import { Retrato } from './batalhaArte';
@@ -70,31 +70,47 @@ export function LadoCracha({ cracha }) {
 
 export function MiniCracha({ cracha }) {
   const materia = MATERIA_CADASTRO[cracha.p.materiaPreferida];
-  const [titulo, emoji, cor] = tituloEpico(materia || '');
+  const visitante = cracha.p.naoMedicina;
+  const [titulo, emoji, cor] = visitante ? tituloVisitante(cracha.p.titulo) : tituloEpico(materia || '');
   return <div className="au-mini" aria-label="Prévia do crachá">
     <span className="au-mini-pic"><Retrato f={FOTOS[cracha.foto] || FOTOS[0]} /></span>
     <span className="au-mini-tx">
       <small className="mono">PRÉVIA DO CRACHÁ</small>
-      <b>{cracha.p.titulo && `${tratamento(cracha.p.titulo)} `}{cracha.nome}</b>
+      <b>{cracha.p.titulo && prefixoTitulo(cracha.p) && `${prefixoTitulo(cracha.p)} `}{cracha.nome}</b>
       <span className="mono">@{cracha.username}</span>
-      {materia ? <span className="cr-pill ti" style={{ '--tc': cor }}><span aria-hidden="true">{emoji}</span>{titulo}</span> : <span className="au-mini-q">Escolha a matéria para ganhar um título</span>}
+      {materia || visitante ? <span className="cr-pill ti" style={{ '--tc': cor }}><span aria-hidden="true">{emoji}</span>{titulo}</span> : <span className="au-mini-q">Escolha a matéria para ganhar um título</span>}
     </span>
   </div>;
 }
 
-export function Escolhas({ titulo, setTitulo, materia, setMateria, foto, setFoto, tentou }) {
-  const epico = materia ? tituloEpico(MATERIA_CADASTRO[materia]) : null;
+// Matérias numa caixa que rola: as de baixo aparecem pela metade num fade, que some no fim da lista.
+function Materias({ materia, setMateria, tentou }) {
+  const caixa = useRef(null);
+  const [fim, setFim] = useState(false);
+  const conferirFim = () => { const c = caixa.current; if (c) setFim(c.scrollTop + c.clientHeight >= c.scrollHeight - 4); };
+  useEffect(conferirFim, []);
+  return <>
+    <div ref={caixa} onScroll={conferirFim} className={`au-mats rola ${fim ? 'fim' : ''} ${tentou && !materia ? 'bad' : ''}`} role="radiogroup" aria-label="Matéria preferida">
+      {MATERIAS_CADASTRO.map(([v, t, e]) => <button key={v} type="button" role="radio" aria-checked={materia === v} className={materia === v ? 'on' : ''} onClick={() => setMateria(v)}><span aria-hidden="true">{e}</span>{t}</button>)}
+    </div>
+    <p className={`au-mats-dica ${fim ? 'fim' : ''}`} aria-hidden="true"><i>↓</i>role para ver as {MATERIAS_CADASTRO.length} matérias</p>
+  </>;
+}
+
+// naoMedicina troca Dr./Dra. pelo título de visitante; o valor guardado continua Doutor/Doutora (é o que escolhe a foto padrão).
+export function Escolhas({ titulo, setTitulo, materia, setMateria, foto, setFoto, tentou, naoMedicina = false, children }) {
+  const epico = naoMedicina ? tituloVisitante(titulo) : materia ? tituloEpico(MATERIA_CADASTRO[materia]) : null;
+  const rotulo = t => (naoMedicina ? tituloVisitante(t)[0].split(' ')[0] : t === 'Doutor' ? 'Dr.' : 'Dra.');
   return <>
     <div className="cr-f"><span className="cr-l">Título</span>
       <div className={`au-seg ${tentou && !titulo ? 'bad' : ''}`} role="radiogroup" aria-label="Título">
-        {['Doutor', 'Doutora'].map(t => <button key={t} type="button" role="radio" aria-checked={titulo === t} className={titulo === t ? 'on' : ''} onClick={() => setTitulo(t)}>{t === 'Doutor' ? 'Dr.' : 'Dra.'}<small>{t}</small></button>)}
+        {['Doutor', 'Doutora'].map(t => <button key={t} type="button" role="radio" aria-checked={titulo === t} className={titulo === t ? 'on' : ''} onClick={() => setTitulo(t)}>{rotulo(t)}<small>{naoMedicina ? 'no Plantão' : t}</small></button>)}
       </div>
     </div>
+    {children}
     <div className="cr-f"><span className="cr-l">Matéria preferida</span>
-      <div className={`au-mats ${tentou && !materia ? 'bad' : ''}`} role="radiogroup" aria-label="Matéria preferida">
-        {MATERIAS_CADASTRO.map(([v, t, e]) => <button key={v} type="button" role="radio" aria-checked={materia === v} className={materia === v ? 'on' : ''} onClick={() => setMateria(v)}><span aria-hidden="true">{e}</span>{t}</button>)}
-      </div>
-      {epico && <span className="cr-help au-ti">Título épico no crachá: <b style={{ color: epico[2] }}>{epico[0]}</b></span>}
+      <Materias materia={materia} setMateria={setMateria} tentou={tentou} />
+      {epico && <span className="cr-help au-ti">{naoMedicina ? 'Seu título no crachá' : 'Título épico no crachá'}: <b style={{ color: epico[2] }}>{naoMedicina && `${epico[1]} `}{epico[0]}</b></span>}
     </div>
     <div className="cr-f"><span className="cr-l">Foto do crachá</span>
       <div className="cr-fotos" role="radiogroup" aria-label="Foto do crachá">
@@ -102,6 +118,101 @@ export function Escolhas({ titulo, setTitulo, materia, setMateria, foto, setFoto
       </div>
     </div>
   </>;
+}
+
+// Etapa do curso (1 a 12, ou formado) e "não sou de Medicina", decididos em 15/10/2026.
+export function CursoCampos({ curso, setCurso, tentou }) {
+  const { etapa, formado, naoMedicina } = curso;
+  const mudar = novo => setCurso({ ...curso, ...novo });
+  const porEtapa = v => mudar({ etapa: v === null ? null : Math.max(1, Math.min(ETAPA_MAXIMA, v)) });
+  const travada = formado || naoMedicina;
+  return <div className="cr-f"><label className="cr-l" htmlFor="cg-etapa">Etapa do curso</label>
+    <div className="au-etapa">
+      <div className={`au-num ${travada ? 'off' : ''}`}>
+        <button type="button" aria-label="Diminuir etapa" disabled={travada || !etapa || etapa <= 1} onClick={() => porEtapa((etapa || 2) - 1)}>−</button>
+        <input id="cg-etapa" inputMode="numeric" autoComplete="off" disabled={travada} aria-describedby="cg-etapa-suf" value={travada ? '' : etapa ?? ''}
+          onChange={e => { const d = e.target.value.replace(/\D/g, '').slice(0, 2); porEtapa(d === '' ? null : Number(d)); }}
+          onKeyDown={e => { if (e.key === 'ArrowUp') { e.preventDefault(); porEtapa((etapa || 0) + 1); } if (e.key === 'ArrowDown') { e.preventDefault(); porEtapa((etapa || 2) - 1); } }} />
+        <button type="button" aria-label="Aumentar etapa" disabled={travada || etapa >= ETAPA_MAXIMA} onClick={() => porEtapa((etapa || 0) + 1)}>+</button>
+      </div>
+      <span className="au-num-suf" id="cg-etapa-suf">de {ETAPA_MAXIMA}</span>
+      <label className="au-check" htmlFor="cg-formado">
+        <input id="cg-formado" type="checkbox" checked={formado} disabled={naoMedicina} onChange={e => mudar({ formado: e.target.checked })} />
+        <span className="box"><Check size={12} strokeWidth={3} /></span>Já sou formado(a)
+      </label>
+    </div>
+    {tentou && !travada && !etapa && <span className="cr-help"><span className="cr-st no"><X size={13} />Escolha a etapa ou marque "Já sou formado(a)"</span></span>}
+    <label className="au-check" htmlFor="cg-naomed">
+      <input id="cg-naomed" type="checkbox" checked={naoMedicina} onChange={e => mudar({ naoMedicina: e.target.checked })} />
+      <span className="box"><Check size={12} strokeWidth={3} /></span>Não sou de Medicina
+    </label>
+  </div>;
+}
+
+const semAcento = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const destacar = (texto, busca) => {
+  const i = busca ? semAcento(texto).indexOf(busca) : -1;
+  return i < 0 ? texto : <>{texto.slice(0, i)}<mark>{texto.slice(i, i + busca.length)}</mark>{texto.slice(i + busca.length)}</>;
+};
+// Faculdade: menu com busca embutida (nome, sigla ou cidade, sem ligar para acentos) e "não achei" para digitar.
+// A lista (cerca de 400 cursos) só carrega quando a tela abre.
+export function MenuFaculdade({ valor, setValor, opcional, tentou }) {
+  const [lista, setLista] = useState(null);
+  const [aberto, setAberto] = useState(false);
+  const [busca, setBusca] = useState('');
+  const [ativo, setAtivo] = useState(0);
+  const [outra, setOutra] = useState(false);
+  const raiz = useRef(null), botao = useRef(null), campoBusca = useRef(null), campoOutra = useRef(null);
+  useEffect(() => { import('../utils/faculdadesMedicina').then(m => setLista(m.FACULDADES_MEDICINA)).catch(() => setLista([])); }, []);
+  const doMenu = lista?.some(([n]) => n === valor);
+  useEffect(() => { if (valor && lista && !doMenu) setOutra(true); }, [valor, lista, doMenu]);
+  useEffect(() => {
+    if (!aberto) return undefined;
+    const fora = e => { if (!raiz.current?.contains(e.target)) setAberto(false); };
+    document.addEventListener('pointerdown', fora);
+    return () => document.removeEventListener('pointerdown', fora);
+  }, [aberto]);
+  const q = semAcento(busca.trim());
+  const itens = (lista || []).filter(([n, l]) => !q || semAcento(`${n} ${l}`).includes(q));
+  const abrir = () => { setBusca(''); setAtivo(0); setAberto(true); setTimeout(() => campoBusca.current?.focus(), 0); };
+  const fechar = (foco = true) => { setAberto(false); if (foco) botao.current?.focus(); };
+  const escolher = i => {
+    if (i === itens.length) { setOutra(true); setValor(''); fechar(false); setTimeout(() => campoOutra.current?.focus(), 0); return; }
+    setOutra(false); setValor(itens[i][0]); fechar();
+  };
+  const tecla = e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setAtivo(a => Math.min(a + 1, itens.length)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setAtivo(a => Math.max(a - 1, 0)); }
+    else if (e.key === 'Enter') { e.preventDefault(); escolher(Math.min(ativo, itens.length)); }
+    else if (e.key === 'Escape') { e.preventDefault(); fechar(); }
+  };
+  useEffect(() => { if (aberto) raiz.current?.querySelector(`#fac-op-${ativo}`)?.scrollIntoView({ block: 'nearest' }); }, [ativo, aberto]);
+  const mostrado = outra ? 'Outra faculdade' : valor;
+  return <div className="cr-f"><span className="cr-l" id="cg-fac-l">Faculdade{opcional ? ' (opcional)' : ''}</span>
+    <div className="au-fac" ref={raiz}>
+      <button ref={botao} type="button" className={`au-fac-btn ${tentou && !opcional && !valor ? 'bad' : ''}`} aria-haspopup="listbox" aria-expanded={aberto}
+        aria-labelledby="cg-fac-l cg-fac-v" onClick={() => (aberto ? fechar() : abrir())}>
+        <span className={`val ${mostrado ? '' : 'ph'}`} id="cg-fac-v">{mostrado || 'Escolha sua faculdade'}</span><ChevronDown size={16} />
+      </button>
+      {aberto && <div className="au-fac-pop">
+        <div className="au-fac-busca"><Search size={16} />
+          <input ref={campoBusca} value={busca} placeholder="Busque por nome, sigla ou cidade" role="combobox" aria-expanded="true" aria-controls="cg-fac-lista"
+            aria-autocomplete="list" aria-activedescendant={`fac-op-${ativo}`} autoComplete="off" onChange={e => { setBusca(e.target.value); setAtivo(0); }} onKeyDown={tecla} />
+        </div>
+        <ul className="au-fac-lista" id="cg-fac-lista" role="listbox" aria-labelledby="cg-fac-l">
+          {!lista ? <li className="vazio">Carregando a lista…</li> : !itens.length && <li className="vazio">Nada encontrado para “{busca}”.</li>}
+          {itens.map(([n, l], i) => <li key={`${n}|${l}`} id={`fac-op-${i}`} role="option" aria-selected={valor === n} className={i === ativo ? 'ativo' : ''}
+            onPointerDown={e => e.preventDefault()} onClick={() => escolher(i)}><span>{destacar(n, q)}</span><small>{l}</small></li>)}
+          <li id={`fac-op-${itens.length}`} role="option" aria-selected={outra} className={`outra ${ativo === itens.length ? 'ativo' : ''}`}
+            onPointerDown={e => e.preventDefault()} onClick={() => escolher(itens.length)}>Não achei · digitar outra</li>
+        </ul>
+      </div>}
+    </div>
+    {outra && <span className={`cr-in au-in ${tentou && !opcional && !valor ? 'bad' : ''}`}>
+      <input ref={campoOutra} aria-label="Nome da sua faculdade" maxLength={120} placeholder="Nome da sua faculdade" value={valor} onChange={e => setValor(e.target.value)} />
+    </span>}
+    <span className="cr-help au-ti">{opcional ? 'Se a sua não estiver na lista, use “digitar outra”.' : 'Lista de cursos de Medicina do Censo da Educação Superior (INEP/MEC).'}</span>
+  </div>;
 }
 
 // Impressão do crachá enquanto o cadastro grava. Até o tempo previsto o crachá sai quase inteiro;
@@ -130,7 +241,7 @@ export function Impressao({ cracha, passos, etapa, erro, tentativa, aoTentar, ao
   return <motion.div className="au-print" role="dialog" aria-modal="true" aria-label="Emissão do crachá" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
     <div className="pr-in">
       <span className="kicker">Recepção · emissão de crachá</span>
-      <h2>{pronto ? `Bem-vind${doutora ? 'a' : 'o'} ao plantão, ${doutora ? 'Dra.' : 'Dr.'} ${primeiro}` : erro ? 'A impressora parou' : 'Imprimindo seu crachá'}</h2>
+      <h2>{pronto ? `Bem-vind${doutora ? 'a' : 'o'} ao plantão, ${prefixoTitulo(cracha.p) ? `${prefixoTitulo(cracha.p)} ` : ''}${primeiro}` : erro ? 'A impressora parou' : 'Imprimindo seu crachá'}</h2>
       <div className="pr-machine">
         <div className="pr-slot" aria-hidden="true"><span className={`pr-led ${erro ? 'err' : pronto ? 'ok' : ''}`} /><span className="pr-mouth" /></div>
         <div className="pr-window">

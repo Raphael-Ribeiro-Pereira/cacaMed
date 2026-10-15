@@ -5,10 +5,11 @@ import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { desdeDe, useDisponibilidade } from '../utils/cracha';
 import { fotoPadrao, primeiroNome, sugestoes } from '../utils/entrada';
 import { useLargo } from '../utils/prototipo';
-import { CascaEntrada, Campo, Erro, Escolhas, GoogleG, Impressao, LadoCracha, MiniCracha, Ok, Olho } from './entradaUi';
+import { CascaEntrada, Campo, CursoCampos, Erro, Escolhas, GoogleG, Impressao, LadoCracha, MenuFaculdade, MiniCracha, Ok, Olho } from './entradaUi';
 import { StatusUser } from './crachaUi';
 import '../prototipo.css';
 import { SENHA_MINIMA } from '../utils/senha';
+import { tituloVisitante, validarCurso } from '../utils/curso';
 
 // Cadastro 2.0 portado do protótipo de movimento: conta já autenticada (Google ou e-mail confirmado)
 // sem perfil. Username conferido no servidor, sugestões livres e o crachá impresso durante o cadastrar.
@@ -43,6 +44,8 @@ export default function Cadastro2({ usuario, onConcluido, conta = contaPadrao, s
   const [titulo, setTitulo] = useState(usuario.escolhas?.titulo || '');
   const [materia, setMateria] = useState(usuario.escolhas?.materia || '');
   const [foto, setFoto] = useState(usuario.escolhas?.foto ?? null);
+  // Curso (15/10/2026): etapa de 1 a 12 ou formado, faculdade, e quem não é de Medicina.
+  const [curso, setCurso] = useState({ etapa: null, formado: false, naoMedicina: false, faculdade: '' });
   const [senha, setSenha] = useState('');
   const [conf, setConf] = useState('');
   const [ver, setVer] = useState(false);
@@ -59,9 +62,10 @@ export default function Cadastro2({ usuario, onConcluido, conta = contaPadrao, s
   const check = useDisponibilidade(u, true, conferir);
   const livres = useSugestoesLivres(nomeConta, check === 'taken', u, conferir);
   const senhaOk = senha.length >= SENHA_MINIMA, confOk = conf.length > 0 && conf === senha;
-  const pronto = check === 'ok' && !!titulo && !!materia && (!precisaSenha || (senhaOk && confOk));
+  const cursoOk = validarCurso(curso);
+  const pronto = check === 'ok' && !!titulo && !!materia && !!cursoOk && (!precisaSenha || (senhaOk && confOk));
   const fotoAtual = foto ?? fotoPadrao(titulo);
-  const cracha = { p: { uid: usuario.uid, titulo, materiaPreferida: materia, pontuacaoTotal: 0, estatisticas: {} },
+  const cracha = { p: { uid: usuario.uid, titulo, materiaPreferida: materia, naoMedicina: curso.naoMedicina, pontuacaoTotal: 0, estatisticas: {} },
     email: usuario.email, nome: nomeConta, username: u || 'username', foto: fotoAtual, desde };
 
   const registrar = async (tentativa, passos) => {
@@ -73,7 +77,7 @@ export default function Cadastro2({ usuario, onConcluido, conta = contaPadrao, s
         setSenhaCriada(true); setSenha(''); setConf('');
         setImpressao(i => ({ ...i, etapa: 1 }));
       }
-      let perfil = await servicoPerfil(usuario, 'cadastrar', { titulo, materiaPreferida: materia, usarNomeGoogle: false, username: u });
+      let perfil = await servicoPerfil(usuario, 'cadastrar', { titulo, materiaPreferida: materia, usarNomeGoogle: false, username: u, curso: cursoOk });
       setImpressao(i => ({ ...i, etapa: 2 }));
       if (foto !== null && foto !== fotoPadrao(titulo)) perfil = await servicoPerfil(usuario, 'editarPerfil', { nome: perfil.nome, username: perfil.username, foto });
       setPerfilFinal(perfil);
@@ -86,7 +90,7 @@ export default function Cadastro2({ usuario, onConcluido, conta = contaPadrao, s
   const enviar = e => {
     e.preventDefault();
     setTentou(true);
-    if (!pronto) { setErro(check !== 'ok' ? 'Escolha um username disponível.' : 'Preencha todos os campos do prontuário corretamente.'); return; }
+    if (!pronto) { setErro(check !== 'ok' ? 'Escolha um username disponível.' : !cursoOk ? 'Conte a sua etapa e a sua faculdade.' : 'Preencha todos os campos do prontuário corretamente.'); return; }
     setErro('');
     const passos = [precisaSenha ? (google ? 'Vinculando senha à conta Google' : 'Vinculando senha à conta') : (google ? 'Conta Google conferida' : 'Conta conferida'), 'Registrando no prontuário', 'Imprimindo crachá'];
     registrar((impressao?.tentativa || 0) + 1, passos);
@@ -119,7 +123,11 @@ export default function Cadastro2({ usuario, onConcluido, conta = contaPadrao, s
           {check === 'checking' ? <span className="spin sm" aria-label="Conferindo" /> : check === 'ok' ? <span className="okdot"><Check size={11} strokeWidth={3} /></span> : null}
         </Campo>
         {livres.length > 0 && <div className="au-sugs"><span>Livres agora:</span>{livres.map(s => <button key={s} type="button" className="au-sug mono" onClick={() => { setUsarPrimeiro(false); setUsername(s); }}>@{s}</button>)}</div>}
-        <Escolhas titulo={titulo} setTitulo={setTitulo} materia={materia} setMateria={setMateria} foto={fotoAtual} setFoto={setFoto} tentou={tentou} />
+        <Escolhas titulo={titulo} setTitulo={setTitulo} materia={materia} setMateria={setMateria} foto={fotoAtual} setFoto={setFoto} tentou={tentou} naoMedicina={curso.naoMedicina}>
+          <CursoCampos curso={curso} setCurso={setCurso} tentou={tentou} />
+          {curso.naoMedicina && <p className="au-visit"><span aria-hidden="true">🕵️</span><span>Você entra como <b>{tituloVisitante(titulo)[0]}</b>: joga tudo, com um título só seu.</span></p>}
+          <MenuFaculdade valor={curso.faculdade} setValor={faculdade => setCurso(c => ({ ...c, faculdade }))} opcional={curso.naoMedicina} tentou={tentou} />
+        </Escolhas>
         {precisaSenha && <div className="au-pw">
           <span className="au-pw-h"><KeyRound size={15} /><b>Crie uma senha</b></span>
           <p>Para também entrar pelo formulário de e-mail. Ela fica no serviço de autenticação, não no seu perfil.</p>

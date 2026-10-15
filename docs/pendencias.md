@@ -26,7 +26,7 @@ Legenda: **[U]** com o usuário, **[A]** com o agente, **[U+A]** precisa dos doi
 | Item | Estado |
 | --- | --- |
 | Site | https://caca-med.vercel.app, deploy `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx` (commit `75a82fa`) |
-| Código ainda **não publicado** (deploy às quintas) | Nada pendente em 15/10/2026: tudo da `main` (`bcbb482`) foi publicado hoje. Próximo que entra na quinta 22/10 está na lista de segurança e no design web |
+| Código ainda **não publicado** (deploy às quintas) | **Cadastro com código do e-mail** (15/10/2026, [[cadastro-com-codigo|detalhes]]): tela de cadastro só com nome, e-mail e senha; código de 6 números com a animação escolhida; Cadastro 2.0 com etapa, "não sou de Medicina", faculdade (lista do INEP) e 18 matérias. Mexe na API (`cadastrar` e `utils/curso.js` novo) e no site. **Antes de publicar:** o usuário põe o `{{ .Token }}` no e-mail "Confirm signup" do Supabase (tarefa 10 da seção 4). O resto da `main` até `bcbb482` foi publicado em 15/10 |
 | Publicação de 15/10/2026 | Migrações `ranking_so_username` e `limites_perfil_e_username` aplicadas no banco. API `cacamed-api` **v15** (publicada pela CLI do Supabase, 24 arquivos, sem os dois do Paciente DDX; ranking, coroas e palavras 200, POST sem login 401). Frontend `dpl_Ak8wHt3EzusRgHXh4ZPKoy3nsjNu` (commit `bcbb482`). Ponto de volta do frontend: `dpl_GCgrwufvuGTgMoJLs5xcyAvgLzPx` |
 | API | Edge Function `cacamed-api`, **versão 14**, no projeto Supabase `lruzndfqfivlvcckvgbw` (São Paulo, plano Free). Inclui a correção da senha no cadastro Google e a aprovação de migração |
 | Vercel | equipe `team_nkI26shDp4jqQSE5MaIZduEE`, projeto `prj_XAluhsTRRiiEuiGabCvqNzaVrWsv` |
@@ -80,12 +80,13 @@ Registros: [PWA](app-instalavel.md), [cadastro Google e e-mail](historico/regist
 7. **Testar em aparelho real** (iPhone e Android) seguindo o [roteiro](roteiro-smartphone.md): instalar o app, entrar com a conta real e jogar uma cruzadinha. Depois, testar o cadastro por e-mail de ponta a ponta (a conta de teste `gfire0009` já está confirmada: ao entrar, ela cai no Cadastro 2.0).
 8. **E-mail próprio (quando houver domínio):** registrar o domínio, criar a conta no Resend e colar a credencial **você mesmo** no painel do Supabase (a credencial não passa pelo chat).
 9. **Acessibilidade** (opcional): foco, leitor de tela e zoom de 200% nas telas principais.
+10. **Painel do Supabase, antes de publicar o cadastro com código:** em Authentication → Emails → "Confirm signup", incluir `{{ .Token }}` no corpo do e-mail (por exemplo `<p>Seu código: <b>{{ .Token }}</b></p>`); em Authentication → Providers → Email, conferir "Email OTP Length" = 6. Ver [[cadastro-com-codigo|Cadastro com código]].
 
 ## 5. Trabalho do agente, na ordem decidida
 
 Detalhe e caixas de seleção no [cronograma de 09/10](cronograma-recuperacao-caca-med.md#plano-de-09102026--cadastro-bancos-separados-batalha-e-ddx-público) e no [de 07/10](cronograma-recuperacao-caca-med.md#plano-de-07102026--economia-v3-revisão-inteligente-v2-e-app-offline).
 
-1. **Cadastro:** publicar a tela de confirmação e o Cadastro 2.0 com as escolhas guardadas (feito na `main` em 10/10, falta publicar); configurar o e-mail próprio quando houver domínio.
+1. **Cadastro:** ~~tela de confirmação e Cadastro 2.0 com as escolhas guardadas~~ publicados em 15/10. **Cadastro com código** feito na `main` em 15/10 ([[cadastro-com-codigo|detalhes]]): publicar depois da tarefa 10 da seção 4; depois, editar etapa, faculdade e matéria no perfil. Configurar o e-mail próprio quando houver domínio.
 2. **Ajustes rápidos:**
    - bancos separados do Quiz e do V ou M ([regra](jogos-e-economia-v2.md#bancos-separados-quiz-e-verdade-ou-mentira-09102026)): sorteio pronto e testado; lote `vm-lote-002` pronto para a revisão médica (11/10). Depois da aprovação: integrar com `revisado: true` e publicar numa quinta;
    - ~~texto da Batalha estilo Pokémon~~: feito na `main` em 10/10, falta publicar ([especificação](modo-historia-v2.md#texto-da-batalha-estilo-pokémon)).

@@ -55,8 +55,8 @@ export const contaPadrao = {
     const f = await firebase();
     await f.sendPasswordResetEmail(f.auth, email);
   },
-  // Supabase pede confirmação por e-mail: devolve { confirmarEmail }. Firebase devolve o usuário já com o nome no token.
-  // escolhas (título, matéria e foto) ficam nos metadados da conta para o Cadastro 2.0 não pedir de novo.
+  // Supabase pede confirmação por e-mail (código de 6 números): devolve { confirmarEmail }. Firebase devolve o usuário já
+  // com o nome no token. Desde 15/10/2026 o cadastro não manda escolhas; o Cadastro 2.0 ainda lê as de contas antigas.
   async criarConta({ nome, email, senha, escolhas = {} }) {
     if (USAR_AUTH_SUPABASE) {
       const supabase = await clienteSupabase();
@@ -71,7 +71,14 @@ export const contaPadrao = {
     await user.getIdToken(true);
     return { user };
   },
-  // Reenvia o e-mail de confirmação do cadastro (só existe com a autenticação Supabase).
+  // Confirma o cadastro com o código do e-mail ({{ .Token }} no modelo "Confirm signup" do Supabase). Ao acertar,
+  // a sessão nova chega ao App pelo onAuthStateChange. O erro leva o code do Supabase (otp_expired e afins).
+  async confirmarCodigo(email, codigo) {
+    const supabase = await clienteSupabase();
+    const { error } = await supabase.auth.verifyOtp({ email, token: codigo, type: 'email' });
+    if (error) throw error;
+  },
+  // Reenvia o e-mail de confirmação do cadastro, com um código novo (só existe com a autenticação Supabase).
   async reenviarConfirmacao(email) {
     if (!USAR_AUTH_SUPABASE) return;
     const supabase = await clienteSupabase();

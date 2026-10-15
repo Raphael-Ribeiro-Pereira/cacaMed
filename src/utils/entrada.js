@@ -1,11 +1,9 @@
 import { hash, usernameValido } from './cracha.js';
 import { fotoDoPerfil } from './fotosCracha.js';
+import { MATERIAS_CADASTRO } from './curso.js';
 
-// Regras das telas de entrada: matérias do cadastro, e-mail e sugestões de username.
-export const MATERIAS_CADASTRO = [
-  ['anatomia', 'Anatomia', '🦴'], ['neurologia', 'Neurologia', '🧠'], ['farmaco', 'Farmacologia', '💊'],
-  ['micro', 'Microbiologia', '🦠'], ['clinica', 'Clínica Geral', '🩺'], ['patologia', 'Patologia', '🔬'],
-];
+// Regras das telas de entrada: e-mail, sugestões de username e as escolhas que vêm do cadastro. As matérias moram em curso.js.
+export { MATERIAS_CADASTRO };
 const semAcento = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 export const slug = s => semAcento(s).toLowerCase().replace(/[^a-z0-9]/g, '');
 export const emailOk = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e || '').trim());

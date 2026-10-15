@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Award, BadgeCheck, Check, ClipboardCheck, Mail, Stethoscope, Trophy, X } from 'lucide-react';
-import { tituloEpico } from '../utils/coroas';
-import { especialidade, hash, matriculaDe, tratamento } from '../utils/cracha';
+import { hash, matriculaDe, prefixoTitulo, tituloDoCracha } from '../utils/cracha';
 import { progressoGlobal } from '../utils/economia';
 import { FOTOS } from '../utils/fotosCracha';
 import { resumirCruzadinhas } from '../utils/progressoCruzadinha';
@@ -44,8 +43,7 @@ export function StatusUser({ check }) {
 
 export function CrachaFrente({ p, email, nome, username, foto, desde, oculto }) {
   const L = progressoGlobal(p);
-  const [esp] = especialidade(p);
-  const [titulo, emoji, corTitulo] = tituloEpico(esp);
+  const [titulo, emoji, corTitulo] = tituloDoCracha(p);
   const matricula = matriculaDe(p.uid || username);
   const cruz = resumirCruzadinhas(p.estatisticas).partidas;
   const concluidos = ['ddx', 'erroMedico', 'causaEfeito'].reduce((t, k) => t + (Number(p[k]?.partidas) || 0), 0);
@@ -63,7 +61,7 @@ export function CrachaFrente({ p, email, nome, username, foto, desde, oculto }) 
       <span className="cr-pic"><Retrato f={FOTOS[foto] || FOTOS[0]} title={`Foto de ${nome}`} /></span>
       <span className="cr-lvl mono"><small>LVL</small>{L.nivel}</span>
     </div>
-    <b className="cr-name">{p.titulo && <small className="cr-tt">{tratamento(p.titulo)}</small>}{nome}</b>
+    <b className="cr-name">{p.titulo && prefixoTitulo(p) && <small className="cr-tt">{prefixoTitulo(p)}</small>}{nome}</b>
     <span className="cr-user">@{username}<BadgeCheck size={14} /></span>
     <span className="cr-mail"><Mail size={11} />{email}</span>
     <div className="cr-pills">

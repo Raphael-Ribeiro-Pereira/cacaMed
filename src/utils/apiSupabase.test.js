@@ -261,3 +261,23 @@ test('S-06 e S-09: e-mail antigo não verificado não reserva o endereço; usern
   const corrida = await cadastrar('corrida');
   assert.equal(corrida.status, 409);
 });
+
+test('cadastrar guarda o curso validado e aceita as matérias novas; app antigo sem curso continua cadastrando', async () => {
+  const f = fixture();
+  const ok = await f.call({ acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'cardio', username: 'nova', curso: { etapa: 4, faculdade: ' Universidade Federal de Minas Gerais (UFMG) ', extra: 'x' } });
+  assert.equal(ok.status, 200);
+  const perfil = f.states.get('jogador').profile;
+  assert.deepEqual([perfil.materiaPreferida, perfil.naoMedicina, perfil.etapa, perfil.formado, perfil.faculdade, perfil.extra],
+    ['cardio', false, 4, false, 'Universidade Federal de Minas Gerais (UFMG)', undefined]);
+  const visitante = await f.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'visita', curso: { naoMedicina: true } }, 'admin');
+  assert.equal(visitante.status, 200);
+  assert.equal(f.states.get('admin').profile.naoMedicina, true);
+  const g = fixture();
+  for (const curso of [{ etapa: 13, faculdade: 'UFMG' }, { etapa: 3 }, 'medicina', null]) {
+    assert.equal((await g.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'teste', curso })).status, 400, JSON.stringify(curso));
+  }
+  assert.equal((await g.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'veterinaria', username: 'teste' })).status, 400);
+  const antigo = await g.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'teste' });
+  assert.equal(antigo.status, 200);
+  assert.equal('etapa' in g.states.get('jogador').profile, false);
+});

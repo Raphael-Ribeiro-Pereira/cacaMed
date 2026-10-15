@@ -32,6 +32,17 @@ export function tituloEpico(materia) {
   if (m.includes('IMUNO')) return ['Lorde dos Anticorpos', '🛡️', '#8b5cf6'];
   if (m.includes('PATO') || m.includes('DOENCA')) return ['Detetive de Lâminas', '🔬', '#8b5cf6'];
   if (m.includes('HISTO') || m.includes('CELULA')) return ['Mestre Celular', '🧬', '#ff4d7e'];
+  // Matérias do cadastro novo (15/10/2026); nenhuma coincide com as 6 coroas.
+  if (m.includes('FISIO')) return ['Maestro da Homeostase', '⚖️', '#5cc8ff'];
+  if (m.includes('BIOQUIMICA')) return ['Mago das Enzimas', '⚗️', '#c9b8ff'];
+  if (m.includes('CARDIO')) return ['Domador de Corações', '🫀', '#ff3366'];
+  if (m.includes('PEDIATRIA')) return ['Guardião dos Pequenos', '🧸', '#ffb703'];
+  if (m.includes('GINECO') || m.includes('OBSTETRICIA')) return ['Arauto da Vida', '🤰', '#ff8fa8'];
+  if (m.includes('CIRURGIA')) return ['Mãos de Aço', '🔪', '#dce2f7'];
+  if (m.includes('EMERGENCIA')) return ['Domador do Caos', '🚑', '#ff6b35'];
+  if (m.includes('PSIQUIATRIA')) return ['Leitor de Mentes', '🌀', '#b49cff'];
+  if (m.includes('COLETIVA')) return ['Sentinela do SUS', '🏥', '#06d6a0'];
+  if (m.includes('SEMIOLOGIA')) return ['Ouvido Absoluto', '👂', '#3dffb0'];
   return ['Bisturi de Ouro', '🛡️', '#ffb95f'];
 }
 

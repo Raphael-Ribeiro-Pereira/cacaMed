@@ -1231,6 +1231,81 @@
 .cbt .au-check b { color: var(--mint); font-size: 12.5px; }
 .cbt .au-sugs { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: -6px; font-size: 12px; color: var(--muted); }
 .cbt .au-sug { padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--mint); background: rgba(0, 245, 212, .08); border: 1px solid rgba(0, 245, 212, .3); }
+/* Código de 6 números do e-mail (15/10/2026). Duas filas iguais e sobrepostas: as casinhas e os números
+   se movem separados na animação do acerto (CodigoEmail.jsx). */
+.cbt .cd { display: grid; gap: 4px; }
+.cbt .cd-palco { position: relative; height: 104px; cursor: text; }
+.cbt .cd-fila { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; pointer-events: none; }
+.cbt .cd-caixa, .cbt .cd-dig { flex: none; width: min(46px, calc((100% - 52px) / 6)); height: 58px; }
+.cbt .cd-fila > :nth-child(3) { margin-right: 10px; }
+.cbt .cd-caixa { position: relative; display: grid; place-items: center; border-radius: 13px; background: #0b1120; border: 2px solid rgba(220, 226, 247, .06); transition: border-color .2s, box-shadow .2s; }
+.cbt .cd-caixa.on { border-color: rgba(0, 245, 212, .4); }
+.cbt .cd-caixa.cur { border-color: rgba(0, 245, 212, .55); box-shadow: 0 0 16px rgba(0, 245, 212, .12); }
+.cbt .cd-caixa.cur::after { content: ''; width: 2px; height: 24px; background: var(--mint); animation: cbt-cd-pisca 1s steps(1) infinite; }
+.cbt .cd-dig { display: grid; place-items: center; font: 800 26px var(--mono); color: var(--text); }
+.cbt .cd-dig b { animation: cbt-pop .22s var(--ease); }
+.cbt .cd-fila.erro { animation: cbt-cd-treme .42s; }
+.cbt .cd-fila.erro .cd-caixa { border-color: rgba(255, 51, 102, .55); }
+.cbt .cd-fila.erro .cd-dig { color: #ff8fa9; }
+.cbt .cd-real { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; padding: 0; font-size: 16px; color: transparent; caret-color: transparent; background: none; }
+.cbt .cd-boca { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; transform: scale(0); pointer-events: none; }
+.cbt .cd-boca i { position: absolute; left: 0; right: 0; height: 50%; border: 2px solid var(--mint); background: #0b1120; }
+.cbt .cd-boca i:first-child { top: 0; border-bottom: 0; border-radius: 14px 14px 0 0; transform-origin: 50% 100%; }
+.cbt .cd-boca i:last-child { bottom: 0; border-top: 0; border-radius: 0 0 14px 14px; transform-origin: 50% 0; }
+.cbt .cd-visto { position: absolute; left: 50%; top: 50%; width: 84px; height: 84px; margin: -42px 0 0 -42px; pointer-events: none; }
+.cbt .cd-visto circle { fill: rgba(0, 245, 212, .1); stroke: var(--mint); stroke-width: 3; stroke-dasharray: 240; stroke-dashoffset: 240; opacity: 0; }
+.cbt .cd-visto path { fill: none; stroke: var(--mint); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 60; stroke-dashoffset: 60; }
+.cbt .cd-visto.fixo circle { opacity: 1; stroke-dashoffset: 0; }
+.cbt .cd-visto.fixo path { stroke-dashoffset: 0; }
+.cbt .cd-onda { position: absolute; left: 50%; top: 50%; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 50%; border: 2px solid var(--mint); opacity: 0; pointer-events: none; }
+.cbt .cd-rastro { position: absolute; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: var(--mint); opacity: .5; pointer-events: none; }
+.cbt .cd-msg { margin: 0; min-height: 18px; text-align: center; font-size: 13px; color: var(--muted); }
+.cbt .cd-msg.err { color: #ff8fa9; font-weight: 600; }
+.cbt .cd-msg.ok { color: var(--mint); font-weight: 700; }
+@keyframes cbt-cd-pisca { 50% { opacity: 0; } }
+@keyframes cbt-cd-treme { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+
+/* Cadastro 2.0: etapa do curso, "não sou de Medicina", faculdade com busca e matérias que rolam com fade. */
+.cbt .au-etapa { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; transition: opacity .2s; }
+.cbt .au-num { display: flex; align-items: center; height: 48px; border-radius: 13px; background: #0b1120; border: 2px solid rgba(220, 226, 247, .06); overflow: hidden; transition: opacity .2s; }
+.cbt .au-num:focus-within { border-color: rgba(0, 245, 212, .55); box-shadow: 0 0 16px rgba(0, 245, 212, .12); }
+.cbt .au-num.off { opacity: .4; }
+.cbt .au-num button { width: 44px; height: 100%; font-size: 20px; font-weight: 700; color: var(--mint); background: none; border: 0; }
+.cbt .au-num button:disabled { color: rgba(220, 226, 247, .18); }
+.cbt .au-num input { width: 52px; text-align: center; background: none; border: 0; outline: none; color: var(--text); font: 800 19px var(--mono); }
+.cbt .au-num-suf { color: var(--muted); font-size: 13px; }
+.cbt .au-visit { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; font-size: 12.5px; color: var(--text); background: rgba(255, 183, 3, .08); border: 1px solid rgba(255, 183, 3, .3); animation: cbt-rise-k .3s var(--ease); }
+.cbt .au-visit > span { font-size: 22px; }
+.cbt .au-visit b { color: var(--amber); }
+.cbt .au-fac { position: relative; }
+.cbt .au-fac-btn { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 0 14px; border-radius: 13px; text-align: left; font: 600 15px var(--sans); color: var(--text); background: #0b1120; border: 2px solid rgba(220, 226, 247, .06); transition: border-color .2s, box-shadow .2s; }
+.cbt .au-fac-btn[aria-expanded='true'] { border-color: rgba(0, 245, 212, .55); box-shadow: 0 0 16px rgba(0, 245, 212, .12); }
+.cbt .au-fac-btn.bad { border-color: rgba(255, 51, 102, .55); }
+.cbt .au-fac-btn .val { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cbt .au-fac-btn .val.ph { color: #4d5a72; font-weight: 500; }
+.cbt .au-fac-btn svg { flex: none; color: var(--muted); transition: transform .2s; }
+.cbt .au-fac-btn[aria-expanded='true'] svg { transform: rotate(180deg); }
+.cbt .au-fac-pop { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 20; overflow: hidden; border-radius: 14px; background: var(--elev); border: 1px solid var(--line-strong); box-shadow: 0 24px 48px -16px #000; transform-origin: top; animation: cbt-fac-abre .18s var(--ease); }
+@keyframes cbt-fac-abre { from { opacity: 0; transform: scaleY(.94) translateY(-4px); } }
+.cbt .au-fac-busca { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); color: var(--muted); }
+.cbt .au-fac-busca input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--text); font: 500 16px var(--sans); }
+.cbt .au-fac-lista { list-style: none; margin: 0; padding: 6px; max-height: 240px; overflow-y: auto; }
+.cbt .au-fac-lista li { display: grid; gap: 1px; padding: 9px 10px; border-radius: 9px; cursor: pointer; font-size: 13.5px; font-weight: 600; }
+.cbt .au-fac-lista li small { font-size: 11.5px; font-weight: 500; color: var(--muted); }
+.cbt .au-fac-lista li.ativo { background: rgba(139, 92, 246, .16); }
+.cbt .au-fac-lista li[aria-selected='true'] { color: #c9b8ff; }
+.cbt .au-fac-lista li mark { background: none; color: var(--mint); font-weight: 800; }
+.cbt .au-fac-lista li.vazio { cursor: default; color: var(--muted); font-weight: 500; }
+.cbt .au-fac-lista li.outra { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; color: var(--mint); }
+.cbt .au-mats.rola { max-height: 156px; overflow-y: auto; padding: 2px 2px 24px; margin: -2px; scroll-snap-type: y proximity; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 52px), transparent); mask-image: linear-gradient(#000 calc(100% - 52px), transparent); }
+.cbt .au-mats.rola::-webkit-scrollbar { display: none; }
+.cbt .au-mats.rola button { scroll-snap-align: start; gap: 6px; padding-inline: 9px; font-size: 12.5px; }
+.cbt .au-mats.rola.fim { -webkit-mask-image: none; mask-image: none; }
+.cbt .au-mats-dica { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 2px 0 0; font-size: 11.5px; color: var(--muted); transition: opacity .3s; }
+.cbt .au-mats-dica i { font-style: normal; display: inline-block; animation: cbt-mats-desce 1.4s ease-in-out infinite; }
+.cbt .au-mats-dica.fim { opacity: 0; }
+@keyframes cbt-mats-desce { 50% { transform: translateY(3px); } }
 .cbt .au-sug:hover { background: rgba(0, 245, 212, .16); }
 .cbt .au-pw { display: grid; gap: 10px; padding: 14px; border-radius: 16px; background: rgba(59, 130, 246, .05); border: 1px dashed rgba(59, 130, 246, .3); }
 .cbt .au-pw-h { display: flex; align-items: center; gap: 7px; color: #7fb0ff; }

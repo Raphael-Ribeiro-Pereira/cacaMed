@@ -5,8 +5,7 @@ import { EmailAuthProvider, linkWithCredential, reauthenticateWithCredential, up
 import { supabase } from '../supabase';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { DOENCAS } from '../utils/batalha';
-import { tituloEpico } from '../utils/coroas';
-import { desdeDe, especialidade, matriculaDe, useDisponibilidade } from '../utils/cracha';
+import { desdeDe, especialidade, matriculaDe, tituloDoCracha, useDisponibilidade } from '../utils/cracha';
 import { FOTOS, fotoDoPerfil } from '../utils/fotosCracha';
 import { animar, fmt, useLargo } from '../utils/prototipo';
 import { Retrato } from './batalhaArte';
@@ -45,7 +44,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   const possuiSenha = senhaVinculada || usuario?.providerData?.some(provedor => provedor.providerId === 'password');
 
   const [esp, espXp] = especialidade(p);
-  const [titulo, , corTitulo] = tituloEpico(esp);
+  const [titulo, , corTitulo] = tituloDoCracha(p);
   const userMudou = username !== (p.username || '');
   const dirty = userMudou || nome !== (p.nome || p.username || '') || foto !== fotoAtual;
   // Firestore antigo não confere username; com a API (ou um serviço injetado na homologação), confere.

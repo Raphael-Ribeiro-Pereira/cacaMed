@@ -3,6 +3,7 @@ import { resumirHistorico } from '../utils/estatisticasPainel.js';
 import { criarMissoesDiarias, dataLocalHoje } from '../utils/missoes.js';
 import { validarPartidaNoBanco } from './operarJogosSupabase.js';
 import { criarLimitador, ipDoPedido, LIMITES_API } from './limitador.js';
+import { materiaValida, validarCurso } from '../utils/curso.js';
 
 export const ORIGENS_SUPABASE = new Set(['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'https://caca-med.vercel.app']);
 async function lerPedido(req) {
@@ -134,7 +135,9 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
           if (acao === 'obterPerfil') return answer({ resultado: null });
           if (acao !== 'cadastrar') return answer({ erro: 'Cadastro não concluído.' }, 409);
           let username = pedido.usarNomeGoogle ? usernameDoNome(user.nome) : String(pedido.username || '').trim();
-          if (!['Doutor', 'Doutora'].includes(pedido.titulo) || !['anatomia', 'neurologia', 'farmaco', 'micro', 'clinica', 'patologia'].includes(pedido.materiaPreferida) ||
+          // curso (etapa, faculdade, não sou de Medicina) chegou em 15/10/2026: app antigo ainda sem ele cadastra como antes.
+          const curso = pedido.curso === undefined ? {} : validarCurso(pedido.curso);
+          if (!['Doutor', 'Doutora'].includes(pedido.titulo) || !materiaValida(pedido.materiaPreferida) || !curso ||
               !usernameValido(username)) return answer({ erro: 'Cadastro inválido.' }, 400);
           if (await usernameEmUso(database, username, user.uid)) {
             if (!pedido.usarNomeGoogle) return answer({ erro: 'Este username já está em uso por outro plantonista.' }, 409);
@@ -145,7 +148,7 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
           // reserva o endereço e bloquearia o login Google de quem é dono dele).
           const contato = user.source === 'firebase' && user.emailVerified === false ? { emailNaoVerificado: user.email } : { email: user.email };
           const perfil = { uid: user.uid, ...contato, nome, username, titulo: pedido.titulo, role: 'jogador',
-            materiaPreferida: pedido.materiaPreferida, especialidade: pedido.materiaPreferida,
+            materiaPreferida: pedido.materiaPreferida, especialidade: pedido.materiaPreferida, ...curso,
             pontuacaoTotal: 0, tickets: 0, xpTopicos: {}, estatisticas: {}, estatisticasGerais: {},
             economia: { versao: 2, ultimoNivelPremiado: 1 }, missoesDiarias: criarMissoesDiarias(),
             dataUltimoLogin: dataLocalHoje(), tutorialCruzadinhasConcluido: false, criadoEm: new Date().toISOString() };

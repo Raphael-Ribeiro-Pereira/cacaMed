@@ -66,7 +66,7 @@ function App() {
   const [tentativaPerfil, setTentativaPerfil] = useState(0);
   const [recuperandoSenha, setRecuperandoSenha] = useState(false);
   const [etapaAbertura, setEtapaAbertura] = useState(0);
-  // Cadastro por e-mail em andamento: a sessão nova não troca de tela enquanto o crachá é impresso.
+  // Cadastro por e-mail em andamento: a sessão nova não troca de tela enquanto a animação do código roda.
   const cadastroEmAndamento = useRef(false);
 
   // Estados das Cruzadinhas
@@ -251,8 +251,9 @@ function App() {
     <Suspense fallback={<div className="stitch-page stitch-loading" role="status">Carregando...</div>}>
       {telaAtual === 'login' && <Login setTelaAtual={setTelaAtual} />}
       {comCasca && <BarraLateral tela={telaAtual} ir={setTelaAtual} p={dadosUsuario} foto={fotoDoPerfil(dadosUsuario)} aoPassarRanking={() => { carregarRanking().catch(() => {}); }} />}
+      {/* Conta confirmada pelo código: recarrega a sessão, e o App abre o Cadastro 2.0 (ou o menu, se já houver perfil). */}
       {telaAtual === 'cadastro' && <Cadastro setTelaAtual={setTelaAtual} aoCriarConta={ativo => { cadastroEmAndamento.current = ativo; }}
-        onConcluido={perfil => { cadastroEmAndamento.current = false; setDadosUsuario(perfil); setTelaAtual('menu'); }} />}
+        onContaConfirmada={() => { cadastroEmAndamento.current = false; setTentativaPerfil(valor => valor + 1); }} />}
       {telaAtual === 'vincularGoogle' && usuario && <VincularGoogle usuario={usuario} onConfirmado={() => setTelaAtual('cadastro2')} />}
       {telaAtual === 'cadastro2' && usuario && <Cadastro2 usuario={usuario} onConcluido={perfil => { setDadosUsuario(perfil); setTelaAtual('menu'); }} />}
       {telaAtual === 'erroPerfil' && <main className="stitch-page stitch-loading flex-col p-6 text-center"><p role="alert">{erroPerfil}</p><div className="flex gap-3"><button className="stitch-primary" onClick={() => setTentativaPerfil(valor => valor + 1)}>Tentar novamente</button><button className="stitch-back" onClick={sairDaConta}>Voltar ao login</button></div></main>}

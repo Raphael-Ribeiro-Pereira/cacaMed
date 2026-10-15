@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Acerto do código</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+<style>
+/* Variações da animação de acerto do código (15/10/2026): os números giram num tornado e um quadradinho os "come" até virar o visto. */
+:root{
+  --canvas:#0b0f19;--surface:#111827;--field:#0d1422;--line:rgba(220,226,247,.09);--line-strong:#2c3a4f;
+  --text:#dce2f7;--muted:#8d9bb3;--mint:#00f5d4;--mint-2:#06d6a0;--mint-ink:#00382f;
+  --sans:"Plus Jakarta Sans",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--text);font:400 14px/1.45 var(--sans);padding:24px 16px 48px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
+header{max-width:1140px;margin:0 auto 20px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:end;justify-content:space-between}
+h1{margin:0;font-size:20px;font-weight:800}h1 b{color:var(--mint)}
+header p{margin:4px 0 0;color:var(--muted);max-width:64ch;font-size:13px}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:9px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:13px}
+.btn.pri{background:var(--mint);color:var(--mint-ink);border-color:var(--mint)}
+.btn[aria-pressed=true]{color:var(--mint);border-color:rgba(0,245,212,.4)}
+.grid{max-width:1140px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:18px}
+.cardv{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.cardv h2{margin:0;font-size:16px;font-weight:800;display:flex;gap:8px;align-items:center}
+.cardv h2 span{font:800 12px var(--mono);color:var(--mint-ink);background:var(--mint);border-radius:6px;padding:2px 7px}
+.cardv p{margin:0;color:var(--muted);font-size:12.5px}
+.palco{position:relative;height:230px;border-radius:16px;background:radial-gradient(70% 70% at 50% 50%,rgba(0,245,212,.05),transparent),var(--canvas);border:1px solid var(--line);overflow:hidden}
+.cardv .btn{align-self:flex-start}
+
+/* peças */
+.slot{position:absolute;width:44px;height:56px;margin:-28px 0 0 -22px;border-radius:12px;border:1.5px solid rgba(0,245,212,.45);background:var(--field)}
+.dig{position:absolute;width:30px;height:40px;margin:-20px 0 0 -15px;display:grid;place-items:center;font:800 25px var(--mono);color:var(--text);will-change:transform}
+.rastro{position:absolute;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:var(--mint);opacity:.5;pointer-events:none}
+/* o comedor: quadrado do placeholder, com duas mandíbulas (metades) que abrem */
+.come{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;transform:scale(0)}
+.come .mand{position:absolute;left:0;right:0;height:50%;border:2px solid var(--mint);background:var(--field)}
+.come .cima{top:0;border-bottom:0;border-radius:14px 14px 0 0;transform-origin:50% 100%}
+.come .baixo{bottom:0;border-top:0;border-radius:0 0 14px 14px;transform-origin:50% 0}
+.come .inteiro{position:absolute;inset:0;border:2px solid var(--mint);border-radius:14px;background:var(--field)}
+.visto{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;pointer-events:none}
+.visto circle{fill:rgba(0,245,212,.1);stroke:var(--mint);stroke-width:3;stroke-dasharray:240;stroke-dashoffset:240;opacity:0}
+.visto path{fill:none;stroke:var(--mint);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60}
+.onda{position:absolute;left:50%;top:50%;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;border:2px solid var(--mint);opacity:0;pointer-events:none}
+.legenda{position:absolute;left:0;right:0;bottom:12px;text-align:center;color:var(--mint);font-weight:700;font-size:13px;opacity:0}
+.notas{max-width:1140px;margin:22px auto 0;color:var(--muted);font-size:12.5px}
+.notas b{color:var(--text)}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Acerto do código · <b>tornado que come os números</b></h1>
+    <p>Três leituras da sua ideia. Em todas, os 6 números são sugados num redemoinho e um quadradinho (o placeholder) os come e vira o visto. Toque em "Ver de novo" em cada uma.</p>
+  </div>
+  <div class="ctrl">
+    <button class="btn pri" id="todas">▶ Rodar todas</button>
+    <button class="btn" id="lento" aria-pressed="false">Câmera lenta</button>
+  </div>
+</header>
+
+<div class="grid">
+  <section class="cardv" style="grid-column:1/-1;border-color:rgba(0,245,212,.35)"><h2><span>D</span>Redemoinho do C + boca do A, mais lenta (escolhida)</h2>
+    <p>As casinhas brilham, entram no redemoinho e se fundem num quadrado. Os números vêm em seguida, em espiral mais lenta, e o quadrado abre e fecha a boca para comer cada um. No fim ele tomba 45° e vira o visto. Cerca de 4 s no total.</p>
+    <div class="palco" id="pD" style="height:260px"></div><button class="btn" data-v="D">↺ Ver de novo</button></section>
+  <section class="cardv"><h2><span>A</span>Tornado + mandíbula</h2>
+    <p>Os números giram em espiral cada vez mais rápido. Um quadrado nasce no centro, abre e fecha como uma boca e engole cada número que chega. Fechado, ele arredonda e desenha o visto.</p>
+    <div class="palco" id="pA"></div><button class="btn" data-v="A">↺ Ver de novo</button></section>
+  <section class="cardv"><h2><span>B</span>Funil + engolida</h2>
+    <p>O último quadradinho fica e vira o funil. Os outros números são puxados em fila para dentro dele; a cada engolida ele estica e incha um pouco. No fim, gira, vira círculo e mostra o visto.</p>
+    <div class="palco" id="pB"></div><button class="btn" data-v="B">↺ Ver de novo</button></section>
+  <section class="cardv"><h2><span>C</span>Redemoinho + fusão</h2>
+    <p>As 6 casinhas entram no tornado junto com os números e se fundem num quadrado maior, que gira e morde o que sobrou. Ele tomba 45°, perde as bordas e o visto se desenha no lugar.</p>
+    <div class="palco" id="pC"></div><button class="btn" data-v="C">↺ Ver de novo</button></section>
+</div>
+<p class="notas">Em todas: dura cerca de 1,8 s, quem usa <b>reduzir movimento</b> vê só o visto, e no celular cabe na mesma área das casinhas. Diga qual variação segue (ou a mistura, por exemplo "o tornado da A com a fusão da C").</p>
+
+<script>
+const CODIGO = '482913';
+const reduz = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let vel = 1;
+const $ = s => document.querySelector(s);
+const el = (cls, pai, html = '') => { const e = document.createElement('div'); e.className = cls; e.innerHTML = html; pai.appendChild(e); return e; };
+const easeIn = t => t * t * t, easeOut = t => 1 - Math.pow(1 - t, 3);
+const espera = ms => new Promise(r => setTimeout(r, ms * vel));
+const anima = (e, k, o) => e.animate(k, { ...o, duration: (o.duration || 300) * vel, delay: (o.delay || 0) * vel, fill: 'forwards' }).finished;
+
+// Monta a fileira de casinhas com os números, centrada no palco.
+let rodada = 0;
+function montar(palco) {
+  palco.innerHTML = '';
+  const run = String(++rodada); palco.dataset.run = run;
+  const W = palco.clientWidth, H = palco.clientHeight, cx = W / 2, cy = H / 2 - 8;
+  const larg = Math.min(48, (W - 40) / 6.6), xs = [...CODIGO].map((_, i) => cx + (i - 2.5) * larg + (i < 3 ? -5 : 5));
+  const slots = xs.map(x => { const s = el('slot', palco); s.style.left = x + 'px'; s.style.top = cy + 'px'; s.style.width = (larg - 6) + 'px'; s.style.marginLeft = -(larg - 6) / 2 + 'px'; return s; });
+  const digs = [...CODIGO].map((d, i) => { const e = el('dig', palco, d); e.style.left = '0px'; e.style.top = '0px'; e.style.transform = `translate(${xs[i]}px,${cy}px)`; return e; });
+  const visto = el('visto', palco, '<svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="38" transform="rotate(-90 42 42)"/><path d="m27 43 10 10 21-22"/></svg>');
+  visto.style.top = cy + 'px';
+  const leg = el('legenda', palco, 'E-mail confirmado!');
+  return { W, H, cx, cy, xs, slots, digs, visto, leg, palco, run };
+}
+
+// Tornado: cada número sai da sua posição e espirala até o centro. aoChegar(i) dispara quando o número é engolido.
+function tornado(c, { dur = 1100, voltas = 2.2, achata = .5, ordem = null, atraso = 0, aoChegar }) {
+  return new Promise(fim => {
+    const t0 = performance.now(), ini = c.digs.map((_, i) => {
+      const dx = c.xs[i] - c.cx, dy = 0;
+      return { r: Math.hypot(dx, dy) || 1, a: Math.atan2(dy * 2, dx), comido: false, atr: ordem ? ordem.indexOf(i) * atraso : 0 };
+    });
+    const passo = agora => {
+      if (c.palco.dataset.run !== c.run) return fim(); // a cena foi refeita: para esta rodada
+      let vivos = 0;
+      c.digs.forEach((d, i) => {
+        const s = ini[i]; if (s.comido) return;
+        const p = Math.min(1, Math.max(0, (agora - t0 - s.atr * vel) / (dur * vel)));
+        const r = s.r * (1 - easeIn(p)) * (1 - p * .15);
+        const a = s.a + easeIn(p) * voltas * Math.PI * 2;
+        const x = c.cx + Math.cos(a) * r, y = c.cy + Math.sin(a) * r * achata - Math.sin(p * Math.PI) * 14;
+        const esc = 1 - p * .55;
+        d.style.transform = `translate(${x}px,${y}px) rotate(${p * 540}deg) scale(${esc})`;
+        d.style.opacity = 1 - Math.max(0, p - .85) * 4;
+        if (p >= 1) { s.comido = true; d.style.opacity = 0; aoChegar?.(i); } else vivos++;
+        if (p > .1 && p < .95 && Math.random() < .25) { const t = el('rastro', c.palco); t.style.left = x + 'px'; t.style.top = y + 'px'; t.animate([{ opacity: .5, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(.2)' }], { duration: 380 * vel, fill: 'forwards' }).finished.then(() => t.remove()); }
+      });
+      vivos ? requestAnimationFrame(passo) : fim();
+    };
+    requestAnimationFrame(passo);
+  });
+}
+
+async function finalVisto(c, { girar = 0, ritmo = 1 } = {}) {
+  if (c.palco.dataset.run !== c.run) return;
+  const [circ, path] = c.visto.querySelectorAll('circle,path');
+  circ.style.opacity = 1;
+  await Promise.all([anima(circ, [{ strokeDashoffset: 240 }, { strokeDashoffset: 0 }], { duration: 420 * ritmo }), girar && anima(c.visto, [{ transform: `rotate(${girar}deg)` }, { transform: 'none' }], { duration: 420 * ritmo })]);
+  await anima(path, [{ strokeDashoffset: 60 }, { strokeDashoffset: 0 }], { duration: 260 * ritmo });
+  const onda = el('onda', c.visto.parentNode); onda.style.top = c.cy + 'px';
+  anima(onda, [{ opacity: .8, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(2.6)' }], { duration: 600 * ritmo });
+  anima(c.leg, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 300, delay: 100 });
+}
+
+// D (escolhida em 15/10): as casinhas entram no redemoinho e se fundem na boca (C); a boca abre e fecha e come cada número (A). Mais lenta.
+async function varD(palco) {
+  const c = montar(palco);
+  // brilho de acerto antes de tudo se mexer
+  await Promise.all(c.slots.map((s, i) => anima(s, [{ boxShadow: '0 0 0 0 rgba(0,245,212,0)' }, { borderColor: '#00f5d4', boxShadow: '0 0 0 6px rgba(0,245,212,.18)' }, { borderColor: '#00f5d4', boxShadow: '0 0 0 0 rgba(0,245,212,0)' }], { duration: 300, delay: i * 30 })));
+  const caixas = c.slots.map((s, i) => { s.style.left = '0px'; s.style.top = '0px'; s.style.transform = `translate(${c.xs[i]}px,${c.cy}px)`; s.style.marginTop = '-28px'; return s; });
+  const come = el('come', palco, '<div class="mand cima"></div><div class="mand baixo"></div>'); come.style.top = c.cy + 'px';
+  const cima = come.querySelector('.cima'), baixo = come.querySelector('.baixo');
+  let fundidas = 0;
+  const funde = () => {
+    fundidas++; const e = .35 + fundidas * .11;
+    come.animate([{ transform: `scale(${e - .11}) rotate(${(fundidas - 1) * 60}deg)` }, { transform: `scale(${e + .08}) rotate(${fundidas * 60}deg)` }, { transform: `scale(${e}) rotate(${fundidas * 60}deg)` }], { duration: 300 * vel, fill: 'forwards', easing: 'ease-out' });
+  };
+  const morde = () => {
+    const o = { duration: 280 * vel, easing: 'ease-in-out' };
+    cima.animate([{ transform: 'none' }, { transform: 'rotate(-30deg) translateY(-5px)' }, { transform: 'none' }], o);
+    baixo.animate([{ transform: 'none' }, { transform: 'rotate(30deg) translateY(5px)' }, { transform: 'none' }], o);
+    come.animate([{ transform: 'scale(1.01) rotate(360deg)' }, { transform: 'scale(1.14,.9) rotate(360deg)' }, { transform: 'scale(1.01) rotate(360deg)' }], { duration: 300 * vel, fill: 'forwards' });
+  };
+  const caixasNoRedemoinho = tornado({ ...c, digs: caixas }, { dur: 1100, voltas: 1.5, ordem: [0, 5, 1, 4, 2, 3], atraso: 90, aoChegar: funde });
+  await espera(500);
+  await Promise.all([caixasNoRedemoinho, tornado(c, { dur: 1400, voltas: 2.4, ordem: [2, 3, 1, 4, 0, 5], atraso: 110, aoChegar: morde })]);
+  await espera(300);
+  // a boca fecha, tomba 45° e some enquanto o visto se desenha
+  await anima(come, [{ transform: 'scale(1.01) rotate(360deg)', opacity: 1 }, { transform: 'scale(1.2) rotate(405deg)', opacity: 1, offset: .6 }, { transform: 'scale(1.45) rotate(405deg)', opacity: 0 }], { duration: 450, easing: 'ease-in' });
+  await finalVisto(c, { girar: 45, ritmo: 1.2 });
+}
+
+// A: quadrado com mandíbulas que abrem e fecham a cada número.
+async function varA(palco) {
+  const c = montar(palco); await espera(250);
+  c.slots.forEach((s, i) => anima(s, [{ opacity: 1 }, { opacity: 0, transform: 'scale(.6)' }], { duration: 260, delay: i * 30 }));
+  const come = el('come', palco, '<div class="mand cima"></div><div class="mand baixo"></div>'); come.style.top = c.cy + 'px';
+  const cima = come.querySelector('.cima'), baixo = come.querySelector('.baixo');
+  anima(come, [{ transform: 'scale(0) rotate(-90deg)' }, { transform: 'scale(1) rotate(0)' }], { duration: 380, delay: 150, easing: 'cubic-bezier(.3,1.6,.5,1)' });
+  const morde = () => {
+    const o = { duration: 150, easing: 'ease-in-out', fill: 'none' };
+    cima.animate([{ transform: 'none' }, { transform: 'rotate(-28deg) translateY(-4px)' }, { transform: 'none' }], { ...o, duration: 150 * vel });
+    baixo.animate([{ transform: 'none' }, { transform: 'rotate(28deg) translateY(4px)' }, { transform: 'none' }], { ...o, duration: 150 * vel });
+    come.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12,.9)' }, { transform: 'scale(1)' }], { duration: 160 * vel });
+  };
+  await tornado(c, { dur: 1050, voltas: 2.4, ordem: [5, 0, 4, 1, 3, 2], atraso: 70, aoChegar: morde });
+  await espera(120);
+  // fecha de vez, arredonda e some no círculo do visto
+  await anima(come, [{ transform: 'scale(1)', borderRadius: '0' }, { transform: 'scale(1.25) rotate(90deg)' }, { transform: 'scale(0) rotate(180deg)' }], { duration: 360, easing: 'ease-in' });
+  await finalVisto(c, { girar: -90 });
+}
+
+// B: a última casinha vira o funil e engole os números em fila, crescendo a cada um.
+async function varB(palco) {
+  const c = montar(palco); await espera(250);
+  const funil = c.slots[5];
+  c.slots.slice(0, 5).forEach((s, i) => anima(s, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(10px) scale(.7)' }], { duration: 260, delay: i * 40 }));
+  // o funil desliza para o centro e engole o próprio número primeiro
+  const dx = c.cx - c.xs[5];
+  await Promise.all([anima(funil, [{ transform: 'none' }, { transform: `translateX(${dx}px) scale(1.15)`, borderColor: '#00f5d4', borderWidth: '2px' }], { duration: 380, easing: 'cubic-bezier(.2,.9,.3,1.2)' }),
+    anima(c.digs[5], [{ transform: c.digs[5].style.transform }, { transform: `translate(${c.cx}px,${c.cy}px) scale(.2)`, opacity: 0 }], { duration: 380 })]);
+  let tam = 1.15;
+  const engole = () => {
+    tam += .05;
+    funil.animate([{ transform: `translateX(${dx}px) scale(${tam - .05})` }, { transform: `translateX(${dx}px) scale(${tam * .85},${tam * 1.25})` }, { transform: `translateX(${dx}px) scale(${tam})` }], { duration: 200 * vel, fill: 'forwards', easing: 'ease-out' });
+  };
+  c.digs[5].style.display = 'none';
+  c.digs.forEach((d, i) => { if (i < 5) d.style.zIndex = 2; });
+  await tornado({ ...c, digs: c.digs.map((d, i) => i < 5 ? d : document.createElement('i')) }, { dur: 700, voltas: 1.3, achata: .35, ordem: [4, 3, 2, 1, 0, 5], atraso: 120, aoChegar: i => i < 5 && engole() });
+  await espera(80);
+  await anima(funil, [{ transform: `translateX(${dx}px) scale(${tam})`, borderRadius: '12px' }, { transform: `translateX(${dx}px) scale(1.5) rotate(180deg)`, borderRadius: '50%', opacity: 1 }, { transform: `translateX(${dx}px) scale(0) rotate(360deg)`, borderRadius: '50%', opacity: 0 }], { duration: 420, easing: 'ease-in' });
+  await finalVisto(c);
+}
+
+// C: casinhas e números entram juntos no redemoinho; as casinhas se fundem num quadrado que gira e morde o resto.
+async function varC(palco) {
+  const c = montar(palco); await espera(250);
+  const caixas = c.slots.map((s, i) => { s.style.left = '0px'; s.style.top = '0px'; s.style.transform = `translate(${c.xs[i]}px,${c.cy}px)`; s.style.marginTop = '-28px'; return s; });
+  const come = el('come', palco, '<div class="inteiro"></div>'); come.style.top = c.cy + 'px';
+  let mordidas = 0, fundidas = 0;
+  const cresce = () => anima(come, [{ transform: `scale(${.4 + fundidas * .12}) rotate(${fundidas * 60}deg)` }, { transform: `scale(${.4 + (fundidas + 1) * .12}) rotate(${(fundidas + 1) * 60}deg)` }], { duration: 160 });
+  // primeiro as casinhas (mais rápidas), depois os números
+  const p1 = tornado({ ...c, digs: caixas }, { dur: 650, voltas: 1.4, ordem: [0, 5, 1, 4, 2, 3], atraso: 50, aoChegar: () => { cresce(); fundidas++; } });
+  await espera(350);
+  const morde = () => { mordidas++; come.animate([{ transform: `scale(1.12) rotate(${360 + mordidas * 45}deg)` }, { transform: `scale(.94,1.18) rotate(${360 + mordidas * 45 + 20}deg)` }, { transform: `scale(1.12) rotate(${360 + (mordidas + 1) * 45}deg)` }], { duration: 170 * vel, fill: 'forwards' }); };
+  await Promise.all([p1, tornado(c, { dur: 1000, voltas: 2.6, ordem: [2, 3, 1, 4, 0, 5], atraso: 60, aoChegar: morde })]);
+  await espera(100);
+  const ang = 360 + (mordidas + 1) * 45;
+  await anima(come, [{ transform: `scale(1.12) rotate(${ang}deg)`, opacity: 1 }, { transform: `scale(1.3) rotate(${ang + 45}deg)`, opacity: 1, offset: .6 }, { transform: `scale(1.5) rotate(${ang + 45}deg)`, opacity: 0 }], { duration: 380 });
+  await finalVisto(c, { girar: 45 });
+}
+
+const VARS = { D: varD, A: varA, B: varB, C: varC };
+const rodar = v => {
+  const palco = $('#p' + v);
+  if (reduz) { const c = montar(palco); c.digs.concat(c.slots).forEach(e => e.style.opacity = 0); c.visto.querySelector('circle').style.cssText = 'opacity:1;stroke-dashoffset:0'; c.visto.querySelector('path').style.strokeDashoffset = 0; c.leg.style.opacity = 1; return; }
+  VARS[v](palco);
+};
+document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => rodar(b.dataset.v));
+$('#todas').onclick = () => Object.keys(VARS).forEach(rodar);
+$('#lento').onclick = e => { vel = vel === 1 ? 3 : 1; e.currentTarget.setAttribute('aria-pressed', vel !== 1); };
+Object.keys(VARS).forEach(v => montar($('#p' + v)));
+setTimeout(() => Object.keys(VARS).forEach(rodar), 500);
+</script>
+</body>
+</html>
