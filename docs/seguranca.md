@@ -56,7 +56,7 @@ Correções na `main`, **ainda não publicadas**. A API e o site vão juntos na 
 | S-13 | Aceito por ora | — | O `localhost` fica na lista porque o desenvolvimento local usa a API de produção; o token não é cookie, então o risco é pequeno. `/api/ia` só é tratado quando a dica de IA for para a Edge Function |
 | S-14 | **Feito em parte** | este | Teto de 256 KB por perfil e 200 eventos por gravação na mesma migração (o maior perfil hoje tem 24 KB); as chaves de `xpTopicos` já ficam presas aos tópicos do banco (S-02). **Aplicar numa quinta** |
 | S-15 | **Feito** | `9ad1526` | — |
-| S-16 | Sem urgência | — | `npm audit fix` numa janela de manutenção |
+| S-16 | **Feito em parte** | este | `npm audit fix` (15/10): de 16 avisos para 4, todos do `@grpc/grpc-js` que vem do Firebase por caminho do Node (fora do site). Somem quando o código do Firebase sair (S-10); `--force` não, porque troca a versão do Firebase |
 
 ## Achados
 
