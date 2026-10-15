@@ -191,6 +191,20 @@ test('S-02: cruzadinha só aceita partida que cabe no tópico do banco de palavr
   assert.equal((await f.call({ acao: 'registrarPartida', partida: partida() })).status, 200);
 });
 
+test('cruzadinha lembra as palavras respondidas no perfil e recusa palavra fora do tópico', async () => {
+  const f = fixture();
+  await f.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'teste' });
+  const partida = extra => ({ id: crypto.randomUUID(), chaveXP: 'ANATOMIA-OSSOS', subMateria: 'Ossos', palavras: 3, letras: 15, tempo: 100, erros: 0, maiorPalavra: 6, ...extra });
+  assert.equal((await f.call({ acao: 'registrarPartida', partida: partida({ respostas: ['FEMUR', 'INVENTADA'] }) })).status, 400, 'palavra fora do tópico');
+  assert.equal((await f.call({ acao: 'registrarPartida', partida: partida({ respostas: ['FEMUR', 'TIBIA', 'FIBULA', 'CLAVICULA'] }) })).status, 400, 'mais respostas que palavras');
+  assert.equal((await f.call({ acao: 'registrarPartida', partida: partida({ respostas: 'FEMUR' }) })).status, 400);
+  assert.equal((await f.call({ acao: 'registrarPartida', partida: partida({ respostas: ['FEMUR', 'TIBIA', 'FIBULA'] }) })).status, 200);
+  assert.equal((await f.call({ acao: 'registrarPartida', partida: partida({ respostas: ['ESCAPULA', 'Fêmur'] }) })).status, 200);
+  assert.deepEqual(f.states.get('jogador').profile.palavrasRespondidas, { 'ANATOMIA-OSSOS': ['TIBIA', 'FIBULA', 'ESCAPULA', 'FEMUR'] });
+  assert.equal((await f.call({ acao: 'registrarPartida', partida: partida() })).status, 200, 'app antigo sem respostas');
+  assert.equal(f.states.get('jogador').profile.palavrasRespondidas['ANATOMIA-OSSOS'].length, 4);
+});
+
 test('S-02: tempo impossível não ganha bônus e há teto de cruzadinhas por hora e por dia', () => {
   const jogar = (perfil, agora, extra = {}) => executarPedidoSupabase(perfil, { acao: 'registrarPartida', partida: {
     id: crypto.randomUUID(), chaveXP: 'ANATOMIA-OSSOS', subMateria: 'Ossos', palavras: 5, letras: 30, tempo: 100, erros: 0, maiorPalavra: 10, ...extra } }, { agora: new Date(agora) }).perfil;
