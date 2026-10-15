@@ -48,9 +48,10 @@ Correções na `main`, **ainda não publicadas**. A API e o site vão juntos na 
 | S-05 | **Feito para o DDX** | `4da1957` | O build só leva os casos revisados do Plantão, do Erro médico e do Causa e efeito, e o `postbuild` falha se um não revisado vazar. Os 3 pilotos saem do site, inclusive para o administrador. Falta: a Batalha (as 12 doenças, todas sem revisão) e tirar o gabarito dos casos revisados (22/10) |
 | S-06 | Pendente | — | 22/10 |
 | S-07 | **Feito no código** | `69de946` | Senha nova com 8 caracteres em todas as telas e na API, sem o fallback para a `service_role`. **No painel:** mínimo 8 e reautenticação para trocar a senha |
-| S-08 | Em parte | `d1d4ba9` + 14/10 | Cache feito. **Decidido: o ranking público mostra só o username** (código e migração `20261014000000_ranking_so_username.sql` prontos na `main`; entram na quinta, a migração pode ser aplicada sozinha). Falta o HMAC no `idPublico` |
+| S-08 | **Feito em parte** | `d1d4ba9` e este | Cache feito; o ranking e as Coroas públicos mostram o **username** do crachá, nunca o nome da conta Google (decidido em 14/10/2026). Falta o HMAC no `idPublico` |
 | S-09 | **Feito** | `69de946` | Falta o índice único de username no banco (migração, numa quinta) |
-| S-10, S-11 | Decisão sua | — | Desligar o Firebase e arquivar o Apps Script |
+| S-10 | **Travado pelo usuário** (14/10) | — | Firestore e Storage fechados, cadastro novo desligado, backup das contas feito. Falta tirar do código a aceitação de login do Firebase (22/10) e, depois de uma semana estável, apagar o projeto |
+| S-11 | **Fechado pelo usuário** (14/10) | — | A implantação passou para "Somente eu" (conferido: o endereço agora pede login do Google). Arquivar depois da semana estável |
 | S-12 | **Feito** | `9ad1526` | — |
 | S-13 | Aceito por ora | — | O `localhost` fica na lista porque o desenvolvimento local usa a API de produção; o token não é cookie, então o risco é pequeno. `/api/ia` só é tratado quando a dica de IA for para a Edge Function |
 | S-14 | Pendente | — | Junto com a S-02 completa |
