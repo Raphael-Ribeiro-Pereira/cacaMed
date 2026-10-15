@@ -46,15 +46,15 @@ Correções na `main`, **ainda não publicadas**. A API e o site vão juntos na 
 | S-03 | **Feito (por instância)** | `d1d4ba9` | Limite em memória por IP e por jogador, com 429 e `Retry-After`; ranking e coroas com cache de 60 s. Falta um limite global no banco e o teto diário de XP do Quiz e do V ou M (decisão da [[economia-v3\|economia v3]]) |
 | S-04 | **Feito (CSP em teste)** | `0aeda3d` | Anti-frame, `nosniff`, `Referrer-Policy` e `Permissions-Policy` valem já. O CSP vai em `Report-Only`: aplicado localmente, não houve bloqueio em 13 telas, num caso do Plantão, na Batalha e no Quiz. Falta conferir o login Google e Supabase na produção e então aplicar |
 | S-05 | **Feito para o DDX** | `4da1957` | O build só leva os casos revisados do Plantão, do Erro médico e do Causa e efeito, e o `postbuild` falha se um não revisado vazar. Os 3 pilotos saem do site, inclusive para o administrador. Falta: a Batalha (as 12 doenças, todas sem revisão) e tirar o gabarito dos casos revisados (22/10) |
-| S-06 | Pendente | — | 22/10 |
+| S-06 | **Feito no código** | este | A aprovação vale só para o e-mail gravado em `migracaoAprovadaEmail` (instrução em [[migracao-supabase]]); e-mail antigo não verificado não reserva o endereço; busca por e-mail sem diferenciar maiúsculas. O cadastro novo no Firebase foi desligado pelo usuário em 14/10 |
 | S-07 | **Feito no código** | `69de946` | Senha nova com 8 caracteres em todas as telas e na API, sem o fallback para a `service_role`. **No painel:** mínimo 8 e reautenticação para trocar a senha |
 | S-08 | **Feito em parte** | `d1d4ba9` e este | Cache feito; o ranking e as Coroas públicos mostram o **username** do crachá, nunca o nome da conta Google (decidido em 14/10/2026). Falta o HMAC no `idPublico` |
-| S-09 | **Feito** | `69de946` | Falta o índice único de username no banco (migração, numa quinta) |
-| S-10 | **Travado pelo usuário** (14/10) | — | Firestore e Storage fechados, cadastro novo desligado, backup das contas feito. Falta tirar do código a aceitação de login do Firebase (22/10) e, depois de uma semana estável, apagar o projeto |
+| S-09 | **Feito** | `69de946` e este | Índice único de username pronto na migração `20261015000000_limites_perfil_e_username.sql` (sem repetidos na produção em 15/10); a corrida vira 409. **Aplicar numa quinta** |
+| S-10 | **Travado pelo usuário** (14/10) | — | Firestore e Storage fechados, cadastro novo desligado, backup das contas feito. **O projeto não pode ser apagado:** a credencial do login Google do Supabase foi criada nele (conferido em 15/10). Mantê-lo (sem custo) ou criar a credencial num projeto novo antes. Todas as contas vindas do Firebase já têm a senha no Supabase; tirar do código a aceitação de login do Firebase fica para depois da publicação do site novo |
 | S-11 | **Fechado pelo usuário** (14/10) | — | A implantação passou para "Somente eu" (conferido: o endereço agora pede login do Google). Arquivar depois da semana estável |
 | S-12 | **Feito** | `9ad1526` | — |
 | S-13 | Aceito por ora | — | O `localhost` fica na lista porque o desenvolvimento local usa a API de produção; o token não é cookie, então o risco é pequeno. `/api/ia` só é tratado quando a dica de IA for para a Edge Function |
-| S-14 | Pendente | — | Junto com a S-02 completa |
+| S-14 | **Feito em parte** | este | Teto de 256 KB por perfil e 200 eventos por gravação na mesma migração (o maior perfil hoje tem 24 KB); as chaves de `xpTopicos` já ficam presas aos tópicos do banco (S-02). **Aplicar numa quinta** |
 | S-15 | **Feito** | `9ad1526` | — |
 | S-16 | Sem urgência | — | `npm audit fix` numa janela de manutenção |
 

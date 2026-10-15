@@ -45,13 +45,15 @@ Motor em `src/utils/causaEfeito.js`; banco em `causaEfeitoBanco.js`.
 - O jogador parte de um **estímulo** e monta um circuito de **4 elos**: mecanismo, consequência, compensação e intervenção. Escolhe entre **6 cartas**, das quais 2 são distratoras.
 - Cada elo certo vale 25 XP, com as respostas enviadas em lote, como no Erro médico.
 
-## Conteúdo (13/10/2026)
+## Conteúdo (15/10/2026)
+
+Os lotes do Erro médico (1 e 2) e do Causa e efeito (1 a 3) foram **aprovados pela diretoria em 15/10/2026** e integrados. O pacote do site só leva os itens revisados ([[seguranca|S-05]]): os três pilotos de asma ficam só no servidor.
 
 | Modo | No banco | Aguardando revisão | Meta |
 | --- | --- | --- | --- |
-| Plantão | 33 | 0 | 25 ✔ |
-| Erro médico | 1 (piloto) | 27 (lotes 1 e 2) | 25 |
-| Causa e efeito | 1 (piloto) | 35 (lotes 1 a 3) | 50 |
+| Plantão | 33 (32 revisados e o piloto) | 0 | 25 ✔ |
+| Erro médico | 28 (27 revisados e o piloto) | 0 | 25 ✔ |
+| Causa e efeito | 36 (35 revisados e o piloto) | 0 | 50 (meta, não obrigatória) |
 
 Os dossiês de revisão ficam em `content/review/` e os lotes em `content/inbox/`. Depois da aprovação, rodar `node scripts/integrar-ddx.mjs erro|causa` e `node scripts/sincronizar-supabase.mjs`.
 

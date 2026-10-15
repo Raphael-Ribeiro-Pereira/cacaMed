@@ -8,6 +8,7 @@ import { obterRelacao } from './causaEfeito.js';
 import { criarMissoesDiarias, dataLocalHoje } from './missoes.js';
 import { LIMITE_CRUZADINHAS } from '../shared/operarJogosSupabase.js';
 import { criarLimitador } from '../shared/limitador.js';
+import { aprovadaPara } from '../shared/migrarSenhaSupabase.js';
 
 // Tópico com 6 palavras: a maior tem 10 letras e as 5 maiores somam 38, o que cabe nas partidas dos testes.
 const BANCO_PALAVRAS = { 'ANATOMIA-OSSOS': ['MANDIBULAS', 'CLAVICULA', 'ESCAPULA', 'FIBULA', 'FEMUR', 'TIBIA'].map(palavra => ({ palavra })) };
@@ -234,4 +235,29 @@ test('S-03: limitador por janela fixa recomeça depois da janela', () => {
   assert.equal(limitar('b', 2, 1000), 0, 'chaves separadas');
   t = 1000;
   assert.equal(limitar('a', 2, 1000), 0);
+});
+
+test('S-06: aprovação de migração vale só para o e-mail aprovado', () => {
+  assert.equal(aprovadaPara({ aprovada: true, aprovadaEmail: 'Carol@Exemplo.com ' }, 'carol@exemplo.com'), true);
+  assert.equal(aprovadaPara({ aprovada: true }, 'carol@exemplo.com'), false, 'aprovação antiga sem e-mail não vale');
+  assert.equal(aprovadaPara({ aprovada: true, aprovadaEmail: 'carol@exemplo.com' }, 'outra@exemplo.com'), false);
+  assert.equal(aprovadaPara({ aprovada: false, aprovadaEmail: 'carol@exemplo.com' }, 'carol@exemplo.com'), false);
+  assert.equal(aprovadaPara({ aprovada: true, aprovadaEmail: '' }, ''), false);
+});
+
+test('S-06 e S-09: e-mail antigo não verificado não reserva o endereço; username repetido no banco vira 409', async () => {
+  let gravado;
+  const database = async (path, options = {}) => {
+    if (path === 'rpc/cacamed_commit') { gravado = JSON.parse(options.body).p_profile; if (gravado.username === 'corrida') throw Object.assign(new Error('dup'), { code: '23505' }); return 1; }
+    return [];
+  };
+  const api = criarApiSupabase({ database, identity: async () => ({ uid: 'fb1', email: 'vitima@exemplo.com', nome: 'X', source: 'firebase', emailVerified: false }),
+    palavras: async () => ({ banco: {} }), ranking: async () => [], migrateIdentity: async () => ({}) });
+  const cadastrar = username => api(new Request('https://test/api', { method: 'POST', headers: { Authorization: 'Bearer t', Origin: 'http://localhost:5174' },
+    body: JSON.stringify({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username }) }));
+  assert.equal((await cadastrar('novo.jogador')).status, 200);
+  assert.equal(gravado.email, undefined);
+  assert.equal(gravado.emailNaoVerificado, 'vitima@exemplo.com');
+  const corrida = await cadastrar('corrida');
+  assert.equal(corrida.status, 409);
 });

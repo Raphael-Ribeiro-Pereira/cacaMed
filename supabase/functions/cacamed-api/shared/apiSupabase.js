@@ -141,7 +141,10 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
             username = `${username.slice(0, 16)}${Math.floor(Math.random() * 9000) + 1000}`;
           }
           const nome = limparNome(user.nome) || limparNome(String(user.email || '').split('@')[0]) || 'Plantonista';
-          const perfil = { uid: user.uid, email: user.email, nome, username, titulo: pedido.titulo, role: 'jogador',
+          // S-06: e-mail ainda não verificado de conta antiga do Firebase não vira `email` do perfil (esse campo
+          // reserva o endereço e bloquearia o login Google de quem é dono dele).
+          const contato = user.source === 'firebase' && user.emailVerified === false ? { emailNaoVerificado: user.email } : { email: user.email };
+          const perfil = { uid: user.uid, ...contato, nome, username, titulo: pedido.titulo, role: 'jogador',
             materiaPreferida: pedido.materiaPreferida, especialidade: pedido.materiaPreferida,
             pontuacaoTotal: 0, tickets: 0, xpTopicos: {}, estatisticas: {}, estatisticasGerais: {},
             economia: { versao: 2, ultimoNivelPremiado: 1 }, missoesDiarias: criarMissoesDiarias(),
@@ -150,7 +153,7 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
             await database('rpc/cacamed_commit', { method: 'POST', body: JSON.stringify({ p_player_id: user.uid, p_expected_version: -1, p_profile: perfil }) });
             if (user.authId) await database('cacamed_player_state?' + filter + '&auth_user_id=is.null', { method: 'PATCH', body: JSON.stringify({ auth_user_id: user.authId }) });
             return answer({ resultado: perfil });
-          } catch (erro) { if (['PT409', '40001'].includes(erro.code)) continue; throw erro; }
+          } catch (erro) { if (['PT409', '40001'].includes(erro.code)) continue; if (erro.code === '23505') return answer({ erro: 'Este username já está em uso por outro plantonista.' }, 409); throw erro; }
         }
         if (acao === 'cadastrar') return answer({ resultado: row.profile });
         const novoUsername = String(pedido.username || '').trim();
@@ -184,7 +187,7 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
           await database('rpc/cacamed_commit', { method: 'POST', body: JSON.stringify({ p_player_id: user.uid, p_expected_version: row.version,
             p_profile: alteracao.perfil, p_events: alteracao.eventos }) });
           return answer({ resultado: alteracao.perfil });
-        } catch (erro) { if (['PT409', '40001'].includes(erro.code)) continue; throw erro; }
+        } catch (erro) { if (['PT409', '40001'].includes(erro.code)) continue; if (erro.code === '23505') return answer({ erro: 'Este username já está em uso por outro plantonista.' }, 409); throw erro; }
       }
       return answer({ erro: 'Outro pedido atualizou o progresso. Consulte o progresso salvo antes de reenviar.' }, 409);
     } catch (erro) {

@@ -2,7 +2,7 @@
 import { createRemoteJWKSet, jwtVerify } from 'npm:jose@6.1.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
 import { criarApiSupabase } from './shared/apiSupabase.js';
-import { criarMigracaoSenha } from './shared/migrarSenhaSupabase.js';
+import { aprovadaPara, criarMigracaoSenha } from './shared/migrarSenhaSupabase.js';
 import { nivelPorXP } from './utils/economia.js';
 import { importarBancoCSV } from './utils/importarBancoCSV.js';
 import { montarCoroas, semanaCoroas } from './utils/coroas.js';
@@ -43,7 +43,9 @@ async function identity(token) {
     const rows = await database('cacamed_player_state?auth_user_id=eq.' + encodeURIComponent(user.id) + '&select=player_id');
     if (!rows.length && user.app_metadata?.firebase_uid) throw Object.assign(new Error('A vinculação da conta ainda não terminou. Entre novamente.'), { status: 409 });
     if (!rows.length && user.email) {
-      const antigos = await database('cacamed_player_state?profile->>email=eq.' + encodeURIComponent(user.email) + '&select=player_id&limit=1');
+      // E-mail comparado sem diferenciar maiúsculas; % e _ escapados para o ilike não virar curinga.
+      const padrao = user.email.replace(/[\\%_*]/g, c => '\\' + c);
+      const antigos = await database('cacamed_player_state?profile->>email=ilike.' + encodeURIComponent(padrao) + '&select=player_id&limit=1');
       if (antigos.length) throw Object.assign(new Error('Seu progresso antigo está preservado. Entre uma vez com a senha antiga para concluir a migração dessa conta.'), { status: 409 });
     }
     return { uid: rows[0]?.player_id || user.id, authId: user.id, email: user.email || '',
@@ -53,16 +55,18 @@ async function identity(token) {
 // Conversão gradual, somente após provar a identidade antiga. Não vincula por
 // um email enviado pelo cliente e não envia email de login automaticamente.
 // E-mail não verificado no Firebase só migra quando o administrador grava
-// profile.migracaoAprovada = true no perfil do jogador (o cliente não altera esse campo).
+// profile.migracaoAprovada = true e profile.migracaoAprovadaEmail = o e-mail conferido, no perfil do jogador
+// (o cliente não altera esses campos). A aprovação vale só para esse e-mail (S-06 de docs/seguranca.md):
+// se o e-mail da conta antiga mudar depois, ela deixa de valer.
 async function migracaoAprovada(user) {
-  const rows = await database('cacamed_player_state?player_id=eq.' + encodeURIComponent(user.uid) + '&select=aprovada:profile->migracaoAprovada');
-  return rows[0]?.aprovada === true;
+  const rows = await database('cacamed_player_state?player_id=eq.' + encodeURIComponent(user.uid) + '&select=aprovada:profile->migracaoAprovada,aprovadaEmail:profile->>migracaoAprovadaEmail');
+  return aprovadaPara(rows[0], user.email);
 }
 async function migrateIdentity(user) {
   if (user.source !== 'firebase') throw Object.assign(new Error('Esta conta já está no Supabase.'), { status: 400 });
   const filter = 'player_id=eq.' + encodeURIComponent(user.uid);
-  const rows = await database('cacamed_player_state?' + filter + '&select=auth_user_id,aprovada:profile->migracaoAprovada');
-  if (!user.emailVerified && rows[0]?.aprovada !== true) return { migrada: false, motivo: 'email_nao_verificado' };
+  const rows = await database('cacamed_player_state?' + filter + '&select=auth_user_id,aprovada:profile->migracaoAprovada,aprovadaEmail:profile->>migracaoAprovadaEmail');
+  if (!user.emailVerified && !aprovadaPara(rows[0], user.email)) return { migrada: false, motivo: 'email_nao_verificado' };
   if (!rows.length) return { migrada: false, motivo: 'cadastro_pendente' };
   let id = rows[0].auth_user_id;
   if (!id) {

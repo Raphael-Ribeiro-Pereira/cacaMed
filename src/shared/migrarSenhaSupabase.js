@@ -27,3 +27,8 @@ export function criarMigracaoSenha({ verificarSenha, vincular, obterConta, atual
     return vinculo;
   };
 }
+
+// Aprovação do administrador para migrar conta com e-mail não verificado (S-06 de docs/seguranca.md): vale só
+// para o e-mail gravado em profile.migracaoAprovadaEmail, comparado sem diferenciar maiúsculas.
+export const aprovadaPara = (row, email) => row?.aprovada === true && Boolean(String(email || '').trim())
+  && String(row.aprovadaEmail || '').trim().toLowerCase() === String(email).trim().toLowerCase();

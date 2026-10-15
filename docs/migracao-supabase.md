@@ -114,11 +114,12 @@ Correção de segurança: a chave não é mais gerada nem versionada em `firebas
 
 As duas migrações automáticas (ao abrir o app com sessão Firebase e ao entrar com senha) exigem e-mail verificado no Firebase. Quem nunca verificou o e-mail ficava para sempre na ponte Firebase. Em 08/10/2026 eram duas contas.
 
-- **Aprovação do administrador (API v14):** gravar `profile.migracaoAprovada = true` no perfil libera a migração dessa conta. O jogador não consegue gravar esse campo; só o banco e o servidor.
+- **Aprovação do administrador (API v14; presa ao e-mail desde a v15):** gravar `profile.migracaoAprovada = true` **e** `profile.migracaoAprovadaEmail` com o e-mail conferido libera a migração dessa conta, só para esse e-mail ([[seguranca|S-06]]). Antes de aprovar, confirme por fora do app que a pessoa é dona do e-mail. O jogador não consegue gravar esses campos; só o banco e o servidor. Desde 14/10/2026 o cadastro novo no Firebase está desligado, então só contas antigas chegam aqui.
 
   ```sql
   update public.cacamed_player_state
-  set profile = jsonb_set(profile, '{migracaoAprovada}', 'true'::jsonb), version = version + 1
+  set profile = profile || jsonb_build_object('migracaoAprovada', true, 'migracaoAprovadaEmail', lower('<e-mail conferido>')),
+      version = version + 1
   where player_id = '<uid do Firebase>' and auth_user_id is null;
   ```
 
