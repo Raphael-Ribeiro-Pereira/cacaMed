@@ -69,7 +69,7 @@ O valor que vale é sempre o do servidor. Enquanto a confirmação não chega, a
 
 Cada modo corrige e pontua no aparelho com os motores de `src/utils` e `src/shared`, os mesmos da API, e grava na fila.
 
-- **Dicas de IA da cruzadinha (nível 3 em diante):** ficam indisponíveis offline. Só as dicas estáticas funcionam.
+- **Dicas da cruzadinha:** desde 15/10/2026 todas saem do banco de palavras, sem IA, então funcionam offline ([[cruzadinha-palavras-e-dicas|detalhes]]).
 - **Ranking:** mostra a última versão guardada, com a data.
 - **Explicações por IA da Revisão Inteligente:** dependem de rede. Offline, a tela de revisão mostra a explicação guardada de cada item, que é revisada. Ao voltar a rede, o jogador pode pedir a explicação da IA ([Revisão v2](revisao-inteligente.md#llm-na-tela-de-revisão)).
 

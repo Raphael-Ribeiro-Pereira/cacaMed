@@ -19,5 +19,6 @@ Voltar ao [[Inicio|Início]].
 - [[entrada-menu-casca|Entrada, menu e casca]].
 - [[cadastro-com-codigo|Cadastro com código do e-mail]]: código de 6 números, etapa, faculdade, "não sou de Medicina" e 18 matérias (15/10/2026).
 - [[telas-de-jogo|Telas de jogo]].
+- [[cruzadinha-palavras-e-dicas|Cruzadinha: memória de palavras e dicas sem IA]] (15/10/2026).
 - [[caca-med-guidelines|Diretrizes de desenvolvimento e de design]].
 - Os protótipos ficam em `prototipos/` (o principal é `ddx-modos.html`) e em `docs/prototipos/` (as variações do DDX). A referência visual antiga, do Stitch, está em `docs/stitch-reference/`.

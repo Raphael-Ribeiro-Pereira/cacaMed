@@ -3,12 +3,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
 import { ArrowDownUp, Check, ChevronLeft, ChevronRight, CircleHelp, Delete, Settings2 } from 'lucide-react';
 import { gerarTabuleiro } from '../utils/motorTabuleiro';
-import { chamarOpenRouter } from '../services/openrouter';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { aplicarProgressoMissoes, dataLocalHoje, lerMissoes } from '../utils/missoes';
 import { nivelPorXP } from '../utils/economia';
 import { celulasPreenchidasAteProximaVazia, escolherDirecaoDaEntrada, proximaCelulaDaEntrada, resolverLetraRepetida } from '../utils/navegacaoCruzadinha';
 import { chaveCasa, estadoDaCasa, palavraDaCasa, palavrasDaGrade, palavrasResolvidas, tamanhoDaPalavra } from '../utils/cruzadinha';
+import { montarDicas, NIVEL_DICAS_EXTRAS } from '../utils/dicasCruzadinha';
+import { lembrarRespostas } from '../utils/memoriaPalavras';
 import { animar, useLargo } from '../utils/prototipo';
 import { Resultado, SubiuNivel } from './resultadoUi';
 
@@ -17,21 +18,11 @@ import { Resultado, SubiuNivel } from './resultadoUi';
 const normalizar = valor => String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
 const formatarTempo = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
-const aplicarCensura = (textoDica, palavraSecreta) => {
-  if (!textoDica || !palavraSecreta) return textoDica;
-  const palavraLimpa = normalizar(palavraSecreta);
-  const radical = palavraLimpa.length > 4 ? palavraLimpa.substring(0, palavraLimpa.length - 2) : palavraLimpa;
-  return textoDica.split(' ').map(palavra => {
-    const pLimpa = normalizar(palavra).replace(/[^A-Z]/g, '');
-    return pLimpa.includes(radical) && pLimpa.length >= radical.length ? '***' : palavra;
-  }).join(' ');
-};
-
 const PASSOS_TUTORIAL = [
   { titulo: 'Escolha uma palavra', texto: 'Toque em uma casa para selecionar a palavra. Em um cruzamento, o jogo escolhe a palavra com mais casas vazias; toque de novo na casa, use Enter ou a tecla ⇅ para trocar a direção. As setas da dica passam para a palavra anterior ou a próxima.' },
   { titulo: 'Preencha a grade', texto: 'Digite uma letra por casa, no teclado da tela ou no do computador. O cursor pula letras já preenchidas e aceita a letra repetida de um cruzamento sem duplicá-la; apagar volta para a casa anterior. Arraste e use o zoom para ver a grade toda.' },
   { titulo: 'Entenda as cores', texto: 'Verde: letra certa. Amarelo: a letra existe na palavra, em outra posição. Vermelho: a letra não está na palavra. Quando todas as letras de uma palavra estão certas, ela acende. Complete todas para terminar o plantão.' },
-  { titulo: 'Use as dicas', texto: 'A dica do laudo aparece junto da grade. A partir do nível 3 do tópico, você pode abrir dicas extras que valem para a partida toda: a do residente custa 5 XP e a do paciente, mais 10 XP.' },
+  { titulo: 'Use as dicas', texto: 'A dica do laudo aparece junto da grade; até o nível 2 do tópico, ela já traz a primeira letra. A partir do nível 3, você pode abrir dicas extras que valem para a partida toda: a do residente mostra a primeira letra (5 XP) e a do paciente, a última (mais 10 XP).' },
   { titulo: 'Receba suas recompensas', texto: 'Letras e palavras formam o XP base. Nível e tempo podem multiplicá-lo; dicas reduzem o resultado, com mínimo de 10 XP por partida. Missões podem dar XP extra, e cada cruzadinha concluída concede 2 tickets, além das recompensas de missão e nível global. O resultado mostra cada parcela.' },
   { titulo: 'Antes de sair', texto: 'Se abandonar o plantão antes de completá-lo, as letras e o progresso desta partida serão perdidos. O botão de voltar pede confirmação.' },
 ];
@@ -45,7 +36,7 @@ async function registrarPadrao(usuario, uid, partida) {
 }
 
 export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtual, usuario, dadosUsuario, setDadosUsuario,
-  registrar, servicoPerfil = chamarPerfilPlanilha, consultarIA = chamarOpenRouter }) {
+  registrar, servicoPerfil = chamarPerfilPlanilha }) {
   const web = useLargo();
   const meuUid = usuario?.uid || dadosUsuario?.uid;
   const admin = dadosUsuario?.role === 'admin';
@@ -53,17 +44,21 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   const chaveXP = `${normalizar(materia)}-${normalizar(subMateria)}`;
   const xpTopico = Number(dadosUsuario?.xpTopicos?.[chaveXP]) || 0;
   const nivelAtual = xpTopico === 0 ? 0 : Math.floor(Math.sqrt(xpTopico / 1000)) + 1;
-  const dicasExtras = nivelAtual > 2;
   const [nivelDaGrade, setNivelDaGrade] = useState(nivelAtual);
+  const dicasExtras = nivelDaGrade >= NIVEL_DICAS_EXTRAS;
   const [chaveRecarregamento, setChaveRecarregamento] = useState(0);
+  // Memória do tópico: a grade evita as palavras já respondidas. O perfil guarda a lista (o servidor a atualiza a cada
+  // vitória) e a sessão guarda as desta visita, para valer mesmo se o perfil ainda não tiver a memória.
+  const respondidasNaSessao = useRef([]);
+  const [memoria, setMemoria] = useState(() => dadosUsuario?.palavrasRespondidas?.[chaveXP] || []);
 
   const { gradePronta, limites } = useMemo(() => {
-    const resultado = gerarTabuleiro(bancoDePalavras, chaveXP, nivelDaGrade);
+    const resultado = gerarTabuleiro(bancoDePalavras, chaveXP, nivelDaGrade, { respondidas: memoria });
     if (import.meta.env.DEV && resultado.selecao) console.debug('[Cruzadinha] seleção da grade', chaveXP, resultado.selecao);
     return resultado;
     // A chave força uma nova grade aleatória ao avançar, mesmo no mesmo nível.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bancoDePalavras, chaveXP, chaveRecarregamento, nivelDaGrade]);
+  }, [bancoDePalavras, chaveXP, chaveRecarregamento, nivelDaGrade, memoria]);
   const palavras = useMemo(() => palavrasDaGrade(gradePronta), [gradePronta]);
   const dicasBasicas = useMemo(() => {
     const mapa = {};
@@ -80,9 +75,8 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   const [sel, setSel] = useState(null);
   const [dir, setDir] = useState('horizontal');
   const [jogoIniciado, setJogoIniciado] = useState(false);
-  const [mensagemGeral, setMensagemGeral] = useState('Montando o plantão...');
-  const [dicasSalvas, setDicasSalvas] = useState({});
-  const pedindoDica = useRef(new Set());
+  // As dicas saem do banco de palavras (dicasCruzadinha.js), no nível em que a grade foi montada.
+  const dicasSalvas = useMemo(() => montarDicas(palavras.map(p => p.palavra), dicasBasicas, nivelDaGrade), [palavras, dicasBasicas, nivelDaGrade]);
   const [nivelDica, setNivelDica] = useState(1);
   const penalidadeXP = nivelDica === 3 ? 15 : nivelDica === 2 ? 5 : 0;
   const [tempo, setTempo] = useState(0);
@@ -145,48 +139,9 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     return () => clearInterval(intervalo);
   }, [jogoIniciado, vitoria, tutorialAberto, folha]);
 
-  // Dicas: até o nível 2 do tópico, a do banco (com a primeira letra); a partir do 3, a IA gera as três camadas.
   useEffect(() => {
-    if (!palavras.length || jogoIniciado) return;
-    let ativo = true;
-    const lista = [...new Set(palavras.map(p => p.palavra))];
-    if (nivelAtual <= 2) {
-      const estaticas = {};
-      lista.forEach(palavra => {
-        estaticas[palavra] = { laudo: `${aplicarCensura(dicasBasicas[palavra] || 'Encontre esta estrutura.', palavra)} (Começa com a letra ${palavra[0]})`, residente: '', paciente: '' };
-      });
-      setDicasSalvas(estaticas);
-      setJogoIniciado(true);
-      return undefined;
-    }
-    setMensagemGeral(`A IA está preparando as dicas do nível ${nivelAtual}...`);
-    const prompt = `Você é um gerador de dicas de palavras cruzadas médicas. Para CADA palavra da lista, crie 3 níveis de dicas (máx 15 palavras cada).
-      Nível 1 (laudo): Termos técnicos anatômicos/patológicos formais.
-      Nível 2 (residente): Correlação clínica, sintomas ou prática de hospital.
-      Nível 3 (paciente): Linguagem extremamente simples e leiga, quase infantil.
-      REGRAS ABSOLUTAS: É PROIBIDO usar a palavra solicitada ou os seus radicais nas dicas.
-      Retorne APENAS um objeto JSON válido. Exemplo:
-      {
-        "FEMUR": { "laudo": "...", "residente": "...", "paciente": "..." },
-        "TIBIA": { "laudo": "...", "residente": "...", "paciente": "..." }
-      }
-      Lista: ${lista.join(', ')}`;
-    consultarIA(prompt, { temperature: 0.2 })
-      .then(texto => { if (ativo) setDicasSalvas(JSON.parse(texto.replace(/```json/gi, '').replace(/```/g, '').trim())); })
-      .catch(erro => console.error(erro))
-      .finally(() => { if (ativo) setJogoIniciado(true); });
-    return () => { ativo = false; };
-  }, [palavras, nivelAtual, jogoIniciado, dicasBasicas, consultarIA]);
-
-  const gerarDica = termo => {
-    if (dicasSalvas[termo] || pedindoDica.current.has(termo)) return;
-    pedindoDica.current.add(termo);
-    const prompt = `Gere dicas para estudantes de medicina. O termo é [${termo}]. Retorne UM JSON estrito com 3 níveis curtos (máx 15 palavras). Formato: {"laudo": "termo técnico...", "residente": "prática clínica...", "paciente": "termo leigo..."}. PROIBIDO usar a palavra '${termo}'.`;
-    consultarIA(prompt, { temperature: 0.2 })
-      .then(texto => setDicasSalvas(prev => ({ ...prev, [termo]: JSON.parse(texto.replace(/```json/gi, '').replace(/```/g, '').trim()) })))
-      .catch(() => setDicasSalvas(prev => ({ ...prev, [termo]: { laudo: 'Sem conexão com a IA. Tente deduzir pelas letras.', residente: 'Indisponível.', paciente: 'Indisponível.' } })))
-      .finally(() => pedindoDica.current.delete(termo));
-  };
+    if (palavras.length && !jogoIniciado) setJogoIniciado(true);
+  }, [palavras, jogoIniciado]);
 
   const focarCasa = (linha, coluna) => requestAnimationFrame(() => {
     const r = transform.current;
@@ -195,8 +150,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   const selecionar = (celula, direcao, centralizar = false) => {
     setSel({ linha: celula.linha, coluna: celula.coluna });
     setDir(direcao);
-    const p = palavraDaCasa(palavras, celula, direcao);
-    if (p && jogoIniciado) gerarDica(p.palavra);
     if (centralizar) focarCasa(celula.linha, celula.coluna);
   };
   const irParaPalavra = (p, novos = valoresRef.current) => {
@@ -321,6 +274,8 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     const letras = gradePronta.flat().filter(c => !c.vazia && c.letraCerta !== ' ');
     if (!letras.length || !letras.every(c => valores[chaveCasa(c.linha, c.coluna)] === c.letraCerta.toUpperCase())) return;
     cadeadoRecompensa.current = true;
+    const respostas = [...new Set(palavras.map(p => p.palavra))];
+    respondidasNaSessao.current = lembrarRespostas(respondidasNaSessao.current, respostas);
     setVitoria(true);
     setFolha(null);
     const numLetras = letras.length;
@@ -336,7 +291,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     const concluidas = missoes.missoes.filter((m, i) => !lerMissoes(dadosUsuario)[i]?.concluida && m.concluida);
     setRelatorio({ ganho, letras: numLetras, palavras: numPalavras, xpLetras, xpPalavras, multNivel, multTempo, penalidade: penalidadeXP, xpCalculado, xpMissoes: missoes.xp, missoesConcluidas: concluidas, tempo, nivel: nivelDaGrade });
     if (!partidaId.current) partidaId.current = crypto.randomUUID();
-    setXpPendente({ status: 'pendente', partida: { id: partidaId.current, chaveXP, subMateria, dia: dataLocalHoje(), xp: ganho, palavras: numPalavras, penalidadeXP, letras: numLetras, tempo, erros, maiorPalavra } });
+    setXpPendente({ status: 'pendente', partida: { id: partidaId.current, chaveXP, subMateria, dia: dataLocalHoje(), xp: ganho, palavras: numPalavras, penalidadeXP, letras: numLetras, tempo, erros, maiorPalavra, respostas } });
   }, [valores, gradePronta, palavras, vitoria, nivelDaGrade, tempo, penalidadeXP, dadosUsuario, chaveXP, subMateria, erros]);
   // A grade acesa fica na tela por um instante antes do resultado, como no protótipo.
   useEffect(() => {
@@ -368,10 +323,11 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   const novaPartida = nivel => {
     setNivelDaGrade(nivel);
     setValores({}); valoresRef.current = {}; setSel(null); setDir('horizontal');
-    setVitoria(false); setMostrarResultado(false); setJogoIniciado(false); setMensagemGeral('Montando o plantão...');
-    tentativasErradas.current.clear(); puladas.current = []; pedindoDica.current.clear();
+    setVitoria(false); setMostrarResultado(false); setJogoIniciado(false);
+    tentativasErradas.current.clear(); puladas.current = [];
     cadeadoRecompensa.current = false; partidaId.current = null;
-    setDicasSalvas({}); setTempo(0); setErros(0); setRelatorio(null); setNivelDica(1); setXpPendente(null); setSubiu(null);
+    setMemoria(lembrarRespostas(dadosUsuario?.palavrasRespondidas?.[chaveXP], respondidasNaSessao.current));
+    setTempo(0); setErros(0); setRelatorio(null); setNivelDica(1); setXpPendente(null); setSubiu(null);
     setIntro(animar());
     setChaveRecarregamento(c => c + 1);
   };
@@ -462,14 +418,14 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   }
 
   const dica = ativa ? dicasSalvas[ativa.palavra] : null;
-  const textoDica = !jogoIniciado ? mensagemGeral : !ativa ? 'Toque em uma casa para ver a dica.' : dica?.laudo || 'Consultando a dica...';
+  const textoDica = !jogoIniciado ? 'Montando o plantão...' : !ativa ? 'Toque em uma casa para ver a dica.' : dica?.laudo;
   const proximaExtra = DICAS_EXTRAS[nivelDica + 1];
   const pista = <div className="clue">
     <button className="icon-btn" onClick={() => ciclar(-1)} disabled={bloqueado} aria-label="Dica anterior"><ChevronLeft /></button>
     <span className="num mono">{ativa ? `${ativa.numero}${ativa.d === 'horizontal' ? '→' : '↓'}` : '…'}</span>
     <p aria-live="polite">{textoDica} {ativa && jogoIniciado && <span className="mono" style={{ color: 'var(--muted)', fontSize: 11 }}>({tamanhoDaPalavra(ativa.palavra)})</span>}
       {nivelDica >= 2 && dica?.residente && <span style={{ display: 'block', marginTop: 4, fontSize: 12, fontWeight: 500, color: 'var(--amber)' }}>Residente: {dica.residente}</span>}
-      {nivelDica >= 3 && dica?.paciente && <span style={{ display: 'block', marginTop: 2, fontSize: 12, fontWeight: 500, color: 'var(--mint)' }}>Paciente: “{dica.paciente}”</span>}
+      {nivelDica >= 3 && dica?.paciente && <span style={{ display: 'block', marginTop: 2, fontSize: 12, fontWeight: 500, color: 'var(--mint)' }}>Paciente: {dica.paciente}</span>}
     </p>
     <button className="icon-btn" onClick={() => ciclar(1)} disabled={bloqueado} aria-label="Próxima dica"><ChevronRight /></button>
   </div>;
@@ -540,7 +496,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
             {palavras.filter(p => p.d === d).map(p => {
               const feita = resolvidas.includes(p);
               return <button key={p.chave} className={`cw-clue ${p === ativa ? 'on' : ''} ${feita ? 'done' : ''}`} disabled={bloqueado} onClick={() => irParaPalavra(p)}>
-                <span className="num mono">{p.numero}</span><span>{dicasSalvas[p.palavra]?.laudo || (jogoIniciado ? 'Consultando a dica...' : '...')} <small className="mono">({tamanhoDaPalavra(p.palavra)})</small></span>{feita && <Check size={15} />}
+                <span className="num mono">{p.numero}</span><span>{dicasSalvas[p.palavra]?.laudo || '...'} <small className="mono">({tamanhoDaPalavra(p.palavra)})</small></span>{feita && <Check size={15} />}
               </button>;
             })}
           </div>)}

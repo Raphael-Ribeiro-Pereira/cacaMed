@@ -1,3 +1,5 @@
+import { palavraDaMemoria } from './memoriaPalavras.js';
+
 const podeColocarPalavra = (matriz, palavra, linhaInicial, colunaInicial, direcao) => {
   const tamanhoMatriz = matriz.length;
   if (linhaInicial < 0 || colunaInicial < 0) return false;
@@ -144,17 +146,27 @@ const embaralhar = itens => {
   return resultado;
 };
 
-export const gerarTabuleiro = (bancoDePalavras, materia, nivelAtual = 0, { tentativas = 20 } = {}) => {
+// `respondidas`: palavras do tópico que o jogador já respondeu, da mais antiga para a mais recente (memoriaPalavras.js).
+export const gerarTabuleiro = (bancoDePalavras, materia, nivelAtual = 0, { tentativas = 20, respondidas = [] } = {}) => {
   let tamanhoMatriz = 16;
   if (bancoDePalavras && materia) {
     const palavrasOriginais = bancoDePalavras[materia];
     if (palavrasOriginais && palavrasOriginais.length > 0) {
-      
+
       const limiteDificuldade = nivelAtual + 1;
-      const palavrasFiltradas = palavrasOriginais.filter(p => p.dificuldade <= limiteDificuldade);
-      const palavrasProximas = palavrasOriginais.filter(p => p.dificuldade <= limiteDificuldade + 1);
-      const bancos = [palavrasFiltradas, palavrasProximas, palavrasOriginais]
-        .filter((banco, indice, todos) => banco.length && !todos.slice(0, indice).some(anterior => anterior.length === banco.length));
+      const ordemResposta = new Map((Array.isArray(respondidas) ? respondidas : []).map((p, i) => [palavraDaMemoria(p), i]));
+      const respondida = p => ordemResposta.has(palavraDaMemoria(p.palavra));
+      const novas = palavrasOriginais.filter(p => !respondida(p));
+      const palavrasFiltradas = novas.filter(p => p.dificuldade <= limiteDificuldade);
+      // Camadas, na ordem em que entram na grade: novas do nível, novas do nível seguinte, novas dos demais (da
+      // dificuldade mais próxima para a mais distante) e, só quando faltam novas, as já respondidas (as mais antigas primeiro).
+      const camadas = [
+        palavrasFiltradas,
+        novas.filter(p => p.dificuldade === limiteDificuldade + 1),
+        novas.filter(p => p.dificuldade > limiteDificuldade + 1),
+        palavrasOriginais.filter(respondida).sort((a, b) => ordemResposta.get(palavraDaMemoria(a.palavra)) - ordemResposta.get(palavraDaMemoria(b.palavra))),
+      ];
+      const bancos = camadas.map((_, i) => camadas.slice(0, i + 1)).filter((_, i) => camadas[i].length);
       const metaPalavras = Math.min(12, palavrasOriginais.length);
       
       let tamanhoMaiorPalavra = 0;
@@ -181,7 +193,8 @@ export const gerarTabuleiro = (bancoDePalavras, materia, nivelAtual = 0, { tenta
       for (let indiceBanco = 0; indiceBanco < bancos.length; indiceBanco++) {
         const banco = bancos[indiceBanco];
         for (let tentativa = 0; tentativa < totalTentativas; tentativa++) {
-          const ordem = embaralhar(banco).slice(0, 20);
+          // Nas novas de outros níveis, as de dificuldade mais próxima vêm primeiro.
+          const ordem = banco.flatMap((camada, i) => (i === 3 ? camada : i === 2 ? embaralhar(camada).sort((a, b) => a.dificuldade - b.dificuldade) : embaralhar(camada))).slice(0, 20);
           const candidata = tentarPosicionar(matrizVazia, ordem, 0) || matrizVazia;
           const metrica = medirGrade(candidata);
           if (metrica.palavras > melhor.palavras || (metrica.palavras === melhor.palavras && qualidade(metrica) > qualidade(melhor))) {
@@ -234,11 +247,13 @@ export const gerarTabuleiro = (bancoDePalavras, materia, nivelAtual = 0, { tenta
         minRow = 0; maxRow = 10; minCol = 0; maxCol = 10; 
       }
 
+      const naGrade = matrizFinal.flat().flatMap(c => [c.palavraInicialHorizontal, c.palavraInicialVertical]).filter(Boolean);
+      const repetidas = naGrade.filter(p => ordemResposta.has(palavraDaMemoria(p))).length;
       return {
         gradePronta: matrizFinal,
         limites: { minRow, maxRow, minCol, maxCol },
         metricas: medirGrade(matrizFinal),
-        selecao: { disponiveis: palavrasOriginais.length, compativeis: palavrasFiltradas.length, selecionadas, posicionadas: melhor.palavras, meta: metaPalavras, expandiuDificuldade: bancoUtilizado > 0 },
+        selecao: { disponiveis: palavrasOriginais.length, novas: novas.length, compativeis: palavrasFiltradas.length, selecionadas, posicionadas: melhor.palavras, repetidas, meta: metaPalavras, expandiuDificuldade: bancoUtilizado > 0 },
       };
     }
   }

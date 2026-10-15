@@ -4,6 +4,7 @@ import { obterCasoPlantao, executarPlantao } from '../utils/plantao.js';
 import { obterAuditoria, avaliarAuditoria } from '../utils/erroMedico.js';
 import { obterRelacao, avaliarRelacao } from '../utils/causaEfeito.js';
 import { DOENCAS, executarBatalha, obterDoenca, obterPet, recompensaBatalha, relatorioBatalha } from '../utils/batalha.js';
+import { lembrarRespostas, palavraDaMemoria } from '../utils/memoriaPalavras.js';
 const criarMissoesCruzadinha = criarMissoesDiarias;
 
 // S-02 da auditoria de segurança (docs/seguranca.md), contenção até a cruzadinha ser emitida pelo servidor:
@@ -22,6 +23,14 @@ export function validarPartidaNoBanco(partida, banco) {
   const maiorPossivel = Math.max(...topico.map(p => String(p.palavra || '').length));
   if (palavras > maximoPalavras || Number(partida.letras) > maximoLetras || Number(partida.maiorPalavra) > maiorPossivel) {
     throw new Error('Dados da partida fora dos limites.');
+  }
+  // As respostas lembradas (opcionais: o app antigo não manda) têm que ser palavras deste tópico.
+  if (partida.respostas !== undefined) {
+    const doTopico = new Set(topico.map(p => palavraDaMemoria(p.palavra)));
+    if (!Array.isArray(partida.respostas) || partida.respostas.length > palavras
+        || !partida.respostas.every(p => typeof p === 'string' && doTopico.has(palavraDaMemoria(p)))) {
+      throw new Error('Dados da partida fora dos limites.');
+    }
   }
 }
 
@@ -92,6 +101,11 @@ export function registrarPartidaSupabase(perfil, partida, recibos = [], agora = 
     cruzadinhasRegistradas: [...(perfil.cruzadinhasRegistradas || []), id].slice(-100),
     cruzadinhasHorarios: [...horarios, instante].slice(-LIMITE_CRUZADINHAS.dia),
   };
+  // Memória do tópico: a próxima grade evita as palavras já respondidas (memoriaPalavras.js).
+  if (Array.isArray(partida.respostas) && partida.respostas.length) {
+    atualizado.palavrasRespondidas = { ...perfil.palavrasRespondidas,
+      [chaveXP]: lembrarRespostas(perfil.palavrasRespondidas?.[chaveXP], partida.respostas.slice(0, palavras)) };
+  }
 
   return atualizado;
 }
