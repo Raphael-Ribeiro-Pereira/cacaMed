@@ -1,6 +1,6 @@
 # Cruzadinha: memória de palavras e dicas sem IA
 
-Pedido do usuário em 15/10/2026, feito na `main` no mesmo dia; **ainda não publicado** (API e site, numa quinta). Ver [[pendencias|Pendências]].
+Pedido do usuário em 15/10/2026, feito na `main` no mesmo dia. **Site publicado em 15/10** (`dpl_2rrQWaNcimhRyv46t6KNeS2FKUSv`, branch `release/cruzadinha-1510`, sem o cadastro com código). **Falta publicar a API:** até lá, a memória só vale dentro da mesma visita (a API v15 ignora as `respostas`). Ver [[pendencias|Pendências]].
 
 ## Dicas sem IA
 
