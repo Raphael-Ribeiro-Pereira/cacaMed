@@ -31,7 +31,7 @@ Pauta do dia, na ordem:
 2. **Cruzadinha emitida pelo servidor (S-02 e S-14)**, já feita na `main` em 17/10 junto com as **dicas por planilha** e o fim do filtro de palavras por nível ([[cruzadinha-palavras-e-dicas#Dicas por planilha e grade no servidor (17/10/2026)|detalhe]]). Publicar a API antes do site. As planilhas de dicas entram quando o usuário mandar os links (só dados, sem publicar código).
 3. **Gabarito fora do pacote (S-05):** tirar do pacote do site os casos com gabarito, decidido junto com o app offline.
 4. **S-06** (já no código e na API desde 15/10) e o restante da **S-08**: HMAC do `idPublico` feito na `main` em 17/10; na publicação, criar o segredo `CACAMED_ID_PUBLICO_SEGREDO` **depois** de a API e o site estarem no ar.
-5. **Índice único de username** (migração) e **limite de tamanho do perfil** conferido.
+5. ~~**Índice único de username** e **limite de tamanho do perfil**~~ já aplicados em 15/10 (conferido em 17/10).
 6. **CSP:** sair do `Report-Only` só se o console não tiver avisos do dia anterior.
 7. **Dois títulos para quem não é de Medicina** (Infiltrado/Infiltrada + título épico da matéria; commit `2acd519`, só site).
 8. **Ponto de volta:** anotar o deploy anterior antes de publicar.
