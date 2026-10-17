@@ -302,3 +302,20 @@ test('CORS aceita o domínio cacamed.com e recusa origem desconhecida', async ()
   assert.equal((await chamar('https://cacamed.com')).headers.get('Access-Control-Allow-Origin'), 'https://cacamed.com');
   assert.equal((await chamar('https://outro.exemplo')).headers.get('Access-Control-Allow-Origin'), null);
 });
+
+test('editarPerfil muda etapa, faculdade e matéria com a regra do cadastro e aceita o app antigo', async () => {
+  const f = fixture();
+  await f.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'teste', curso: { etapa: 3, faculdade: 'USP' } });
+  const base = { acao: 'editarPerfil', nome: 'Teste', username: 'teste' };
+  assert.equal((await f.call({ ...base, curso: { etapa: 4, faculdade: 'USP' }, materiaPreferida: 'cardio' })).status, 200);
+  let perfil = f.states.get('jogador').profile;
+  assert.deepEqual([perfil.etapa, perfil.faculdade, perfil.materiaPreferida, perfil.especialidade], [4, 'USP', 'cardio', 'cardio']);
+  assert.equal((await f.call({ ...base, curso: { etapa: 13, faculdade: 'USP' } })).status, 400, 'etapa fora de 1 a 12');
+  assert.equal((await f.call({ ...base, curso: { etapa: 2 } })).status, 400, 'sem faculdade');
+  assert.equal((await f.call({ ...base, materiaPreferida: 'inventada' })).status, 400);
+  assert.equal((await f.call({ ...base, curso: { naoMedicina: true } })).status, 200);
+  perfil = f.states.get('jogador').profile;
+  assert.deepEqual([perfil.naoMedicina, perfil.etapa], [true, null]);
+  assert.equal((await f.call({ ...base, nome: 'Outro nome' })).status, 200, 'app antigo sem curso');
+  assert.equal(f.states.get('jogador').profile.naoMedicina, true, 'o curso não é apagado');
+});

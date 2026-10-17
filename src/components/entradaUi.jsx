@@ -84,7 +84,7 @@ export function MiniCracha({ cracha }) {
 }
 
 // Matérias numa caixa que rola: as de baixo aparecem pela metade num fade, que some no fim da lista.
-function Materias({ materia, setMateria, tentou }) {
+export function Materias({ materia, setMateria, tentou }) {
   const caixa = useRef(null);
   const [fim, setFim] = useState(false);
   const conferirFim = () => { const c = caixa.current; if (c) setFim(c.scrollTop + c.clientHeight >= c.scrollHeight - 4); };

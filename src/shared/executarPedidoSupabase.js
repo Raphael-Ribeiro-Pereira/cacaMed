@@ -5,6 +5,7 @@ import { eventosBatalha } from '../utils/batalhaRevisao.js';
 import { registrarXpSemanal } from '../utils/coroas.js';
 import { migrarEconomia } from '../utils/economia.js';
 import { prepararMissoesDoDia } from '../utils/missoes.js';
+import { materiaValida, validarCurso } from '../utils/curso.js';
 
 export const ACOES_REVISAO = ['consultarRevisao', 'iniciarRevisao', 'responderRevisao', 'encerrarRevisao'];
 export const FOTOS_CRACHA = 6;
@@ -39,7 +40,18 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
     if (username !== perfil.username && !usernameValido(username)) throw new Error('Use 3 a 20 letras minúsculas, números, ponto ou _ no username.');
     const foto = pedido.foto === undefined ? perfil.foto : Number(pedido.foto);
     if (foto !== undefined && (!Number.isInteger(foto) || foto < 0 || foto >= FOTOS_CRACHA)) throw new Error('Foto inválida.');
-    perfil = { ...perfil, nome, username, ...(foto === undefined ? {} : { foto }) };
+    // Curso e matéria preferida são opcionais (o app antigo não manda) e seguem a mesma regra do cadastro.
+    let curso = {};
+    if (pedido.curso !== undefined) {
+      curso = validarCurso(pedido.curso);
+      if (!curso) throw new Error('Conte a etapa e a faculdade do curso.');
+    }
+    let materia = {};
+    if (pedido.materiaPreferida !== undefined) {
+      if (!materiaValida(pedido.materiaPreferida)) throw new Error('Matéria inválida.');
+      materia = { materiaPreferida: pedido.materiaPreferida, especialidade: pedido.materiaPreferida };
+    }
+    perfil = { ...perfil, nome, username, ...(foto === undefined ? {} : { foto }), ...curso, ...materia };
   } else if (pedido.acao === 'pularTutorialBatalha') perfil = operarBatalhaSupabase(perfil, pedido);
   else if (pedido.acao === 'admin') {
     if (perfil.role !== 'admin') throw new Error('Acesso restrito ao administrador.');

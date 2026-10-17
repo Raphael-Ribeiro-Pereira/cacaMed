@@ -8,7 +8,9 @@ import { DOENCAS } from '../utils/batalha';
 import { desdeDe, especialidade, matriculaDe, tituloDoCracha, useDisponibilidade } from '../utils/cracha';
 import { FOTOS, fotoDoPerfil } from '../utils/fotosCracha';
 import { animar, fmt, useLargo } from '../utils/prototipo';
+import { validarCurso } from '../utils/curso';
 import { Retrato } from './batalhaArte';
+import { CursoCampos, MenuFaculdade, Materias } from './entradaUi';
 import { CrachaFrente, QR, StatusUser } from './crachaUi';
 import { FlameIcon, MiniEcg, Tabbar } from './prototipoUi';
 import '../prototipo.css';
@@ -27,6 +29,10 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   const [username, setUsername] = useState(p.username || '');
   const [nome, setNome] = useState(p.nome || p.username || '');
   const [foto, setFoto] = useState(fotoAtual);
+  // Etapa, faculdade e matéria preferida: editáveis aqui (a etapa muda a cada semestre). Perfis antigos podem não ter curso.
+  const cursoAtual = { etapa: p.etapa ?? null, formado: p.formado === true, naoMedicina: p.naoMedicina === true, faculdade: p.faculdade || '' };
+  const [curso, setCurso] = useState(cursoAtual);
+  const [materia, setMateria] = useState(p.materiaPreferida || '');
   const [save, setSave] = useState('idle');
   const [erroSalvar, setErroSalvar] = useState('');
   const [flip, setFlip] = useState(false);
@@ -43,16 +49,22 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   const [saindo, setSaindo] = useState(false);
   const possuiSenha = senhaVinculada || usuario?.providerData?.some(provedor => provedor.providerId === 'password');
 
-  const [esp, espXp] = especialidade(p);
-  const [titulo, , corTitulo] = tituloDoCracha(p);
+  // A prévia do crachá já mostra a matéria e a condição de curso em edição.
+  const previa = { ...p, materiaPreferida: materia, naoMedicina: curso.naoMedicina };
+  const [esp, espXp] = especialidade(previa);
+  const [titulo, , corTitulo] = tituloDoCracha(previa);
   const userMudou = username !== (p.username || '');
-  const dirty = userMudou || nome !== (p.nome || p.username || '') || foto !== fotoAtual;
+  const cursoMudou = JSON.stringify(curso) !== JSON.stringify(cursoAtual);
+  const cursoValido = validarCurso(curso);
+  const materiaMudou = materia !== (p.materiaPreferida || '');
+  const semCurso = !cursoMudou && !p.naoMedicina && !p.faculdade;
+  const dirty = userMudou || nome !== (p.nome || p.username || '') || foto !== fotoAtual || cursoMudou || materiaMudou;
   // Firestore antigo não confere username; com a API (ou um serviço injetado na homologação), confere.
   const viaServico = PLANILHA_OU_SUPABASE || servicoPerfil !== chamarPerfilPlanilha;
   const conferir = viaServico ? u => servicoPerfil(usuario, 'verificarUsername', { username: u }) : null;
   const [conferirEstavel] = useState(() => conferir);
   const check = useDisponibilidade(username, userMudou, conferirEstavel);
-  const podeSalvar = dirty && nome.trim().length >= 2 && (!userMudou || check === 'ok') && save !== 'saving';
+  const podeSalvar = dirty && nome.trim().length >= 2 && (!userMudou || check === 'ok') && (!cursoMudou || Boolean(cursoValido)) && (!materiaMudou || Boolean(materia)) && save !== 'saving';
   const desde = desdeDe(p.criadoEm || usuario?.metadata?.creationTime);
   const matricula = matriculaDe(p.uid || username);
 
@@ -65,12 +77,14 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
 
   const salvar = async () => {
     if (!podeSalvar || !usuario?.uid) return;
-    const novo = { username, nome: nome.trim(), foto };
-    const antes = { username: p.username, nome: p.nome, foto: p.foto };
+    const novo = { username, nome: nome.trim(), foto, ...(cursoMudou ? { curso: cursoValido } : {}), ...(materiaMudou ? { materiaPreferida: materia } : {}) };
+    // O que a tela guarda enquanto o servidor grava, e o que volta se a gravação falhar.
+    const local = { username, nome: nome.trim(), foto, ...(cursoMudou ? cursoValido : {}), ...(materiaMudou ? { materiaPreferida: materia, especialidade: materia } : {}) };
+    const antes = { username: p.username, nome: p.nome, foto: p.foto, etapa: p.etapa, formado: p.formado, naoMedicina: p.naoMedicina, faculdade: p.faculdade, materiaPreferida: p.materiaPreferida, especialidade: p.especialidade };
     ultimoPedido.current = novo;
     setErroSalvar('');
     // Otimista: crachá e prévias já mostram os dados novos enquanto o servidor grava.
-    setDadosUsuario(prev => ({ ...prev, ...novo }));
+    setDadosUsuario(prev => ({ ...prev, ...local }));
     setSave('saving');
     try {
       if (viaServico) {
@@ -78,7 +92,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
         if (ultimoPedido.current === novo) setDadosUsuario(perfil);
       } else {
         const [{ db }, { doc, updateDoc }] = await Promise.all([import('../firebase'), import('firebase/firestore')]);
-        await updateDoc(doc(db, 'usuarios', usuario.uid), novo);
+        await updateDoc(doc(db, 'usuarios', usuario.uid), local);
       }
       setSave('ok');
       setTimeout(() => setSave(s => (s === 'ok' ? 'idle' : s)), 2400);
@@ -158,7 +172,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
         <div className="cr-lanyard" aria-hidden="true"><span className="cr-strap" /><span className="cr-clip" /></div>
         <div ref={card} className={`cr-card ${flip ? 'flip' : ''}`} onPointerMove={tilt} onPointerLeave={solta}>
           <div className="cr-inner">
-            <CrachaFrente p={p} email={email} nome={nomeCard} username={username || p.username} foto={foto} desde={desde} oculto={flip} />
+            <CrachaFrente p={previa} email={email} nome={nomeCard} username={username || p.username} foto={foto} desde={desde} oculto={flip} />
             <div className="cr-face cr-back" aria-hidden={!flip}>
               <div className="cr-slot" />
               <div className="cr-top"><span className="cr-org">caco<b>Med</b><small>VERSO DO CRACHÁ</small></span><span className="cr-access">VALIDADE<br /><b>TEMPORADA {new Date().getFullYear()}</b></span></div>
@@ -194,6 +208,12 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
         </label>
         <div className="cr-f"><span className="cr-l">Especialização</span>
           <span className="cr-in ro esp"><Stethoscope size={16} /><b>{esp}</b><small>{fmt(espXp)} XP · título <em style={{ color: corTitulo }}>{titulo}</em></small></span>
+        </div>
+        <CursoCampos curso={curso} setCurso={setCurso} tentou={cursoMudou} />
+        {semCurso && <p className="cr-help">Conte a sua etapa e a sua faculdade para completar o prontuário.</p>}
+        <MenuFaculdade valor={curso.faculdade} setValor={faculdade => setCurso(c => ({ ...c, faculdade }))} opcional={curso.naoMedicina} tentou={cursoMudou} />
+        <div className="cr-f"><span className="cr-l">Matéria preferida</span>
+          <Materias materia={materia} setMateria={setMateria} tentou={materiaMudou} />
         </div>
         <div className="cr-f"><span className="cr-l">Foto do crachá</span>
           <div className="cr-fotos" role="radiogroup" aria-label="Foto do crachá">
