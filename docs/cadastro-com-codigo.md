@@ -43,7 +43,9 @@ Decidido com o usuário em 15/10/2026 a partir dos protótipos [`prototipos/cada
 - `src/utils/apiSupabase.test.js`: `cadastrar` guarda o curso validado, recusa curso inválido e matéria desconhecida, e aceita o app antigo sem curso.
 - Homologação (`/homologacao.html`, "Testar cadastro" com `confirmar@exemplo.com`; o código certo é `482913`): conferido em 15/10 na web e no celular (375 px), do formulário à impressão do crachá, com código errado, animação do acerto, busca de faculdade, matérias com fade e "Não sou de Medicina".
 
-## Fica para depois
+## Edição no Perfil (16/10/2026, na `main`, falta publicar com o cadastro)
 
-- Editar etapa, faculdade e matéria no perfil (a etapa muda a cada semestre).
+A tela do Perfil (`PerfilUsuario.jsx`) ganhou etapa do curso, "Já sou formado(a)", "Não sou de Medicina", faculdade (menu com busca) e matéria preferida, os mesmos componentes do Cadastro 2.0. A prévia do crachá mostra o título novo antes de salvar. O servidor (`editarPerfil`) aceita `curso` e `materiaPreferida` opcionais, com a mesma validação do cadastro (`validarCurso`, `materiaValida`); o app antigo, que não manda esses campos, continua funcionando e nada é apagado. Perfis criados antes do cadastro com código não têm curso e veem o aviso "Conte a sua etapa e a sua faculdade". Trocar o curso exige etapa e faculdade válidas para habilitar o botão. Depende da API nova (`executarPedidoSupabase.js`); sem ela, o servidor ignora os campos e responde sem erro, então publicar a API antes do site.
+
+## Fica para depois
 - Mostrar etapa e faculdade no crachá, se o usuário quiser (o crachá não mudou).

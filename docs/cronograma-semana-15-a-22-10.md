@@ -19,7 +19,7 @@ Atualizado em 15/10/2026, depois da publicação da API v16 (cruzadinha) e do si
 - [ ] **Testar em aparelho real** (iPhone e Android) seguindo o [roteiro](roteiro-smartphone.md).
 
 **Agente (branch de trabalho, sem publicar)**
-- [ ] **Edição de etapa, faculdade e matéria no perfil** (a etapa muda a cada semestre).
+- [x] **Edição de etapa, faculdade e matéria no perfil** (feita na `main` em 16/10; publica junto do cadastro com código, API antes do site).
 - [ ] **Mostrar etapa e faculdade no crachá**, se o usuário quiser.
 - [ ] **Cadastro com código:** deixar pronto para a quinta, desde que o SMTP esteja configurado (ver [[cadastro-com-codigo|cadastro com código]]). Sem SMTP, não publicar.
 - [ ] **Preparar o pacote de quinta** dos itens de segurança do dia 22 (abaixo), sem publicar antes.
