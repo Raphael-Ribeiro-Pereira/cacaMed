@@ -6,7 +6,6 @@
   "scripts": {
     "sync:plantao": "node scripts/sincronizar-plantao.mjs",
     "dev": "vite",
-    "server": "node server/index.js",
     "build": "vite build",
     "postbuild": "node scripts/conferir-pacote.mjs",
     "lint": "eslint .",
@@ -19,9 +18,7 @@
   "dependencies": {
     "@supabase/supabase-js": "2.117.2",
     "clsx": "^2.1.1",
-    "cors": "^2.8.6",
     "dotenv": "^18.0.3",
-    "express": "^5.2.1",
     "firebase": "^12.11.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.6.0",

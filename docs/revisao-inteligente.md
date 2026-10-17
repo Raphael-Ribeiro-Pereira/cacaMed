@@ -100,7 +100,7 @@ Opções para decidir depois:
 
 Decidido em 07/10/2026: a LLM **escreve a revisão para o jogador dentro do app**, por API. Não é usada para escrever rascunhos de conteúdo.
 
-O projeto já usa a OpenRouter com o modelo `qwen/qwen3.8-27b:free` nas dicas de IA da cruzadinha, via `server/index.js` (rota `/api/ia`). **Essa rota só existe no servidor local:** em produção, `https://caca-med.vercel.app/api/ia` respondeu 404 em 07/10/2026. As dicas de IA não funcionam no site publicado, e a revisão não pode usar essa rota como está.
+Até 15/10/2026 o projeto usava a OpenRouter com o modelo `qwen/qwen3.8-27b:free` nas dicas de IA da cruzadinha, via `server/index.js` (rota `/api/ia`); as dicas passaram a sair do banco e o servidor local foi removido em 17/10/2026. **Essa rota só existe no servidor local:** em produção, `https://caca-med.vercel.app/api/ia` respondeu 404 em 07/10/2026. As dicas de IA não funcionam no site publicado, e a revisão não pode usar essa rota como está.
 
 Como deve funcionar:
 - **Chamada pelo servidor.** O pedido vai para a Edge Function `cacamed-api` (por exemplo, a ação `explicarRevisao`), e a chave da OpenRouter fica nos segredos do Supabase. Nunca no aparelho. A mesma rota passa a atender as dicas da cruzadinha.
