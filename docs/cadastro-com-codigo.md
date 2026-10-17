@@ -1,6 +1,6 @@
 # Cadastro com código do e-mail
 
-Decidido com o usuário em 15/10/2026 a partir dos protótipos [`prototipos/cadastro-codigo.html`](../prototipos/cadastro-codigo.html) e [`prototipos/codigo-animacoes.html`](../prototipos/codigo-animacoes.html). Feito na `main` no mesmo dia; **ainda não publicado** (ver [[pendencias|Pendências]]). Regra do porte: do protótipo vieram **só as decisões** (campos e fluxo); o visual segue o das telas que já existiam. A exceção é a animação do acerto.
+Decidido com o usuário em 15/10/2026 a partir dos protótipos [`prototipos/cadastro-codigo.html`](../prototipos/cadastro-codigo.html) e [`prototipos/codigo-animacoes.html`](../prototipos/codigo-animacoes.html). Feito na `main` no mesmo dia; **publicado em 16/10/2026** (API v18 e site `dpl_41ThD325jEAAgQRK3DhhKhzfMKiC`; ver [[pendencias|Pendências]]). Regra do porte: do protótipo vieram **só as decisões** (campos e fluxo); o visual segue o das telas que já existiam. A exceção é a animação do acerto.
 
 ## Fluxo
 
