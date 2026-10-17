@@ -5,7 +5,7 @@ import { validarPartidaNoBanco } from './operarJogosSupabase.js';
 import { criarLimitador, ipDoPedido, LIMITES_API } from './limitador.js';
 import { materiaValida, validarCurso } from '../utils/curso.js';
 
-export const ORIGENS_SUPABASE = new Set(['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'https://caca-med.vercel.app']);
+export const ORIGENS_SUPABASE = new Set(['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'https://caca-med.vercel.app', 'https://cacamed.com']);
 async function lerPedido(req) {
   const reader = req.body?.getReader();
   if (!reader) throw Object.assign(new Error('Pedido inválido.'), { status: 400 });
