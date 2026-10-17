@@ -276,7 +276,6 @@ test('S-06 e S-09: e-mail antigo não verificado não reserva o endereço; usern
   assert.equal(corrida.status, 409);
 });
 
-<<<<<<< HEAD
 test('cadastrar guarda o curso validado e aceita as matérias novas; app antigo sem curso continua cadastrando', async () => {
   const f = fixture();
   const ok = await f.call({ acao: 'cadastrar', titulo: 'Doutora', materiaPreferida: 'cardio', username: 'nova', curso: { etapa: 4, faculdade: ' Universidade Federal de Minas Gerais (UFMG) ', extra: 'x' } });
@@ -295,11 +294,11 @@ test('cadastrar guarda o curso validado e aceita as matérias novas; app antigo 
   const antigo = await g.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'teste' });
   assert.equal(antigo.status, 200);
   assert.equal('etapa' in g.states.get('jogador').profile, false);
-=======
+});
+
 test('CORS aceita o domínio cacamed.com e recusa origem desconhecida', async () => {
   const f = fixture();
   const chamar = origin => f.api(new Request('https://test/api?acao=palavras', { method: 'OPTIONS', headers: { Origin: origin } }));
   assert.equal((await chamar('https://cacamed.com')).headers.get('Access-Control-Allow-Origin'), 'https://cacamed.com');
   assert.equal((await chamar('https://outro.exemplo')).headers.get('Access-Control-Allow-Origin'), null);
->>>>>>> d4eba0b (fix: allow the cacamed.com origin in the API CORS list)
 });
