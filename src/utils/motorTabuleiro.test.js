@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { gerarTabuleiro } from './motorTabuleiro.js';
+import { entradasDaGrade, gerarTabuleiro, montarGrade } from './motorTabuleiro.js';
 
 test('busca de grades preserva palavras e melhora a qualidade da primeira candidata', () => {
   const banco = { OSSOS: ['ATLAS', 'TALUS', 'ULNA', 'SACRO', 'RADIO', 'COCCIX', 'UMERO', 'FEMUR', 'TIBIA', 'FIBULA', 'ESCAPULA', 'CLAVICULA', 'PATELA', 'CARPO', 'TARSO'].map(palavra => ({ palavra, dificuldade: 0 })) };
@@ -65,23 +65,30 @@ test('letra inicial e resposta de cada entrada permanecem coerentes após cruzam
   }
 });
 
-test('amplia a dificuldade quando o nível atual produziria uma grade pequena', () => {
+// Decidido em 16/10/2026: o nível não filtra mais as palavras; qualquer palavra do tópico pode cair em qualquer nível.
+test('palavras de qualquer dificuldade entram na grade do nível 0', () => {
   const comuns = ['ATLAS', 'TALUS', 'ULNA', 'SACRO', 'RADIO', 'COCCIX'];
-  const extras = ['UMERO', 'FEMUR', 'TIBIA', 'FIBULA', 'ESCAPULA', 'CLAVICULA', 'PATELA', 'CARPO', 'TARSO'];
-  const banco = { OSSOS: [
-    ...comuns.map(palavra => ({ palavra, dificuldade: 0 })),
-    ...extras.map(palavra => ({ palavra, dificuldade: 2 })),
-  ] };
+  const dificeis = ['UMERO', 'FEMUR', 'TIBIA', 'FIBULA', 'ESCAPULA', 'CLAVICULA', 'PATELA', 'CARPO', 'TARSO'];
+  const banco = { OSSOS: [...comuns.map(palavra => ({ palavra, dificuldade: 0 })), ...dificeis.map(palavra => ({ palavra, dificuldade: 9 }))] };
   const original = Math.random;
   let estado = 42;
   Math.random = () => ((estado = (1664525 * estado + 1013904223) >>> 0) / 4294967296);
   try {
-    const { metricas, selecao } = gerarTabuleiro(banco, 'OSSOS', 0);
-    assert.equal(selecao.compativeis, 6);
+    const { metricas, selecao, gradePronta } = gerarTabuleiro(banco, 'OSSOS', 0);
     assert.ok(metricas.palavras >= 10);
-    assert.equal(selecao.expandiuDificuldade, true);
     assert.equal(selecao.posicionadas, metricas.palavras);
+    assert.ok(entradasDaGrade(gradePronta).some(e => dificeis.includes(e.palavra)));
   } finally { Math.random = original; }
+});
+
+test('a grade remontada a partir das entradas é igual à gerada', () => {
+  const banco = { OSSOS: ['FEMUR', 'TIBIA', 'FIBULA', 'PATELA', 'UMERO', 'RADIO', 'ULNA', 'CARPO', 'TARSO', 'SACRO', 'COCCIX', 'VEIA PORTA'].map((palavra, i) => ({ palavra, dificuldade: 0, dicaBasica: 'dica ' + i })) };
+  const gerada = gerarTabuleiro(banco, 'OSSOS', 0);
+  const entradas = entradasDaGrade(gerada.gradePronta);
+  const remontada = montarGrade(entradas, gerada.tamanho);
+  const resumo = g => g.gradePronta.flat().filter(c => !c.vazia).map(c => [c.linha, c.coluna, c.letraCerta, c.numero, c.palavraInicialHorizontal, c.palavraInicialVertical, c.dicaBasicaHorizontal, c.dicaBasicaVertical, c.idHorizontal, c.idVertical].join('|'));
+  assert.deepEqual(resumo(remontada), resumo(gerada));
+  assert.deepEqual(remontada.limites, gerada.limites);
 });
 
 test('nível 2 usa até 12 termos quando o tópico permite cruzamentos', () => {

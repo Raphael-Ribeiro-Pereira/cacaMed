@@ -319,3 +319,41 @@ test('editarPerfil muda etapa, faculdade e matéria com a regra do cadastro e ac
   assert.equal((await f.call({ ...base, nome: 'Outro nome' })).status, 200, 'app antigo sem curso');
   assert.equal(f.states.get('jogador').profile.naoMedicina, true, 'o curso não é apagado');
 });
+
+test('emitirCruzadinha: a grade sai do servidor, a palavra que volta traz outra dica e a partida usa os números da grade', () => {
+  const termos = ['FEMUR', 'TIBIA', 'FIBULA', 'PATELA', 'UMERO', 'RADIO', 'ULNA', 'CARPO', 'TARSO', 'SACRO', 'COCCIX', 'ATLAS'];
+  const banco = { 'ANATOMIA-OSSOS': termos.map((palavra, i) => ({ palavra, numero: i + 1, dificuldade: 0, dicaBasica: `${palavra} A`, dicas: [`${palavra} A`, `${palavra} B`] })) };
+  const agora = new Date('2026-10-17T12:00:00Z');
+  const base = { uid: 'teste', tickets: 0, pontuacaoTotal: 0, missoesDiarias: [] };
+  const emitir = perfil => executarPedidoSupabase(perfil, { acao: 'emitirCruzadinha', chaveXP: 'ANATOMIA-OSSOS' }, { banco, agora }).perfil;
+  const p1 = emitir(base);
+  const e1 = p1.cruzadinha.entrada;
+  assert.ok(e1.entradas.length >= 10);
+  assert.ok(e1.entradas.every(e => [`${e.palavra} A`, `${e.palavra} B`].includes(e.dica)));
+  // Sem responder, as palavras podem voltar, mas cada uma com a dica que ainda não apareceu.
+  const p2 = emitir(p1);
+  const e2 = p2.cruzadinha.entrada;
+  const repetidas = e2.entradas.filter(e => e1.entradas.some(x => x.palavra === e.palavra));
+  assert.ok(repetidas.length > 0);
+  for (const e of repetidas) assert.notEqual(e.dica, e1.entradas.find(x => x.palavra === e.palavra).dica, e.palavra);
+  assert.throws(() => executarPedidoSupabase(base, { acao: 'emitirCruzadinha', chaveXP: 'INVENTADO-X' }, { banco, agora }), /Tópico da cruzadinha desconhecido/);
+  const partida = extra => ({ id: crypto.randomUUID(), subMateria: 'Ossos', tempo: 300, erros: 0, penalidadeXP: 0, ...extra });
+  assert.throws(() => executarPedidoSupabase(p2, { acao: 'registrarPartida', partida: partida({ cruzadinhaId: e1.id }) }, { agora }), /não está mais aberta/);
+  // O app manda números inflados; valem os da grade emitida.
+  const p3 = executarPedidoSupabase(p2, { acao: 'registrarPartida', partida: partida({ cruzadinhaId: e2.id, chaveXP: 'INVENTADO-X', palavras: 40, letras: 400, maiorPalavra: 40 }) }, { agora }).perfil;
+  assert.equal(p3.cruzadinha.entrada, null);
+  assert.equal(p3.estatisticas['ANATOMIA-OSSOS'].partidas, 1);
+  assert.ok(p3.xpTopicos['ANATOMIA-OSSOS'] < (40 * 10 + 400 * 2));
+  assert.deepEqual(new Set(p3.palavrasRespondidas['ANATOMIA-OSSOS']), new Set(e2.entradas.map(e => e.palavra)));
+});
+
+test('emitirCruzadinha pela API e consulta pública sem as variações de dica', async () => {
+  const f = fixture();
+  await f.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'teste' });
+  const r = await f.call({ acao: 'emitirCruzadinha', chaveXP: 'ANATOMIA-OSSOS' });
+  assert.equal(r.status, 200);
+  assert.ok(r.resultado.cruzadinha.entrada.entradas.length > 0);
+  assert.equal((await f.call({ acao: 'emitirCruzadinha', chaveXP: 'INVENTADO-X' })).status, 400);
+  const publico = await (await f.api(new Request('https://test/api?acao=palavras'))).json();
+  assert.ok(publico.resultado.banco['ANATOMIA-OSSOS'].every(item => !('dicas' in item)));
+});

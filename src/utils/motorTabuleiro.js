@@ -78,6 +78,44 @@ export const medirGrade = matriz => {
   return { palavras: casas.reduce((n, c) => n + Number(!!c.inicioHorizontal) + Number(!!c.inicioVertical), 0), intersecoes: casas.filter(c => c.pertenceHorizontal && c.pertenceVertical).length, largura, altura, area: largura * altura, densidade: casas.length / (largura * altura) };
 };
 
+// Escreve a palavra a partir do encaixe (linha, coluna e direção) numa cópia da matriz.
+const colocarPalavra = (matrizAtual, itemAtual, encaixe) => {
+  const palavra = itemAtual.palavra.toUpperCase();
+  // Cópia rasa: as casas nunca são alteradas no lugar (cada casa escrita vira um objeto novo), então basta copiar as linhas.
+  const novaMatriz = matrizAtual.map(linha => linha.slice());
+  let lAtual = encaixe.linha;
+  let cAtual = encaixe.coluna;
+  
+  const idIdentificadorDaPalavra = `${encaixe.linha}-${encaixe.coluna}`;
+
+  for (let i = 0; i < palavra.length; i++) {
+    novaMatriz[lAtual][cAtual] = {
+      ...novaMatriz[lAtual][cAtual],
+      vazia: false,
+      letraCerta: palavra[i],
+      numero: i === 0 && !novaMatriz[lAtual][cAtual].numero ? itemAtual.numero : novaMatriz[lAtual][cAtual].numero,
+      
+      // 🔥 MUDANÇA: Memória dividida em Horizontal e Vertical!
+      palavraInicialHorizontal: (i === 0 && encaixe.direcao === 'horizontal') ? palavra : novaMatriz[lAtual][cAtual].palavraInicialHorizontal,
+      palavraInicialVertical: (i === 0 && encaixe.direcao === 'vertical') ? palavra : novaMatriz[lAtual][cAtual].palavraInicialVertical,
+      
+      pertenceHorizontal: encaixe.direcao === 'horizontal' ? true : novaMatriz[lAtual][cAtual].pertenceHorizontal,
+      pertenceVertical: encaixe.direcao === 'vertical' ? true : novaMatriz[lAtual][cAtual].pertenceVertical,
+      inicioHorizontal: (i === 0 && encaixe.direcao === 'horizontal') ? true : novaMatriz[lAtual][cAtual].inicioHorizontal,
+      inicioVertical: (i === 0 && encaixe.direcao === 'vertical') ? true : novaMatriz[lAtual][cAtual].inicioVertical,
+      idHorizontal: encaixe.direcao === 'horizontal' ? idIdentificadorDaPalavra : novaMatriz[lAtual][cAtual].idHorizontal,
+      idVertical: encaixe.direcao === 'vertical' ? idIdentificadorDaPalavra : novaMatriz[lAtual][cAtual].idVertical,
+      
+      // 🔥 MUDANÇA: Dicas e Dificuldades também ganham memórias separadas
+      dicaBasicaHorizontal: (i === 0 && encaixe.direcao === 'horizontal') ? itemAtual.dicaBasica : novaMatriz[lAtual][cAtual].dicaBasicaHorizontal,
+      dicaBasicaVertical: (i === 0 && encaixe.direcao === 'vertical') ? itemAtual.dicaBasica : novaMatriz[lAtual][cAtual].dicaBasicaVertical,
+      dificuldade: i === 0 ? itemAtual.dificuldade : novaMatriz[lAtual][cAtual].dificuldade
+    };
+    if (encaixe.direcao === 'horizontal') cAtual++; else lAtual++;
+  }
+  return novaMatriz;
+};
+
 const tentarPosicionar = (matrizAtual, palavras, indexAtual) => {
   if (indexAtual === palavras.length) return matrizAtual;
   const itemAtual = palavras[indexAtual];
@@ -95,37 +133,7 @@ const tentarPosicionar = (matrizAtual, palavras, indexAtual) => {
 
   for (let encaixe of encaixesTestar) {
     if (podeColocarPalavra(matrizAtual, palavra, encaixe.linha, encaixe.coluna, encaixe.direcao)) {
-      let novaMatriz = JSON.parse(JSON.stringify(matrizAtual)); 
-      let lAtual = encaixe.linha;
-      let cAtual = encaixe.coluna;
-      
-      const idIdentificadorDaPalavra = `${encaixe.linha}-${encaixe.coluna}`;
-
-      for (let i = 0; i < palavra.length; i++) {
-        novaMatriz[lAtual][cAtual] = {
-          ...novaMatriz[lAtual][cAtual],
-          vazia: false,
-          letraCerta: palavra[i],
-          numero: i === 0 && !novaMatriz[lAtual][cAtual].numero ? itemAtual.numero : novaMatriz[lAtual][cAtual].numero,
-          
-          // 🔥 MUDANÇA: Memória dividida em Horizontal e Vertical!
-          palavraInicialHorizontal: (i === 0 && encaixe.direcao === 'horizontal') ? palavra : novaMatriz[lAtual][cAtual].palavraInicialHorizontal,
-          palavraInicialVertical: (i === 0 && encaixe.direcao === 'vertical') ? palavra : novaMatriz[lAtual][cAtual].palavraInicialVertical,
-          
-          pertenceHorizontal: encaixe.direcao === 'horizontal' ? true : novaMatriz[lAtual][cAtual].pertenceHorizontal,
-          pertenceVertical: encaixe.direcao === 'vertical' ? true : novaMatriz[lAtual][cAtual].pertenceVertical,
-          inicioHorizontal: (i === 0 && encaixe.direcao === 'horizontal') ? true : novaMatriz[lAtual][cAtual].inicioHorizontal,
-          inicioVertical: (i === 0 && encaixe.direcao === 'vertical') ? true : novaMatriz[lAtual][cAtual].inicioVertical,
-          idHorizontal: encaixe.direcao === 'horizontal' ? idIdentificadorDaPalavra : novaMatriz[lAtual][cAtual].idHorizontal,
-          idVertical: encaixe.direcao === 'vertical' ? idIdentificadorDaPalavra : novaMatriz[lAtual][cAtual].idVertical,
-          
-          // 🔥 MUDANÇA: Dicas e Dificuldades também ganham memórias separadas
-          dicaBasicaHorizontal: (i === 0 && encaixe.direcao === 'horizontal') ? itemAtual.dicaBasica : novaMatriz[lAtual][cAtual].dicaBasicaHorizontal,
-          dicaBasicaVertical: (i === 0 && encaixe.direcao === 'vertical') ? itemAtual.dicaBasica : novaMatriz[lAtual][cAtual].dicaBasicaVertical,
-          dificuldade: i === 0 ? itemAtual.dificuldade : novaMatriz[lAtual][cAtual].dificuldade
-        };
-        if (encaixe.direcao === 'horizontal') cAtual++; else lAtual++;
-      }
+      const novaMatriz = colocarPalavra(matrizAtual, itemAtual, encaixe);
       let resultadoFuturo = tentarPosicionar(novaMatriz, palavras, indexAtual + 1);
       if (resultadoFuturo !== false) return resultadoFuturo;
     }
@@ -146,116 +154,76 @@ const embaralhar = itens => {
   return resultado;
 };
 
-// `respondidas`: palavras do tópico que o jogador já respondeu, da mais antiga para a mais recente (memoriaPalavras.js).
-export const gerarTabuleiro = (bancoDePalavras, materia, nivelAtual = 0, { tentativas = 20, respondidas = [] } = {}) => {
-  let tamanhoMatriz = 16;
-  if (bancoDePalavras && materia) {
-    const palavrasOriginais = bancoDePalavras[materia];
-    if (palavrasOriginais && palavrasOriginais.length > 0) {
+const matrizVaziaDe = tamanho => Array.from({ length: tamanho }, (_, l) => Array.from({ length: tamanho }, (__, c) => ({ linha: l, coluna: c, vazia: true })));
 
-      const limiteDificuldade = nivelAtual + 1;
-      const ordemResposta = new Map((Array.isArray(respondidas) ? respondidas : []).map((p, i) => [palavraDaMemoria(p), i]));
-      const respondida = p => ordemResposta.has(palavraDaMemoria(p.palavra));
-      const novas = palavrasOriginais.filter(p => !respondida(p));
-      const palavrasFiltradas = novas.filter(p => p.dificuldade <= limiteDificuldade);
-      // Camadas, na ordem em que entram na grade: novas do nível, novas do nível seguinte, novas dos demais (da
-      // dificuldade mais próxima para a mais distante) e, só quando faltam novas, as já respondidas (as mais antigas primeiro).
-      const camadas = [
-        palavrasFiltradas,
-        novas.filter(p => p.dificuldade === limiteDificuldade + 1),
-        novas.filter(p => p.dificuldade > limiteDificuldade + 1),
-        palavrasOriginais.filter(respondida).sort((a, b) => ordemResposta.get(palavraDaMemoria(a.palavra)) - ordemResposta.get(palavraDaMemoria(b.palavra))),
-      ];
-      const bancos = camadas.map((_, i) => camadas.slice(0, i + 1)).filter((_, i) => camadas[i].length);
-      const metaPalavras = Math.min(12, palavrasOriginais.length);
-      
-      let tamanhoMaiorPalavra = 0;
-      palavrasOriginais.forEach(item => {
-        if (item.palavra.length > tamanhoMaiorPalavra) tamanhoMaiorPalavra = item.palavra.length;
-      });
-      tamanhoMatriz = Math.max(20, tamanhoMaiorPalavra + 10);
-      
-      let matrizVazia = [];
-      for (let l = 0; l < tamanhoMatriz; l++) {
-        let linha = [];
-        for (let c = 0; c < tamanhoMatriz; c++) {
-          linha.push({ linha: l, coluna: c, vazia: true });
-        }
-        matrizVazia.push(linha);
-      }
-      
-      let matrizFinal = matrizVazia;
-      let melhor = medirGrade(matrizFinal);
-      let selecionadas = 0;
-      let bancoUtilizado = 0;
-      const totalTentativas = Math.max(1, Math.min(40, tentativas));
-      const qualidade = m => m.densidade * 100 + m.intersecoes * 3 - m.area * 0.1;
-      for (let indiceBanco = 0; indiceBanco < bancos.length; indiceBanco++) {
-        const banco = bancos[indiceBanco];
-        for (let tentativa = 0; tentativa < totalTentativas; tentativa++) {
-          // Nas novas de outros níveis, as de dificuldade mais próxima vêm primeiro.
-          const ordem = banco.flatMap((camada, i) => (i === 3 ? camada : i === 2 ? embaralhar(camada).sort((a, b) => a.dificuldade - b.dificuldade) : embaralhar(camada))).slice(0, 20);
-          const candidata = tentarPosicionar(matrizVazia, ordem, 0) || matrizVazia;
-          const metrica = medirGrade(candidata);
-          if (metrica.palavras > melhor.palavras || (metrica.palavras === melhor.palavras && qualidade(metrica) > qualidade(melhor))) {
-            matrizFinal = candidata;
-            melhor = metrica;
-            selecionadas = ordem.length;
-            bancoUtilizado = indiceBanco;
-          }
-        }
-        if (melhor.palavras >= metaPalavras) break;
-      }
-      
-      let contadorSequencial = 1;
-      for (let l = 0; l < tamanhoMatriz; l++) {
-        for (let c = 0; c < tamanhoMatriz; c++) {
-          let celula = matrizFinal[l][c];
-          if (!celula.vazia) {
-            if (celula.inicioHorizontal || celula.inicioVertical) {
-              celula.numero = contadorSequencial;
-              contadorSequencial++;
-            } else {
-              celula.numero = null; 
-            }
-          }
-        }
-      }
-      
-      let minRow = tamanhoMatriz, maxRow = 0;
-      let minCol = tamanhoMatriz, maxCol = 0;
-      let temPalavra = false;
-
-      matrizFinal.forEach(linha => {
-        linha.forEach(celula => {
-          if (!celula.vazia) {
-            temPalavra = true;
-            if (celula.linha < minRow) minRow = celula.linha;
-            if (celula.linha > maxRow) maxRow = celula.linha;
-            if (celula.coluna < minCol) minCol = celula.coluna;
-            if (celula.coluna > maxCol) maxCol = celula.coluna;
-          }
-        });
-      });
-
-      if (temPalavra) {
-        minRow = Math.max(0, minRow - 1);
-        maxRow = Math.min(tamanhoMatriz - 1, maxRow + 1);
-        minCol = Math.max(0, minCol - 1);
-        maxCol = Math.min(tamanhoMatriz - 1, maxCol + 1);
-      } else {
-        minRow = 0; maxRow = 10; minCol = 0; maxCol = 10; 
-      }
-
-      const naGrade = matrizFinal.flat().flatMap(c => [c.palavraInicialHorizontal, c.palavraInicialVertical]).filter(Boolean);
-      const repetidas = naGrade.filter(p => ordemResposta.has(palavraDaMemoria(p))).length;
-      return {
-        gradePronta: matrizFinal,
-        limites: { minRow, maxRow, minCol, maxCol },
-        metricas: medirGrade(matrizFinal),
-        selecao: { disponiveis: palavrasOriginais.length, novas: novas.length, compativeis: palavrasFiltradas.length, selecionadas, posicionadas: melhor.palavras, repetidas, meta: metaPalavras, expandiuDificuldade: bancoUtilizado > 0 },
-      };
-    }
+// Numera as palavras na ordem de leitura e calcula a área ocupada (com uma casa de folga).
+function finalizarGrade(matriz) {
+  const tamanho = matriz.length;
+  let contador = 1;
+  for (const linha of matriz) for (const celula of linha) {
+    if (celula.vazia) continue;
+    celula.numero = celula.inicioHorizontal || celula.inicioVertical ? contador++ : null;
   }
-  return { gradePronta: [], limites: { minRow: 0, maxRow: 10, minCol: 0, maxCol: 10 } };
+  const ocupadas = matriz.flat().filter(c => !c.vazia);
+  if (!ocupadas.length) return { gradePronta: matriz, limites: { minRow: 0, maxRow: 10, minCol: 0, maxCol: 10 } };
+  const linhas = ocupadas.map(c => c.linha), colunas = ocupadas.map(c => c.coluna);
+  return { gradePronta: matriz, limites: {
+    minRow: Math.max(0, Math.min(...linhas) - 1), maxRow: Math.min(tamanho - 1, Math.max(...linhas) + 1),
+    minCol: Math.max(0, Math.min(...colunas) - 1), maxCol: Math.min(tamanho - 1, Math.max(...colunas) + 1),
+  } };
+}
+
+// Palavras posicionadas na grade, na ordem de leitura: o que o servidor guarda e devolve ao emitir a cruzadinha.
+export const entradasDaGrade = gradePronta => gradePronta.flat().flatMap(c => [
+  ...(c.inicioHorizontal ? [{ palavra: c.palavraInicialHorizontal, linha: c.linha, coluna: c.coluna, d: 'horizontal', dica: c.dicaBasicaHorizontal || '' }] : []),
+  ...(c.inicioVertical ? [{ palavra: c.palavraInicialVertical, linha: c.linha, coluna: c.coluna, d: 'vertical', dica: c.dicaBasicaVertical || '' }] : []),
+]);
+
+// Remonta a grade a partir das entradas emitidas pelo servidor, com as mesmas casas que gerarTabuleiro produz.
+export function montarGrade(entradas, tamanho) {
+  let matriz = matrizVaziaDe(tamanho);
+  for (const e of entradas) matriz = colocarPalavra(matriz, { palavra: e.palavra, dicaBasica: e.dica, dificuldade: 0 }, { linha: e.linha, coluna: e.coluna, direcao: e.d });
+  return { ...finalizarGrade(matriz), metricas: medirGrade(matriz) };
+}
+
+// `respondidas`: palavras do tópico que o jogador já respondeu, da mais antiga para a mais recente (memoriaPalavras.js).
+// Desde 16/10/2026 o nível não filtra mais as palavras (tópicos pequenos ficavam repetitivos): `_nivelAtual` fica na
+// assinatura por compatibilidade. A grade usa primeiro as palavras novas, embaralhadas; as já respondidas só
+// completam a grade quando faltam novas, das mais antigas para as mais recentes.
+export const gerarTabuleiro = (bancoDePalavras, materia, _nivelAtual, { tentativas = 20, respondidas = [] } = {}) => {
+  const palavrasOriginais = bancoDePalavras && materia ? bancoDePalavras[materia] : null;
+  if (!palavrasOriginais?.length) return { gradePronta: [], limites: { minRow: 0, maxRow: 10, minCol: 0, maxCol: 10 } };
+  const ordemResposta = new Map((Array.isArray(respondidas) ? respondidas : []).map((p, i) => [palavraDaMemoria(p), i]));
+  const respondida = p => ordemResposta.has(palavraDaMemoria(p.palavra));
+  const novas = palavrasOriginais.filter(p => !respondida(p));
+  const repetidas = palavrasOriginais.filter(respondida).sort((a, b) => ordemResposta.get(palavraDaMemoria(a.palavra)) - ordemResposta.get(palavraDaMemoria(b.palavra)));
+  const bancos = [[novas], [novas, repetidas]].filter((camadas, i) => camadas[i].length);
+  const metaPalavras = Math.min(12, palavrasOriginais.length);
+  const tamanhoMatriz = Math.max(20, Math.max(...palavrasOriginais.map(item => item.palavra.length)) + 10);
+  const matrizVazia = matrizVaziaDe(tamanhoMatriz);
+
+  let matrizFinal = matrizVazia;
+  let melhor = medirGrade(matrizFinal);
+  let selecionadas = 0;
+  const totalTentativas = Math.max(1, Math.min(40, tentativas));
+  const qualidade = m => m.densidade * 100 + m.intersecoes * 3 - m.area * 0.1;
+  for (const banco of bancos) {
+    for (let tentativa = 0; tentativa < totalTentativas; tentativa++) {
+      const ordem = banco.flatMap((camada, i) => (i === 1 ? camada : embaralhar(camada))).slice(0, 20);
+      const candidata = tentarPosicionar(matrizVazia, ordem, 0) || matrizVazia;
+      const metrica = medirGrade(candidata);
+      if (metrica.palavras > melhor.palavras || (metrica.palavras === melhor.palavras && qualidade(metrica) > qualidade(melhor))) {
+        matrizFinal = candidata;
+        melhor = metrica;
+        selecionadas = ordem.length;
+      }
+    }
+    if (melhor.palavras >= metaPalavras) break;
+  }
+
+  const pronta = finalizarGrade(matrizFinal);
+  const naGrade = entradasDaGrade(pronta.gradePronta).map(e => e.palavra);
+  return { ...pronta, metricas: medirGrade(matrizFinal), tamanho: tamanhoMatriz,
+    selecao: { disponiveis: palavrasOriginais.length, novas: novas.length, selecionadas, posicionadas: melhor.palavras,
+      repetidas: naGrade.filter(p => ordemResposta.has(palavraDaMemoria(p))).length, meta: metaPalavras } };
 };

@@ -1,6 +1,6 @@
 import { operarTreinoSupabase, eventosTreino } from './operarTreinoSupabase.js';
 import { operarRevisaoSupabase, eventosRevisao } from './operarRevisaoSupabase.js';
-import { registrarPartidaSupabase, operarAdminSupabase, operarPlantaoSupabase, operarAuditoriaSupabase, operarRelacaoSupabase, operarBatalhaSupabase } from './operarJogosSupabase.js';
+import { emitirCruzadinhaSupabase, registrarPartidaSupabase, operarAdminSupabase, operarPlantaoSupabase, operarAuditoriaSupabase, operarRelacaoSupabase, operarBatalhaSupabase } from './operarJogosSupabase.js';
 import { eventosBatalha } from '../utils/batalhaRevisao.js';
 import { registrarXpSemanal } from '../utils/coroas.js';
 import { migrarEconomia } from '../utils/economia.js';
@@ -16,7 +16,8 @@ const tituloCruzadinha = partida => {
   const materia = String(partida.chaveXP || '').split('-')[0].toLocaleLowerCase('pt-BR').replace(/(^|\s)\S/g, l => l.toLocaleUpperCase('pt-BR'));
   return `${materia} · ${String(partida.subMateria || '').trim()}`.slice(0, 90);
 };
-export function executarPedidoSupabase(original, pedido, { recibos = [], tentativas = [], revisoes = [], agora = new Date() } = {}) {
+// `banco`: banco de palavras com as dicas de todas as planilhas (só a emissão da cruzadinha usa).
+export function executarPedidoSupabase(original, pedido, { recibos = [], tentativas = [], revisoes = [], agora = new Date(), banco } = {}) {
   let perfil = migrarEconomia(original);
   const preparo = prepararMissoesDoDia(perfil);
   if (preparo) perfil = { ...perfil, dataUltimoLogin: preparo.dataUltimoLogin, missoesDiarias: preparo.missoesDiarias };
@@ -32,7 +33,8 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
   } else if (pedido.acao === 'registrarPartida') {
     perfil = registrarPartidaSupabase(perfil, pedido.partida, recibos, agora);
     eventos = [{ id: `recibo:${pedido.partida.id}`, kind: 'recibo', data: { modo: 'cruzadinha', rodadaId: pedido.partida.id, titulo: tituloCruzadinha(pedido.partida) } }];
-  } else if (pedido.acao === 'tutorial') perfil = { ...perfil, tutorialCruzadinhasConcluido: true };
+  } else if (pedido.acao === 'emitirCruzadinha') perfil = emitirCruzadinhaSupabase(perfil, pedido, banco, agora);
+  else if (pedido.acao === 'tutorial') perfil = { ...perfil, tutorialCruzadinhasConcluido: true };
   else if (pedido.acao === 'editarPerfil') {
     const nome = String(pedido.nome || '').trim();
     const username = String(pedido.username || '').trim();

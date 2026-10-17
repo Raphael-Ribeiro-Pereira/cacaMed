@@ -200,10 +200,11 @@ async function servicoEntrada(user, acao, pedido = {}) {
   if (acao === 'editarPerfil') return (perfilCadastrado = { ...perfilCadastrado, ...pedido });
   throw new Error('Ação indisponível na homologação.');
 }
-// Cruzadinhas: banco fictício pequeno; a gravação roda a regra do servidor (registrarPartida) sobre o perfil fictício.
-const termo = (palavra, dicaBasica) => ({ palavra, palavraComEspaco: palavra, dificuldade: 0, dicaBasica });
+// Cruzadinhas: banco fictício pequeno; a emissão da grade e a gravação rodam a regra do servidor sobre o perfil fictício.
+// O esquelético tem duas dicas por palavra (duas "planilhas"), para ver o revezamento das dicas.
+const termo = (palavra, dicaBasica, segunda) => ({ palavra, palavraComEspaco: palavra, dificuldade: 0, dicaBasica, dicas: segunda ? [dicaBasica, segunda] : [dicaBasica] });
 const BANCO_FICTICIO = {
-  'ANATOMIA-SISTEMA ESQUELETICO': [['FEMUR', 'Osso mais longo do corpo, na coxa.'], ['TIBIA', 'Osso medial da perna.'], ['FIBULA', 'Osso lateral e fino da perna.'], ['UMERO', 'Osso do braço.'], ['RADIO', 'Osso lateral do antebraço.'], ['ULNA', 'Osso medial do antebraço.'], ['PATELA', 'Osso sesamoide do joelho.'], ['ESTERNO', 'Osso plano no centro do tórax.'], ['CLAVICULA', 'Une o esterno à escápula.'], ['SACRO', 'Osso formado por vértebras fundidas na pelve.'], ['ESCAPULA', 'Osso triangular do dorso do ombro.'], ['ATLAS', 'Primeira vértebra cervical.'], ['AXIS', 'Segunda vértebra cervical, com o dente.'], ['COCCIX', 'Fim da coluna, abaixo do sacro.'], ['CALCANEO', 'Osso do calcanhar.'], ['TALUS', 'Osso do tarso que se articula com a tíbia.'], ['CARPO', 'Conjunto de oito ossos do punho.'], ['TARSO', 'Conjunto de sete ossos do pé.'], ['FALANGE', 'Osso dos dedos.'], ['COSTELA', 'Osso curvo da caixa torácica.'], ['MANDIBULA', 'Único osso móvel do crânio.'], ['OCCIPITAL', 'Osso da nuca, com o forame magno.'], ['ILIO', 'Maior parte do osso do quadril.'], ['ISQUIO', 'Parte do quadril em que nos sentamos.']].map(([p, d]) => termo(p, d)),
+  'ANATOMIA-SISTEMA ESQUELETICO': [['FEMUR', 'Osso mais longo do corpo, na coxa.'], ['TIBIA', 'Osso medial da perna.'], ['FIBULA', 'Osso lateral e fino da perna.'], ['UMERO', 'Osso do braço.'], ['RADIO', 'Osso lateral do antebraço.'], ['ULNA', 'Osso medial do antebraço.'], ['PATELA', 'Osso sesamoide do joelho.'], ['ESTERNO', 'Osso plano no centro do tórax.'], ['CLAVICULA', 'Une o esterno à escápula.'], ['SACRO', 'Osso formado por vértebras fundidas na pelve.'], ['ESCAPULA', 'Osso triangular do dorso do ombro.'], ['ATLAS', 'Primeira vértebra cervical.'], ['AXIS', 'Segunda vértebra cervical, com o dente.'], ['COCCIX', 'Fim da coluna, abaixo do sacro.'], ['CALCANEO', 'Osso do calcanhar.'], ['TALUS', 'Osso do tarso que se articula com a tíbia.'], ['CARPO', 'Conjunto de oito ossos do punho.'], ['TARSO', 'Conjunto de sete ossos do pé.'], ['FALANGE', 'Osso dos dedos.'], ['COSTELA', 'Osso curvo da caixa torácica.'], ['MANDIBULA', 'Único osso móvel do crânio.'], ['OCCIPITAL', 'Osso da nuca, com o forame magno.'], ['ILIO', 'Maior parte do osso do quadril.'], ['ISQUIO', 'Parte do quadril em que nos sentamos.']].map(([p, d]) => termo(p, d, `Segunda planilha: ${p.length} letras, começa com ${p[0]}.`)),
   'ANATOMIA-SISTEMA MUSCULAR': [['BICEPS', 'Flexor do cotovelo com duas cabeças.'], ['TRICEPS', 'Extensor do cotovelo.'], ['DELTOIDE', 'Músculo que arredonda o ombro.'], ['TRAPEZIO', 'Músculo do dorso que eleva o ombro.'], ['SARTORIO', 'Músculo mais longo do corpo.'], ['DIAFRAGMA', 'Principal músculo da respiração.'], ['MASSETER', 'Músculo da mastigação.']].map(([p, d]) => termo(p, d)),
   'FARMACOLOGIA-ANTIBIOTICOS': [['AMOXICILINA', 'Penicilina de amplo espectro por via oral.'], ['AZITROMICINA', 'Macrolídeo de dose única diária.'], ['DOXICICLINA', 'Tetraciclina usada na leptospirose.'], ['CEFTRIAXONA', 'Cefalosporina de terceira geração.'], ['VANCOMICINA', 'Glicopeptídeo contra MRSA.'], ['GENTAMICINA', 'Aminoglicosídeo nefrotóxico.']].map(([p, d]) => termo(p, d)),
 };
@@ -219,7 +220,7 @@ let simularFalhaGenerica = false;
 async function servicoGenerico(_, acao, pedido = {}) {
   await espera(600);
   if (simularFalhaGenerica && acao !== 'obterPerfil') { simularFalhaGenerica = false; throw new Error('Falha simulada no pedido.'); }
-  const { perfil, eventos } = executarPedidoSupabase(salvo, { ...pedido, acao });
+  const { perfil, eventos } = executarPedidoSupabase(salvo, { ...pedido, acao }, { banco: BANCO_FICTICIO });
   registrarEventos(eventos);
   return guardar(perfil);
 }

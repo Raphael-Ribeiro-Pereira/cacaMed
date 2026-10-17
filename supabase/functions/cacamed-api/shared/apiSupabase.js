@@ -4,6 +4,7 @@ import { criarMissoesDiarias, dataLocalHoje } from '../utils/missoes.js';
 import { validarPartidaNoBanco } from './operarJogosSupabase.js';
 import { criarLimitador, ipDoPedido, LIMITES_API } from './limitador.js';
 import { materiaValida, validarCurso } from '../utils/curso.js';
+import { bancoPublico } from '../utils/importarBancoCSV.js';
 
 export const ORIGENS_SUPABASE = new Set(['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'https://caca-med.vercel.app', 'https://cacamed.com']);
 async function lerPedido(req) {
@@ -49,6 +50,8 @@ export const usernameDoNome = nome => {
 
 export function criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras, log = () => {},
   limitador = criarLimitador(), limites = LIMITES_API }) {
+  // A consulta pública leva uma dica por palavra; as outras planilhas ficam no servidor, que sorteia ao emitir a grade.
+  const palavrasPublicas = async () => { const r = await palavras(); return { ...r, banco: bancoPublico(r.banco) }; };
   return async req => {
     const inicio = performance.now();
     let acao = 'desconhecida';
@@ -78,7 +81,7 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         const publico = { 'Cache-Control': 'public, max-age=60' };
         if (acao === 'ranking') return answer({ sucesso: true, ranking: await ranking() }, 200, publico);
         if (acao === 'coroas' && coroas) return answer({ sucesso: true, coroas: await coroas() }, 200, publico);
-        if (acao === 'palavras') return answer({ resultado: await palavras() }, 200, { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400' });
+        if (acao === 'palavras') return answer({ resultado: await palavrasPublicas() }, 200, { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400' });
         return answer({ erro: 'Consulta inválida.' }, 400);
       }
       if (req.method !== 'POST') return answer({ erro: 'Método inválido.' }, 405);
@@ -93,7 +96,8 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         || (['migrarSenha', 'definirSenha'].includes(acao) && barrar('senha:' + user.uid, limites.senha))
         || (acao === 'verificarUsername' && barrar('username:' + user.uid, limites.username));
       if (barrado) return barrado;
-      // Cruzadinha (S-02): a partida tem que caber no tópico do banco de palavras do servidor.
+      // Cruzadinha (S-02): a partida tem que caber no tópico do banco de palavras do servidor; a emissão usa o banco completo.
+      const banco = acao === 'emitirCruzadinha' && palavras ? (await palavras()).banco : undefined;
       if (acao === 'registrarPartida' && palavras) {
         try { validarPartidaNoBanco(pedido.partida, (await palavras()).banco); } catch (erro) { return answer({ erro: erro.message }, 400); }
       }
@@ -178,7 +182,7 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         if (recibo.length) row = (await database('cacamed_player_state?' + filter + '&select=profile,version,auth_user_id'))[0];
         let alteracao;
         try {
-          alteracao = executarPedidoSupabase(row.profile, pedido, { recibos: recibo.length ? [id] : [],
+          alteracao = executarPedidoSupabase(row.profile, pedido, { banco, recibos: recibo.length ? [id] : [],
             tentativas: historico.filter(r => r.kind === 'resposta').map(r => r.data), revisoes: historico.filter(r => r.kind === 'revisao').map(r => r.data) });
         } catch (erro) {
           // S-12: erro de programa (TypeError e afins) não vai para o cliente; o detalhe fica só no log.

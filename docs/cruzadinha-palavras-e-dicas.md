@@ -2,6 +2,27 @@
 
 Pedido do usuário em 15/10/2026, feito na `main` no mesmo dia. **Site publicado em 15/10** (`dpl_2rrQWaNcimhRyv46t6KNeS2FKUSv`, branch `release/cruzadinha-1510`, sem o cadastro com código). **Falta publicar a API:** até lá, a memória só vale dentro da mesma visita (a API v15 ignora as `respostas`). Ver [[pendencias|Pendências]].
 
+## Dicas por planilha e grade no servidor (17/10/2026)
+
+Decidido com o usuário em 17/10/2026, feito na `main`; **publica na quinta 22/10** (API antes do site). Respostas dele:
+
+1. **Várias planilhas de dicas, sem ordem de dificuldade.** O usuário cria mais 5 ou 6 planilhas no formato da atual; cada palavra pode ter uma dica por planilha. A grade sorteia, para cada palavra, uma dica que o jogador **ainda não viu naquela palavra**; quando ele já viu todas, volta a vista há mais tempo.
+2. **O nível não filtra mais as palavras.** Num tópico pequeno o jogador decorava rápido as palavras do nível (retorno de um jogador). Agora qualquer palavra do tópico pode cair em qualquer nível; o nível só muda o multiplicador de XP e, até o 2, a primeira letra no laudo.
+3. **Sai a coluna `nivelMinimo`.** As planilhas novas têm só **Palavra, Área, Subárea e Descrição**; o importador lê as colunas pelo nome do cabeçalho (com ou sem acento) e aceita a planilha antiga.
+4. **Os links das planilhas** o usuário manda quando terminar (ver "Importar as planilhas", abaixo).
+5. **A memória das palavras continua** (as respondidas só voltam quando faltam novas); a memória das dicas entra por cima.
+6. **Dicas extras** (residente e paciente): ficaram como estavam, para decidir depois.
+7. **As dicas novas entram direto no jogo**, sem revisão médica antes.
+
+**Como funciona:**
+- **Banco** (`montarBanco` em `importarBancoCSV.js`): junta a planilha principal e as de dicas pela palavra e pelo tópico (Área + Subárea). Cada palavra guarda `dicas` (uma por planilha, '' quando a planilha não tem a palavra). Palavra que só existe numa planilha de dicas também entra. A consulta pública `palavras` (lista de tópicos e jogo antigo) leva só uma dica por palavra.
+- **Grade no servidor** (`emitirCruzadinha`, S-02): o app pede a grade do tópico; a API monta com o banco completo, a memória de palavras (`palavrasRespondidas`) e a memória de dicas (`dicasVistas[tópico][palavra]`, índices das planilhas já mostradas, do mais antigo para o mais recente) e guarda no perfil só as entradas (`cruzadinha.entrada`: palavra, posição, direção e dica). O app remonta a grade com `montarGrade`. A dica conta como vista quando a grade é emitida, mesmo que o jogador abandone.
+- **Partida** (`registrarPartida` com `cruzadinhaId`): tópico, número de palavras, letras, maior palavra e respostas saem da grade emitida, não do app; a grade fecha ao gravar. O app antigo, sem `cruzadinhaId`, continua pelo caminho de antes (até sair).
+- **Sem a ação no servidor** (API antiga) ou sem a API (Firestore antigo), o app monta a grade sozinho, como antes.
+- **Custo:** cerca de 210 ms por grade no maior tópico (Patologia · Doenças, ~400 palavras), medido no computador; a cópia da matriz passou a ser rasa.
+
+**Importar as planilhas (quando o usuário mandar os links):** baixar o CSV publicado de cada uma, conferir cabeçalho e quantas palavras casam com a planilha principal, e gravar em `cacamed_content` (`id = palavras`), no campo `data.dicas` como `[{ source, csv, rows }]`, na ordem das planilhas. A API lê esse campo a cada 5 minutos; não precisa publicar código.
+
 ## Dicas sem IA
 
 **Problema:** do nível 3 do tópico em diante, as dicas pediam à IA (rota `/api/ia`, que só existe no servidor local). No site, o pedido falhava e a dica virava "Sem conexão com a IA".
@@ -25,11 +46,7 @@ Pedido do usuário em 15/10/2026, feito na `main` no mesmo dia. **Site publicado
 
 **Regra:**
 1. Ao vencer, a partida manda as palavras da grade (`respostas`). O servidor confere se são do tópico e guarda no perfil, em `palavrasRespondidas[tópico]`, da mais antiga para a mais recente (`src/utils/memoriaPalavras.js`, até 600 por tópico). Partida abandonada não conta.
-2. A próxima grade (`gerarTabuleiro`, opção `respondidas`) usa, nesta ordem:
-   - palavras **novas** do nível;
-   - novas do nível seguinte;
-   - novas dos outros níveis, da dificuldade mais próxima para a mais distante;
-   - só quando faltam novas, as já respondidas, das **mais antigas** para as mais recentes.
+2. A próxima grade (`gerarTabuleiro`, opção `respondidas`) usa primeiro as palavras **novas**, embaralhadas, de qualquer nível (desde 17/10/2026; antes preferia as do nível do jogador) e, só quando faltam novas, as já respondidas, das **mais antigas** para as mais recentes.
 3. Na mesma visita, o app também lembra as palavras das partidas vencidas, para valer mesmo antes de a API nova ser publicada.
 4. O app antigo, que não manda `respostas`, continua gravando normalmente.
 

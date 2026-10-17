@@ -13,3 +13,14 @@ export function lembrarRespostas(anteriores, novas, limite = LIMITE_MEMORIA_TOPI
   const ficam = (Array.isArray(anteriores) ? anteriores : []).map(palavraDaMemoria).filter(p => valida(p) && !recentes.includes(p));
   return [...new Set(ficam), ...recentes].slice(-limite);
 }
+
+// Memória das dicas (decidido em 16/10/2026): cada palavra pode ter uma dica por planilha. A grade sorteia uma dica que o
+// jogador ainda não viu naquela palavra; quando já viu todas, volta a vista há mais tempo. `variantes` são os índices
+// das planilhas que têm dica para a palavra; `vistas`, os índices já mostrados, do mais antigo para o mais recente.
+export function escolherDica(variantes, vistas = [], sortear = Math.random) {
+  if (!variantes.length) return null;
+  const novas = variantes.filter(i => !vistas.includes(i));
+  if (novas.length) return novas[Math.floor(sortear() * novas.length)];
+  return [...vistas].find(i => variantes.includes(i)) ?? variantes[0];
+}
+export const lembrarDica = (vistas, indice) => [...(Array.isArray(vistas) ? vistas : []).filter(i => i !== indice), indice];

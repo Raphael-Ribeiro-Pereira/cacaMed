@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { gerarTabuleiro } from './motorTabuleiro.js';
-import { lembrarRespostas } from './memoriaPalavras.js';
+import { escolherDica, lembrarDica, lembrarRespostas } from './memoriaPalavras.js';
 import { montarDicas } from './dicasCruzadinha.js';
 
 const naGrade = gradePronta => gradePronta.flat().flatMap(c => [c.palavraInicialHorizontal, c.palavraInicialVertical]).filter(Boolean);
@@ -43,17 +43,15 @@ test('três grades seguidas não repetem palavras enquanto houver novas', () => 
   });
 });
 
-test('sem novas no nível, puxa novas dos outros níveis antes de repetir', () => {
-  const faceis = ['FEMUR', 'TIBIA', 'ULNA', 'RADIO', 'SACRO', 'ATLAS'];
-  const dificeis = ['ESCAPULA', 'CLAVICULA', 'MANDIBULA', 'OCCIPITAL', 'CALCANEO', 'NAVICULAR', 'METATARSO', 'ESTERNO', 'COSTELA', 'FALANGE', 'PATELA', 'CARPO', 'TARSO', 'TALUS'];
-  const banco = { OSSOS: [...faceis.map(palavra => ({ palavra, dificuldade: 0 })), ...dificeis.map(palavra => ({ palavra, dificuldade: 8 }))] };
-  comSemente(3, () => {
-    const { gradePronta, selecao } = gerarTabuleiro(banco, 'OSSOS', 0, { respondidas: faceis });
-    const palavras = naGrade(gradePronta);
-    assert.equal(selecao.compativeis, 0);
-    assert.ok(palavras.length >= 10);
-    assert.deepEqual(palavras.filter(p => faceis.includes(p)), [], 'as fáceis já respondidas não voltam');
-  });
+test('dica nova a cada volta da palavra; com todas vistas, volta a vista há mais tempo', () => {
+  const sorteio = valores => () => valores.shift() ?? 0;
+  assert.equal(escolherDica([0, 1, 2], [], sorteio([0.99])), 2);
+  assert.equal(escolherDica([0, 1, 2], [2, 0], sorteio([0.5])), 1, 'só falta a 1');
+  assert.equal(escolherDica([0, 1, 2], [1, 2, 0]), 1, 'todas vistas: a mais antiga');
+  assert.equal(escolherDica([0, 2], [2, 1, 0]), 2, 'ignora planilha sem dica para a palavra');
+  assert.equal(escolherDica([], []), null);
+  assert.deepEqual(lembrarDica([0, 1, 2], 0), [1, 2, 0]);
+  assert.deepEqual(lembrarDica(undefined, 3), [3]);
 });
 
 test('com tudo respondido, as respostas mais antigas voltam primeiro', () => {

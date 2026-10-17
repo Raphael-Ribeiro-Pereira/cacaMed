@@ -4,7 +4,8 @@ import { obterCasoPlantao, executarPlantao } from '../utils/plantao.js';
 import { obterAuditoria, avaliarAuditoria } from '../utils/erroMedico.js';
 import { obterRelacao, avaliarRelacao } from '../utils/causaEfeito.js';
 import { DOENCAS, executarBatalha, obterDoenca, obterPet, recompensaBatalha, relatorioBatalha } from '../utils/batalha.js';
-import { lembrarRespostas, palavraDaMemoria } from '../utils/memoriaPalavras.js';
+import { escolherDica, lembrarDica, lembrarRespostas, palavraDaMemoria } from '../utils/memoriaPalavras.js';
+import { entradasDaGrade, gerarTabuleiro } from '../utils/motorTabuleiro.js';
 const criarMissoesCruzadinha = criarMissoesDiarias;
 
 // S-02 da auditoria de segurança (docs/seguranca.md), contenção até a cruzadinha ser emitida pelo servidor:
@@ -34,10 +35,51 @@ export function validarPartidaNoBanco(partida, banco) {
   }
 }
 
-export function registrarPartidaSupabase(perfil, partida, recibos = [], agora = new Date().toISOString()) {
-  const id = String(partida?.id || '');
+// Cruzadinha emitida pelo servidor (S-02, 16/10/2026): o servidor monta a grade com o banco, a memória de palavras e a
+// memória de dicas do jogador, guarda as entradas no perfil e o app só remonta a grade. Cada palavra recebe uma dica
+// sorteada entre as planilhas que ainda não mostraram dica dela ao jogador (memoriaPalavras.js).
+export function emitirCruzadinhaSupabase(perfil, pedido, banco, agora = new Date().toISOString()) {
+  const chaveXP = String(pedido?.chaveXP || '');
+  const topico = banco?.[chaveXP];
+  if (!Array.isArray(topico) || !topico.length) throw new Error('Tópico da cruzadinha desconhecido.');
+  const grade = gerarTabuleiro(banco, chaveXP, 0, { respondidas: perfil.palavrasRespondidas?.[chaveXP] });
+  const porPalavra = new Map(topico.map(p => [p.palavra, p]));
+  const vistasDoTopico = { ...perfil.dicasVistas?.[chaveXP] };
+  const entradas = entradasDaGrade(grade.gradePronta).map(e => {
+    const item = porPalavra.get(e.palavra);
+    const dicas = Array.isArray(item?.dicas) ? item.dicas : [];
+    const variantes = dicas.map((d, i) => (d ? i : -1)).filter(i => i >= 0);
+    const indice = escolherDica(variantes, vistasDoTopico[e.palavra]);
+    if (variantes.length > 1) vistasDoTopico[e.palavra] = lembrarDica(vistasDoTopico[e.palavra], indice);
+    return { ...e, dica: indice === null ? (item?.dicaBasica || '') : dicas[indice] };
+  });
+  if (!entradas.length) throw new Error('Não foi possível montar a grade deste tópico.');
+  return { ...perfil,
+    cruzadinha: { entrada: { id: crypto.randomUUID(), chaveXP, emitidaEm: new Date(agora).toISOString(), tamanho: grade.tamanho, entradas } },
+    dicasVistas: { ...perfil.dicasVistas, [chaveXP]: vistasDoTopico } };
+}
+
+// Números da partida tirados da grade emitida (o app não decide quantas palavras e letras teve).
+function numerosDaEntrada(entrada) {
+  const casas = new Set();
+  for (const e of entrada.entradas) [...e.palavra].forEach((letra, i) => {
+    if (letra !== ' ') casas.add(e.d === 'horizontal' ? `${e.linha}-${e.coluna + i}` : `${e.linha + i}-${e.coluna}`);
+  });
+  return { chaveXP: entrada.chaveXP, palavras: entrada.entradas.length, letras: casas.size,
+    maiorPalavra: Math.max(...entrada.entradas.map(e => e.palavra.length)), respostas: [...new Set(entrada.entradas.map(e => e.palavra))] };
+}
+
+export function registrarPartidaSupabase(perfil, original, recibos = [], agora = new Date().toISOString()) {
+  const id = String(original?.id || '');
   if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error('Identificador de partida inválido.');
   if (recibos.includes(id) || (perfil.cruzadinhasRegistradas || []).includes(id)) return perfil;
+  // Com a grade emitida pelo servidor, tópico, palavras, letras e respostas vêm dela; o app antigo continua pelo caminho de antes.
+  let partida = original;
+  if (original?.cruzadinhaId !== undefined) {
+    const entrada = perfil.cruzadinha?.entrada;
+    if (!entrada || entrada.id !== original.cruzadinhaId) throw new Error('Esta cruzadinha não está mais aberta. Comece um novo plantão.');
+    partida = { ...original, ...numerosDaEntrada(entrada) };
+  }
   const chaveXP = String(partida.chaveXP || '');
   const subMateria = String(partida.subMateria || '').slice(0, 80);
   const palavras = Number(partida.palavras);
@@ -102,6 +144,7 @@ export function registrarPartidaSupabase(perfil, partida, recibos = [], agora = 
     cruzadinhasHorarios: [...horarios, instante].slice(-LIMITE_CRUZADINHAS.dia),
   };
   // Memória do tópico: a próxima grade evita as palavras já respondidas (memoriaPalavras.js).
+  if (partida !== original) atualizado.cruzadinha = { ...perfil.cruzadinha, entrada: null };
   if (Array.isArray(partida.respostas) && partida.respostas.length) {
     atualizado.palavrasRespondidas = { ...perfil.palavrasRespondidas,
       [chaveXP]: lembrarRespostas(perfil.palavrasRespondidas?.[chaveXP], partida.respostas.slice(0, palavras)) };

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
 import { ArrowDownUp, Check, ChevronLeft, ChevronRight, CircleHelp, Delete, Settings2 } from 'lucide-react';
-import { gerarTabuleiro } from '../utils/motorTabuleiro';
+import { gerarTabuleiro, montarGrade } from '../utils/motorTabuleiro';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { aplicarProgressoMissoes, dataLocalHoje, lerMissoes } from '../utils/missoes';
 import { nivelPorXP } from '../utils/economia';
@@ -28,6 +28,7 @@ const PASSOS_TUTORIAL = [
 ];
 const DICAS_EXTRAS = { 2: ['Dica do residente', 5], 3: ['Relato do paciente', 10] };
 const PERFIL_NA_PLANILHA = ['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS);
+const SEM_GRADE = [];
 // Na API, a partida vai com a sessão do próprio usuário (Firebase ou Supabase); o Firestore antigo só carrega sob demanda.
 async function registrarPadrao(usuario, uid, partida) {
   if (PERFIL_NA_PLANILHA) return chamarPerfilPlanilha(usuario, 'registrarPartida', { partida });
@@ -52,13 +53,38 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   const respondidasNaSessao = useRef([]);
   const [memoria, setMemoria] = useState(() => dadosUsuario?.palavrasRespondidas?.[chaveXP] || []);
 
-  const { gradePronta, limites } = useMemo(() => {
-    const resultado = gerarTabuleiro(bancoDePalavras, chaveXP, nivelDaGrade, { respondidas: memoria });
-    if (import.meta.env.DEV && resultado.selecao) console.debug('[Cruzadinha] seleção da grade', chaveXP, resultado.selecao);
-    return resultado;
-    // A chave força uma nova grade aleatória ao avançar, mesmo no mesmo nível.
+  // Desde 16/10/2026 a grade sai do servidor (emitirCruzadinha): ele escolhe as palavras e sorteia as dicas com a memória
+  // do jogador, e o app só remonta a grade. Sem a API (Firestore antigo) ou com uma API antiga, o app monta a grade sozinho.
+  const emitirNoServidor = PERFIL_NA_PLANILHA || servicoPerfil !== chamarPerfilPlanilha;
+  const [grade, setGrade] = useState({ estado: 'carregando' });
+  useEffect(() => {
+    let ativo = true;
+    const local = () => {
+      const resultado = gerarTabuleiro(bancoDePalavras, chaveXP, nivelDaGrade, { respondidas: memoria });
+      if (import.meta.env.DEV && resultado.selecao) console.debug('[Cruzadinha] seleção da grade', chaveXP, resultado.selecao);
+      return { estado: resultado.gradePronta.length ? 'pronta' : 'vazia', ...resultado };
+    };
+    if (!emitirNoServidor) { setGrade(local()); return undefined; }
+    setGrade({ estado: 'carregando' });
+    servicoPerfil(usuario, 'emitirCruzadinha', { chaveXP })
+      .then(perfil => {
+        const entrada = perfil?.cruzadinha?.entrada;
+        if (!entrada || entrada.chaveXP !== chaveXP) throw new Error('O servidor não devolveu a grade. Tente de novo.');
+        if (!ativo) return;
+        setDadosUsuario(perfil);
+        setGrade({ estado: 'pronta', id: entrada.id, ...montarGrade(entrada.entradas, entrada.tamanho) });
+      })
+      .catch(erro => {
+        if (!ativo) return;
+        if (/Ação desconhecida/.test(erro?.message || '') && bancoDePalavras) setGrade(local());
+        else setGrade({ estado: 'erro', mensagem: erro?.message || 'Não foi possível montar a grade.' });
+      });
+    return () => { ativo = false; };
+    // A chave pede uma grade nova ao avançar (nível e memória mudam junto com ela).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bancoDePalavras, chaveXP, chaveRecarregamento, nivelDaGrade, memoria]);
+  }, [chaveXP, chaveRecarregamento]);
+  const gradePronta = grade.gradePronta || SEM_GRADE;
+  const limites = grade.limites;
   const palavras = useMemo(() => palavrasDaGrade(gradePronta), [gradePronta]);
   const dicasBasicas = useMemo(() => {
     const mapa = {};
@@ -291,8 +317,8 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     const concluidas = missoes.missoes.filter((m, i) => !lerMissoes(dadosUsuario)[i]?.concluida && m.concluida);
     setRelatorio({ ganho, letras: numLetras, palavras: numPalavras, xpLetras, xpPalavras, multNivel, multTempo, penalidade: penalidadeXP, xpCalculado, xpMissoes: missoes.xp, missoesConcluidas: concluidas, tempo, nivel: nivelDaGrade });
     if (!partidaId.current) partidaId.current = crypto.randomUUID();
-    setXpPendente({ status: 'pendente', partida: { id: partidaId.current, chaveXP, subMateria, dia: dataLocalHoje(), xp: ganho, palavras: numPalavras, penalidadeXP, letras: numLetras, tempo, erros, maiorPalavra, respostas } });
-  }, [valores, gradePronta, palavras, vitoria, nivelDaGrade, tempo, penalidadeXP, dadosUsuario, chaveXP, subMateria, erros]);
+    setXpPendente({ status: 'pendente', partida: { id: partidaId.current, chaveXP, subMateria, dia: dataLocalHoje(), xp: ganho, palavras: numPalavras, penalidadeXP, letras: numLetras, tempo, erros, maiorPalavra, respostas, ...(grade.id ? { cruzadinhaId: grade.id } : {}) } });
+  }, [valores, gradePronta, palavras, vitoria, nivelDaGrade, tempo, penalidadeXP, dadosUsuario, chaveXP, subMateria, erros, grade.id]);
   // A grade acesa fica na tela por um instante antes do resultado, como no protótipo.
   useEffect(() => {
     if (!vitoria) return undefined;
@@ -353,13 +379,13 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     if (!intro) return undefined;
     const t = setTimeout(() => setIntro(false), 120 + 45 * 26 + 700);
     return () => clearTimeout(t);
-  }, [intro, chaveRecarregamento]);
+  }, [intro, chaveRecarregamento, grade.estado]);
 
   // O zoom inicial cabe a grade inteira na área do tabuleiro (com um piso para as casas não ficarem minúsculas).
   useLayoutEffect(() => {
     const el = areaTabuleiro.current;
     if (el && !mostrarResultado) setArea({ w: el.clientWidth, h: el.clientHeight });
-  }, [chaveRecarregamento, web, mostrarResultado]);
+  }, [chaveRecarregamento, web, mostrarResultado, grade.estado]);
 
   const raiz = conteudo => <div className={`cbt ${web ? 'web' : ''}`}>{conteudo}<AnimatePresence>{subiu && <SubiuNivel key="lvl" info={subiu} onClose={() => setSubiu(null)} />}</AnimatePresence></div>;
 
@@ -388,10 +414,13 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     {admin && <button className="icon-btn" onClick={() => setFolha('admin')} disabled={vitoria || !jogoIniciado} aria-label="Ferramentas admin"><Settings2 /></button>}
   </div>;
 
-  if (!gradePronta.length) return raiz(<div className="cbt-scr r-crossword">{topbar}
-    <div className="scroll plain" role="alert" style={{ display: 'flex', flexDirection: 'column', textAlign: 'center' }}>
-      <span>Não foi possível montar a grade deste tópico.</span>
-      <button className="primary" style={{ maxWidth: 260 }} onClick={() => setTelaAtual('topicos')}>Escolher outro tópico</button>
+  if (grade.estado !== 'pronta') return raiz(<div className="cbt-scr r-crossword">{topbar}
+    <div className="scroll plain" role={grade.estado === 'carregando' ? 'status' : 'alert'} style={{ display: 'flex', flexDirection: 'column', textAlign: 'center' }}>
+      {grade.estado === 'carregando' ? <span>Montando o plantão...</span> : <>
+        <span>{grade.estado === 'erro' ? grade.mensagem : 'Não foi possível montar a grade deste tópico.'}</span>
+        {grade.estado === 'erro' && <button className="primary" style={{ maxWidth: 260 }} onClick={() => setChaveRecarregamento(c => c + 1)}>Tentar de novo</button>}
+        <button className={grade.estado === 'erro' ? 'ghost' : 'primary'} style={{ maxWidth: 260 }} onClick={() => setTelaAtual('topicos')}>Escolher outro tópico</button>
+      </>}
     </div></div>);
 
   const resolvidasCasas = new Map();

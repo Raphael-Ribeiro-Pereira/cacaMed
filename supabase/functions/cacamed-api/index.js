@@ -4,7 +4,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.117.2';
 import { criarApiSupabase } from './shared/apiSupabase.js';
 import { aprovadaPara, criarMigracaoSenha } from './shared/migrarSenhaSupabase.js';
 import { nivelPorXP } from './utils/economia.js';
-import { importarBancoCSV } from './utils/importarBancoCSV.js';
+import { montarBanco } from './utils/importarBancoCSV.js';
 import { montarCoroas, semanaCoroas } from './utils/coroas.js';
 
 const keys = createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
@@ -128,7 +128,8 @@ async function palavras() {
   if (bancoCache && Date.now() - bancoCache.instante < 300000) return bancoCache.resultado;
   const rows = await database('cacamed_content?id=eq.palavras&select=data,version');
   if (!rows.length) throw new Error('Banco de palavras não importado.');
-  const resultado = { banco: importarBancoCSV(rows[0].data.csv), versao: rows[0].version };
+  // A planilha principal e as planilhas de dicas (data.dicas, desde 16/10/2026): cada palavra guarda uma dica por planilha.
+  const resultado = { banco: montarBanco([rows[0].data.csv, ...(rows[0].data.dicas || []).map(d => d.csv)]), versao: rows[0].version };
   bancoCache = { instante: Date.now(), resultado };
   return resultado;
 }
