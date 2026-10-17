@@ -224,6 +224,8 @@ async function servicoGenerico(_, acao, pedido = {}) {
   registrarEventos(eventos);
   return guardar(perfil);
 }
+// Ranking e Coroas fictícios marcam o jogador pelo SHA-256 do uid (no Supabase real, a API devolve um HMAC).
+const idFicticioDoJogador = usuario => calcularIdPublico(usuario.uid);
 const TELAS_PROTOTIPO = ['batalha', 'ranking', 'estatisticas', 'perfil', 'menu', 'login', 'cadastro', 'cadastro2', 'cadastro2email', 'topicos', 'jogo', 'quiz', 'verdadeMentira', 'revisao', 'selecaoDDX', 'erroMedico', 'causaEfeito'];
 const TELAS_CASCA = ['menu', 'ranking', 'estatisticas', 'perfil', 'topicos'];
 
@@ -253,13 +255,13 @@ export function Homologacao() {
   : modo === 'selecaoDDX' ? <PlantaoMedico usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoGenerico} />
   : modo === 'erroMedico' ? <ErroMedico usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoGenerico} />
   : modo === 'causaEfeito' ? <CausaEfeito usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoGenerico} />
-  : modo === 'menu' ? <MenuPrincipal usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} buscarRanking={rankingFicticio} />
+  : modo === 'menu' ? <MenuPrincipal usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} buscarRanking={rankingFicticio} obterMeuId={idFicticioDoJogador} />
   : modo === 'login' ? <Login setTelaAtual={navegar} conta={contaFicticia} />
   : modo === 'cadastro' ? <Cadastro setTelaAtual={navegar} conta={contaFicticia} onContaConfirmada={() => navegar('cadastro2email')} />
   : modo === 'cadastro2' ? <Cadastro2 usuario={usuarioGoogle} conta={contaFicticia} servicoPerfil={servicoEntrada} onConcluido={perfil => { setDados(perfil); navegar('menu'); }} />
   : modo === 'cadastro2email' ? <Cadastro2 key="email" usuario={usuarioEmailConfirmado()} conta={contaFicticia} servicoPerfil={servicoEntrada} onConcluido={perfil => { setDados(perfil); navegar('menu'); }} />
   : modo === 'batalha' ? <BatalhaDiagnostica usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('quiz')} servicoPerfil={servicoBatalha} />
-  : modo === 'ranking' ? <Ranking usuario={inicial} dadosUsuario={dados} setTelaAtual={navegar} buscarRanking={rankingFicticio} buscarCoroas={coroasFicticias} sincronizar={async () => {}} />
+  : modo === 'ranking' ? <Ranking usuario={inicial} dadosUsuario={dados} setTelaAtual={navegar} buscarRanking={rankingFicticio} buscarCoroas={coroasFicticias} sincronizar={async () => {}} obterMeuId={idFicticioDoJogador} />
   : modo === 'estatisticas' ? <Estatisticas usuario={inicial} dadosUsuario={dados} setTelaAtual={navegar} servicoPerfil={servicoCracha} />
   : modo === 'perfil' ? <PerfilUsuario usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoCracha} aoSair={async () => {}} /> : modo === 'revisao' ? <RevisaoInteligente usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('quiz')} servicoPerfil={servicoPerfil} /> : <TreinoMedico key={modo} modo={modo} usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('revisao')} servicoPerfil={servicoPerfil} />}</>;
 }

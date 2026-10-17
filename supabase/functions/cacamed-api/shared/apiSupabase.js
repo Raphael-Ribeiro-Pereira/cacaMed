@@ -48,7 +48,8 @@ export const usernameDoNome = nome => {
   return usernameValido(base) ? base : 'plantonista';
 };
 
-export function criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras, log = () => {},
+// `idPublico(playerId)`: o ID que o ranking e as Coroas mostram (S-08: HMAC com segredo do servidor).
+export function criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras, idPublico, log = () => {},
   limitador = criarLimitador(), limites = LIMITES_API }) {
   // A consulta pública leva uma dica por palavra; as outras planilhas ficam no servidor, que sorteia ao emitir a grade.
   const palavrasPublicas = async () => { const r = await palavras(); return { ...r, banco: bancoPublico(r.banco) }; };
@@ -101,6 +102,8 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
       if (acao === 'registrarPartida' && palavras) {
         try { validarPartidaNoBanco(pedido.partida, (await palavras()).banco); } catch (erro) { return answer({ erro: erro.message }, 400); }
       }
+      // O app não sabe o segredo do ID público: pergunta o seu para se achar no ranking e nas Coroas.
+      if (acao === 'meuIdPublico' && idPublico) return answer({ resultado: { idPublico: await idPublico(user.uid) } });
       if (acao === 'migrarSenha') return answer({ resultado: await migratePassword(user, pedido) });
       if (acao === 'definirSenha') return answer({ resultado: await definePassword(user, pedido, token) });
       if (acao === 'migrarIdentidade') return answer({ resultado: await migrateIdentity(user, pedido) });

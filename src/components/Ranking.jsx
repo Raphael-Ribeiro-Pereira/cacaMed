@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDown, ArrowUp, Trophy } from 'lucide-react';
-import { buscarCoroasPublicas, buscarRankingPublico, calcularIdPublico, sincronizarRanking } from '../services/rankingPublico';
+import { buscarCoroasPublicas, buscarRankingPublico, obterMeuIdPublico, sincronizarRanking } from '../services/rankingPublico';
 import { guardarRanking, rankingEmCache } from '../services/rankingSessao';
 import { MATERIAS, coroasDoJogador, montarTabelaCoroas, semanaCoroas, xpDaSemana } from '../utils/coroas';
 import { fotoDoPerfil } from '../utils/fotosCracha';
@@ -25,7 +25,7 @@ const CRITERIOS = [['xp', 'XP'], ['letras', 'Letras certas'], ['tempo', 'Tempo m
 const minutos = s => s == null ? '—' : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
 export default function Ranking({ usuario, dadosUsuario, setTelaAtual, abaInicial = 'temporada',
-  buscarRanking = buscarRankingPublico, buscarCoroas = buscarCoroasPublicas, sincronizar = sincronizarRanking }) {
+  buscarRanking = buscarRankingPublico, buscarCoroas = buscarCoroasPublicas, sincronizar = sincronizarRanking, obterMeuId = obterMeuIdPublico }) {
   const web = useLargo();
   const uid = useId();
   const foto = fotoDoPerfil(dadosUsuario);
@@ -48,9 +48,10 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual, abaInicia
 
   useEffect(() => {
     let vivo = true;
-    calcularIdPublico(usuario.uid).then(id => { if (vivo) setMeuId(id); });
+    obterMeuId(usuario).then(id => { if (vivo) setMeuId(id); });
     return () => { vivo = false; };
-  }, [usuario.uid]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usuario.uid, obterMeuId]);
 
   useEffect(() => {
     let vivo = true;

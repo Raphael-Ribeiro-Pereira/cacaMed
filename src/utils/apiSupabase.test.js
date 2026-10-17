@@ -357,3 +357,10 @@ test('emitirCruzadinha pela API e consulta pública sem as variações de dica',
   const publico = await (await f.api(new Request('https://test/api?acao=palavras'))).json();
   assert.ok(publico.resultado.banco['ANATOMIA-OSSOS'].every(item => !('dicas' in item)));
 });
+
+test('S-08: o jogador pergunta o próprio ID público, calculado só no servidor', async () => {
+  const f = fixture({ idPublico: async playerId => `hmac:${playerId}` });
+  assert.deepEqual((await f.call({ acao: 'meuIdPublico' })).resultado, { idPublico: 'hmac:jogador' });
+  const semLogin = await f.api(new Request('https://test/api', { method: 'POST', headers: { Origin: 'http://localhost:5174' }, body: JSON.stringify({ acao: 'meuIdPublico' }) }));
+  assert.equal(semLogin.status, 401);
+});

@@ -1,10 +1,24 @@
 import { getIdToken } from 'firebase/auth';
 import { USAR_SUPABASE } from '../supabase';
 import { buscarConteudoSupabase } from './perfilSupabase';
+import { chamarPerfilPlanilha } from './perfilPlanilha';
 
 const ENDPOINT_RANKING = 'https://script.google.com/macros/s/AKfycbyo7eh7LTMLKpR7KAINlxMarLRe2DbL72niTbPA9xKlgi8fMy2WUs8bhb_fMl0y06pWfw/exec';
 let sequencia = 0;
 let ultimaSincronizacao = { chave: null, instante: 0, promessa: null };
+
+// S-08: no Supabase, o ID público é um HMAC com segredo do servidor, então o app pergunta o seu à API (uma vez por
+// conta e por visita). Se a API ainda não tiver a ação, ou falhar, usa o SHA-256 de antes.
+const meusIds = new Map();
+export function obterMeuIdPublico(usuario) {
+  if (!USAR_SUPABASE) return calcularIdPublico(usuario.uid);
+  if (!meusIds.has(usuario.uid)) {
+    meusIds.set(usuario.uid, chamarPerfilPlanilha(usuario, 'meuIdPublico')
+      .then(r => r?.idPublico || calcularIdPublico(usuario.uid))
+      .catch(() => { meusIds.delete(usuario.uid); return calcularIdPublico(usuario.uid); }));
+  }
+  return meusIds.get(usuario.uid);
+}
 
 export async function calcularIdPublico(uid) {
   const bytes = new TextEncoder().encode(uid);

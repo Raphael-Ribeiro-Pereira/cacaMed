@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BookOpen, BrainCircuit, ClipboardCheck, GitBranch, HeartPulse, Play, RotateCcw, ScanLine, Shuffle, Stethoscope, Ticket, Trophy } from 'lucide-react';
-import { calcularIdPublico } from '../services/rankingPublico';
+import { obterMeuIdPublico } from '../services/rankingPublico';
 import { carregarRanking, rankingEmCache } from '../services/rankingSessao';
 import { DOENCAS } from '../utils/batalha';
 import { progressoGlobal } from '../utils/economia';
@@ -111,17 +111,18 @@ function BattleCard({ p, web, ir }) {
 }
 
 // Ranking da prévia: abre com a lista da sessão e atualiza por trás.
-function useRankingMenu(usuario, buscarRanking) {
+function useRankingMenu(usuario, buscarRanking, obterMeuId) {
   const [lista, setLista] = useState(rankingEmCache);
   const [meuId, setMeuId] = useState(null);
   const [erro, setErro] = useState(false);
   const [tentativa, setTentativa] = useState(0);
   useEffect(() => {
     let vivo = true;
-    if (usuario?.uid) calcularIdPublico(usuario.uid).then(id => { if (vivo) setMeuId(id); });
+    if (usuario?.uid) obterMeuId(usuario).then(id => { if (vivo) setMeuId(id); });
     carregarRanking(buscarRanking).then(l => { if (vivo) { setLista(l); setErro(false); } }).catch(() => { if (vivo) setErro(true); });
     return () => { vivo = false; };
-  }, [usuario?.uid, buscarRanking, tentativa]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usuario?.uid, buscarRanking, tentativa, obterMeuId]);
   const ordenada = useMemo(() => (lista ? lista.map((r, i) => ({ id: r.idPublico || `linha-${i}`, nome: String(r.nome || 'Doutor(a)'), valor: n(r.xpGlobal), me: Boolean(meuId) && r.idPublico === meuId }))
     .sort((a, b) => b.valor - a.valor || a.id.localeCompare(b.id)) : null), [lista, meuId]);
   const anterior = useMemo(() => (meuId ? lerLocal('cacoMed-rank-pos-' + meuId) : null), [meuId]);
@@ -130,14 +131,14 @@ function useRankingMenu(usuario, buscarRanking) {
   return { lista: erro && !lista ? null : ordenada, erro: erro && !lista, delta, tentar: () => setTentativa(t => t + 1) };
 }
 
-export default function MenuPrincipal({ dadosUsuario, setTelaAtual, usuario, setDadosUsuario, buscarRanking }) {
+export default function MenuPrincipal({ dadosUsuario, setTelaAtual, usuario, setDadosUsuario, buscarRanking, obterMeuId = obterMeuIdPublico }) {
   const web = useLargo();
   const p = dadosUsuario || {};
   const foto = fotoDoPerfil(p);
   const L = progressoGlobal(p);
   const admin = p.role === 'admin';
   const missoes = lerMissoes(p);
-  const rank = useRankingMenu(usuario, buscarRanking);
+  const rank = useRankingMenu(usuario, buscarRanking, obterMeuId);
   const ir = setTelaAtual;
   const hoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   const ferramentas = usuario && admin && <AdminSpeedDial titulo="Ferramentas admin · Centro de Comando" acima={!web}><FerramentasAdmin usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} /></AdminSpeedDial>;

@@ -104,11 +104,21 @@ const emCache = (calcular, ms = 60000) => {
     return guardado.valor;
   };
 };
+// ID público do ranking e das Coroas (S-08): HMAC-SHA-256 do player_id com o segredo CACAMED_ID_PUBLICO_SEGREDO.
+// Sem o segredo, continua o SHA-256 simples de antes (o mesmo que o app antigo calcula para se achar).
+const hex = buffer => Array.from(new Uint8Array(buffer), b => b.toString(16).padStart(2, '0')).join('');
+let chaveIdPublico;
+async function idPublico(playerId) {
+  const segredo = Deno.env.get('CACAMED_ID_PUBLICO_SEGREDO');
+  const dados = new TextEncoder().encode(playerId);
+  if (!segredo) return hex(await crypto.subtle.digest('SHA-256', dados));
+  chaveIdPublico ||= crypto.subtle.importKey('raw', new TextEncoder().encode(segredo), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return hex(await crypto.subtle.sign('HMAC', await chaveIdPublico, dados));
+}
 const ranking = emCache(async () => {
   const rows = await database('rpc/cacamed_ranking', { method: 'POST', body: '{}' });
   return Promise.all(rows.map(async r => {
-    const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(r.player_id));
-    return { idPublico: Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2,'0')).join(''), nome: r.nome,
+    return { idPublico: await idPublico(r.player_id), nome: r.nome,
       xpGlobal: Number(r.xp_global), nivelGlobal: nivelPorXP(r.xp_global), partidas: Number(r.partidas), letras: Number(r.letras),
       tempoMedio: r.tempo_medio == null ? null : Number(r.tempo_medio), atualizadoEm: r.atualizado_em };
   }));
@@ -119,8 +129,7 @@ const coroas = emCache(async () => {
   const rows = await database('cacamed_player_state?select=player_id,nome:profile->>nome,username:profile->>username,coroas:profile->coroas'
     + '&profile->coroas->>semana=eq.' + encodeURIComponent(semana) + '&player_id=not.like.homologacao:*');
   return montarCoroas(await Promise.all(rows.map(async r => {
-    const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(r.player_id));
-    return { idPublico: Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2,'0')).join(''), nome: r.username || 'Plantonista', coroas: r.coroas };
+    return { idPublico: await idPublico(r.player_id), nome: r.username || 'Plantonista', coroas: r.coroas };
   })));
 });
 let bancoCache;
@@ -187,5 +196,5 @@ async function definePassword(user, pedido, token) {
   }
   return { sucesso: true };
 }
-Deno.serve(criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras,
+Deno.serve(criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras, idPublico,
   log: info => console.info(JSON.stringify(info)) }));
