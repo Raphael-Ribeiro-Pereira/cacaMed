@@ -21,19 +21,19 @@ Dois auditores trabalharam **separados**: a equipe do projeto (achados marcados 
 | S-01 | **Crítica** | Chave de API do Google escrita no código, no histórico **público** do GitHub | E | Você + 30 min |
 | S-02 | **Alta** | Qualquer jogador cria XP e tickets à vontade pela cruzadinha | E e A | 1 dia |
 | S-03 | **Alta** | Sem limite de frequência nem teto diário; robôs farmam XP em Quiz, V ou M e Batalha | E e A | 1 dia |
-| S-04 | **Alta** | Faltam cabeçalhos de segurança no site (CSP, anti-frame, nosniff) | E e A | 2 h |
+| S-04 | **CSP aplicado na `main`** (17/10/2026) | `af74fb3` | Anti-frame, `nosniff`, `Referrer-Policy` e `Permissions-Policy` já valiam. Sem avisos `[Report Only]` no site logado (conferido pelo usuário em 17/10) e com o Firebase fora do app, o CSP saiu do modo relatório e ficou só com o próprio site, o Supabase e as fontes do Google (`frame-src 'none'`, `script-src 'self'`). Publica na quinta, depois do teste na pré-visualização |
 | S-05 | **Alta (latente)** | Gabaritos e casos **não revisados** vão no pacote público do site | A | 0,5 a 2 dias |
 | S-06 | Média | Aprovação de migração permite pré-sequestro de conta | A | 0,5 dia |
 | S-07 | Média | Trocar senha só com o token; senha de 6 caracteres; fallback para a chave mestra | E e A | 2 h + painel |
 | S-08 | Média | Ranking e coroas sem cache, com nome real do Google (LGPD) e hash sem sal | E e A | 0,5 dia |
 | S-09 | Média | Cadastro sem validar username e nome, sem unicidade | A | 2 h |
-| S-10 | Baixa | Firebase legado: regras do Firestore frouxas, qualquer provedor, sem revogação | E e A | Decisão |
+| S-10 | **Firebase fora do app** (17/10/2026, na `main`) | `af74fb3` | Login, Firestore, a ponte da planilha e o vínculo de conta antiga saíram; tudo pelo Supabase. Conferido no banco antes: nenhum perfil sem conta no Supabase (só o da homologação) e nenhuma conta vinda do Firebase sem senha no Supabase. **O projeto do Firebase não pode ser apagado:** a credencial do login Google do Supabase foi criada nele. Falta tirar do servidor os caminhos que aceitam token do Firebase (`migrarSenha`, `migrarIdentidade`) depois de uma semana estável |
 | S-11 | Baixa | Apps Script antigo ainda público | E e A | Decisão |
 | S-12 | Baixa | Mensagens de erro internas devolvidas ao cliente | A | 1 h |
 | S-13 | Baixa | CORS com localhost em produção e `/api/ia` sem login | A | 1 h |
 | S-14 | Baixa | Perfil e eventos crescem sem teto | A | 2 h |
 | S-15 | Baixa | Link da fonte sem checar `https` | E e A | 30 min |
-| S-16 | Info | 16 vulnerabilidades em dependências, **nenhuma no site publicado** | E e A | 1 h |
+| S-16 | **Feito** (17/10/2026) | `af74fb3` | Sem o pacote `firebase` (e sem `express` e `cors`), `npm audit` mostra 0 avisos |
 
 ## Andamento (14/10/2026)
 
