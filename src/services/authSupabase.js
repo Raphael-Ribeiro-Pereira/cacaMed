@@ -1,7 +1,3 @@
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
-import { supabase, SUPABASE_URL, SUPABASE_CHAVE_PUBLICA } from '../supabase';
-import { criarTransporteSupabase } from './transporteSupabase';
 import { provedoresDaConta } from '../utils/contaSupabase';
 import { escolhasDoCadastro } from '../utils/entrada';
 
@@ -13,18 +9,3 @@ export function usuarioSupabase(user) {
     metadata: { creationTime: user.created_at }, providerData: provedoresDaConta(user) };
 }
 
-export async function entrarComSenhaPreservada(email, senha) {
-  const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: senha });
-  if (!error) return data;
-  // Só credenciais rejeitadas justificam consultar o provedor antigo. Falhas de
-  // rede e limite de tentativas não iniciam outra tentativa de autenticação.
-  if (error.code !== 'invalid_credentials') throw error;
-  const { user } = await signInWithEmailAndPassword(auth, email.trim(), senha);
-  const transporte = criarTransporteSupabase({ url: SUPABASE_URL, chavePublica: SUPABASE_CHAVE_PUBLICA,
-    obterToken: () => user.getIdToken(true) });
-  const resultado = await transporte('migrarSenha', { senha });
-  if (!resultado.migrada) return { user };
-  const resposta = await supabase.auth.signInWithPassword({ email: email.trim(), password: senha });
-  if (resposta.error) throw resposta.error;
-  return resposta.data;
-}

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { BookOpen, Check, ChevronLeft, ChevronRight, Eye, GraduationCap, Library, Lock, Map as MapaIco, MapPin, PawPrint, Search, Shield, ShieldAlert, Shuffle, Siren, Sparkles, Stethoscope, Ticket, X, Zap } from 'lucide-react';
 import { AGENTE, CAPITULOS, DOENCAS, FONTES, PETS, PET_QUANDO, capituloDe, obterDoenca } from '../utils/batalha';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
-import { USAR_SUPABASE } from '../supabase';
 import { Blob, PetArt, Retrato, Species } from './batalhaArte';
 import BatalhaArena from './BatalhaArena';
 import { useLargo } from '../utils/prototipo';
@@ -54,11 +53,10 @@ export default function BatalhaDiagnostica({ usuario, dadosUsuario, setDadosUsua
   };
 
   let conteudo;
-  const semApi = !USAR_SUPABASE && servicoPerfil === chamarPerfilPlanilha;
-  if (semApi || !admin) {
+  if (!admin) {
     conteudo = <div className="cbt-scr"><Topo voltar={() => setTelaAtual('menu')} kicker="Modo secreto" titulo="Batalha diagnóstica" />
       <div className="scroll"><section className="card" style={{ display: 'grid', gap: 10 }}><span className="kicker">Em piloto</span>
-        <p>{semApi ? 'A Batalha diagnóstica usa a API do Supabase. Ative VITE_FONTE_DADOS=supabase para testar.' : 'A Batalha diagnóstica está em teste com o administrador enquanto o conteúdo passa por revisão médica.'}</p>
+        <p>A Batalha diagnóstica está em teste com o administrador enquanto o conteúdo passa por revisão médica.</p>
         <button className="ghost" onClick={() => setTelaAtual('menu')}>Voltar ao início</button></section></div></div>;
   } else if (tela.id === 'arena' && aberta) {
     conteudo = <BatalhaArena key={entrada.id} entrada={entrada} doenca={obterDoenca(entrada.doencaId)} web={web} usuario={usuario} servicoPerfil={servicoPerfil}

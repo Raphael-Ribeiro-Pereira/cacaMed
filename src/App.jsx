@@ -1,15 +1,10 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import { auth, db } from './firebase'; 
-import { getIdTokenResult, onAuthStateChanged } from 'firebase/auth';
 import { sairDaConta } from './services/sairDaConta';
-import { USAR_SUPABASE, USAR_AUTH_SUPABASE, supabase } from './supabase';
+import { supabase } from './supabase';
 import { usuarioSupabase } from './services/authSupabase';
 import { marcarInterfacePronta } from './services/diagnosticoDesempenho';
-import { buscarConteudoSupabase, migrarSessaoFirebase } from './services/perfilSupabase';
-import { doc, getDoc, runTransaction } from 'firebase/firestore';
-import { prepararMissoesDoDia } from './utils/missoes';
-import { limparEstatisticasClinicasAntigas, possuiEstatisticasClinicasAntigas } from './utils/estatisticasClinicas';
+import { buscarConteudoSupabase } from './services/perfilSupabase';
 import './index.css';
 
 import Login from './components/Login';
@@ -20,20 +15,15 @@ const PerfilUsuario = lazy(() => import('./components/PerfilUsuario'));
 const SelecaoTopicos = lazy(() => import('./components/SelecaoTopicos'));
 const Jogo = lazy(() => import('./components/Jogo'));
 const Ranking = lazy(() => import('./components/Ranking'));
-import { sincronizarRanking } from './services/rankingPublico';
 const Estatisticas = lazy(() => import('./components/Estatisticas'));
 const Cadastro2 = lazy(() => import('./components/Cadastro2'));
-const VincularGoogle = lazy(() => import('./components/VincularGoogle'));
 import { chamarPerfilPlanilha } from './services/perfilPlanilha';
-import { importarBancoCSV } from './utils/importarBancoCSV';
 import { fotoDoPerfil } from './utils/fotosCracha';
 import { animar } from './utils/prototipo';
 import { carregarRanking } from './services/rankingSessao';
 import { BarraLateral } from './components/cascaUi';
 import { Ecg } from './components/entradaUi';
 import './prototipo.css';
-
-const PERFIL_NA_PLANILHA = ['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS);
 
 // Abertura do protótipo de movimento com as etapas reais: sessão, credencial e perfil com as missões do dia.
 const ETAPAS_ABERTURA = ['Conectando ao prontuário', 'Validando credencial', 'Carregando missões do dia', 'Plantão liberado'];
@@ -82,41 +72,13 @@ function App() {
   }, [carregandoAuth, telaAtual]);
 
 
-  const verificarEResetarMissoes = async (uid, dadosAtuais) => {
-    if (!prepararMissoesDoDia(dadosAtuais) && !possuiEstatisticasClinicasAntigas(dadosAtuais.estatisticas)) return dadosAtuais;
-    try {
-      return await runTransaction(db, async transaction => {
-        const ref = doc(db, 'usuarios', uid);
-        const snapshot = await transaction.get(ref);
-        if (!snapshot.exists()) return dadosAtuais;
-        const dados = snapshot.data();
-        const preparo = prepararMissoesDoDia(dados);
-        const alteracoes = {};
-        if (preparo) Object.assign(alteracoes, {
-          dataUltimoLogin: preparo.dataUltimoLogin,
-          missoesDiarias: preparo.missoesDiarias,
-          pontuacaoTotal: (Number(dados.pontuacaoTotal) || 0) + preparo.xpLogin
-        });
-        if (possuiEstatisticasClinicasAntigas(dados.estatisticas)) {
-          alteracoes.estatisticas = limparEstatisticasClinicasAntigas(dados.estatisticas);
-        }
-        if (!Object.keys(alteracoes).length) return dados;
-        const atualizado = { ...dados, ...alteracoes };
-        transaction.update(ref, alteracoes);
-        return atualizado;
-      });
-    } catch (error) {
-      console.error('Falha ao atualizar missões diárias:', error);
-      return dadosAtuais;
-    }
-  };
-
   useEffect(() => {
     let ativo = true;
     let versaoSessao = 0;
     let ultimaIdentidade;
+    // Login só pelo Supabase desde 17/10/2026: o perfil vem da API; sem perfil, a conta segue para o Cadastro 2.0.
     const receberUsuario = async (user) => {
-      const identidade = user ? `${user.source || 'firebase'}:${user.authId || user.uid}` : null;
+      const identidade = user ? user.authId : null;
       // INITIAL_SESSION e SIGNED_IN podem chegar para a mesma sessão no retorno
       // OAuth. Uma identidade já recebida não precisa recarregar o perfil.
       if (identidade === ultimaIdentidade) return;
@@ -126,74 +88,38 @@ function App() {
       if (user && cadastroEmAndamento.current) { setUsuario(user); return; }
       setCarregandoAuth(true);
       setEtapaAbertura(user ? 1 : 0);
-      if (user) {
-        setUsuario(user);
-        if (PERFIL_NA_PLANILHA) {
-          try {
-            setEtapaAbertura(2);
-            const perfil = await chamarPerfilPlanilha(user, 'obterPerfil');
-            if (USAR_SUPABASE && perfil && user.source !== 'supabase') {
-              await migrarSessaoFirebase(user);
-            }
-            if (!sessaoAtual()) return;
-            if (perfil && animar()) { setEtapaAbertura(3); await espera(350); if (!sessaoAtual()) return; }
-            setDadosUsuario(perfil);
-            if (perfil) setTelaAtual('menu');
-            else {
-              const token = user.source === 'supabase' ? { signInProvider: user.providerData.some(p => p.providerId === 'google.com') ? 'google.com' : 'password' } : await getIdTokenResult(user);
-              if (!sessaoAtual()) return;
-              const veioDoGoogle = token.signInProvider === 'google.com';
-              const temSenhaAntiga = user.providerData.some(provedor => provedor.providerId === 'password');
-              setTelaAtual(user.source !== 'supabase' && veioDoGoogle && temSenhaAntiga ? 'vincularGoogle' : 'cadastro2');
-            }
-            setErroPerfil('');
-          } catch (erro) {
-            if (!sessaoAtual()) return;
-            setErroPerfil(erro.message || 'Não foi possível carregar seu perfil.');
-            setTelaAtual('erroPerfil');
-          } finally {
-            if (sessaoAtual()) setCarregandoAuth(false);
-          }
-          return;
-        }
-        try {
-          const docSnap = await getDoc(doc(db, 'usuarios', user.uid));
-          if (!sessaoAtual()) return;
-          if (!docSnap.exists()) throw new Error('Perfil antigo não encontrado. Entre novamente ou conclua o cadastro.');
-          const dados = await verificarEResetarMissoes(user.uid, docSnap.data());
-          if (!sessaoAtual()) return;
-          setDadosUsuario(dados);
-          setTelaAtual('menu');
-          setErroPerfil('');
-        } catch (erro) {
-          if (!sessaoAtual()) return;
-          setErroPerfil(erro.message || 'Não foi possível carregar seu perfil.');
-          setTelaAtual('erroPerfil');
-        } finally {
-          if (sessaoAtual()) setCarregandoAuth(false);
-        }
-      } else {
+      if (!user) {
         setUsuario(null);
         setDadosUsuario(null);
         setTelaAtual('login');
         setCarregandoAuth(false);
+        return;
+      }
+      setUsuario(user);
+      try {
+        setEtapaAbertura(2);
+        const perfil = await chamarPerfilPlanilha(user, 'obterPerfil');
+        if (!sessaoAtual()) return;
+        if (perfil && animar()) { setEtapaAbertura(3); await espera(350); if (!sessaoAtual()) return; }
+        setDadosUsuario(perfil);
+        setTelaAtual(perfil ? 'menu' : 'cadastro2');
+        setErroPerfil('');
+      } catch (erro) {
+        if (!sessaoAtual()) return;
+        setErroPerfil(erro.message || 'Não foi possível carregar seu perfil.');
+        setTelaAtual('erroPerfil');
+      } finally {
+        if (sessaoAtual()) setCarregandoAuth(false);
       }
     };
-    const unsubscribe = onAuthStateChanged(auth, async user => {
-      if (USAR_AUTH_SUPABASE) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) return;
-      }
-      if (ativo) void receberUsuario(user);
-    });
-    const subscription = USAR_AUTH_SUPABASE ? supabase.auth.onAuthStateChange((evento, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((evento, session) => {
       if (evento === 'PASSWORD_RECOVERY') setRecuperandoSenha(true);
       // Não chama APIs Auth dentro do callback: o SDK ainda segura o lock da sessão.
       if (['INITIAL_SESSION', 'SIGNED_IN', 'SIGNED_OUT'].includes(evento)) setTimeout(() => {
-        if (ativo) void receberUsuario(session ? usuarioSupabase(session.user) : evento === 'SIGNED_OUT' ? null : auth.currentUser);
+        if (ativo) void receberUsuario(session ? usuarioSupabase(session.user) : null);
       }, 0);
-    }).data.subscription : null;
-    return () => { ativo = false; versaoSessao++; unsubscribe(); subscription?.unsubscribe(); };
+    });
+    return () => { ativo = false; versaoSessao++; subscription.unsubscribe(); };
   }, [tentativaPerfil]);
 
   useEffect(() => {
@@ -202,14 +128,7 @@ function App() {
       setEstadoBanco('carregando');
       setErroBanco('');
       try {
-        const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQzuC7MJYVdSo2Ufi_OQnREAFSDrYi2SY5_KGJvrKv_7lSXGVbiieXop7OA0keLmZV5tuQgGdkSIT8/pub?output=csv";
-        let bancoFormatado;
-        if (USAR_SUPABASE) bancoFormatado = (await buscarConteudoSupabase('palavras', { signal: controlador.signal })).resultado.banco;
-        else {
-          const resposta = await fetch(urlCSV + "&tempo=" + new Date().getTime(), { signal: controlador.signal });
-          if (!resposta.ok) throw new Error(`Banco de palavras indisponível (HTTP ${resposta.status}).`);
-          bancoFormatado = importarBancoCSV(await resposta.text());
-        }
+        const bancoFormatado = (await buscarConteudoSupabase('palavras', { signal: controlador.signal })).resultado.banco;
         if (controlador.signal.aborted) return;
         setBancoDePalavras(bancoFormatado);
         setEstadoBanco(Object.keys(bancoFormatado).length ? 'pronto' : 'vazio');
@@ -230,13 +149,6 @@ function App() {
     return () => document.body.classList.remove('com-casca');
   }, [comCasca]);
 
-  useEffect(() => {
-    if (PERFIL_NA_PLANILHA || !usuario || !dadosUsuario) return;
-    sincronizarRanking(usuario, dadosUsuario).catch(() => {
-      console.warn('Ranking pendente de sincronização.');
-    });
-  }, [usuario, dadosUsuario]);
-
   const iniciarJogo = (materiaEscolhida, subMateriaEscolhida) => {
     setMateria(materiaEscolhida);
     setSubMateria(subMateriaEscolhida);
@@ -254,7 +166,6 @@ function App() {
       {/* Conta confirmada pelo código: recarrega a sessão, e o App abre o Cadastro 2.0 (ou o menu, se já houver perfil). */}
       {telaAtual === 'cadastro' && <Cadastro setTelaAtual={setTelaAtual} aoCriarConta={ativo => { cadastroEmAndamento.current = ativo; }}
         onContaConfirmada={() => { cadastroEmAndamento.current = false; setTentativaPerfil(valor => valor + 1); }} />}
-      {telaAtual === 'vincularGoogle' && usuario && <VincularGoogle usuario={usuario} onConfirmado={() => setTelaAtual('cadastro2')} />}
       {telaAtual === 'cadastro2' && usuario && <Cadastro2 usuario={usuario} onConcluido={perfil => { setDadosUsuario(perfil); setTelaAtual('menu'); }} />}
       {telaAtual === 'erroPerfil' && <main className="stitch-page stitch-loading flex-col p-6 text-center"><p role="alert">{erroPerfil}</p><div className="flex gap-3"><button className="stitch-primary" onClick={() => setTentativaPerfil(valor => valor + 1)}>Tentar novamente</button><button className="stitch-back" onClick={sairDaConta}>Voltar ao login</button></div></main>}
       {telaAtual === 'menu' && usuario && <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} usuario={usuario} setDadosUsuario={setDadosUsuario} />}

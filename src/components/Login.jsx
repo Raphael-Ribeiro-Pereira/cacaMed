@@ -1,21 +1,14 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, KeyRound, Link2, Lock, Mail, Stethoscope } from 'lucide-react';
+import { Check, KeyRound, Lock, Mail, Stethoscope } from 'lucide-react';
 import { contaPadrao } from '../services/entradaConta';
-import { USAR_AUTH_SUPABASE } from '../supabase';
 import { emailOk } from '../utils/entrada';
 import { animar, useLargo } from '../utils/prototipo';
 import { CascaEntrada, Campo, Erro, GoogleG, LadoMarca, Marca, Olho } from './entradaUi';
 import '../prototipo.css';
 
-// Tela de entrada portada do protótipo de movimento, com a mesma lógica de antes: senha pelo
-// Firebase ou Supabase, Google (com vínculo de conta antiga) e recuperação de senha.
-const PERFIL_NA_API = ['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS);
-const MENSAGENS_GOOGLE = {
-  'auth/unauthorized-domain': 'Este endereço local não está autorizado para login Google. Abra http://localhost:5173/.',
-  'auth/popup-blocked': 'O navegador bloqueou a janela do Google. Autorize pop-ups e tente novamente.',
-  'auth/operation-not-allowed': 'O login Google ainda não está disponível neste projeto.',
-};
+// Tela de entrada portada do protótipo de movimento: senha e Google pelo Supabase e recuperação de senha.
+// O vínculo de conta antiga do Firebase saiu em 17/10/2026, com o Firebase.
 
 function Folha({ aberta, rotulo, onClose, children }) {
   useEffect(() => {
@@ -36,12 +29,12 @@ function Esqueci({ aberto, emailInicial, onClose, conta }) {
   const [end, setEnd] = useState(emailInicial);
   const [st, setSt] = useState('idle');
   const [erro, setErro] = useState('');
-  const enviar = async (e, antigo = false) => {
+  const enviar = async e => {
     e?.preventDefault();
     if (!emailOk(end) || st === 'busy') return;
     setSt('busy'); setErro('');
     try {
-      await conta.recuperarSenha(end.trim(), { antigo });
+      await conta.recuperarSenha(end.trim());
       setSt('ok');
     } catch (falha) {
       setSt('idle');
@@ -63,7 +56,6 @@ function Esqueci({ aberto, emailInicial, onClose, conta }) {
       </Campo>
       {erro && <p className="cr-err" role="alert">{erro}</p>}
       <button className="primary amber" type="submit" disabled={!emailOk(end) || st === 'busy'}>{st === 'busy' ? <><span className="spin sm dark" />Enviando</> : 'Enviar link de recuperação'}</button>
-      {USAR_AUTH_SUPABASE && <button type="button" className="w-link" disabled={!emailOk(end) || st === 'busy'} onClick={() => enviar(null, true)}>Ainda não entrei após a atualização: recuperar acesso antigo</button>}
       <button type="button" className="ghost" onClick={onClose}>Voltar ao login</button>
     </form>}
   </Folha>;
@@ -71,7 +63,6 @@ function Esqueci({ aberto, emailInicial, onClose, conta }) {
 
 export default function Login({ setTelaAtual, conta = contaPadrao }) {
   const web = useLargo();
-  const comGoogle = PERFIL_NA_API || conta !== contaPadrao;
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [ver, setVer] = useState(false);
@@ -82,9 +73,6 @@ export default function Login({ setTelaAtual, conta = contaPadrao }) {
   const [treme, setTreme] = useState(0);
   const [esqueci, setEsqueci] = useState(false);
   const [aberturas, setAberturas] = useState(0);
-  const [pendente, setPendente] = useState(null);
-  const [senhaVinculo, setSenhaVinculo] = useState('');
-  const [vinculando, setVinculando] = useState(false);
   const pode = emailOk(email) && senha.length > 0 && !busy && !google;
 
   useEffect(() => {
@@ -109,26 +97,11 @@ export default function Login({ setTelaAtual, conta = contaPadrao }) {
     if (google) return;
     setErro(''); setGoogle(true);
     try {
-      const r = await conta.entrarComGoogle();
-      if (r?.pendente) { setPendente(r.pendente); setSenhaVinculo(''); }
-    } catch (falha) {
-      if (falha.code !== 'auth/popup-closed-by-user') falhar(MENSAGENS_GOOGLE[falha.code] || `Não foi possível entrar com Google (${falha.code || 'erro desconhecido'}).`);
+      await conta.entrarComGoogle();
+    } catch {
+      falhar('Não foi possível entrar com Google. Tente novamente.');
     } finally {
       setGoogle(false);
-    }
-  };
-  const vincular = async e => {
-    e.preventDefault();
-    if (!pendente || !senhaVinculo || vinculando) return;
-    setVinculando(true);
-    try {
-      await conta.vincularGoogle(pendente.email, senhaVinculo, pendente.credencial);
-      setPendente(null); setSenhaVinculo('');
-    } catch {
-      setPendente(null); setSenhaVinculo('');
-      falhar('Senha antiga incorreta ou vínculo indisponível. Confira e tente novamente.');
-    } finally {
-      setVinculando(false);
     }
   };
 
@@ -154,27 +127,13 @@ export default function Login({ setTelaAtual, conta = contaPadrao }) {
         <button className="primary" type="submit" disabled={!pode}>
           {busy ? <><span className="spin sm dark" />Validando credencial</> : <><Stethoscope />Entrar no plantão</>}
         </button>
-        {comGoogle && <>
-          <div className="au-or"><span>ou</span></div>
-          <button type="button" className="au-google" onClick={entrarComGoogle} disabled={google || busy}>
-            {google ? <><span className="spin sm" />Aguardando o Google</> : <><GoogleG />Continuar com Google</>}
-          </button>
-        </>}
+        <div className="au-or"><span>ou</span></div>
+        <button type="button" className="au-google" onClick={entrarComGoogle} disabled={google || busy}>
+          {google ? <><span className="spin sm" />Aguardando o Google</> : <><GoogleG />Continuar com Google</>}
+        </button>
       </motion.form>
       <p className="au-foot">Ainda não é plantonista? <button className="w-link" onClick={() => setTelaAtual('cadastro')}>Cadastre-se na recepção</button></p>
     </CascaEntrada>
     <Esqueci key={aberturas} aberto={esqueci} emailInicial={email} conta={conta} onClose={() => setEsqueci(false)} />
-    <Folha aberta={Boolean(pendente)} rotulo="Vincular conta antiga" onClose={() => !vinculando && setPendente(null)}>
-      <span className="cr-key"><Link2 size={20} /></span>
-      <h3>Vincular conta antiga</h3>
-      <p>Encontramos uma conta antiga para <b>{pendente?.email}</b>. Você autoriza vinculá-la ao Google? Confirme com a senha antiga.</p>
-      <form onSubmit={vincular} className="au-sheet-f">
-        <Campo id="lg-vinculo" label="Senha antiga" icon={Lock}>
-          <input id="lg-vinculo" type="password" autoComplete="current-password" autoFocus value={senhaVinculo} onChange={e => setSenhaVinculo(e.target.value)} />
-        </Campo>
-        <button className="primary" type="submit" disabled={!senhaVinculo || vinculando}>{vinculando ? <><span className="spin sm dark" />Vinculando</> : 'Autorizo vincular'}</button>
-        <button type="button" className="ghost" disabled={vinculando} onClick={() => setPendente(null)}>Agora não</button>
-      </form>
-    </Folha>
   </div></div>;
 }

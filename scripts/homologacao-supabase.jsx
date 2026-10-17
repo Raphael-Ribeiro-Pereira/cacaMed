@@ -2,9 +2,7 @@
 // gravações são isoladas pelo servidor e exigem a conta real de administrador.
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../src/firebase';
-import { supabase, USAR_AUTH_SUPABASE } from '../src/supabase';
+import { supabase } from '../src/supabase';
 import { usuarioSupabase } from '../src/services/authSupabase';
 import { chamarPerfilSupabase } from '../src/services/perfilSupabase';
 import TreinoMedico from '../src/components/TreinoMedico';
@@ -48,15 +46,11 @@ export default function HomologacaoSupabase() {
     if (!user) { setStatus('Entre como admin na página principal e volte a esta página.'); return; }
     servicoPerfil(user, 'prepararHomologacao').then(p => { setDados(p); setStatus('Ambiente remoto de teste pronto.'); }).catch(e => setErro(e.message));
     };
-    if (USAR_AUTH_SUPABASE) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_evento, session) => {
-        // Não inicia APIs Auth dentro do callback que ainda segura o lock.
-        setTimeout(() => receber(session ? usuarioSupabase(session.user) : null), 0);
-      });
-      return () => { ativo = false; subscription.unsubscribe(); };
-    }
-    const cancelar = onAuthStateChanged(auth, receber);
-    return () => { ativo = false; cancelar(); };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_evento, session) => {
+      // Não inicia APIs Auth dentro do callback que ainda segura o lock.
+      setTimeout(() => receber(session ? usuarioSupabase(session.user) : null), 0);
+    });
+    return () => { ativo = false; subscription.unsubscribe(); };
   }, []);
   const concorrencia = async () => {
     if (ocupado || !usuario) return;

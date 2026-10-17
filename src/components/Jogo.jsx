@@ -27,14 +27,9 @@ const PASSOS_TUTORIAL = [
   { titulo: 'Antes de sair', texto: 'Se abandonar o plantão antes de completá-lo, as letras e o progresso desta partida serão perdidos. O botão de voltar pede confirmação.' },
 ];
 const DICAS_EXTRAS = { 2: ['Dica do residente', 5], 3: ['Relato do paciente', 10] };
-const PERFIL_NA_PLANILHA = ['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS);
 const SEM_GRADE = [];
-// Na API, a partida vai com a sessão do próprio usuário (Firebase ou Supabase); o Firestore antigo só carrega sob demanda.
-async function registrarPadrao(usuario, uid, partida) {
-  if (PERFIL_NA_PLANILHA) return chamarPerfilPlanilha(usuario, 'registrarPartida', { partida });
-  const { registrarCruzadinha } = await import('../services/registrarCruzadinha');
-  return registrarCruzadinha(uid, partida);
-}
+// A partida vai para a API com a sessão do próprio usuário.
+const registrarPadrao = (usuario, uid, partida) => chamarPerfilPlanilha(usuario, 'registrarPartida', { partida });
 
 export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtual, usuario, dadosUsuario, setDadosUsuario,
   registrar, servicoPerfil = chamarPerfilPlanilha }) {
@@ -54,8 +49,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   const [memoria, setMemoria] = useState(() => dadosUsuario?.palavrasRespondidas?.[chaveXP] || []);
 
   // Desde 16/10/2026 a grade sai do servidor (emitirCruzadinha): ele escolhe as palavras e sorteia as dicas com a memória
-  // do jogador, e o app só remonta a grade. Sem a API (Firestore antigo) ou com uma API antiga, o app monta a grade sozinho.
-  const emitirNoServidor = PERFIL_NA_PLANILHA || servicoPerfil !== chamarPerfilPlanilha;
+  // do jogador, e o app só remonta a grade. Com uma API antiga (sem a ação), o app monta a grade sozinho.
   const [grade, setGrade] = useState({ estado: 'carregando' });
   useEffect(() => {
     let ativo = true;
@@ -64,7 +58,6 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       if (import.meta.env.DEV && resultado.selecao) console.debug('[Cruzadinha] seleção da grade', chaveXP, resultado.selecao);
       return { estado: resultado.gradePronta.length ? 'pronta' : 'vazia', ...resultado };
     };
-    if (!emitirNoServidor) { setGrade(local()); return undefined; }
     setGrade({ estado: 'carregando' });
     servicoPerfil(usuario, 'emitirCruzadinha', { chaveXP })
       .then(perfil => {
@@ -136,12 +129,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     if (!meuUid) { setErroTutorial('Não foi possível identificar seu perfil. Entre novamente e tente de novo.'); return; }
     setSalvandoTutorial(true); setErroTutorial('');
     try {
-      if (PERFIL_NA_PLANILHA || servicoPerfil !== chamarPerfilPlanilha) setDadosUsuario(await servicoPerfil(usuario, 'tutorial'));
-      else {
-        const [{ db }, { doc, updateDoc }] = await Promise.all([import('../firebase'), import('firebase/firestore')]);
-        await updateDoc(doc(db, 'usuarios', meuUid), { tutorialCruzadinhasConcluido: true });
-        setDadosUsuario(prev => ({ ...prev, tutorialCruzadinhasConcluido: true }));
-      }
+      setDadosUsuario(await servicoPerfil(usuario, 'tutorial'));
       setTutorialAberto(false);
     } catch (error) {
       console.error('Falha ao registrar tutorial da cruzadinha:', error);

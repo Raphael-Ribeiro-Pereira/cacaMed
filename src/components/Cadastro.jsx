@@ -85,15 +85,14 @@ export default function Cadastro({ setTelaAtual, onContaConfirmada, aoCriarConta
     }
   };
 
-  // Conta nova do Google segue para o Cadastro 2.0 pelo App; e-mail que já tem senha precisa vincular pelo login.
+  // Conta nova do Google segue para o Cadastro 2.0 pelo App, na volta do Google.
   const cadastrarComGoogle = async () => {
     if (google || busy) return;
     setErro(''); setGoogle(true);
     try {
-      const r = await conta.entrarComGoogle();
-      if (r?.pendente) setErro('Este e-mail já tem conta por senha. Entre pela tela de login para vincular o Google.');
-    } catch (falha) {
-      if (falha.code !== 'auth/popup-closed-by-user') setErro('Não foi possível entrar com Google. Tente novamente.');
+      await conta.entrarComGoogle();
+    } catch {
+      setErro('Não foi possível entrar com Google. Tente novamente.');
     } finally {
       setGoogle(false);
     }

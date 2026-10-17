@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDown, ArrowUp, Trophy } from 'lucide-react';
-import { buscarCoroasPublicas, buscarRankingPublico, obterMeuIdPublico, sincronizarRanking } from '../services/rankingPublico';
+import { buscarCoroasPublicas, buscarRankingPublico, obterMeuIdPublico } from '../services/rankingPublico';
 import { guardarRanking, rankingEmCache } from '../services/rankingSessao';
 import { MATERIAS, coroasDoJogador, montarTabelaCoroas, semanaCoroas, xpDaSemana } from '../utils/coroas';
 import { fotoDoPerfil } from '../utils/fotosCracha';
@@ -25,7 +25,7 @@ const CRITERIOS = [['xp', 'XP'], ['letras', 'Letras certas'], ['tempo', 'Tempo m
 const minutos = s => s == null ? '—' : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
 export default function Ranking({ usuario, dadosUsuario, setTelaAtual, abaInicial = 'temporada',
-  buscarRanking = buscarRankingPublico, buscarCoroas = buscarCoroasPublicas, sincronizar = sincronizarRanking, obterMeuId = obterMeuIdPublico }) {
+  buscarRanking = buscarRankingPublico, buscarCoroas = buscarCoroasPublicas, obterMeuId = obterMeuIdPublico }) {
   const web = useLargo();
   const uid = useId();
   const foto = fotoDoPerfil(dadosUsuario);
@@ -57,7 +57,6 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual, abaInicia
     let vivo = true;
     (async () => {
       try {
-        await sincronizar(usuario, perfilRef.current);
         const r = await buscarRanking();
         guardarRanking(r);
         if (vivo) setLista(r);
@@ -67,7 +66,7 @@ export default function Ranking({ usuario, dadosUsuario, setTelaAtual, abaInicia
       }
     })();
     return () => { vivo = false; };
-  }, [usuario, tentativa, buscarRanking, sincronizar]);
+  }, [usuario, tentativa, buscarRanking]);
 
   // Coroas: abre com a última visita guardada no aparelho e confere o servidor por trás.
   const salvo = useMemo(() => (meuId ? lerLocal('cacoMed-coroas-' + meuId) : null), [meuId]);

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BarChart3, Brain, Check, ChevronLeft, Crown as CoroaIco, Grid3x3, HeartPulse, KeyRound, Lock, LogOut, Mail, Pencil, RotateCw, Save, ScanLine, Shield, Stethoscope, Swords, UserRound } from 'lucide-react';
-import { EmailAuthProvider, linkWithCredential, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import { supabase } from '../supabase';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { DOENCAS } from '../utils/batalha';
@@ -18,9 +17,8 @@ import { SENHA_MINIMA } from '../utils/senha';
 
 // Crachá do plantonista, portado do protótipo de movimento: frente e verso, prévia ao vivo,
 // username conferido no servidor e salvamento otimista que volta atrás se a gravação falhar.
-// Firestore e saída da conta carregam sob demanda: a tela abre sem inicializar o Firebase.
+// A saída da conta carrega sob demanda (a homologação troca por uma fictícia).
 const sairDaContaReal = async () => (await import('../services/sairDaConta')).sairDaConta();
-const PLANILHA_OU_SUPABASE = ['planilha', 'supabase'].includes(import.meta.env.VITE_FONTE_DADOS);
 export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil = chamarPerfilPlanilha, aoSair = sairDaContaReal }) {
   const web = useLargo();
   const p = dadosUsuario || {};
@@ -59,9 +57,8 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   const materiaMudou = materia !== (p.materiaPreferida || '');
   const semCurso = !cursoMudou && !p.naoMedicina && !p.faculdade;
   const dirty = userMudou || nome !== (p.nome || p.username || '') || foto !== fotoAtual || cursoMudou || materiaMudou;
-  // Firestore antigo não confere username; com a API (ou um serviço injetado na homologação), confere.
-  const viaServico = PLANILHA_OU_SUPABASE || servicoPerfil !== chamarPerfilPlanilha;
-  const conferir = viaServico ? u => servicoPerfil(usuario, 'verificarUsername', { username: u }) : null;
+  // O username é conferido na API (ou no serviço injetado na homologação).
+  const conferir = u => servicoPerfil(usuario, 'verificarUsername', { username: u });
   const [conferirEstavel] = useState(() => conferir);
   const check = useDisponibilidade(username, userMudou, conferirEstavel);
   const podeSalvar = dirty && nome.trim().length >= 2 && (!userMudou || check === 'ok') && (!cursoMudou || Boolean(cursoValido)) && (!materiaMudou || Boolean(materia)) && save !== 'saving';
@@ -87,13 +84,8 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
     setDadosUsuario(prev => ({ ...prev, ...local }));
     setSave('saving');
     try {
-      if (viaServico) {
-        const perfil = await servicoPerfil(usuario, 'editarPerfil', novo);
-        if (ultimoPedido.current === novo) setDadosUsuario(perfil);
-      } else {
-        const [{ db }, { doc, updateDoc }] = await Promise.all([import('../firebase'), import('firebase/firestore')]);
-        await updateDoc(doc(db, 'usuarios', usuario.uid), local);
-      }
+      const perfil = await servicoPerfil(usuario, 'editarPerfil', novo);
+      if (ultimoPedido.current === novo) setDadosUsuario(perfil);
       setSave('ok');
       setTimeout(() => setSave(s => (s === 'ok' ? 'idle' : s)), 2400);
     } catch (falha) {
@@ -121,20 +113,12 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
     setSenhaErro('');
     setSalvandoSenha(true);
     try {
-      if (usuario.source === 'supabase') {
-        if (possuiSenha) {
-          const verificacao = await supabase.auth.signInWithPassword({ email: usuario.email, password: senhaAtual });
-          if (verificacao.error || verificacao.data.user?.id !== usuario.authId) throw new Error('Senha atual inválida.');
-        }
-        await chamarPerfilPlanilha(usuario, 'definirSenha', { senha: senhaNova });
-        setSenhaVinculada(true);
-      } else if (possuiSenha) {
-        await reauthenticateWithCredential(usuario, EmailAuthProvider.credential(usuario.email, senhaAtual));
-        await updatePassword(usuario, senhaNova);
-      } else {
-        await linkWithCredential(usuario, EmailAuthProvider.credential(usuario.email, senhaNova));
-        setSenhaVinculada(true);
+      if (possuiSenha) {
+        const verificacao = await supabase.auth.signInWithPassword({ email: usuario.email, password: senhaAtual });
+        if (verificacao.error || verificacao.data.user?.id !== usuario.authId) throw new Error('Senha atual inválida.');
       }
+      await chamarPerfilPlanilha(usuario, 'definirSenha', { senha: senhaNova });
+      setSenhaVinculada(true);
       setSheet(null); setSenhaAtual(''); setSenhaNova(''); setSenhaConfirma('');
     } catch (falha) {
       setSenhaErro(falha.code === 'auth/email-already-in-use'
