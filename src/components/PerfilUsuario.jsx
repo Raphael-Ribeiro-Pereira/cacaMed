@@ -5,7 +5,7 @@ import { EmailAuthProvider, linkWithCredential, reauthenticateWithCredential, up
 import { supabase } from '../supabase';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { DOENCAS } from '../utils/batalha';
-import { desdeDe, especialidade, matriculaDe, tituloDoCracha, useDisponibilidade } from '../utils/cracha';
+import { desdeDe, especialidade, matriculaDe, titulosDoCracha, useDisponibilidade } from '../utils/cracha';
 import { FOTOS, fotoDoPerfil } from '../utils/fotosCracha';
 import { animar, fmt, useLargo } from '../utils/prototipo';
 import { validarCurso } from '../utils/curso';
@@ -52,7 +52,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   // A prévia do crachá já mostra a matéria, a etapa e a faculdade em edição.
   const previa = { ...p, materiaPreferida: materia, ...curso };
   const [esp, espXp] = especialidade(previa);
-  const [titulo, , corTitulo] = tituloDoCracha(previa);
+  const titulos = titulosDoCracha(previa);
   const userMudou = username !== (p.username || '');
   const cursoMudou = JSON.stringify(curso) !== JSON.stringify(cursoAtual);
   const cursoValido = validarCurso(curso);
@@ -207,7 +207,7 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
           <span className="cr-in ro"><input id="pf-mail" value={email} readOnly /><span className="tag mono">FIXO</span></span>
         </label>
         <div className="cr-f"><span className="cr-l">Especialização</span>
-          <span className="cr-in ro esp"><Stethoscope size={16} /><b>{esp}</b><small>{fmt(espXp)} XP · título <em style={{ color: corTitulo }}>{titulo}</em></small></span>
+          <span className="cr-in ro esp"><Stethoscope size={16} /><b>{esp}</b><small>{fmt(espXp)} XP · {titulos.length > 1 ? 'títulos' : 'título'} {titulos.map(([t, , c], i) => <span key={t}>{i > 0 && ' e '}<em style={{ color: c }}>{t}</em></span>)}</small></span>
         </div>
         <CursoCampos curso={curso} setCurso={setCurso} tentou={cursoMudou} />
         {semCurso && <p className="cr-help">Conte a sua etapa e a sua faculdade para completar o prontuário.</p>}

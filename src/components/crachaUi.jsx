@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Award, BadgeCheck, Check, ClipboardCheck, GraduationCap, Mail, Stethoscope, Trophy, X } from 'lucide-react';
-import { hash, linhaCurso, matriculaDe, prefixoTitulo, tituloDoCracha } from '../utils/cracha';
+import { hash, linhaCurso, matriculaDe, prefixoTitulo, titulosDoCracha } from '../utils/cracha';
 import { progressoGlobal } from '../utils/economia';
 import { FOTOS } from '../utils/fotosCracha';
 import { resumirCruzadinhas } from '../utils/progressoCruzadinha';
@@ -43,7 +43,7 @@ export function StatusUser({ check }) {
 
 export function CrachaFrente({ p, email, nome, username, foto, desde, oculto }) {
   const L = progressoGlobal(p);
-  const [titulo, emoji, corTitulo] = tituloDoCracha(p);
+  const titulos = titulosDoCracha(p);
   const matricula = matriculaDe(p.uid || username);
   const cruz = resumirCruzadinhas(p.estatisticas).partidas;
   const concluidos = ['ddx', 'erroMedico', 'causaEfeito'].reduce((t, k) => t + (Number(p[k]?.partidas) || 0), 0);
@@ -67,7 +67,7 @@ export function CrachaFrente({ p, email, nome, username, foto, desde, oculto }) 
     {linhaCurso(p) && <span className="cr-curso"><GraduationCap size={11} /><span>{linhaCurso(p)}</span></span>}
     <div className="cr-pills">
       <span className="cr-pill lv"><Stethoscope size={13} />Nível {L.nivel}</span>
-      <span className="cr-pill ti" style={{ '--tc': corTitulo }}><span aria-hidden="true">{emoji}</span>{titulo}</span>
+      {titulos.map(([titulo, emoji, cor]) => <span key={titulo} className="cr-pill ti" style={{ '--tc': cor }}><span aria-hidden="true">{emoji}</span>{titulo}</span>)}
     </div>
     <div className="cr-xp">
       <div><span>PRÓXIMO NÍVEL</span><b className="mono">{fmt(L.xp)}/{fmt(L.proximo)}</b></div>

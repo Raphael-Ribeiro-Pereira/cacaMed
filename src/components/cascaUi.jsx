@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDown, ArrowRight, ArrowUp, BarChart3, BrainCircuit, Grid3x3, HeartPulse, Home, RotateCcw, ScanLine, Stethoscope, Swords, Ticket, Trophy } from 'lucide-react';
-import { tituloDoCracha } from '../utils/cracha';
+import { titulosDoCracha } from '../utils/cracha';
 import { progressoGlobal } from '../utils/economia';
 import { MODOS, dadosModo } from '../utils/modosPerfil';
 import { animar, fmt } from '../utils/prototipo';
@@ -16,7 +16,7 @@ const primeiro = p => String(p.nome || p.username || 'Plantonista').trim().split
 
 export function ProgressCard({ p, foto, ir, onNav }) {
   const L = progressoGlobal(p);
-  const [titulo] = tituloDoCracha(p);
+  const titulo = titulosDoCracha(p).map(t => t[0]).join(' · ');
   const modos = MODOS.map(([id, nome, cor]) => ({ id, nome, cor, ...dadosModo(p, id) }));
   const comXp = modos.filter(m => m.xp > 0);
   const total = comXp.reduce((s, m) => s + m.xp, 0) || 1;

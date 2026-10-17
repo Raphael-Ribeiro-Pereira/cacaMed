@@ -71,14 +71,14 @@ export function LadoCracha({ cracha }) {
 export function MiniCracha({ cracha }) {
   const materia = MATERIA_CADASTRO[cracha.p.materiaPreferida];
   const visitante = cracha.p.naoMedicina;
-  const [titulo, emoji, cor] = visitante ? tituloVisitante(cracha.p.titulo) : tituloEpico(materia || '');
+  const titulos = [...(visitante ? [tituloVisitante(cracha.p.titulo)] : []), ...(materia ? [tituloEpico(materia)] : [])];
   return <div className="au-mini" aria-label="Prévia do crachá">
     <span className="au-mini-pic"><Retrato f={FOTOS[cracha.foto] || FOTOS[0]} /></span>
     <span className="au-mini-tx">
       <small className="mono">PRÉVIA DO CRACHÁ</small>
       <b>{cracha.p.titulo && prefixoTitulo(cracha.p) && `${prefixoTitulo(cracha.p)} `}{cracha.nome}</b>
       <span className="mono">@{cracha.username}</span>
-      {materia || visitante ? <span className="cr-pill ti" style={{ '--tc': cor }}><span aria-hidden="true">{emoji}</span>{titulo}</span> : <span className="au-mini-q">Escolha a matéria para ganhar um título</span>}
+      {titulos.length ? titulos.map(([titulo, emoji, cor]) => <span key={titulo} className="cr-pill ti" style={{ '--tc': cor }}><span aria-hidden="true">{emoji}</span>{titulo}</span>) : <span className="au-mini-q">Escolha a matéria para ganhar um título</span>}
     </span>
   </div>;
 }
@@ -99,7 +99,8 @@ export function Materias({ materia, setMateria, tentou }) {
 
 // naoMedicina troca Dr./Dra. pelo título de visitante; o valor guardado continua Doutor/Doutora (é o que escolhe a foto padrão).
 export function Escolhas({ titulo, setTitulo, materia, setMateria, foto, setFoto, tentou, naoMedicina = false, children }) {
-  const epico = naoMedicina ? tituloVisitante(titulo) : materia ? tituloEpico(MATERIA_CADASTRO[materia]) : null;
+  const epico = materia ? tituloEpico(MATERIA_CADASTRO[materia]) : null;
+  const visitante = naoMedicina ? tituloVisitante(titulo) : null;
   const rotulo = t => (naoMedicina ? tituloVisitante(t)[0].split(' ')[0] : t === 'Doutor' ? 'Dr.' : 'Dra.');
   return <>
     <div className="cr-f"><span className="cr-l">Título</span>
@@ -110,7 +111,7 @@ export function Escolhas({ titulo, setTitulo, materia, setMateria, foto, setFoto
     {children}
     <div className="cr-f"><span className="cr-l">Matéria preferida</span>
       <Materias materia={materia} setMateria={setMateria} tentou={tentou} />
-      {epico && <span className="cr-help au-ti">{naoMedicina ? 'Seu título no crachá' : 'Título épico no crachá'}: <b style={{ color: epico[2] }}>{naoMedicina && `${epico[1]} `}{epico[0]}</b></span>}
+      {(epico || visitante) && <span className="cr-help au-ti">{visitante ? 'Seus títulos no crachá' : 'Título épico no crachá'}: {visitante && <><b style={{ color: visitante[2] }}>{visitante[1]} {visitante[0]}</b>{epico && ' e '}</>}{epico && <b style={{ color: epico[2] }}>{epico[0]}</b>}</span>}
     </div>
     <div className="cr-f"><span className="cr-l">Foto do crachá</span>
       <div className="cr-fotos" role="radiogroup" aria-label="Foto do crachá">

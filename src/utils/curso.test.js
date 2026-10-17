@@ -62,3 +62,11 @@ test('linhaCurso resume etapa e faculdade para o crachá', async () => {
   assert.equal(linhaCurso({ naoMedicina: true }), '');
   assert.equal(linhaCurso({}), '');
 });
+
+test('quem não é de Medicina ganha dois títulos: o de visitante e o épico da matéria', async () => {
+  const { titulosDoCracha, tituloDoCracha } = await import('./cracha.js');
+  const visitante = titulosDoCracha({ naoMedicina: true, titulo: 'Doutora', materiaPreferida: 'bioquimica' });
+  assert.deepEqual(visitante.map(t => t[0]), ['Infiltrada no Plantão', 'Mago das Enzimas']);
+  assert.deepEqual(titulosDoCracha({ titulo: 'Doutor', materiaPreferida: 'bioquimica' }).map(t => t[0]), ['Mago das Enzimas']);
+  assert.equal(tituloDoCracha({ naoMedicina: true, titulo: 'Doutor', materiaPreferida: 'cardio' })[0], 'Infiltrado no Plantão');
+});

@@ -27,7 +27,13 @@ export function linhaCurso(p) {
   const situacao = p?.naoMedicina ? '' : p?.formado ? (p?.titulo === 'Doutora' ? 'Formada' : 'Formado') : Number.isInteger(p?.etapa) ? `${p.etapa}ª etapa` : '';
   return [situacao, faculdade].filter(Boolean).join(' · ');
 }
-export const tituloDoCracha = p => (p?.naoMedicina ? tituloVisitante(p.titulo) : tituloEpico(especialidade(p)[0]));
+// Títulos do crachá ([nome, emoji, cor] cada): o épico da matéria e, para quem não é de Medicina, também o de visitante,
+// que vem primeiro (decidido em 16/10/2026: fora da Medicina são dois títulos).
+export const titulosDoCracha = p => {
+  const epico = tituloEpico(especialidade(p)[0]);
+  return p?.naoMedicina ? [tituloVisitante(p.titulo), epico] : [epico];
+};
+export const tituloDoCracha = p => titulosDoCracha(p)[0];
 
 // Username: regra local na hora e confirmação no servidor depois de 450 ms sem digitar.
 export function useDisponibilidade(username, ativo, conferir) {

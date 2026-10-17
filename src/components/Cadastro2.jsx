@@ -125,7 +125,7 @@ export default function Cadastro2({ usuario, onConcluido, conta = contaPadrao, s
         {livres.length > 0 && <div className="au-sugs"><span>Livres agora:</span>{livres.map(s => <button key={s} type="button" className="au-sug mono" onClick={() => { setUsarPrimeiro(false); setUsername(s); }}>@{s}</button>)}</div>}
         <Escolhas titulo={titulo} setTitulo={setTitulo} materia={materia} setMateria={setMateria} foto={fotoAtual} setFoto={setFoto} tentou={tentou} naoMedicina={curso.naoMedicina}>
           <CursoCampos curso={curso} setCurso={setCurso} tentou={tentou} />
-          {curso.naoMedicina && <p className="au-visit"><span aria-hidden="true">🕵️</span><span>Você entra como <b>{tituloVisitante(titulo)[0]}</b>: joga tudo, com um título só seu.</span></p>}
+          {curso.naoMedicina && <p className="au-visit"><span aria-hidden="true">🕵️</span><span>Você entra como <b>{tituloVisitante(titulo)[0]}</b> e ganha também o título da matéria: são 2 títulos.</span></p>}
           <MenuFaculdade valor={curso.faculdade} setValor={faculdade => setCurso(c => ({ ...c, faculdade }))} opcional={curso.naoMedicina} tentou={tentou} />
         </Escolhas>
         {precisaSenha && <div className="au-pw">
