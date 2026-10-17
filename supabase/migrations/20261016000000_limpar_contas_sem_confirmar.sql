@@ -15,7 +15,7 @@ begin
   delete from auth.users u
   where u.email_confirmed_at is null
     and u.created_at < now() - interval '24 hours'
-    and not exists (select 1 from public.cacamed_player_state s where s.player_id like '%' || u.id::text);
+    and not exists (select 1 from public.cacamed_player_state s where s.auth_user_id = u.id or s.player_id like '%' || u.id::text);
   get diagnostics apagadas = row_count;
   return apagadas;
 end;

@@ -37,6 +37,10 @@ Decidido com o usuário em 15/10/2026 a partir dos protótipos [`prototipos/cada
 <p>Se você não pediu este cadastro, ignore este e-mail.</p>
 ```
 
+## Limpeza das contas sem confirmação (17/10/2026, aplicada)
+
+O Supabase cria a conta no cadastro e a deixa pendente até o código. Quem desiste ocupa o e-mail. A migração `20261016000000_limpar_contas_sem_confirmar.sql` (aplicada em 17/10 com o "sim" do usuário) liga o `pg_cron` e agenda `cacamed_limpar_contas_sem_confirmar()` todo dia às 06:00 UTC (03:00 em Brasília). Ela apaga só contas **sem e-mail confirmado, criadas há mais de 24 horas e sem perfil de jogo** (nem `auth_user_id` nem `player_id` ligados à conta). A função não pode ser chamada pelo app (`revoke` de `anon` e `authenticated`). Primeira execução manual em 17/10: 0 contas apagadas, 9 contas no total.
+
 ## Testes
 
 - `src/utils/curso.test.js`: etapa, formado, faculdade, visitante, as 18 matérias e os títulos, e a lista de faculdades.
