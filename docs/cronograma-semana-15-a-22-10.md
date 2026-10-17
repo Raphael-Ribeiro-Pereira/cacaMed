@@ -33,7 +33,8 @@ Pauta do dia, na ordem:
 4. **S-06** (pré-sequestro por aprovação de migração) e o restante da **S-08** (HMAC do idPublico).
 5. **Índice único de username** (migração) e **limite de tamanho do perfil** conferido.
 6. **CSP:** sair do `Report-Only` só se o console não tiver avisos do dia anterior.
-7. **Ponto de volta:** anotar o deploy anterior antes de publicar.
+7. **Dois títulos para quem não é de Medicina** (Infiltrado/Infiltrada + título épico da matéria; commit `2acd519`, só site).
+8. **Ponto de volta:** anotar o deploy anterior antes de publicar.
 
 Publicação: migrações primeiro, API depois, site por último, cada um com conferência. Registrar nas pendências ao final.
 
