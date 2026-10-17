@@ -7,6 +7,10 @@ import { materiaValida, validarCurso } from '../utils/curso.js';
 import { bancoPublico } from '../utils/importarBancoCSV.js';
 
 export const ORIGENS_SUPABASE = new Set(['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'https://caca-med.vercel.app', 'https://cacamed.com']);
+// Pré-visualizações deste projeto na Vercel (só a conta do projeto cria esses endereços): servem para testar o site novo
+// contra a API de verdade antes de publicar (decidido em 17/10/2026, para a retirada do Firebase).
+const PREVIA_VERCEL = /^https:\/\/caca-(?:med-git-[a-z0-9-]+|[a-z0-9]+)-raphael-ribeiro-pereiras-projects\.vercel\.app$/;
+export const origemPermitida = origem => ORIGENS_SUPABASE.has(origem) || PREVIA_VERCEL.test(origem);
 async function lerPedido(req) {
   const reader = req.body?.getReader();
   if (!reader) throw Object.assign(new Error('Pedido inválido.'), { status: 400 });
@@ -60,13 +64,13 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
     const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store',
       'Access-Control-Allow-Headers': 'authorization, apikey, content-type',
       'Access-Control-Allow-Methods': 'POST, GET, OPTIONS', Vary: 'Origin' };
-    if (origin && ORIGENS_SUPABASE.has(origin)) headers['Access-Control-Allow-Origin'] = origin;
+    if (origin && origemPermitida(origin)) headers['Access-Control-Allow-Origin'] = origin;
     const answer = (body, status = 200, extra = {}) => {
       const duracao = Math.round(performance.now() - inicio);
       log({ acao, status, duracaoMs: duracao });
       return new Response(JSON.stringify(body), { status, headers: { ...headers, 'Server-Timing': `api;dur=${duracao}`, ...extra } });
     };
-    if (origin && !ORIGENS_SUPABASE.has(origin)) return answer({ erro: 'Origem não autorizada.' }, 403);
+    if (origin && !origemPermitida(origin)) return answer({ erro: 'Origem não autorizada.' }, 403);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers });
     // Limite de frequência (S-03 de docs/seguranca.md): responde 429 com Retry-After.
     const ip = ipDoPedido(req);

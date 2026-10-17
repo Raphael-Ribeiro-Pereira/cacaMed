@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { criarApiSupabase } from '../shared/apiSupabase.js';
+import { criarApiSupabase, origemPermitida } from '../shared/apiSupabase.js';
 import { executarPedidoSupabase } from '../shared/executarPedidoSupabase.js';
 import { BANCO_QUIZ } from './bancoTreinos.js';
 import { obterAuditoria } from './erroMedico.js';
@@ -363,4 +363,11 @@ test('S-08: o jogador pergunta o próprio ID público, calculado só no servidor
   assert.deepEqual((await f.call({ acao: 'meuIdPublico' })).resultado, { idPublico: 'hmac:jogador' });
   const semLogin = await f.api(new Request('https://test/api', { method: 'POST', headers: { Origin: 'http://localhost:5174' }, body: JSON.stringify({ acao: 'meuIdPublico' }) }));
   assert.equal(semLogin.status, 401);
+});
+
+test('CORS aceita as pré-visualizações deste projeto na Vercel e mais nada parecido', () => {
+  for (const ok of ['https://caca-b456lshot-raphael-ribeiro-pereiras-projects.vercel.app', 'https://caca-med-git-preview-s-20931a-raphael-ribeiro-pereiras-projects.vercel.app', 'https://cacamed.com'])
+    assert.equal(origemPermitida(ok), true, ok);
+  for (const nao of ['https://caca-x-raphael-ribeiro-pereiras-projects.vercel.app.evil.com', 'https://evil-raphael-ribeiro-pereiras-projects.vercel.app', 'https://caca-abc-outra-conta.vercel.app', 'http://caca-abc-raphael-ribeiro-pereiras-projects.vercel.app'])
+    assert.equal(origemPermitida(nao), false, nao);
 });
