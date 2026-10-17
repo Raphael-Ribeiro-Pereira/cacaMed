@@ -34,11 +34,12 @@ Peças: `entradaUi.jsx` (campos, casca da entrada, escolhas e impressão), `crac
 - O botão de ferramentas do administrador sobe no celular para não cobrir a barra de abas.
 - A tela "Vincular Google" depois do login antigo (`VincularGoogle.jsx`) não foi portada, como no protótipo.
 
-## Alteração pedida em 16/10/2026 (web, ainda não feita)
+## Alteração pedida em 16/10/2026 (web, feita na `main`, falta publicar)
 
 Decidida pelo usuário ao revisar `cacamed.com` na web (captura com a marcação dele):
 - **Manter:** o cartão do jogador no **rodapé da barra lateral** (foto, nome, ofensiva, XP e tickets). Ele passa a ser o botão que abre o **Perfil**.
 - **Retirar:** o item "Perfil" da lista da barra lateral e o cartão do jogador no **canto superior direito** do Centro de comando (foto, nome, ofensiva, XP e tickets), por repetirem o do rodapé.
+- Feito em `cascaUi.jsx` (`UserBadge` com `aoClicar`) e `MenuPrincipal.jsx`: o clique no cartão do rodapé abre o Perfil e o passar do mouse ainda mostra o cartão de progresso; o cartão ganha `aria-current` na tela do Perfil. Conferido na homologação.
 - Vale só para o layout web; o celular não muda. Entra na revisão de web design da quinta 22/10 ([[cronograma-semana-15-a-22-10|cronograma]]).
 
 ## Homologação

@@ -27,7 +27,7 @@ Atualizado em 15/10/2026, depois da publicação da API v16 (cruzadinha) e do si
 ## Quinta 22/10: publicação (com o "sim" do usuário)
 
 Pauta do dia, na ordem:
-1. **Web design:** revisão da versão web (decisões de design do usuário). Já decidido: o cartão do jogador no rodapé da barra lateral vira o botão do Perfil; saem o item "Perfil" da lista e o cartão do canto superior direito ([[entrada-menu-casca#Alteração pedida em 16/10/2026 (web, ainda não feita)|detalhe]]).
+1. **Web design:** revisão da versão web (decisões de design do usuário). Já decidido: o cartão do jogador no rodapé da barra lateral vira o botão do Perfil; saem o item "Perfil" da lista e o cartão do canto superior direito ([[entrada-menu-casca#Alteração pedida em 16/10/2026 (web, feita na `main`, falta publicar)|detalhe]]).
 2. **Cruzadinha emitida pelo servidor (S-02 e S-14):** a grade passa a sair da API, que guarda o tópico, em vez de a partida confiar no cliente. Só então o limite de palavras e o tamanho do perfil ficam completos.
 3. **Gabarito fora do pacote (S-05):** tirar do pacote do site os casos com gabarito, decidido junto com o app offline.
 4. **S-06** (pré-sequestro por aprovação de migração) e o restante da **S-08** (HMAC do idPublico).

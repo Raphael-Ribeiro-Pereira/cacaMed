@@ -146,7 +146,6 @@ export default function MenuPrincipal({ dadosUsuario, setTelaAtual, usuario, set
     <div className="scroll w-page">
       <header className="w-head rise">
         <div><span className="kicker">Plantão ativo · {hoje}</span><h1>Bem-vind{p.titulo === 'Doutora' ? 'a' : 'o'}, {String(p.nome || p.username || 'Plantonista').trim().split(/\s+/)[0]}</h1><p>Escolha seu próximo desafio clínico.</p></div>
-        <div className="w-head-r"><UserBadge p={p} foto={foto} ir={ir} web /></div>
       </header>
       <div className="w-grid">
         <span className="w-label">ESTUDO RÁPIDO <small>sem ticket</small></span>

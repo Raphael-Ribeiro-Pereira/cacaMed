@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowDown, ArrowRight, ArrowUp, BarChart3, BrainCircuit, Grid3x3, HeartPulse, Home, RotateCcw, ScanLine, Stethoscope, Swords, Ticket, Trophy, UserRound } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUp, BarChart3, BrainCircuit, Grid3x3, HeartPulse, Home, RotateCcw, ScanLine, Stethoscope, Swords, Ticket, Trophy } from 'lucide-react';
 import { tituloDoCracha } from '../utils/cracha';
 import { progressoGlobal } from '../utils/economia';
 import { MODOS, dadosModo } from '../utils/modosPerfil';
@@ -42,7 +42,8 @@ export function ProgressCard({ p, foto, ir, onNav }) {
 }
 
 // Foto com o nível; na web, passar o mouse abre o cartão de progresso; no celular, um toque abre a folha.
-export function UserBadge({ p, foto, ir, web, place = 'below', xpDe }) {
+// `aoClicar` troca o toque por uma ação (na barra lateral da web, abre o Perfil); o cartão continua no mouse.
+export function UserBadge({ p, foto, ir, web, place = 'below', xpDe, aoClicar, atual }) {
   const L = progressoGlobal(p);
   const [open, setOpen] = useState(false);
   const [tela, setTela] = useState(null);
@@ -59,7 +60,7 @@ export function UserBadge({ p, foto, ir, web, place = 'below', xpDe }) {
     </>}
   </AnimatePresence>;
   return <div ref={ancora} className={`ubadge-wrap ${place}`} onMouseEnter={web ? abrir : undefined} onMouseLeave={web ? fechar : undefined}>
-    <button className="ubadge" aria-expanded={open} aria-label={`Progresso de ${p.nome}, nível ${L.nivel}`} onClick={() => setOpen(o => !o)} onFocus={web ? abrir : undefined} onBlur={web ? fechar : undefined}>
+    <button className="ubadge" aria-expanded={aoClicar ? undefined : open} aria-current={atual ? 'page' : undefined} aria-label={aoClicar ? `Abrir o perfil de ${p.nome}, nível ${L.nivel}` : `Progresso de ${p.nome}, nível ${L.nivel}`} onClick={() => (aoClicar ? aoClicar() : setOpen(o => !o))} onFocus={web ? abrir : undefined} onBlur={web ? fechar : undefined}>
       <Avatar nome={p.nome} me foto={foto} size={place === 'right' ? 36 : 40} ring={L.percentual / 100} />
       <span className="ub-lvl mono">{L.nivel}</span>
       <span className="ub-txt"><b>{primeiro(p)}<StreakChip n={n(p.estatisticasGerais?.streakAtual)} /></b><small><CountNum from={xpDe ?? undefined} to={L.xp} /> XP · {n(p.tickets)} <Ticket size={11} /></small></span>
@@ -156,7 +157,7 @@ const NAV = [
   ['menu', 'Centro de comando', Home], null,
   ['topicos', 'Cruzadinhas', Grid3x3], ['quiz', 'Quiz médico', BrainCircuit, 'NOVO'], ['verdadeMentira', 'Verdade ou mentira', ScanLine, 'NOVO'], null,
   ['selecaoDDX', 'DDX · Casos', HeartPulse, 'REVISÃO'], ['batalha', 'Batalha diagnóstica', Swords, 'PILOTO', true], ['revisaoInteligente', 'Revisão inteligente', RotateCcw, 'PILOTO', true], null,
-  ['ranking', 'Ranking', Trophy], ['estatisticas', 'Estatísticas', BarChart3], ['perfil', 'Perfil', UserRound],
+  ['ranking', 'Ranking', Trophy], ['estatisticas', 'Estatísticas', BarChart3],
 ];
 const SECAO = { jogo: 'topicos', erroMedico: 'selecaoDDX', causaEfeito: 'selecaoDDX' };
 export function BarraLateral({ tela, ir, p, foto, aoPassarRanking }) {
@@ -176,7 +177,7 @@ export function BarraLateral({ tela, ir, p, foto, aoPassarRanking }) {
           </button>;
         })}
       </nav>
-      <div className="side-user"><UserBadge p={p} foto={foto} ir={ir} web place="right" /></div>
+      <div className="side-user"><UserBadge p={p} foto={foto} ir={ir} web place="right" aoClicar={() => on !== 'perfil' && ir('perfil')} atual={on === 'perfil'} /></div>
     </div>
   </aside>;
 }
