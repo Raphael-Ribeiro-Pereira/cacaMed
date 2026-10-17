@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Award, BadgeCheck, Check, ClipboardCheck, Mail, Stethoscope, Trophy, X } from 'lucide-react';
-import { hash, matriculaDe, prefixoTitulo, tituloDoCracha } from '../utils/cracha';
+import { Award, BadgeCheck, Check, ClipboardCheck, GraduationCap, Mail, Stethoscope, Trophy, X } from 'lucide-react';
+import { hash, linhaCurso, matriculaDe, prefixoTitulo, tituloDoCracha } from '../utils/cracha';
 import { progressoGlobal } from '../utils/economia';
 import { FOTOS } from '../utils/fotosCracha';
 import { resumirCruzadinhas } from '../utils/progressoCruzadinha';
@@ -64,6 +64,7 @@ export function CrachaFrente({ p, email, nome, username, foto, desde, oculto }) 
     <b className="cr-name">{p.titulo && prefixoTitulo(p) && <small className="cr-tt">{prefixoTitulo(p)}</small>}{nome}</b>
     <span className="cr-user">@{username}<BadgeCheck size={14} /></span>
     <span className="cr-mail"><Mail size={11} />{email}</span>
+    {linhaCurso(p) && <span className="cr-curso"><GraduationCap size={11} /><span>{linhaCurso(p)}</span></span>}
     <div className="cr-pills">
       <span className="cr-pill lv"><Stethoscope size={13} />Nível {L.nivel}</span>
       <span className="cr-pill ti" style={{ '--tc': corTitulo }}><span aria-hidden="true">{emoji}</span>{titulo}</span>

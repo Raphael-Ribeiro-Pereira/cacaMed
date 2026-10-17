@@ -1045,6 +1045,9 @@
 .cbt .cr-lvl small { font-size: 9px; color: var(--mint); letter-spacing: .08em; }
 .cbt .cr-name { font-size: 19px; font-weight: 800; letter-spacing: -.01em; text-align: center; line-height: 1.2; }
 .cbt .cr-user { display: inline-flex; align-items: center; gap: 5px; margin-top: -6px; font: 700 12.5px var(--mono); color: var(--mint); }
+.cbt .cr-curso { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; margin-top: -4px; font-size: 11px; font-weight: 600; color: var(--mint); }
+.cbt .cr-curso svg { flex: none; }
+.cbt .cr-curso span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cbt .cr-mail { display: inline-flex; align-items: center; gap: 5px; margin-top: -6px; font-size: 11px; color: var(--muted); }
 .cbt .cr-pills { width: 100%; display: grid; gap: 6px; margin-top: 2px; }
 .cbt .cr-pill { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 7px 10px; border-radius: 11px; background: #0b1120; font-size: 12.5px; font-weight: 600; }

@@ -49,8 +49,8 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
   const [saindo, setSaindo] = useState(false);
   const possuiSenha = senhaVinculada || usuario?.providerData?.some(provedor => provedor.providerId === 'password');
 
-  // A prévia do crachá já mostra a matéria e a condição de curso em edição.
-  const previa = { ...p, materiaPreferida: materia, naoMedicina: curso.naoMedicina };
+  // A prévia do crachá já mostra a matéria, a etapa e a faculdade em edição.
+  const previa = { ...p, materiaPreferida: materia, ...curso };
   const [esp, espXp] = especialidade(previa);
   const [titulo, , corTitulo] = tituloDoCracha(previa);
   const userMudou = username !== (p.username || '');

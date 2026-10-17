@@ -19,6 +19,14 @@ export function especialidade(p) {
   return [MATERIA_CADASTRO[p?.materiaPreferida] || 'CLÍNICA GERAL', 0];
 }
 // Título do crachá ([nome, emoji, cor]): o épico da especialização, ou o de visitante para quem não é de Medicina.
+// Linha do curso no crachá: "7ª etapa · USP", "Formado(a) · USP" ou só a faculdade para quem não é de Medicina.
+// Da faculdade vai a sigla entre parênteses, quando há; perfis sem curso ficam sem a linha.
+export function linhaCurso(p) {
+  const nome = String(p?.faculdade || '').trim();
+  const faculdade = nome.match(/\(([^()]+)\)\s*$/)?.[1] || nome;
+  const situacao = p?.naoMedicina ? '' : p?.formado ? (p?.titulo === 'Doutora' ? 'Formada' : 'Formado') : Number.isInteger(p?.etapa) ? `${p.etapa}ª etapa` : '';
+  return [situacao, faculdade].filter(Boolean).join(' · ');
+}
 export const tituloDoCracha = p => (p?.naoMedicina ? tituloVisitante(p.titulo) : tituloEpico(especialidade(p)[0]));
 
 // Username: regra local na hora e confirmação no servidor depois de 450 ms sem digitar.

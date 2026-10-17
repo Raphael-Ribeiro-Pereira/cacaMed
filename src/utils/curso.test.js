@@ -53,3 +53,12 @@ test('lista de faculdades de Medicina: sem repetição e com nome e município',
     assert.match(local, / · [A-Z]{2}$/);
   }
 });
+
+test('linhaCurso resume etapa e faculdade para o crachá', async () => {
+  const { linhaCurso } = await import('./cracha.js');
+  assert.equal(linhaCurso({ etapa: 7, faculdade: 'Universidade de São Paulo (USP)' }), '7ª etapa · USP');
+  assert.equal(linhaCurso({ formado: true, titulo: 'Doutora', faculdade: 'Faculdade X' }), 'Formada · Faculdade X');
+  assert.equal(linhaCurso({ naoMedicina: true, etapa: null, faculdade: 'Enfermagem UFMG' }), 'Enfermagem UFMG');
+  assert.equal(linhaCurso({ naoMedicina: true }), '');
+  assert.equal(linhaCurso({}), '');
+});

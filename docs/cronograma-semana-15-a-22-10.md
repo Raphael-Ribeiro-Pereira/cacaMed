@@ -20,7 +20,7 @@ Atualizado em 15/10/2026, depois da publicação da API v16 (cruzadinha) e do si
 
 **Agente (branch de trabalho, sem publicar)**
 - [x] **Edição de etapa, faculdade e matéria no perfil** (feita na `main` em 16/10; publica junto do cadastro com código, API antes do site).
-- [ ] **Mostrar etapa e faculdade no crachá**, se o usuário quiser.
+- [x] **Mostrar etapa e faculdade no crachá** (frente do crachá, feito na `main` em 16/10; se ficar poluído, passar para o verso).
 - [ ] **Cadastro com código:** deixar pronto para a quinta, desde que o SMTP esteja configurado (ver [[cadastro-com-codigo|cadastro com código]]). Sem SMTP, não publicar.
 - [ ] **Preparar o pacote de quinta** dos itens de segurança do dia 22 (abaixo), sem publicar antes.
 
