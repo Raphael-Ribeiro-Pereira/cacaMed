@@ -38,6 +38,30 @@ Pauta do dia, na ordem:
 
 Publicação: migrações primeiro, API depois, site por último, cada um com conferência. Registrar nas pendências ao final.
 
+## Roteiro do pacote de quinta (preparado em 18/10/2026)
+
+O que entra, desde a publicação de 16/10 (site `fc202a0`, API v18). A limpeza das contas sem confirmação já foi aplicada no banco em 17/10.
+
+**API** (tudo compatível com o site de hoje, que continua funcionando se só a API subir):
+- cruzadinha emitida pelo servidor, dicas por planilha com memória por palavra, sem filtro de palavras por nível e com várias colunas de dica (`emitirCruzadinha`, `dbc0bff`, `40fb1a9`);
+- ID público com HMAC e a ação `meuIdPublico` (S-08, `491af65`);
+- conteúdo da Batalha só pela API (`conteudoBatalha`, S-05, `51a5fd9`);
+- CORS das pré-visualizações deste projeto na Vercel (`1be5494`).
+
+**Site** (depende da API nova para a grade no servidor e para a Batalha; sem ela, a cruzadinha monta a grade sozinha):
+- Firebase fora do app e CSP aplicado (S-04, S-10, S-16, `af74fb3`); token vencido fora do endereço (`3a72c9d`);
+- dois títulos para quem não é de Medicina (`2acd519`); cruzadinha, perfil e Batalha da API nova.
+
+**Antes da quinta:** testar na pré-visualização da Vercel (depois dos dois ajustes do usuário nos painéis): entrar com senha e com Google, cadastro com código, troca de senha, cruzadinha completa, ranking (ver se o jogador aparece marcado) e Batalha do administrador. Conferir o console (CSP aplicado).
+
+**Na quinta, nesta ordem, com o "sim" do usuário:**
+1. Anotar os pontos de volta: site `dpl_41ThD325jEAAgQRK3DhhKhzfMKiC`, API v18.
+2. `npm test`, `npm run lint` e `npm run build` (o `postbuild` confere o pacote).
+3. Publicar a API (`npx supabase functions deploy cacamed-api --project-ref lruzndfqfivlvcckvgbw --no-verify-jwt --use-api`) e conferir: `palavras`, `ranking` e `coroas` 200, POST sem login 401, CORS de `cacamed.com`.
+4. Publicar o site (Vercel, produção, commit da `main`) e conferir o pacote (sem Firebase, sem conteúdo clínico da Batalha) e o login.
+5. Criar o segredo `CACAMED_ID_PUBLICO_SEGREDO` (valor aleatório, gerado e gravado pelo agente com `supabase secrets set`, sem passar pelo chat) e conferir que o jogador continua se achando no ranking.
+6. Registrar nas pendências.
+
 ## Depois de 22/10
 
 - Editar perfil (etapa, faculdade, matéria) e crachá, se aprovado.
