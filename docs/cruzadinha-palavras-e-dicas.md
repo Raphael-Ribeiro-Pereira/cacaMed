@@ -21,6 +21,12 @@ Decidido com o usuário em 17/10/2026, feito na `main`; **publica na quinta 22/1
 - **Sem a ação no servidor** (API antiga) ou sem a API (Firestore antigo), o app monta a grade sozinho, como antes.
 - **Custo:** cerca de 210 ms por grade no maior tópico (Patologia · Doenças, ~400 palavras), medido no computador; a cópia da matriz passou a ser rasa.
 
+**Formato das planilhas (18/10/2026):** o usuário montou as planilhas com **Descrição 1 a 5** numa só planilha, sem o nível mínimo. O importador aceita os dois jeitos: cada coluna de descrição (em uma ou em várias planilhas) vira uma variação da dica, na ordem das colunas. Uma planilha com as 5 colunas pode substituir a principal.
+
+**Conferir antes de gravar:** `node scripts/conferir-planilhas-dicas.mjs principal.csv [outras.csv ...]` mostra as colunas reconhecidas, linhas vazias, tópicos, palavras, o maior tópico, quantas palavras têm dica em cada coluna, quantas não têm nenhuma e as palavras que só aparecem nas planilhas seguintes. Não grava nada.
+
+**Aberto, com o usuário:** palavras que existem só numa planilha de dicas (fora da principal) hoje entram no jogo; a recomendação do agente é deixá-las fora e só avisar no conferidor.
+
 **Importar as planilhas (quando o usuário mandar os links):** baixar o CSV publicado de cada uma, conferir cabeçalho e quantas palavras casam com a planilha principal, e gravar em `cacamed_content` (`id = palavras`), no campo `data.dicas` como `[{ source, csv, rows }]`, na ordem das planilhas. A API lê esse campo a cada 5 minutos; não precisa publicar código.
 
 ## Dicas sem IA

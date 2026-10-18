@@ -45,3 +45,21 @@ test('planilhas de dicas: colunas pelo nome, sem nível mínimo, e uma dica por 
   assert.equal('dicas' in bancoPublico(banco)['ANATOMIA-OSSOS'][0], false);
   assert.equal('dicas' in importarBancoCSV(principal)['ANATOMIA-OSSOS'][0], false);
 });
+
+// Formato do usuário (18/10/2026): uma planilha com "Descrição 1" a "Descrição 5", sem nível mínimo.
+test('uma planilha com várias colunas de descrição vira uma variação de dica por coluna', () => {
+  const cinco = ['Palavra,Área,Subárea,Descrição 1,Descrição 2,Descrição 3,Descrição 4,Descrição 5',
+    'Fêmur,Anatomia,Ossos,Osso da coxa,Maior osso do corpo,,Vai do joelho ao quadril,Sustenta o peso',
+    'Veia  porta,Anatomia,Vasos,,Leva o sangue do intestino ao fígado,,,'].join(QUEBRA);
+  const banco = montarBanco([cinco]);
+  const femur = banco['ANATOMIA-OSSOS'][0];
+  assert.deepEqual(femur.dicas, ['Osso da coxa', 'Maior osso do corpo', '', 'Vai do joelho ao quadril', 'Sustenta o peso']);
+  assert.equal(femur.dicaBasica, 'Osso da coxa');
+  const veia = banco['ANATOMIA-VASOS'][0];
+  assert.equal(veia.palavra, 'VEIA PORTA', 'espaços repetidos viram um');
+  assert.equal(veia.dicaBasica, 'Leva o sangue do intestino ao fígado');
+  // Misturado com uma planilha de uma coluna só: as variações continuam em sequência.
+  const mais = ['Palavra,Area,Subárea,Descrição', 'Fêmur,Anatomia,Ossos,Osso longo da coxa'].join(QUEBRA);
+  assert.deepEqual(montarBanco([cinco, mais])['ANATOMIA-OSSOS'][0].dicas.length, 6);
+  assert.equal(montarBanco([cinco, mais])['ANATOMIA-OSSOS'][0].dicas[5], 'Osso longo da coxa');
+});
