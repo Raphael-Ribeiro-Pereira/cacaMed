@@ -1,7 +1,7 @@
 import { executarPedidoSupabase, ACOES_REVISAO, usernameValido } from './executarPedidoSupabase.js';
 import { resumirHistorico } from '../utils/estatisticasPainel.js';
 import { criarMissoesDiarias, dataLocalHoje } from '../utils/missoes.js';
-import { validarPartidaNoBanco } from './operarJogosSupabase.js';
+import { conteudoBatalhaPara, validarPartidaNoBanco } from './operarJogosSupabase.js';
 import { criarLimitador, ipDoPedido, LIMITES_API } from './limitador.js';
 import { materiaValida, validarCurso } from '../utils/curso.js';
 import { bancoPublico } from '../utils/importarBancoCSV.js';
@@ -121,6 +121,11 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
       if (acao === 'obterEstatisticas') {
         const eventos = await database('cacamed_events?' + filter + '&kind=in.(resposta,recibo)&select=kind,data,created_at&order=created_at.desc&limit=1500');
         return answer({ resultado: resumirHistorico(eventos) });
+      }
+      if (acao === 'conteudoBatalha') {
+        const rows = await database('cacamed_player_state?' + filter + '&select=profile');
+        try { return answer({ resultado: conteudoBatalhaPara(rows[0]?.profile, pedido.doencaId) }); }
+        catch (erro) { return answer({ erro: erro.message }, 403); }
       }
       if (acao === 'verificarUsername') {
         const username = String(pedido.username || '').trim();

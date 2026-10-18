@@ -15,6 +15,35 @@ function Topo({ voltar, kicker, titulo, children }) {
   return <div className="topbar"><button className="icon-btn" onClick={voltar} aria-label="Voltar"><ChevronLeft /></button><h1><small>{kicker}</small>{titulo}</h1>{children}</div>;
 }
 
+// S-05 (17/10/2026): no site publicado, as doenças ainda sem revisão médica vêm só com os dados públicos (o build
+// tira o resto); o conteúdo completo vem da API (conteudoBatalha), que só o entrega ao administrador. Na homologação
+// local o conteúdo já está completo e nada é pedido.
+const doencasCompletas = new Map();
+function useDoencaCompleta(id, usuario, servicoPerfil) {
+  const local = obterDoenca(id);
+  const pronta = Array.isArray(local.golpes) ? local : doencasCompletas.get(id);
+  const [estado, setEstado] = useState({ carregando: true });
+  useEffect(() => {
+    if (pronta) return undefined;
+    let vivo = true;
+    servicoPerfil(usuario, 'conteudoBatalha', { doencaId: id })
+      .then(d => { doencasCompletas.set(id, d); if (vivo) setEstado({ doenca: d }); })
+      .catch(e => { if (vivo) setEstado({ erro: e.message || 'Não foi possível carregar a batalha.' }); });
+    return () => { vivo = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+  return pronta ? { doenca: pronta } : estado;
+}
+function ComDoenca({ id, usuario, servicoPerfil, onVoltar, children }) {
+  const { doenca, erro } = useDoencaCompleta(id, usuario, servicoPerfil);
+  if (doenca) return children(doenca);
+  return <div className="cbt-scr"><Topo voltar={onVoltar} kicker="Batalha diagnóstica" titulo={erro ? 'Batalha indisponível' : 'Preparando a arena'} />
+    <div className="scroll plain" role={erro ? 'alert' : 'status'} style={{ display: 'flex', flexDirection: 'column', textAlign: 'center', gap: 12 }}>
+      <span>{erro || 'Carregando a batalha...'}</span>
+      {erro && <button className="ghost" style={{ maxWidth: 260 }} onClick={onVoltar}>Voltar</button>}
+    </div></div>;
+}
+
 export default function BatalhaDiagnostica({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil = chamarPerfilPlanilha }) {
   const web = useLargo();
   const stats = { tutorial: false, historia: 0, descobertas: [], concluidos: [], ...dadosUsuario?.batalha };
@@ -59,10 +88,14 @@ export default function BatalhaDiagnostica({ usuario, dadosUsuario, setDadosUsua
         <p>A Batalha diagnóstica está em teste com o administrador enquanto o conteúdo passa por revisão médica.</p>
         <button className="ghost" onClick={() => setTelaAtual('menu')}>Voltar ao início</button></section></div></div>;
   } else if (tela.id === 'arena' && aberta) {
-    conteudo = <BatalhaArena key={entrada.id} entrada={entrada} doenca={obterDoenca(entrada.doencaId)} web={web} usuario={usuario} servicoPerfil={servicoPerfil}
-      setDadosUsuario={setDadosUsuario} onSair={sair} onFim={() => setTela({ id: 'resultado' })} />;
+    conteudo = <ComDoenca id={entrada.doencaId} usuario={usuario} servicoPerfil={servicoPerfil} onVoltar={() => setTela({ id: 'hub' })}>
+      {d => <BatalhaArena key={entrada.id} entrada={entrada} doenca={d} web={web} usuario={usuario} servicoPerfil={servicoPerfil}
+        setDadosUsuario={setDadosUsuario} onSair={sair} onFim={() => setTela({ id: 'resultado' })} />}
+    </ComDoenca>;
   } else if (tela.id === 'resultado' && entrada?.relatorio) {
-    conteudo = <Resultado entrada={entrada} stats={stats} onVoltar={() => setTela({ id: 'hub' })} onProxima={id => setTela({ id: 'pet', modo: 'historia', doencaId: id })} />;
+    conteudo = <ComDoenca id={entrada.doencaId} usuario={usuario} servicoPerfil={servicoPerfil} onVoltar={() => setTela({ id: 'hub' })}>
+      {d => <Resultado doenca={d} entrada={entrada} stats={stats} onVoltar={() => setTela({ id: 'hub' })} onProxima={id => setTela({ id: 'pet', modo: 'historia', doencaId: id })} />}
+    </ComDoenca>;
   } else if (tela.id === 'pet') {
     conteudo = <EscolhaPet web={web} modo={tela.modo} doencaId={tela.doencaId} tickets={Number(dadosUsuario?.tickets) || 0} ocupado={ocupado}
       onVoltar={() => setTela({ id: tela.voltar || 'hub' })} onEntrar={pet => iniciar(tela.modo, pet, tela.doencaId)} />;
@@ -274,9 +307,8 @@ function EscolhaPet({ web, modo, doencaId, tickets, ocupado, onVoltar, onEntrar 
 }
 
 /* ---------- relatório ---------- */
-function Resultado({ entrada, stats, onVoltar, onProxima }) {
+function Resultado({ doenca: d, entrada, stats, onVoltar, onProxima }) {
   const r = entrada.relatorio;
-  const d = obterDoenca(entrada.doencaId);
   const pet = PETS.find(p => p.id === entrada.pet);
   const venceu = r.resultado === 'vitoria';
   const proxima = entrada.modo === 'historia' && venceu && stats.historia < DOENCAS.length ? DOENCAS[stats.historia] : null;

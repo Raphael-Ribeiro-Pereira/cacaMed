@@ -371,3 +371,18 @@ test('CORS aceita as pré-visualizações deste projeto na Vercel e mais nada pa
   for (const nao of ['https://caca-x-raphael-ribeiro-pereiras-projects.vercel.app.evil.com', 'https://evil-raphael-ribeiro-pereiras-projects.vercel.app', 'https://caca-abc-outra-conta.vercel.app', 'http://caca-abc-raphael-ribeiro-pereiras-projects.vercel.app'])
     assert.equal(origemPermitida(nao), false, nao);
 });
+
+test('S-05: o conteúdo completo da Batalha só sai para o administrador (ou de doença revisada)', async () => {
+  const f = fixture();
+  await f.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'teste' });
+  const negado = await f.call({ acao: 'conteudoBatalha', doencaId: 'pneumo' });
+  assert.equal(negado.status, 403);
+  assert.equal(negado.erro, 'Batalha diagnóstica em piloto para administrador.');
+  const { version, profile } = f.states.get('jogador');
+  f.states.set('jogador', { version, profile: { ...profile, role: 'admin' } });
+  const liberado = await f.call({ acao: 'conteudoBatalha', doencaId: 'pneumo' });
+  assert.equal(liberado.status, 200);
+  assert.equal(liberado.resultado.cura, 'bacti');
+  assert.ok(Array.isArray(liberado.resultado.golpes));
+  assert.equal((await f.call({ acao: 'conteudoBatalha', doencaId: 'inventada' })).status, 403);
+});

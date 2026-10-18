@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { BANCOS_DDX, bancoDoArquivo, lerBanco, pacoteRevisado, soRevisados } from '../../scripts/pacoteRevisado.mjs';
+import { BANCOS_DDX, bancoDoArquivo, doencaPublica, lerBanco, pacoteRevisado, soRevisados } from '../../scripts/pacoteRevisado.mjs';
 import { CASOS_PLANTAO } from './plantaoBanco.js';
 import { AUDITORIAS } from './erroMedicoBanco.js';
 import { RELACOES } from './causaEfeitoBanco.js';
@@ -33,4 +33,18 @@ test('S-05: no build, o pacote do navegador só recebe os itens revisados', () =
 test('S-05: reconhece o banco também em caminho do Windows', () => {
   assert.deepEqual(bancoDoArquivo('C:\\cacaMed\\src\\utils\\erroMedicoBanco.js'), { nome: 'erroMedicoBanco.js', exporta: 'AUDITORIAS' });
   assert.equal(bancoDoArquivo('/x/src/utils/outro.js'), undefined);
+});
+
+test('S-05: no build, as doenças da Batalha sem revisão só levam os dados públicos', async () => {
+  const { DOENCAS_BATALHA, CAPITULOS_BATALHA } = await import('./batalhaConteudo.js');
+  const codigo = await pacoteRevisado().load(caminho('batalhaConteudo.js'));
+  const publico = lerBanco(codigo.split('\n').find(l => l.startsWith('export const DOENCAS_BATALHA = ')), 'DOENCAS_BATALHA');
+  assert.equal(publico.length, DOENCAS_BATALHA.length);
+  for (const [i, d] of DOENCAS_BATALHA.entries()) {
+    if (d.revisado) { assert.deepEqual(publico[i], d); continue; }
+    assert.deepEqual(publico[i], doencaPublica(d));
+    for (const campo of ['golpes', 'exames', 'kit', 'chave', 'dif', 'cura', 'porque', 'conduta', 'aprendizado', 'gram']) assert.equal(campo in publico[i], false, `${d.id}.${campo}`);
+    assert.ok(!codigo.includes(d.conduta.slice(0, 40)), `${d.id}: conduta vazou`);
+  }
+  assert.ok(codigo.includes('export const CAPITULOS_BATALHA = ' + JSON.stringify(CAPITULOS_BATALHA)));
 });

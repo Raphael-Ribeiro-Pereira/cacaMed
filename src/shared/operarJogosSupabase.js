@@ -345,6 +345,14 @@ export function operarRelacaoSupabase(perfil, pedido, recibos = []) {
 
 // Batalha diagnóstica: piloto do administrador enquanto o conteúdo não tiver revisão clínica.
 // O cliente envia apenas a lista de ações; o servidor reexecuta o motor e calcula o resultado e o XP.
+// S-05 (17/10/2026): o pacote do site só leva os dados públicos das doenças sem revisão médica; o conteúdo completo
+// (pistas, exames, tratamento, conduta e aprendizado) sai daqui, na hora da batalha, só para quem pode jogá-la.
+export function conteudoBatalhaPara(perfil, doencaId) {
+  const doenca = obterDoenca(String(doencaId || ''));
+  if (!doenca.revisado && perfil?.role !== 'admin') throw new Error('Batalha diagnóstica em piloto para administrador.');
+  return doenca;
+}
+
 export function operarBatalhaSupabase(perfil, pedido, recibos = [], aleatorio = Math.random) {
   const stats = { tutorial: false, historia: 0, descobertas: [], concluidos: [], partidas: 0, vitorias: 0, xp: 0, historico: [], ...perfil.batalha };
   const admin = perfil.role === 'admin';
