@@ -70,6 +70,8 @@ São **5 por dia**: a de login e mais 4 novas, sorteadas assim:
 - uma de nível 3;
 - uma de nível 4 ou 5 (a de nível 5 sai em 1 a cada 3 dias).
 
+**Missão especial "revisão da semana"** (decidida em 19/10/2026, valor proposto pelo agente e ainda a confirmar): lembra o jogador da [Revisão semanal](revisao-inteligente.md#revisão-semanal-decidida-em-19102026). Paga **+400 XP e 2 tickets**, o mesmo da missão de nível 5, e não ocupa uma das 4 vagas sorteadas. Aparece na quarta-feira, ou antes se a fila de revisão encher, e fica todo dia até a revisão da semana ser feita. Na quarta, vem junto de um aviso ao abrir o app.
+
 Balanceamento proposto pelo agente e aprovado pelo usuário em 07/10/2026:
 
 | Nível | Exemplos | XP | Ticket |

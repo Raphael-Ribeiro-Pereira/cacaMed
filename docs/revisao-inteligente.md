@@ -204,26 +204,40 @@ Movimento reduzido (preferência do sistema): as cartas vão direto para o lugar
 11. **Fim com o monstro do cérebro**, que fica verde, faz um coração e sorri, seguido de parabéns e um prêmio. A imagem de referência do polvo pode ser usada como inspiração.
 12. **Prêmio de conclusão proporcional** (sugestão do agente aprovada): 35 XP por item revisado, até 1000, e 1 ticket a cada 7 itens, até 4, uma vez por semana. Ver [economia v3](economia-v3.md#decisões).
 13. **Palavras do ritmo:** enunciado e alternativas.
-14. **Revisão semanal**, não diária, com **no máximo 4 cartas** por semana (ver abaixo).
+14. **Revisão semanal**, não diária, sem dia fixo (o jogador escolhe), com a fila limitada a **~10 minutos estimados** pelo ritmo, repetição em semanas e lembrete por missão diária e aviso na quarta (ver abaixo).
 
 #### Revisão semanal (decidida em 19/10/2026)
 
-O usuário pensou a Revisão como um **modo semanal**, não diário, e aprovou o limite de 4 cartas. Proposta do agente para as regras, a confirmar no protótipo:
+O usuário pensou a Revisão como um **modo semanal**, não diário.
 - **Semana:** a mesma das Coroas, de segunda a domingo, fechando no domingo às 23:59 de Brasília (`semanaCoroas` e `fimDaSemana` em `src/utils/coroas.js`).
-- **Abertura:** a revisão da semana pode ser feita em qualquer dia da semana. Ao começar, ela junta os erros acumulados até ali em até **4 cartas** de até 7 itens; o que passar do limite aparece no leque como carta em espera, "na próxima semana". Erros feitos depois de começar entram na semana seguinte.
-- **Trava:** do aviso até terminar as cartas da semana (no máximo 4, o que limita o tempo preso).
-- **Prêmio e relatório:** uma vez por semana, ao terminar.
-- **Repetição espaçada em semanas** (substitui os intervalos de 1, 3 e 7 dias): acertou, o item volta em 1 semana; acertou de novo, em 2 semanas; no terceiro acerto seguido, está dominado (+40 XP, uma vez por item e versão). Errou, volta na semana seguinte.
-- **Hub fora da semana de revisão:** "Revisão em dia · a próxima abre na segunda".
+- **Sem dia fixo:** o jogador escolhe o dia da semana em que faz a revisão (decidido).
+- **Tamanho pela duração, não pelo número de cartas:** a fila da semana vai até **cerca de 10 minutos estimados** pelo ritmo da pessoa (palavras de cada item × segundos por palavra, ver a [métrica](#métrica-de-ritmo-e-indecisão-decidida-em-19102026)). Isso substitui o limite de 4 cartas. Para quem ainda não tem ritmo medido, vale um ritmo padrão até juntar respostas certas suficientes.
+- **Fila cheia:** quando a fila chega aos 10 minutos, o jogador recebe o aviso e a missão na hora (ver abaixo), e cada erro novo tira o mais antigo da fila (decidido). Em aberto: o mais antigo é apagado ou vai para uma reserva?
+- **Lembrete:** a **missão do dia "revisão da semana"** com bônus alto, mais um **aviso (pop-up)** na quarta-feira, para quem abrir o app na quarta ver a missão e o aviso juntos (decidido). Proposta do agente:
+  - **Valor da missão:** +400 XP e 2 tickets, o mesmo da maior missão diária (nível 5). Ela não ocupa uma das 4 vagas sorteadas.
+  - **Quando aparece:** na quarta, ou antes se a fila encher, e fica todo dia até a revisão da semana ser feita.
+  - **Aviso:** uma vez por semana, na quarta ou quando a fila encher, o que vier primeiro.
+- **Trava:** do aviso de início até terminar as cartas da semana; com a fila limitada a ~10 minutos, o tempo preso fica limitado.
+- **Prêmio e relatório:** uma vez por semana, ao terminar ([prêmio proporcional](economia-v3.md#decisões)).
+- **Repetição espaçada em semanas** (decidido; substitui os intervalos de 1, 3 e 7 dias): acertou, o item volta em 1 semana; acertou de novo, em 2 semanas; no terceiro acerto seguido, está dominado (+40 XP, uma vez por item e versão). Errou, volta na semana seguinte.
+- **Hub fora da revisão:** "Revisão em dia · a próxima fica disponível na segunda".
+
+**Parecer do agente sobre "o mais antigo sai da fila"** (pedido do usuário):
+- **Concordo** com a fila limitada por tempo e com o aviso na hora em que ela enche.
+- **Sugiro não apagar o erro mais antigo:** ele vai para uma **reserva** e volta numa semana com espaço na fila. Apagar perde justamente os erros mais antigos, que são os mais esquecidos e os que o jogador nunca reviu. A reserva não cresce sem fim: um item que passar 8 semanas nela sai de vez.
+- **Prioridade dentro dos 10 minutos:** primeiro os itens que voltam pela repetição (já revistos, a caminho do domínio), depois os erros novos, do mais recente ao mais antigo. Erros repetidos do mesmo item contam uma vez só.
 
 **Ainda em aberto (no painel do protótipo):**
-1. **Regras da revisão semanal** acima: abre em qualquer dia da semana, com os erros acumulados até começar?
-2. **Repetição em semanas:** 1 semana, depois 2, e dominado no terceiro acerto seguido?
-3. **Semana que acaba com a revisão começada e não terminada:** as cartas que faltam passam para a semana seguinte e a trava continua até terminar? (Sugestão do agente: sim; o prêmio é pago quando terminar.)
+1. **Fila cheia:** apagar o mais antigo ou mandar para a reserva?
+2. **Missão:** +400 XP e 2 tickets, aparecendo na quarta (ou antes, se a fila encher) até a revisão ser feita?
+3. **Aviso:** uma vez por semana, na quarta ou quando a fila encher, o que vier primeiro?
+4. **Semana que acaba com a revisão começada e não terminada:** as cartas que faltam passam para a semana seguinte e a trava continua? (Sugestão: sim; o prêmio é pago quando terminar.)
 
 **Para o código (quando aprovar):**
 - **Servidor:** guardar a revisão da semana (começada, cartas da semana, feitas, trava e relatório visto), para a trava valer em qualquer aparelho e depois de fechar o app; o menu consulta essa trava para bloquear os outros modos. O prêmio de conclusão é pago pelo servidor, uma vez por semana.
-- **Motor:** limite de 4 cartas por semana; intervalos em semanas no lugar de 1, 3 e 7 dias; o domínio continua no terceiro acerto seguido.
+- **Motor:** fila limitada por tempo estimado (~10 min) com a prioridade acima; reserva (se aprovada); intervalos em semanas no lugar de 1, 3 e 7 dias; o domínio continua no terceiro acerto seguido.
+- **Missões:** a missão especial "revisão da semana" fora do sorteio das 4 (em `src/utils/missoes.js`), com o evento de conclusão da revisão da semana.
+- **Aviso:** marca no perfil de "aviso da semana mostrado", para aparecer uma vez só.
 - **Dados por resposta:** tempo até responder, gravado junto da tentativa (hoje só vão a escolha e o acerto); o ritmo e a indecisão são calculados no servidor a partir dele.
 - **Relatório:** uma ação nova que junta as cartas da semana e pede à IA a análise, com cache; a explicação de cada alternativa precisa existir no banco. Hoje o Quiz tem uma explicação por pergunta (a da resposta certa); o V ou M, uma por frase (que já cobre as duas opções); o Erro médico, uma por etapa (linha, categoria e correção certas). **O "porquê" de cada alternativa errada é conteúdo novo**, com fonte e revisão médica, sobretudo no Quiz e no Erro médico.
 
@@ -233,7 +247,7 @@ Regra da memória do projeto: o protótipo traz as decisões de fluxo; no códig
 
 1. **Marcações `grave`:** revisão médica caso a caso no gabarito do Paciente DDX.
 2. **Carta do Paciente DDX:** implementar no motor depois das marcações.
-3. **Hub da Revisão:** protótipo v5 (modo foco, trava até o fim, relatório geral em anel, o monstro e o modo semanal) feito; faltam as três respostas sobre o modo semanal para portar ao código.
+3. **Hub da Revisão:** protótipo v5 (modo foco, trava até o fim, relatório geral em anel, o monstro e o modo semanal) feito; faltam as quatro respostas sobre o modo semanal (fila cheia, missão, aviso e semana que acaba no meio) para portar ao código.
 4. **Explicação por alternativa:** conteúdo novo, sobretudo no Quiz e no Erro médico, com fonte e revisão médica (pré-requisito do relatório geral).
 
 ## Experiência e decisões

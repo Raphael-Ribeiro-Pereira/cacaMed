@@ -68,6 +68,14 @@ svg{display:block}
 .dlg h2{margin:4px 0 0;font-size:20px;font-weight:800}
 .dlg p{margin:0;color:var(--muted)}
 .dlg-acoes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.dlg-missao{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:rgba(6,214,160,.08);border:1px solid rgba(6,214,160,.35);color:var(--text)!important}
+.dlg-missao svg,.missao-rev svg{width:16px;height:16px;flex:none;color:var(--ok);margin-top:2px}
+.missao-rev{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:12px;border-radius:14px;background:rgba(6,214,160,.08);border:1px solid rgba(6,214,160,.35)}
+.missao-rev small{display:block;color:var(--ok);font:700 12px var(--mono);margin-top:2px}
+.fila{display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:14px;font-size:12.5px;color:var(--muted)}
+.fila b{font:700 12px var(--mono);color:var(--text)}
+.fila i{grid-column:1/-1;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--violet),var(--mint)) 0 0/calc(var(--p) * 100%) 100% no-repeat,var(--elev)}
+.fila small{grid-column:1/-1;font-size:11.5px}
 
 /* Modo foco: só as cartas */
 #foco{position:absolute;inset:0;z-index:80;overflow:hidden;--cw:116px;--ch:166px}
@@ -324,8 +332,7 @@ svg{display:block}
       <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-titulo">
         <span class="dlg-ic" id="dlg-ic"></span>
         <h2 id="dlg-titulo">Começar a revisão?</h2>
-        <p>Depois de começar, você só sai da revisão quando terminar todas as cartas da semana.</p>
-        <p>Até lá, os outros modos do jogo ficam bloqueados, mesmo se você fechar e abrir o app.</p>
+        <div id="dlg-texto" style="display:grid;gap:10px"></div>
         <div class="dlg-acoes"><button class="secundario" id="dlg-nao">Agora não</button><button class="primario" id="dlg-sim">Começar</button></div>
       </div>
     </div>
@@ -342,6 +349,7 @@ svg{display:block}
       <button data-valor="normal">Com cartas</button><button data-valor="andamento">Carta em andamento</button><button data-valor="emdia">Em dia</button><button data-valor="vazio">Sem erros</button><button data-valor="bloqueado">Abaixo do nível 10</button>
     </div></div>
     <div class="grupo"><p>Atalhos de teste</p><div class="seg">
+      <button class="atalho-proto" id="sim-quarta">Simular quarta-feira (aviso e missão)</button><button class="atalho-proto" id="sim-cheia">Simular fila cheia (10 min)</button>
       <button class="atalho-proto" id="sim-reabrir">Simular fechar e abrir o app</button><button class="atalho-proto" id="sim-relatorio">Ir direto ao relatório geral</button>
     </div></div>
     <div class="grupo"><p>Abertura</p><div class="seg" data-chave="abertura">
@@ -351,9 +359,9 @@ svg{display:block}
       <button data-valor="cheia">Tela cheia</button><button data-valor="celular">Celular</button>
     </div></div>
     <div class="grupo"><p>O que decidir</p><ol class="decisoes">
-      <li><b>Revisão semanal:</b> abre uma vez por semana (segunda a domingo, como as Coroas), com os erros acumulados até você começar, em até 4 cartas. O que passa do limite fica para a próxima semana. Está bom?</li>
-      <li><b>Repetição espaçada em semanas:</b> acertou, o item volta em 1 semana; acertou de novo, em 2; no terceiro acerto seguido, está dominado (+40 XP). Errou, volta na semana seguinte. Está bom?</li>
-      <li><b>Se a semana acabar com a revisão começada e não terminada:</b> as cartas que faltam passam para a semana seguinte e a trava continua até terminar?</li>
+      <li><b>Fila cheia:</b> quando um erro novo chega com a fila em 10 min, o mais antigo vai para uma <b>reserva</b> (volta numa semana com espaço) em vez de ser apagado?</li>
+      <li><b>Missão da revisão:</b> +400 XP e 2 tickets (o mesmo da maior missão diária). Aparece na quarta, ou antes se a fila encher, e fica até você fazer a revisão da semana?</li>
+      <li><b>Aviso:</b> uma vez por semana, na quarta ou quando a fila encher, o que vier primeiro?</li>
     </ol></div>
   </div>
 </div>
@@ -406,13 +414,14 @@ const ITENS = {
 };
 for (const [k, v] of Object.entries(ITENS)) { v.k = k; v.fonte = FONTE; }
 const CARTAS = [
-  { id: 'quiz-1', modo: 'quiz', titulo: 'Quiz 1', erros: 7, un: ['erro', 'erros'], temas: 'Farmacologia · Clínica médica', min: 5, itens: ['q1', 'q2', 'q4'] },
-  { id: 'vm', modo: 'vm', titulo: 'Verdade ou mentira', erros: 5, un: ['erro', 'erros'], temas: 'Fisiologia · Imunologia', min: 3, itens: ['v1', 'v2'] },
-  { id: 'erro', modo: 'erro', titulo: 'Erro médico', erros: 2, un: ['caso', 'casos'], temas: 'Infeccioso', min: 6, itens: ['e1'] },
-  { id: 'pdx', modo: 'pdx', titulo: 'Paciente DDX', erros: 1, un: ['caso', 'casos'], temas: 'Cardiovascular', min: 4, itens: ['p1'], nova: true },
-  { id: 'quiz-2', modo: 'quiz', titulo: 'Quiz 2', erros: 3, un: ['erro', 'erros'], temas: 'Microbiologia', min: 3, itens: ['q3'], espera: 'na próxima semana' },
+  // `min`: tempo estimado pelo ritmo da pessoa (palavras × segundos por palavra). A fila da semana vai até ~10 min.
+  { id: 'quiz-1', modo: 'quiz', titulo: 'Quiz 1', erros: 7, un: ['erro', 'erros'], temas: 'Farmacologia · Clínica médica', min: 3, itens: ['q1', 'q2', 'q4'] },
+  { id: 'vm', modo: 'vm', titulo: 'Verdade ou mentira', erros: 5, un: ['erro', 'erros'], temas: 'Fisiologia · Imunologia', min: 2, itens: ['v1', 'v2'] },
+  { id: 'erro', modo: 'erro', titulo: 'Erro médico', erros: 2, un: ['caso', 'casos'], temas: 'Infeccioso', min: 3, itens: ['e1'] },
+  { id: 'pdx', modo: 'pdx', titulo: 'Paciente DDX', erros: 1, un: ['caso', 'casos'], temas: 'Cardiovascular', min: 2, itens: ['p1'], nova: true },
+  { id: 'quiz-2', modo: 'quiz', titulo: 'Quiz 2', erros: 3, un: ['erro', 'erros'], temas: 'Microbiologia', min: 2, itens: ['q3'], espera: 'Na reserva' },
 ];
-const ESPERAS = ['na seg., 26/10', 'na seg., 26/10', 'na seg., 26/10', 'na seg., 26/10', 'na seg., 26/10'];
+const ESPERAS = Array(5).fill('Abre seg., 26/10');
 
 // ---------- Estado (e o que sobrevive a fechar e abrir o app) ----------
 const S = { estado: 'normal', abertura: 'furacao', tela: 'cheia', fase: 'hub', animando: false, sessao: null, pausada: null, feitas: new Map(), trava: false, vistas: new Set(), absorvido: false };
@@ -515,8 +524,8 @@ function aplicarEstadoCarta(c, { semFeita = false } = {}) {
   c.el.classList.toggle('feita', Boolean(feita)); c.el.classList.toggle('pausada', pausada);
   c.el.querySelector('.miolo small').innerHTML = feita ? `${I.check} ${feita.acertos}/${feita.total} certas`
     : pausada ? `Item ${S.pausada.sessao.idx + 1} de ${S.pausada.sessao.itens.length}`
-      : c.espera ? `${I.relogio} Volta ${c.espera}` : `${c.erros} ${unidade(c)} · ~${c.min} min`;
-  c.el.setAttribute('aria-label', `${c.titulo}: ${feita ? `feita nesta semana, ${feita.acertos} de ${feita.total} certas` : pausada ? 'em andamento' : c.espera ? `volta ${c.espera}` : `${c.erros} ${unidade(c)}, cerca de ${c.min} minutos`}`);
+      : c.espera ? `${I.relogio} ${c.espera}` : `${c.erros} ${unidade(c)} · ~${c.min} min`;
+  c.el.setAttribute('aria-label', `${c.titulo}: ${feita ? `feita nesta semana, ${feita.acertos} de ${feita.total} certas` : pausada ? 'em andamento' : c.espera ? c.espera.toLowerCase() : `${c.erros} ${unidade(c)}, cerca de ${c.min} minutos`}`);
 }
 function montarCartas() {
   document.querySelectorAll('.carta, .vaga').forEach(e => e.remove());
@@ -542,9 +551,9 @@ function renderHub() {
   const e = S.estado; const lista = cartasDoEstado(); const disponiveis = lista.filter(c => !c.espera);
   const restantes = disponiveis.filter(c => !S.feitas.has(c.id)); const itens = restantes.reduce((s, c) => s + c.erros, 0);
   const concluida = (e === 'normal' || e === 'andamento') && disponiveis.length > 0 && !restantes.length;
-  const feitas = [...S.feitas.values()]; const dominados = 4;
+  const feitas = [...S.feitas.values()]; const dominados = 4; const minFila = restantes.reduce((s, c) => s + c.min, 0);
   const textos = concluida ? { k: 'Revisão da semana concluída', h: 'Tudo revisado nesta semana', s: `Você fez as ${disponiveis.length} cartas. A próxima revisão abre na segunda, 26/10.` } : {
-    normal: { k: `${restantes.length} ${restantes.length === 1 ? 'carta pronta' : 'cartas prontas'}`, h: S.feitas.size ? 'Continue sua revisão' : 'Comece sua revisão', s: `Seus erros da semana em até 4 cartas, de até 7 itens cada. Faça uma de cada vez, na ordem que quiser. No fim, você recebe o relatório completo.${lista.length > disponiveis.length ? ' O que passou do limite fica para a próxima semana.' : ''}` },
+    normal: { k: `${restantes.length} ${restantes.length === 1 ? 'carta pronta' : 'cartas prontas'}`, h: S.feitas.size ? 'Continue sua revisão' : 'Comece sua revisão', s: `Seus erros da semana, até cerca de ${LIMITE_MIN} min pelo seu ritmo. Faça no dia que quiser, uma carta de cada vez. No fim, você recebe o relatório completo.${lista.length > disponiveis.length ? ' O que não coube está na reserva e volta numa semana com espaço.' : ''}` },
     andamento: { k: 'Carta em andamento', h: 'Continue de onde parou', s: S.pausada ? `${S.pausada.titulo} · item ${S.pausada.sessao.idx + 1} de ${S.pausada.sessao.itens.length}` : '' },
     emdia: { k: 'Revisão em dia', h: 'Nada para rever nesta semana', s: 'A próxima revisão abre na segunda, 26/10. Cada acerto espaça o item: volta em 1 semana, depois em 2; no terceiro acerto seguido, está dominado.' },
     vazio: { k: 'Seu aprendizado começa nos jogos', h: 'Ainda sem erros para rever', s: 'Jogue Quiz, Verdade ou mentira, Erro médico ou um caso do Plantão. Cada erro vira uma carta aqui.' },
@@ -560,6 +569,8 @@ function renderHub() {
     <div class="hub-corpo">
       <section class="intro"><p class="kicker">${textos.k}</p><h2>${textos.h}</h2><p class="sub">${textos.s}</p>
         ${e === 'bloqueado' ? '<div class="barra-nivel"><span><i></i></span>NÍVEL 7 · 62% ATÉ O 8</div>' : ''}
+        ${S.missao && !concluida && e === 'normal' ? `<div class="missao-rev">${I.brilho}<span><b>Missão de hoje: revisão da semana</b><small>+${MISSAO_REVISAO.xp} XP · ${MISSAO_REVISAO.tickets} tickets</small></span></div>` : ''}
+        ${e === 'normal' && !concluida ? `<div class="fila"><span>Fila da semana</span><b>~${minFila} de ${LIMITE_MIN} min</b><i style="--p:${Math.min(1, minFila / LIMITE_MIN)}"></i>${lista.length > disponiveis.length ? `<small>${lista.length - disponiveis.length} ${lista.length - disponiveis.length === 1 ? 'carta' : 'cartas'} na reserva</small>` : ''}</div>` : ''}
         <div class="stats">${stats.map(([v, t]) => `<div class="stat"><b>${v}</b><span>${t}</span></div>`).join('')}</div></section>
       <section class="mesa">
         <div class="stage" id="stage">
@@ -579,9 +590,31 @@ function renderHub() {
 }
 
 // ---------- Aviso de início e trava ----------
+// Revisão semanal (19/10): sem dia fixo; a fila vai até ~10 min pelo ritmo da pessoa. O lembrete é a missão do dia
+// (com bônus alto) e um aviso, na quarta ou quando a fila enche, o que vier primeiro, uma vez por semana.
+const LIMITE_MIN = 10;
+const MISSAO_REVISAO = { xp: 400, tickets: 2 };
+const TEXTO_TRAVA = '<p>Depois de começar, você só sai da revisão quando terminar todas as cartas da semana.</p><p>Até lá, os outros modos do jogo ficam bloqueados, mesmo se você fechar e abrir o app.</p>';
+function abrirAviso(tipo) {
+  const disponiveis = cartasDoEstado().filter(c => !c.espera); const min = disponiveis.reduce((s, c) => s + c.min, 0);
+  const missao = `<p class="dlg-missao">${I.brilho}<span>Missão de hoje: <b>revisão da semana · +${MISSAO_REVISAO.xp} XP e ${MISSAO_REVISAO.tickets} tickets</b></span></p>`;
+  const [titulo, texto, botao, icone] = {
+    inicio: ['Começar a revisão?', `<p>${disponiveis.length} cartas · cerca de ${min} min pelo seu ritmo.</p>${TEXTO_TRAVA}`, 'Começar', I.cadeado],
+    quarta: ['Sua revisão da semana está pronta', `<p>${disponiveis.length} cartas · cerca de ${min} min pelo seu ritmo. Que tal hoje?</p>${missao}${TEXTO_TRAVA}`, 'Começar agora', I.relogio],
+    cheia: ['Sua fila de revisão encheu', `<p>Você juntou cerca de ${LIMITE_MIN} min de erros em ${disponiveis.length} cartas. A partir de agora, cada erro novo manda o mais antigo para a reserva.</p>${missao}${TEXTO_TRAVA}`, 'Começar agora', I.brilho],
+  }[tipo];
+  $('#dlg-titulo').textContent = titulo; $('#dlg-texto').innerHTML = texto; $('#dlg-sim').textContent = botao; $('#dlg-ic').innerHTML = icone;
+  $('#dlg-nao').textContent = tipo === 'inicio' ? 'Agora não' : 'Depois';
+  $('#confirmar').hidden = false; $('#dlg-sim').focus();
+}
+async function simularAviso(tipo) {
+  if (S.animando) return;
+  definir('estado', 'normal'); S.missao = true; mostrar('hub');
+  await pausa(250); abrirAviso(tipo);
+}
 function pedirInicio() {
   if (S.estado === 'andamento') return continuar();
-  if (S.estado === 'normal' && !S.feitas.size && !S.trava) { $('#confirmar').hidden = false; $('#dlg-sim').focus(); return; }
+  if (S.estado === 'normal' && !S.feitas.size && !S.trava) return abrirAviso('inicio');
   entrarFoco();
 }
 function confirmarInicio() { $('#confirmar').hidden = true; S.trava = true; guardarProgresso(); entrarFoco(); }
@@ -657,7 +690,7 @@ function clicarCarta(c) {
   if (S.fase === 'relgeral') return S.feitas.has(c.id) ? abrirCartaRel(c) : undefined;
   if (S.fase === 'relcarta') return;
   if (S.fase !== 'foco') return pedirInicio();
-  if (c.espera) return toast(`${c.titulo} volta ${c.espera}.`);
+  if (c.espera) return toast(c.espera === 'Na reserva' ? `${c.titulo} está na reserva: volta numa semana com espaço na fila.` : `${c.titulo}: ${c.espera.toLowerCase()}.`);
   if (S.feitas.has(c.id)) return toast('Carta feita. O relatório completo aparece quando você terminar todas.');
   if (S.pausada && S.pausada.id !== c.id) return toast(`Termine ${S.pausada.titulo} primeiro: ela está em andamento.`);
   escolher(c);
@@ -1035,6 +1068,7 @@ function mostrarParabens() {
   const p = premio(itens); const fim = $('#foco-fim');
   fim.innerHTML = `<p class="kicker">Revisão concluída</p><h2>Parabéns! Você concluiu sua revisão da semana</h2><p>${lista.length} cartas · ${itens} itens · ${certas}/${total} certas</p>
     <div class="premios"><span id="premio-xp">+0 XP</span><span class="ticket">+${p.tickets} ${p.tickets === 1 ? 'ticket' : 'tickets'}</span></div>
+    ${S.missao ? `<p>${I.check.replace('<svg', '<svg style="display:inline;width:14px;height:14px;vertical-align:-2px;color:var(--ok)"')} Missão do dia concluída: +${MISSAO_REVISAO.xp} XP e ${MISSAO_REVISAO.tickets} tickets</p>` : ''}
     <button class="primario" id="fim-menu">Voltar ao hub ${I.seta}</button>`;
   fim.hidden = false;
   if (!rm()) fim.animate([{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.16,1,.3,1)' });
@@ -1142,7 +1176,7 @@ document.addEventListener('click', ev => {
     'foco-sair': () => (S.fase === 'absorvido' ? fecharFoco() : sairFoco()), 'fim-menu': fecharFoco, 'ver-rel': verRelatorioDeHoje,
     menu: () => toast('No app, volta ao menu.'), sair: sairSessao, proxima, entendi,
     'sim-reabrir': () => { if (S.sessao) { S.pausada = { id: S.sessao.carta.id, titulo: S.sessao.carta.titulo, sessao: S.sessao }; } guardarProgresso(); location.reload(); },
-    'sim-relatorio': irAoRelatorio,
+    'sim-relatorio': irAoRelatorio, 'sim-quarta': () => simularAviso('quarta'), 'sim-cheia': () => simularAviso('cheia'),
   };
   if (acoes[b.id]) acoes[b.id]();
   if (b.dataset.k !== undefined) responder(Number(b.dataset.k));
@@ -1155,7 +1189,7 @@ function definir(chave, valor) {
   if (S.animando) return;
   S[chave] = valor; guardar(); sincronizarPainel();
   if (chave !== 'estado') return;
-  S.feitas.clear(); S.vistas.clear(); S.absorvido = false; S.sessao = null; S.pausada = null; S.trava = false;
+  S.feitas.clear(); S.vistas.clear(); S.absorvido = false; S.sessao = null; S.pausada = null; S.trava = false; S.missao = false;
   if (valor === 'andamento') exemploAndamento();
   guardarProgresso();
   $('#foco').hidden = true; $('#expansor').hidden = true; $('#confirmar').hidden = true;
