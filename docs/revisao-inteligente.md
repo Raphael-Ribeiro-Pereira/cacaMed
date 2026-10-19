@@ -155,29 +155,39 @@ Regra decidida: **a entrada da Revisão é sempre o hub**, com as cartas dispon�
 
 ### Protótipo do hub da Revisão
 
-Protótipo em [`docs/prototipos/revisao-hub.html`](prototipos/revisao-hub.html), feito em 19/10/2026, para aprovação antes do código. Abre direto no navegador, sem build. Conteúdo das perguntas é fictício. Segue a ideia do usuário de 19/10:
+Protótipo em [`docs/prototipos/revisao-hub.html`](prototipos/revisao-hub.html), para aprovação antes do código. Abre direto no navegador, sem build. Conteúdo das perguntas é fictício.
+
+**Versão 2 (19/10/2026, depois da primeira rodada com o usuário).** A versão do celular com a abertura em furacão foi aprovada; esta versão acrescenta o **modo foco** pedido pelo usuário:
 1. **Hub:** "Comece sua revisão", quatro estatísticas (itens na fila hoje, itens revisados, taxa de acerto e dominados com o XP) e o baralho fechado no centro da mesa.
-2. **Abertura em furacão:** ao tocar em "Começar revisão" (ou no baralho), as cartas giram em espiral em volta do centro, com um redemoinho de luz atrás, e se abrem num leque de pôquer. Cada carta vira de costas para frente ao chegar.
-3. **Cartas:** uma por modo (Quiz, Verdade ou mentira, Erro médico e Paciente DDX), no estilo de carta de baralho: número de erros no canto, ícone do modo, tempo estimado e temas. Ao passar o mouse, a carta sobe, endireita e cresce para leitura. Carta em espera aparece apagada, com o horário em que volta.
-4. **Escolha:** a carta escolhida vai para o centro e as outras voltam em espiral para trás dela, formando um bloco.
-5. **Expansão:** o bloco cresce até ocupar a tela, na cor do modo, e vira a sessão.
-6. **Fim:** o resultado tem "Voltar ao hub". O hub ganha o link "Ver última revisão", sem abrir nele.
+2. **Modo foco:** ao tocar em "Começar revisão" (ou no baralho), o entorno some e ficam só as cartas, na tela inteira. O baralho vai para o centro girando em espiral ("furacão", com um redemoinho de luz atrás) e se abre num leque de pôquer; cada carta vira de costas para frente ao chegar. Sobram só um X discreto para sair (ou Esc) e uma dica que some em 3,5 s.
+3. **Cartas:** uma por modo (Quiz, Verdade ou mentira, Erro médico e Paciente DDX), no estilo de carta de baralho: número de erros no canto, ícone do modo, tempo estimado e temas. Ao passar o mouse, a carta sobe, endireita e cresce para leitura. Carta em espera aparece no leque, apagada, com o horário em que volta.
+4. **Escolha:** a carta tocada ganha um brilho discreto na cor do modo, vai para o centro, e as outras voltam em espiral para trás dela, formando um bloco. O bloco cresce até ocupar a tela e vira a sessão.
+5. **Fim da carta:** a tela encolhe de volta até o baralho, o leque reabre no modo foco e a carta feita fica verde, com um certinho (e "2/3 certas" no lugar do tempo). O jogador escolhe a próxima entre as que faltam. Tocar numa carta verde abre o resultado dela, com a explicação da IA.
+6. **Sair no meio:** a carta fica "Em andamento" no leque; as outras esperam ela terminar (regra do servidor hoje: uma sessão aberta por vez).
+7. **Todas feitas:** "Revisão de hoje concluída", com o placar do dia e "Voltar ao hub". O hub passa a "Tudo revisado por hoje".
+8. **Hub:** o link "Ver última revisão" abre o último resultado, sem ser a tela de abertura.
 
 O botão "Protótipo" (canto inferior esquerdo) troca:
-- **situação do jogador:** com cartas, sessão em andamento, em dia, sem erros e abaixo do nível 10;
-- **escolha:** uma carta por sessão (como o servidor faz hoje) ou várias cartas juntas (as escolhidas se juntam num bloco e viram uma sessão só);
+- **situação do jogador:** com cartas, carta em andamento, em dia, sem erros e abaixo do nível 10;
+- **ao terminar uma carta:** volta direto às cartas (padrão, como o usuário descreveu) ou mostra o resultado antes;
 - **abertura:** furacão ou leque simples;
 - **tela:** cheia ou moldura de celular.
 
 Movimento reduzido (preferência do sistema): as cartas vão direto para o lugar, sem espiral.
 
-**Decisões que o protótipo pede ao usuário:**
-1. Uma carta por sessão ou várias cartas juntas?
-2. A abertura em furacão é a animação imaginada?
-3. Cartas em espera aparecem no leque (apagadas, com o horário) ou ficam de fora?
-4. As quatro estatísticas do hub são essas?
-5. "Ver última revisão" como link no hub está bom?
-6. Nome e cor da carta do Paciente DDX.
+**Decidido pelo usuário em 19/10/2026:**
+1. **Várias cartas por visita, uma de cada vez:** ao terminar a carta escolhida, o jogador volta às cartas para escolher entre as que faltam. (Substitui a ideia de juntar várias cartas numa sessão só.)
+2. **Cartas em espera** aparecem no leque.
+3. **Estatísticas do hub:** boas no celular. No PC sobra um espaço vazio enorme, o que entra na reformulação geral da versão PC ([pendências](pendencias.md#5-trabalho-do-agente-na-ordem-decidida)).
+4. **Paciente DDX:** nome e cor aprovados.
+5. **Furacão:** aprovado no celular.
+
+**Ainda em aberto (no painel do protótipo):**
+1. Ao terminar a carta: direto às cartas (o resultado abre ao tocar na carta verde) ou o resultado antes?
+2. Sair no meio: a carta fica "Em andamento" e as outras esperam. Está bom?
+3. Todas feitas: aviso e "Voltar ao hub". Está bom?
+
+**Para o código (quando aprovar):** o servidor já faz uma carta por sessão. Falta guardar quais cartas foram feitas no dia (para o verde) e devolver ao hub o resultado de cada uma. Proposta do agente, a confirmar: os erros de uma carta feita voltam como carta nova só no dia seguinte, para a carta verde não ser trocada na hora por outra com os mesmos erros.
 
 Regra da memória do projeto: o protótipo traz as decisões de fluxo; no código, o visual segue os componentes atuais do app.
 
@@ -185,7 +195,7 @@ Regra da memória do projeto: o protótipo traz as decisões de fluxo; no códig
 
 1. **Marcações `grave`:** revisão médica caso a caso no gabarito do Paciente DDX.
 2. **Carta do Paciente DDX:** implementar no motor depois das marcações.
-3. **Hub da Revisão:** prototipar, aprovar e corrigir a entrada.
+3. **Hub da Revisão:** protótipo v2 (modo foco) feito; faltam as três respostas em aberto acima para portar ao código.
 
 ## Experiência e decisões
 

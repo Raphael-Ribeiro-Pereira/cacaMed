@@ -9,11 +9,12 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!--
   Protótipo da Revisão Inteligente (docs/revisao-inteligente.md#protótipo-do-hub-da-revisão).
-  Serve para decidir o fluxo: hub com estatísticas, abertura das cartas em "furacão", leque de cartas (uma por modo),
-  escolha, bloco centralizado e expansão para o modo. Conteúdo das perguntas é fictício. Não é o design final.
+  Fluxo: hub com estatísticas → modo foco (some o entorno, ficam só as cartas, abertas em "furacão") → carta escolhida
+  com brilho → bloco centralizado que se expande no modo → ao terminar, volta ao modo foco com a carta feita em verde
+  e com um certinho, para escolher a próxima. Conteúdo das perguntas é fictício. Não é o design final.
 -->
 <style>
-:root{--canvas:#0b0f19;--surface:#111827;--elev:#1a2234;--line:rgba(220,226,247,.09);--line-strong:#2a3550;--text:#dce2f7;--muted:#8d9bb3;--mint:#00f5d4;--mint-ink:#00382f;--crimson:#ff3366;--violet:#b49cff;--ok:#06d6a0;--laranja:#ffb95f;--sans:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace;--ease:cubic-bezier(.16,1,.3,1);color-scheme:dark}
+:root{--canvas:#0b0f19;--surface:#111827;--elev:#1a2234;--line:rgba(220,226,247,.09);--line-strong:#2a3550;--text:#dce2f7;--muted:#8d9bb3;--mint:#00f5d4;--mint-ink:#00382f;--crimson:#ff3366;--violet:#b49cff;--ok:#06d6a0;--ambar:#ffb703;--laranja:#ffb95f;--sans:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace;--ease:cubic-bezier(.16,1,.3,1);color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:#05070d;color:var(--text);font:400 14px/1.45 var(--sans)}
 button{font:inherit;color:inherit;cursor:pointer}
@@ -51,29 +52,39 @@ svg{display:block}
 .barra-nivel span{height:8px;border-radius:99px;background:var(--elev);overflow:hidden}
 .barra-nivel i{display:block;height:100%;width:62%;background:linear-gradient(90deg,var(--violet),var(--mint))}
 .mesa{display:grid;gap:12px}
-
-/* Mesa das cartas */
 .stage{position:relative;height:460px;border-radius:24px;border:1px solid var(--line);background:var(--surface);overflow:hidden;--cw:132px;--ch:188px}
 @container (max-width:600px){.stage{height:390px;--cw:96px;--ch:136px}}
-.stage::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgba(220,226,247,.10) 1px,transparent 1px);background-size:22px 22px;-webkit-mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 45%,transparent 100%);mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 45%,transparent 100%)}
-#vortex{position:absolute;left:50%;top:50%;width:min(90%,560px);aspect-ratio:1;translate:-50% -50%;border-radius:50%;pointer-events:none;opacity:0;filter:blur(16px);background:conic-gradient(from 0deg,transparent,rgba(180,156,255,.55),transparent 22%,rgba(0,245,212,.45),transparent 48%,rgba(255,143,163,.4),transparent 72%,rgba(124,196,255,.4),transparent);-webkit-mask-image:radial-gradient(circle,transparent 16%,#000 38%,transparent 70%);mask-image:radial-gradient(circle,transparent 16%,#000 38%,transparent 70%)}
-.rotulo-deck{position:absolute;left:0;right:0;top:calc(50% + var(--ch) / 2 + 18px);text-align:center;font:700 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);transition:opacity .3s;pointer-events:none}
-.stage.aberto .rotulo-deck{opacity:0}
-.dica{position:absolute;left:50%;bottom:12px;translate:-50% 0;z-index:70;display:flex;align-items:center;gap:8px;white-space:nowrap;padding:6px 12px;border-radius:99px;background:rgba(26,34,52,.85);backdrop-filter:blur(8px);border:1px solid var(--line-strong);font-size:12px;color:var(--muted);opacity:0;transition:opacity .3s;pointer-events:none}
-.dica::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--mint)}
-.stage.aberto .dica{opacity:1}
+.stage::before,.foco-fundo::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgba(220,226,247,.10) 1px,transparent 1px);background-size:22px 22px;-webkit-mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 45%,transparent 100%);mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 45%,transparent 100%)}
+.rotulo-deck{position:absolute;left:0;right:0;top:calc(50% + var(--ch) / 2 + 18px);text-align:center;font:700 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);pointer-events:none}
+
+/* Modo foco: só as cartas */
+#foco{position:absolute;inset:0;z-index:80;overflow:hidden;--cw:116px;--ch:166px}
+#foco[hidden]{display:none}
+@container (min-width:600px){#foco{--cw:150px;--ch:214px}}
+@container (min-width:1100px){#foco{--cw:172px;--ch:244px}}
+.foco-fundo{position:absolute;inset:0;opacity:0;background:radial-gradient(ellipse 70% 55% at 50% 50%,rgba(180,156,255,.10),transparent 70%),var(--canvas)}
+.vortex{position:absolute;left:50%;top:50%;width:min(92%,620px);aspect-ratio:1;translate:-50% -50%;border-radius:50%;pointer-events:none;opacity:0;filter:blur(16px);background:conic-gradient(from 0deg,transparent,rgba(180,156,255,.55),transparent 22%,rgba(0,245,212,.45),transparent 48%,rgba(255,143,163,.4),transparent 72%,rgba(124,196,255,.4),transparent);-webkit-mask-image:radial-gradient(circle,transparent 16%,#000 38%,transparent 70%);mask-image:radial-gradient(circle,transparent 16%,#000 38%,transparent 70%)}
+.foco-sair{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;z-index:75;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line-strong);background:rgba(17,24,39,.6);color:var(--muted);opacity:0;pointer-events:none;transition:opacity .3s}
+.foco-sair svg{width:18px;height:18px}
+#foco.aberto .foco-sair{opacity:1;pointer-events:auto}
+.foco-dica{position:absolute;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));translate:-50% 0;z-index:75;display:flex;align-items:center;gap:8px;white-space:nowrap;padding:6px 12px;border-radius:99px;background:rgba(26,34,52,.8);backdrop-filter:blur(8px);border:1px solid var(--line-strong);font-size:12px;color:var(--muted);opacity:0;transition:opacity .5s;pointer-events:none}
+.foco-dica::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--mint)}
+.foco-dica.on{opacity:1}
+.foco-fim{position:absolute;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));translate:-50% 0;z-index:75;display:grid;justify-items:center;gap:10px;text-align:center;width:min(360px,calc(100% - 32px))}
+.foco-fim[hidden]{display:none}
+.foco-fim b{font-size:15px}
+.foco-fim .kicker{color:var(--ok)}
 
 /* Carta */
 .carta{position:absolute;left:50%;top:50%;width:var(--cw);height:var(--ch);margin:calc(var(--ch) / -2) 0 0 calc(var(--cw) / -2);border:0;padding:0;background:none;-webkit-tap-highlight-color:transparent;will-change:transform}
 .carta:focus-visible{outline:none}
 .carta:focus-visible .frente{outline:2px solid var(--mint);outline-offset:3px}
-.stage.aberto .carta:not(.espera):hover{z-index:60!important}
+#foco.aberto .carta:not(.espera):hover{z-index:60!important}
 .corpo{position:absolute;inset:0;display:block;perspective:900px;transition:transform .35s var(--ease)}
-.stage.aberto .carta:not(.espera):hover .corpo,.stage.aberto .carta:focus-visible .corpo{transform:translateY(-16px) rotate(calc(var(--r, 0deg) * -1)) scale(1.08)}
-.stage.aberto .carta.sel .corpo{transform:translateY(-28px)}
+#foco.aberto .carta:not(.espera):hover .corpo,#foco.aberto .carta:focus-visible .corpo{transform:translateY(-16px) rotate(calc(var(--r, 0deg) * -1)) scale(1.08)}
 .flip{position:absolute;inset:0;display:block;transform-style:preserve-3d;transform:rotateY(180deg)}
 .face{position:absolute;inset:0;display:block;border-radius:14px;-webkit-backface-visibility:hidden;backface-visibility:hidden;overflow:hidden;text-align:left}
-.frente{background:linear-gradient(165deg,color-mix(in srgb,var(--c) 18%,#1a2234),#111827 62%);border:1px solid color-mix(in srgb,var(--c) 50%,transparent);box-shadow:0 14px 30px rgba(0,0,0,.45);color:var(--text);transition:box-shadow .3s}
+.frente{background:linear-gradient(165deg,color-mix(in srgb,var(--c) 18%,#1a2234),#111827 62%);border:1px solid color-mix(in srgb,var(--c) 50%,transparent);box-shadow:0 14px 30px rgba(0,0,0,.45);color:var(--text);transition:box-shadow .35s,border-color .35s}
 .verso{transform:rotateY(180deg);display:grid;place-items:center;background:radial-gradient(circle at 50% 50%,rgba(180,156,255,.22),transparent 60%),repeating-linear-gradient(45deg,rgba(180,156,255,.10) 0 6px,transparent 6px 12px),#141b2d;border:1px solid rgba(180,156,255,.45);box-shadow:0 14px 30px rgba(0,0,0,.45)}
 .emblema{display:grid;place-items:center;width:64%;aspect-ratio:1;border-radius:50%;border:1px solid rgba(180,156,255,.5);background:#0f1526;font:800 calc(var(--cw) * .12)/1 var(--sans);letter-spacing:-.02em}
 .emblema b{color:var(--mint)}
@@ -88,20 +99,31 @@ svg{display:block}
 .miolo small svg{width:1.1em;height:1.1em}
 .miolo em{font-style:normal;font-size:calc(var(--cw) * .075);color:var(--muted);opacity:.85}
 @container (max-width:600px){.miolo em{display:none}}
-.selo{position:absolute;top:9px;right:9px;font:800 calc(var(--cw) * .065)/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:3px 5px;border-radius:5px;background:var(--c);color:#0b0f19}
-.marca{position:absolute;bottom:9px;left:9px;width:22px;height:22px;border-radius:50%;background:var(--c);color:#0b0f19;display:none;place-items:center}
-.marca svg{width:14px;height:14px}
-.carta.sel .marca{display:grid}
-.carta.sel .frente{box-shadow:0 0 0 2px var(--c),0 0 32px color-mix(in srgb,var(--c) 45%,transparent)}
+.selo,.pausa{position:absolute;top:9px;right:9px;font:800 calc(var(--cw) * .065)/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:3px 5px;border-radius:5px;background:var(--c);color:#0b0f19}
+.pausa{display:none;background:var(--ambar)}
+.carta.pausada .pausa{display:block}
+.carta.pausada .selo,.carta.feita .selo{display:none}
 .carta.espera .frente{filter:grayscale(.65) brightness(.62)}
 .carta.espera{cursor:default}
+/* Brilho discreto ao escolher */
+.carta.brilho .frente{box-shadow:0 0 0 1.5px var(--c),0 0 26px color-mix(in srgb,var(--c) 50%,transparent),0 14px 30px rgba(0,0,0,.45)}
+/* Carta feita: verde com um certinho */
+.carta.feita .frente{border-color:var(--ok);box-shadow:0 0 0 1px color-mix(in srgb,var(--ok) 60%,transparent),0 0 22px rgba(6,214,160,.22),0 14px 30px rgba(0,0,0,.45)}
+.carta.feita .frente::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(160deg,rgba(6,214,160,.24),rgba(6,214,160,.05) 70%)}
+.carta.feita .miolo small{color:var(--ok)}
+/* No leque, cada carta cobre a ponta direita da anterior: o certinho e o "Em andamento" ficam à esquerda, sempre à mostra. */
+.carta.feita .canto:not(.inv),.carta.pausada .canto:not(.inv){visibility:hidden}
+.carta.pausada .pausa{left:9px;right:auto}
+.feito{position:absolute;top:8px;left:8px;z-index:2;width:calc(var(--cw) * .2);height:calc(var(--cw) * .2);min-width:22px;min-height:22px;border-radius:50%;background:var(--ok);color:#03251b;display:none;place-items:center;box-shadow:0 0 14px rgba(6,214,160,.6)}
+.feito svg{width:62%;height:62%;stroke-width:3}
+.carta.feita .feito{display:grid}
 .trava{position:absolute;inset:0;z-index:70;display:grid;place-content:center;justify-items:center;gap:6px;background:rgba(11,15,25,.45);backdrop-filter:blur(2px)}
 .trava svg{width:30px;height:30px;color:var(--violet)}
 .trava b{font:800 16px var(--mono)}
 .trava small{color:var(--muted)}
 .vazio{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;color:var(--muted)}
 .fantasmas{position:relative;width:calc(var(--cw) * 2);height:var(--ch)}
-.fantasma{position:absolute;left:50%;top:0;width:var(--cw);height:var(--ch);margin-left:calc(var(--cw) / -2);border-radius:14px;border:1.5px dashed var(--line-strong);rotate:calc((var(--i) - 1) * 12deg);translate:calc((var(--i) - 1) * 40px) calc(var(--i) * 0px)}
+.fantasma{position:absolute;left:50%;top:0;width:var(--cw);height:var(--ch);margin-left:calc(var(--cw) / -2);border-radius:14px;border:1.5px dashed var(--line-strong);rotate:calc((var(--i) - 1) * 12deg);translate:calc((var(--i) - 1) * 40px) 0}
 
 /* Botões */
 .acoes{display:grid;gap:8px}
@@ -113,7 +135,7 @@ svg{display:block}
 .link{background:none;border:0;color:var(--violet);font-weight:600;padding:8px 4px;text-decoration:underline;text-underline-offset:3px}
 .atalhos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
-/* Expansão para o modo */
+/* Expansão para o modo (e o caminho de volta) */
 #expansor{position:absolute;z-index:90;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--c) 34%,#1a2234),#0b0f19 75%);border:1px solid color-mix(in srgb,var(--c) 50%,transparent)}
 #expansor[hidden]{display:none}
 .ex-rotulo{display:grid;justify-items:center;gap:8px;text-align:center;color:var(--c);padding:0 24px}
@@ -122,8 +144,6 @@ svg{display:block}
 .ex-rotulo small{color:var(--muted);font:700 11px var(--mono);letter-spacing:.12em;text-transform:uppercase}
 
 /* Sessão */
-.chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 10px}
-.chip{font:700 11px var(--mono);padding:4px 9px;border-radius:99px;border:1px solid color-mix(in srgb,var(--c) 50%,transparent);color:var(--c)}
 .progresso{height:4px;margin:0 16px;border-radius:99px;background:var(--elev);overflow:hidden;flex:none}
 .progresso i{display:block;height:100%;background:var(--c);transition:width .4s var(--ease)}
 .sessao-corpo{flex:1;padding:20px 16px 24px;max-width:720px;width:100%;margin:0 auto;display:grid;align-content:start;gap:12px}
@@ -158,7 +178,7 @@ svg{display:block}
 .ia{padding:10px;border-radius:10px;background:color-mix(in srgb,var(--violet) 10%,transparent);color:var(--text)!important;margin-top:4px!important}
 .ia small{display:block;color:var(--muted);margin-top:4px}
 
-#toast{position:absolute;left:50%;bottom:24px;translate:-50% 0;z-index:95;max-width:calc(100% - 32px);padding:10px 14px;border-radius:12px;background:var(--elev);border:1px solid var(--line-strong);font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none}
+#toast{position:absolute;left:50%;bottom:72px;translate:-50% 0;z-index:95;max-width:calc(100% - 32px);padding:10px 14px;border-radius:12px;background:var(--elev);border:1px solid var(--line-strong);font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none}
 #toast.on{opacity:1}
 
 /* Painel do protótipo (fora do app) */
@@ -184,6 +204,12 @@ svg{display:block}
     <section class="view" id="hub" aria-label="Revisão inteligente"></section>
     <section class="view" id="sessao" hidden aria-label="Sessão de revisão"></section>
     <section class="view" id="relatorio" hidden aria-label="Resultado da revisão"></section>
+    <div id="foco" hidden role="dialog" aria-label="Cartas da revisão">
+      <div class="foco-fundo"></div><div class="vortex"></div>
+      <button class="foco-sair" id="foco-sair" aria-label="Sair das cartas"></button>
+      <div class="foco-dica" id="foco-dica"></div>
+      <div class="foco-fim" id="foco-fim" hidden></div>
+    </div>
     <div id="expansor" hidden></div>
     <div id="toast" role="status" aria-live="polite"></div>
   </div>
@@ -195,10 +221,10 @@ svg{display:block}
     <h2>Protótipo · Revisão inteligente</h2>
     <p>Conteúdo fictício. Troque as opções para ver cada caso.</p>
     <div class="grupo"><p>Situação do jogador</p><div class="seg" data-chave="estado">
-      <button data-valor="normal">Com cartas</button><button data-valor="andamento">Sessão em andamento</button><button data-valor="emdia">Em dia</button><button data-valor="vazio">Sem erros</button><button data-valor="bloqueado">Abaixo do nível 10</button>
+      <button data-valor="normal">Com cartas</button><button data-valor="andamento">Carta em andamento</button><button data-valor="emdia">Em dia</button><button data-valor="vazio">Sem erros</button><button data-valor="bloqueado">Abaixo do nível 10</button>
     </div></div>
-    <div class="grupo"><p>Escolha das cartas</p><div class="seg" data-chave="escolha">
-      <button data-valor="uma">Uma carta por sessão</button><button data-valor="varias">Várias cartas juntas</button>
+    <div class="grupo"><p>Ao terminar uma carta</p><div class="seg" data-chave="aoTerminar">
+      <button data-valor="cartas">Volta direto às cartas</button><button data-valor="resultado">Mostra o resultado antes</button>
     </div></div>
     <div class="grupo"><p>Abertura</p><div class="seg" data-chave="abertura">
       <button data-valor="furacao">Furacão</button><button data-valor="simples">Leque simples</button>
@@ -207,12 +233,9 @@ svg{display:block}
       <button data-valor="cheia">Tela cheia</button><button data-valor="celular">Celular</button>
     </div></div>
     <div class="grupo"><p>O que decidir</p><ol class="decisoes">
-      <li><b>Uma carta ou várias?</b> Hoje o servidor faz uma carta por sessão. "Várias cartas juntas" mistura os modos numa sessão só.</li>
-      <li><b>A abertura em furacão</b> é a animação que você imaginou?</li>
-      <li><b>Cartas em espera</b> aparecem no leque, apagadas e com o horário, ou ficam de fora?</li>
-      <li><b>As quatro estatísticas</b> do hub são essas?</li>
-      <li><b>"Ver última revisão"</b> como link no hub está bom?</li>
-      <li><b>Carta do Paciente DDX:</b> nome e cor estão bons?</li>
+      <li><b>Ao terminar uma carta:</b> voltar direto às cartas (o resultado com a explicação da IA abre ao tocar na carta verde) ou ver o resultado antes?</li>
+      <li><b>Sair no meio de uma carta:</b> ela fica "Em andamento" e as outras esperam ela terminar (é a regra do servidor hoje). Está bom?</li>
+      <li><b>Todas feitas:</b> aparece "Revisão de hoje concluída" com o botão de voltar ao hub. Está bom?</li>
     </ol></div>
   </div>
 </div>
@@ -232,8 +255,7 @@ const I = {
   check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
   x: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
   seta: svg('<path d="M5 12h14M13 6l6 6-6 6"/>'),
-  ajuste: svg('<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>'),
-  brilho: svg('<path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9z"/>'),
+  ajuste: svg('<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>'),
 };
 
 const MODOS = {
@@ -245,7 +267,7 @@ const MODOS = {
 // Perguntas fictícias, só para o fluxo da sessão.
 const ITENS = {
   q1: { modo: 'quiz', tema: 'Farmacologia', enunciado: 'Qual é o tratamento de primeira linha na anafilaxia?', opcoes: ['Adrenalina intramuscular', 'Anti-histamínico intravenoso', 'Corticoide intravenoso', 'Salbutamol inalatório'], certa: 0, explica: 'A adrenalina intramuscular é o tratamento inicial; anti-histamínico e corticoide são adjuvantes.' },
-  q2: { modo: 'quiz', tema: 'Clínica médica', parecida: true, enunciado: 'Na anafilaxia que não responde a doses repetidas de adrenalina intramuscular, o próximo passo é:', opcoes: ['Adrenalina em infusão intravenosa', 'Dobrar a dose do anti-histamínico', 'Aguardar o efeito do corticoide', 'Alta com observação em casa'], certa: 0, explica: 'Na anafilaxia refratária, a adrenalina passa a ser dada em infusão intravenosa, com monitorização.' },
+  q2: { modo: 'quiz', tema: 'Clínica médica · parecida', enunciado: 'Na anafilaxia que não responde a doses repetidas de adrenalina intramuscular, o próximo passo é:', opcoes: ['Adrenalina em infusão intravenosa', 'Dobrar a dose do anti-histamínico', 'Aguardar o efeito do corticoide', 'Alta com observação em casa'], certa: 0, explica: 'Na anafilaxia refratária, a adrenalina passa a ser dada em infusão intravenosa, com monitorização.' },
   q4: { modo: 'quiz', tema: 'Farmacologia', enunciado: 'Qual antídoto reverte a intoxicação por benzodiazepínicos?', opcoes: ['Flumazenil', 'Naloxona', 'Atropina', 'N-acetilcisteína'], certa: 0, explica: 'O flumazenil é o antagonista dos receptores de benzodiazepínicos.' },
   q3: { modo: 'quiz', tema: 'Microbiologia', enunciado: 'Qual é o agente mais comum da pneumonia adquirida na comunidade em adultos?', opcoes: ['Streptococcus pneumoniae', 'Staphylococcus aureus', 'Pseudomonas aeruginosa', 'Klebsiella pneumoniae'], certa: 0, explica: 'O pneumococo segue como o agente mais frequente da pneumonia comunitária.' },
   v1: { modo: 'vm', tema: 'Fisiologia', enunciado: '“A heparina não fracionada é monitorada pelo TTPa.”', opcoes: ['Verdadeira', 'Falsa'], certa: 0, explica: 'Verdadeira: o TTPa acompanha o efeito da heparina não fracionada.' },
@@ -262,34 +284,39 @@ const CARTAS = [
 ];
 const ESPERAS = ['amanhã, 09:00', 'amanhã, 14:30', 'qui., 22/10', 'sex., 23/10', 'sáb., 24/10'];
 
-const S = { estado: 'normal', escolha: 'uma', abertura: 'furacao', tela: 'cheia', fase: 'hub', animando: false, sel: new Set(), sessao: null, andamento: null, ultimo: null, rel: null };
-try { const g = JSON.parse(localStorage.getItem('prototipo-revisao-hub') || '{}'); for (const k of ['estado', 'escolha', 'abertura', 'tela']) if (g[k]) S[k] = g[k]; } catch { /* sem armazenamento */ }
-const guardar = () => { try { localStorage.setItem('prototipo-revisao-hub', JSON.stringify({ estado: S.estado, escolha: S.escolha, abertura: S.abertura, tela: S.tela })); } catch { /* sem armazenamento */ } };
+const S = { estado: 'normal', aoTerminar: 'cartas', abertura: 'furacao', tela: 'cheia', fase: 'hub', animando: false, sessao: null, pausada: null, feitas: new Map(), ultimo: null, rel: null, relOrigem: 'hub' };
+try { const g = JSON.parse(localStorage.getItem('prototipo-revisao-hub') || '{}'); for (const k of ['estado', 'aoTerminar', 'abertura', 'tela']) if (g[k]) S[k] = g[k]; } catch { /* sem armazenamento */ }
+const guardar = () => { try { localStorage.setItem('prototipo-revisao-hub', JSON.stringify({ estado: S.estado, aoTerminar: S.aoTerminar, abertura: S.abertura, tela: S.tela })); } catch { /* sem armazenamento */ } };
 S.ultimo = { titulo: 'Última revisão · ontem', acertos: 2, total: 5, dominados: 0, quando: 'ontem', erros: [{ it: ITENS.q1, escolha: 1 }, { it: ITENS.v2, escolha: 0 }, { it: ITENS.e1, escolha: 1 }] };
 
-// ---------- Utilidades de animação ----------
+// ---------- Animação ----------
 const pausa = ms => new Promise(r => setTimeout(r, ms));
-function mover(el, frames, opcoes) {
-  const a = el.animate(frames, { fill: 'forwards', ...opcoes });
-  return a.finished.then(() => { const { offset, easing, ...fim } = frames[frames.length - 1]; Object.assign(el.style, fim); a.cancel(); }).catch(() => {});
+function mover(el, quadros, opcoes) {
+  const a = el.animate(quadros, { fill: 'forwards', ...opcoes });
+  return a.finished.then(() => { const { offset, easing, ...fim } = quadros[quadros.length - 1]; Object.assign(el.style, fim); a.cancel(); }).catch(() => {});
 }
 const tf = p => `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) rotate(${p.r.toFixed(2)}deg) scale(${p.s})`;
-function medidas() {
-  const st = $('#stage'); const r = st.getBoundingClientRect(); const cs = getComputedStyle(st);
-  return { w: r.width, h: r.height, cw: parseFloat(cs.getPropertyValue('--cw')), ch: parseFloat(cs.getPropertyValue('--ch')) };
+function medidas(el) {
+  const cs = getComputedStyle(el);
+  return { w: el.clientWidth, h: el.clientHeight, cw: parseFloat(cs.getPropertyValue('--cw')), ch: parseFloat(cs.getPropertyValue('--ch')) };
+}
+// Centro de um elemento em relação ao centro do app (onde fica o centro do modo foco).
+function centroRelativo(el) {
+  const appEl = $('#app'); const a = appEl.getBoundingClientRect(); const r = el.getBoundingClientRect();
+  return { x: r.left + r.width / 2 - (a.left + appEl.clientLeft + appEl.clientWidth / 2), y: r.top + r.height / 2 - (a.top + appEl.clientTop + appEl.clientHeight / 2) };
 }
 const INCLINA = [-4, 3, -2, 5, -1, 2];
 const posDeck = (i, n) => ({ x: (i - (n - 1) / 2) * 1.2, y: -i * 1.6, r: INCLINA[i % INCLINA.length], s: 1 });
 function posLeque(i, n, m) {
   if (n === 1) return { x: 0, y: 0, r: 0, s: 1 };
   const abertura = Math.min(m.w < 600 ? 60 : 72, 18 * (n - 1)); const meia = abertura / 2 * Math.PI / 180;
-  // Meia largura da carta da ponta já inclinada, para ela não sair da mesa.
+  // Meia largura da carta da ponta já inclinada, para ela não sair da tela.
   const ponta = (m.cw * Math.cos(meia) + m.ch * Math.sin(meia)) / 2;
-  const R = Math.min(m.w < 600 ? 320 : 560, (m.w / 2 - ponta - 8) / Math.sin(meia));
+  const R = Math.min(m.w < 600 ? 320 : 640, (m.w / 2 - ponta - 8) / Math.sin(meia));
   const a = -abertura / 2 + i * abertura / (n - 1); const rad = a * Math.PI / 180; const queda = R * (1 - Math.cos(meia));
-  return { x: R * Math.sin(rad), y: R * (1 - Math.cos(rad)) - queda / 2 + 4, r: a, s: 1 };
+  return { x: R * Math.sin(rad), y: R * (1 - Math.cos(rad)) - queda / 2, r: a, s: 1 };
 }
-// "Furacão": a carta gira em espiral em volta do centro enquanto vai da posição de origem até o destino.
+// "Furacão": a carta gira em espiral em volta do centro enquanto vai da origem até o destino.
 function espiral(i, n, de, para, m, { voltas = 1.5, raio = .34 } = {}) {
   const K = 30, quadros = []; const Rw = Math.min(m.w, m.h) * raio; const f0 = (i / Math.max(n, 1)) * 360;
   for (let k = 0; k <= K; k++) {
@@ -302,20 +329,22 @@ function espiral(i, n, de, para, m, { voltas = 1.5, raio = .34 } = {}) {
   }
   return quadros;
 }
+const comFuracao = () => S.abertura === 'furacao' && !rm();
+function caminho(i, n, de, para, m, opcoes) { return comFuracao() ? espiral(i, n, de, para, m, opcoes) : [{ transform: tf(de) }, { transform: tf(para) }]; }
+function tempo(furacao, simples) { return rm() ? 1 : comFuracao() ? furacao : simples; }
 function virar(c, frente, atraso, dur) {
   if (c.frente === frente) return Promise.resolve();
   c.frente = frente;
-  const f = c.el.querySelector('.flip');
-  return mover(f, [{ transform: `rotateY(${frente ? 180 : 0}deg)` }, { transform: `rotateY(${frente ? 0 : 180}deg)` }], { duration: dur, delay: atraso, easing: 'cubic-bezier(.3,.7,.3,1)' });
+  return mover(c.el.querySelector('.flip'), [{ transform: `rotateY(${frente ? 180 : 0}deg)` }, { transform: `rotateY(${frente ? 0 : 180}deg)` }], { duration: dur, delay: atraso, easing: 'cubic-bezier(.3,.7,.3,1)' });
 }
 function vortex(sentido = 1) {
-  const v = $('#vortex'); if (!v || rm()) return;
-  v.animate([{ opacity: 0, transform: 'rotate(0deg) scale(.35)' }, { opacity: .95, offset: .35 }, { opacity: 0, transform: `rotate(${600 * sentido}deg) scale(1.35)` }], { duration: 1500, easing: 'cubic-bezier(.3,.6,.3,1)' });
+  if (!comFuracao()) return;
+  $('#foco .vortex').animate([{ opacity: 0, transform: 'rotate(0deg) scale(.35)' }, { opacity: .95, offset: .35 }, { opacity: 0, transform: `rotate(${600 * sentido}deg) scale(1.35)` }], { duration: 1500, easing: 'cubic-bezier(.3,.6,.3,1)' });
 }
 let tempoToast;
-function toast(texto) { const t = $('#toast'); t.textContent = texto; t.classList.add('on'); clearTimeout(tempoToast); tempoToast = setTimeout(() => t.classList.remove('on'), 2200); }
+function toast(texto) { const t = $('#toast'); t.textContent = texto; t.classList.add('on'); clearTimeout(tempoToast); tempoToast = setTimeout(() => t.classList.remove('on'), 2400); }
 
-// ---------- Hub ----------
+// ---------- Cartas ----------
 let cartas = [];
 function cartasDoEstado() {
   if (S.estado === 'vazio') return [];
@@ -324,47 +353,63 @@ function cartasDoEstado() {
   return CARTAS;
 }
 const unidade = c => c.erros === 1 ? c.un[0] : c.un[1];
+const todasFeitas = () => { const prontas = cartas.filter(c => !c.espera); return prontas.length > 0 && prontas.every(c => S.feitas.has(c.id)); };
 function htmlCarta(c) {
   const ic = I[c.modo];
   return `<span class="corpo"><span class="flip">
-    <span class="face frente"><span class="canto"><b>${c.erros}</b>${ic}</span>${c.nova ? '<span class="selo">nova</span>' : ''}
-      <span class="miolo"><span class="medalha">${ic}</span><strong>${c.titulo}</strong>
-        <small>${c.espera ? `${I.relogio} Volta ${c.espera}` : `${c.erros} ${unidade(c)} · ~${c.min} min`}</small><em>${c.temas}</em></span>
-      <span class="canto inv"><b>${c.erros}</b>${ic}</span><span class="marca">${I.check}</span></span>
+    <span class="face frente"><span class="canto"><b>${c.erros}</b>${ic}</span>${c.nova ? '<span class="selo">nova</span>' : ''}<span class="pausa">Em andamento</span><span class="feito">${I.check}</span>
+      <span class="miolo"><span class="medalha">${ic}</span><strong>${c.titulo}</strong><small></small><em>${c.temas}</em></span>
+      <span class="canto inv"><b>${c.erros}</b>${ic}</span></span>
     <span class="face verso"><span class="emblema"><span>caco<b>Med</b></span></span></span>
   </span></span>`;
 }
+// Feita (verde com certinho), em andamento ou em espera; `semFeita` adia o verde da carta que acabou de terminar.
+function aplicarEstadoCarta(c, { semFeita = false } = {}) {
+  const feita = !semFeita && S.feitas.get(c.id); const pausada = S.pausada?.id === c.id;
+  c.el.classList.toggle('feita', Boolean(feita)); c.el.classList.toggle('pausada', pausada);
+  c.el.querySelector('.miolo small').innerHTML = feita ? `${I.check} ${feita.acertos}/${feita.total} certas`
+    : pausada ? `Item ${S.pausada.sessao.idx + 1} de ${S.pausada.sessao.itens.length}`
+      : c.espera ? `${I.relogio} Volta ${c.espera}` : `${c.erros} ${unidade(c)} · ~${c.min} min`;
+  c.el.setAttribute('aria-label', `${c.titulo}: ${feita ? `feita hoje, ${feita.acertos} de ${feita.total} certas` : pausada ? 'em andamento' : c.espera ? `volta ${c.espera}` : `${c.erros} ${unidade(c)}, cerca de ${c.min} minutos`}`);
+}
 function montarCartas() {
+  document.querySelectorAll('.carta').forEach(e => e.remove());
   const st = $('#stage'); const lista = cartasDoEstado(); const n = lista.length;
   cartas = lista.map((c, i) => {
     const el = document.createElement('button');
     el.type = 'button'; el.className = 'carta' + (c.espera ? ' espera' : ''); el.tabIndex = -1;
     el.style.setProperty('--c', MODOS[c.modo].cor); el.style.zIndex = i + 1;
-    el.setAttribute('aria-label', `${c.titulo}: ${c.espera ? `volta ${c.espera}` : `${c.erros} ${unidade(c)}, cerca de ${c.min} minutos`}`);
     el.innerHTML = htmlCarta(c);
     const obj = { ...c, el, pos: posDeck(i, n), frente: false };
+    aplicarEstadoCarta(obj);
     el.style.transform = tf(obj.pos);
     el.addEventListener('click', () => clicarCarta(obj));
     st.appendChild(el);
     return obj;
   });
 }
+
+// ---------- Hub ----------
 function renderHub() {
-  if (S.estado === 'andamento' && !S.andamento) S.andamento = sessaoDeExemplo();
-  S.fase = 'hub'; S.sel.clear();
+  if (S.estado === 'andamento' && !S.pausada) S.pausada = pausadaDeExemplo();
+  S.fase = 'hub';
   const e = S.estado; const lista = cartasDoEstado(); const prontas = lista.filter(c => !c.espera);
-  const itens = prontas.reduce((s, c) => s + c.erros, 0);
+  const restantes = prontas.filter(c => !S.feitas.has(c.id)); const itens = restantes.reduce((s, c) => s + c.erros, 0);
+  const concluida = e === 'normal' && prontas.length > 0 && !restantes.length;
+  const feitas = [...S.feitas.values()];
   const textos = {
-    normal: { k: `${prontas.length} cartas prontas`, h: 'Comece sua revisão', s: S.escolha === 'uma' ? 'Cada carta junta até 7 erros de um modo. Escolha uma para começar.' : 'Cada carta junta até 7 erros de um modo. Escolha uma ou mais e jogue tudo numa sessão só.' },
-    andamento: { k: 'Sessão em andamento', h: 'Continue de onde parou', s: S.andamento ? `${S.andamento.cartas.map(c => c.titulo).join(' + ')} · item ${S.andamento.idx + 1} de ${S.andamento.itens.length}` : '' },
+    normal: concluida ? { k: 'Revisão de hoje concluída', h: 'Tudo revisado por hoje', s: `Você fez as ${prontas.length} cartas. Os itens voltam nos intervalos programados.` }
+      : { k: `${restantes.length} ${restantes.length === 1 ? 'carta pronta' : 'cartas prontas'}`, h: S.feitas.size ? 'Continue sua revisão' : 'Comece sua revisão', s: 'Cada carta junta até 7 erros de um modo. Faça uma de cada vez, na ordem que quiser.' },
+    andamento: { k: 'Carta em andamento', h: 'Continue de onde parou', s: S.pausada ? `${S.pausada.titulo} · item ${S.pausada.sessao.idx + 1} de ${S.pausada.sessao.itens.length}` : '' },
     emdia: { k: 'Revisão em dia', h: 'Nada para rever agora', s: 'A próxima carta volta amanhã, às 09:00. Cada acerto espaça o item: 1, 3 e 7 dias.' },
     vazio: { k: 'Seu aprendizado começa nos jogos', h: 'Ainda sem erros para rever', s: 'Jogue Quiz, Verdade ou mentira, Erro médico ou um caso do Plantão. Cada erro vira uma carta aqui.' },
     bloqueado: { k: 'Libera no nível 10', h: 'Revisão bloqueada', s: 'Você está no nível 7. Seus erros já estão sendo guardados: 12 esperando por você.' },
   }[e];
   const stats = e === 'vazio' || e === 'bloqueado'
     ? [['0', 'itens revisados'], ['—', 'de acerto'], ['0', 'dominados'], [e === 'bloqueado' ? '12' : '0', 'erros guardados']]
-    : [[e === 'emdia' ? '0' : String(itens), 'itens na fila hoje'], ['42', 'itens revisados'], ['64%', 'de acerto na Revisão'], ['4', 'dominados · +160 XP']];
-  const rotulo = { normal: `${itens} itens em ${prontas.length} cartas`, andamento: 'Sessão aberta', emdia: `${lista.length} cartas em espera`, bloqueado: '', vazio: '' }[e];
+    : [[e === 'emdia' ? '0' : String(itens), 'itens na fila hoje'], [String(42 + feitas.reduce((s, r) => s + r.total, 0)), 'itens revisados'], ['64%', 'de acerto na Revisão'],
+      [String(4 + feitas.reduce((s, r) => s + r.dominados, 0)), `dominados · +${(4 + feitas.reduce((s, r) => s + r.dominados, 0)) * 40} XP`]];
+  const rotulo = { normal: concluida ? 'Todas feitas hoje' : `${itens} itens em ${restantes.length} cartas`, andamento: 'Carta em andamento', emdia: `${lista.length} cartas em espera`, bloqueado: '', vazio: '' }[e];
   $('#hub').innerHTML = `
     <header class="topo"><button class="icone-btn" id="menu" aria-label="Voltar ao menu">${I.voltar}</button>
       <h1><small>Aprenda com seus erros</small>Revisão inteligente</h1><span class="nivel">NV ${e === 'bloqueado' ? 7 : 12}</span></header>
@@ -373,184 +418,203 @@ function renderHub() {
         ${e === 'bloqueado' ? '<div class="barra-nivel"><span><i></i></span>NÍVEL 7 · 62% ATÉ O 8</div>' : ''}
         <div class="stats">${stats.map(([v, t]) => `<div class="stat"><b>${v}</b><span>${t}</span></div>`).join('')}</div></section>
       <section class="mesa">
-        <div class="stage" id="stage"><div id="vortex"></div>
+        <div class="stage" id="stage">
           ${e === 'vazio' ? `<div class="vazio"><div class="fantasmas">${[0, 1, 2].map(i => `<span class="fantasma" style="--i:${i}"></span>`).join('')}</div><span>Seus erros viram cartas</span></div>` : ''}
           ${e === 'bloqueado' ? `<div class="trava">${I.cadeado}<b>NÍVEL 10</b><small>Faltam 3 níveis</small></div>` : ''}
-          <div class="rotulo-deck">${rotulo}</div><div class="dica" id="dica"></div></div>
+          <div class="rotulo-deck">${rotulo}</div></div>
         <div class="acoes" id="acoes"></div>
       </section>
     </div>`;
-  montarCartas(); atualizarAcoes();
-}
-function atualizarAcoes() {
-  const a = $('#acoes'); if (!a) return;
-  const e = S.estado; const leque = S.fase === 'leque';
+  montarCartas();
   const ultima = S.ultimo ? `<button class="link" id="ultima">Ver última revisão · ${S.ultimo.acertos}/${S.ultimo.total} certas · ${S.ultimo.quando}</button>` : '';
-  let h = '';
-  if (e === 'normal') {
-    if (!leque) h = `<button class="primario" id="abrir">Começar revisão ${I.seta}</button>${ultima}`;
-    else if (S.escolha === 'uma') h = '<button class="secundario" id="recolher">Recolher cartas</button>';
-    else {
-      const sel = cartas.filter(c => S.sel.has(c.id));
-      h = `<button class="primario" id="varias" ${sel.length ? '' : 'disabled'}>${sel.length ? `Começar com ${sel.length} ${sel.length === 1 ? 'carta' : 'cartas'}` : 'Escolha as cartas'} ${I.seta}</button><button class="secundario" id="recolher">Recolher cartas</button>`;
-    }
-  } else if (e === 'andamento') h = `<button class="primario" id="continuar">Continuar sessão ${I.seta}</button><button class="link" id="encerrar">Encerrar agora e ver o resultado</button>`;
-  else if (e === 'emdia') h = leque ? '<button class="secundario" id="recolher">Recolher cartas</button>' : `<button class="primario" disabled>Revisão em dia</button><button class="link" id="abrir">Ver as cartas em espera</button>${ultima}`;
-  else if (e === 'vazio') h = `<div class="atalhos">${['Quiz', 'Verdade ou mentira', 'Erro médico', 'Plantão'].map(x => `<button class="secundario" data-jogar="${x}">Jogar ${x}</button>`).join('')}</div>`;
-  else h = `<button class="primario" disabled>${I.cadeado} Libera no nível 10</button>`;
-  a.innerHTML = h;
-  const dica = $('#dica');
-  if (dica) dica.textContent = e === 'emdia' ? 'Estas cartas voltam nos horários marcados' : S.escolha === 'uma' ? 'Toque numa carta para começar' : 'Toque para escolher · toque de novo para tirar';
+  $('#acoes').innerHTML = e === 'normal' ? (concluida ? `<button class="secundario" id="abrir">Ver as cartas de hoje</button>${ultima}` : `<button class="primario" id="abrir">${S.feitas.size ? 'Continuar revisão' : 'Começar revisão'} ${I.seta}</button>${ultima}`)
+    : e === 'andamento' ? `<button class="primario" id="continuar">Continuar ${S.pausada?.titulo || ''} ${I.seta}</button><button class="link" id="encerrar">Encerrar agora e ver o resultado</button>`
+      : e === 'emdia' ? `<button class="primario" disabled>Revisão em dia</button><button class="link" id="abrir">Ver as cartas em espera</button>${ultima}`
+        : e === 'vazio' ? `<div class="atalhos">${['Quiz', 'Verdade ou mentira', 'Erro médico', 'Plantão'].map(x => `<button class="secundario" data-jogar="${x}">Jogar ${x}</button>`).join('')}</div>`
+          : `<button class="primario" disabled>${I.cadeado} Libera no nível 10</button>`;
 }
-document.addEventListener('click', ev => {
-  const b = ev.target.closest('button'); if (!b) return;
-  if (b.dataset.jogar) return toast(`No app, abre o ${b.dataset.jogar}.`);
-  const acoes = {
-    abrir: abrirLeque, recolher, varias: comecarVarias, continuar, encerrar: () => finalizar(S.andamento),
-    ultima: () => abrirRelatorio(S.ultimo), menu: () => toast('No app, volta ao menu.'),
-    sair: sairSessao, proxima, 'rel-hub': voltarAoHub, 'rel-voltar': voltarAoHub,
-  };
-  if (acoes[b.id]) acoes[b.id]();
-  if (b.dataset.k !== undefined) responder(Number(b.dataset.k));
-});
 
-// ---------- Leque ----------
-function clicarCarta(c) {
-  if (S.animando) return;
-  if (S.estado === 'bloqueado') return toast('A Revisão libera no nível 10.');
-  if (S.fase !== 'leque') return S.estado === 'andamento' ? continuar() : abrirLeque();
-  if (c.espera) return toast(`${c.titulo} volta ${c.espera}.`);
-  if (S.escolha === 'uma') return escolherUma(c);
-  if (S.sel.has(c.id)) S.sel.delete(c.id); else S.sel.add(c.id);
-  c.el.classList.toggle('sel', S.sel.has(c.id)); c.el.setAttribute('aria-pressed', String(S.sel.has(c.id)));
-  atualizarAcoes();
+// ---------- Modo foco ----------
+let tempoDica;
+function mostrarDica() {
+  const d = $('#foco-dica'); clearTimeout(tempoDica);
+  if (todasFeitas()) { d.classList.remove('on'); return; }
+  d.textContent = S.estado === 'emdia' ? 'Estas cartas voltam nos horários marcados' : S.pausada ? `Toque em ${S.pausada.titulo} para continuar` : S.feitas.size ? 'Escolha a próxima carta' : 'Toque numa carta para começar';
+  d.classList.add('on'); tempoDica = setTimeout(() => d.classList.remove('on'), 3500);
 }
+function mostrarFim() {
+  const feitas = [...S.feitas.values()]; const fim = $('#foco-fim');
+  fim.innerHTML = `<p class="kicker">Revisão de hoje concluída</p><b>${feitas.length} cartas feitas · ${feitas.reduce((s, r) => s + r.acertos, 0)}/${feitas.reduce((s, r) => s + r.total, 0)} certas</b><button class="primario" id="foco-hub">Voltar ao hub ${I.seta}</button>`;
+  fim.hidden = false;
+  if (!rm()) fim.animate([{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.16,1,.3,1)' });
+}
+// Abre o leque no modo foco, a partir de onde as cartas estiverem.
 async function abrirLeque() {
-  if (S.animando || !cartas.length || S.estado === 'bloqueado' || S.estado === 'andamento') return;
-  S.animando = true; S.fase = 'leque'; atualizarAcoes();
-  $('#stage').scrollIntoView({ block: 'nearest', behavior: rm() ? 'auto' : 'smooth' });
-  const m = medidas(); const n = cartas.length; const furacao = S.abertura === 'furacao' && !rm();
-  if (furacao) vortex(1);
+  const foco = $('#foco'); const m = medidas(foco); const n = cartas.length;
+  vortex(1);
   await Promise.all(cartas.map((c, i) => {
     const de = c.pos; const para = posLeque(i, n, m); c.pos = para;
-    const dur = rm() ? 1 : furacao ? 1250 : 520; const atraso = rm() ? 0 : furacao ? i * 80 : i * 45;
-    const quadros = furacao ? espiral(i, n, de, para, m) : [{ transform: tf(de) }, { transform: tf(para) }];
-    if (S.escolha === 'varias') c.el.setAttribute('aria-pressed', 'false');
-    return Promise.all([mover(c.el, quadros, { duration: dur, delay: atraso, easing: furacao ? 'linear' : 'cubic-bezier(.16,1,.3,1)' }),
-      virar(c, true, rm() ? 0 : atraso + dur * (furacao ? .7 : .35), rm() ? 1 : 340)]);
+    const dur = tempo(1250, 520); const atraso = rm() ? 0 : comFuracao() ? i * 80 : i * 45;
+    return Promise.all([mover(c.el, caminho(i, n, de, para, m), { duration: dur, delay: atraso, easing: comFuracao() ? 'linear' : 'cubic-bezier(.16,1,.3,1)' }),
+      virar(c, true, rm() ? 0 : atraso + dur * (comFuracao() ? .7 : .35), rm() ? 1 : 340)]);
   }));
-  $('#stage').classList.add('aberto');
+  foco.classList.add('aberto');
   cartas.forEach(c => { c.el.tabIndex = 0; c.el.style.setProperty('--r', `${c.pos.r}deg`); });
-  cartas.find(c => !c.espera)?.el.focus({ preventScroll: true });
+  (cartas.find(c => !c.espera && !S.feitas.has(c.id)) || cartas[0])?.el.focus({ preventScroll: true });
+  mostrarDica();
+}
+// Do hub para o foco: o entorno some e o baralho vai para o centro da tela abrindo em furacão.
+async function entrarFoco() {
+  if (S.animando || !cartas.length) return false;
+  if (S.estado === 'bloqueado') { toast('A Revisão libera no nível 10.'); return false; }
+  S.animando = true; S.fase = 'foco';
+  const foco = $('#foco'); const st = $('#stage');
+  foco.hidden = false; foco.classList.remove('aberto'); $('#foco-fim').hidden = true;
+  const off = centroRelativo(st); const k = medidas(st).cw / medidas(foco).cw; const n = cartas.length;
+  cartas.forEach((c, i) => { const d = posDeck(i, n); c.pos = { x: d.x * k + off.x, y: d.y * k + off.y, r: d.r, s: k }; c.el.style.transform = tf(c.pos); foco.appendChild(c.el); });
+  mover(foco.querySelector('.foco-fundo'), [{ opacity: 0 }, { opacity: 1 }], { duration: rm() ? 1 : 420, easing: 'ease-out' });
+  await abrirLeque();
+  if (todasFeitas()) mostrarFim();
   S.animando = false;
+  return true;
 }
-async function recolher() {
+// Do foco de volta ao hub: as cartas voltam em espiral para o baralho e o entorno reaparece.
+async function sairFoco() {
+  if (S.animando || S.fase !== 'foco') return;
+  S.animando = true;
+  const foco = $('#foco'); foco.classList.remove('aberto'); $('#foco-fim').hidden = true; $('#foco-dica').classList.remove('on');
+  const st = $('#stage'); const off = centroRelativo(st); const mF = medidas(foco); const k = medidas(st).cw / mF.cw; const n = cartas.length;
+  vortex(-1);
+  await Promise.all([
+    ...cartas.map((c, i) => {
+      const d = posDeck(i, n); const para = { x: d.x * k + off.x, y: d.y * k + off.y, r: d.r, s: k };
+      const quadros = caminho(i, n, c.pos, para, mF, { voltas: -1 }); c.pos = para; c.el.tabIndex = -1;
+      return Promise.all([mover(c.el, quadros, { duration: tempo(950, 420), delay: rm() ? 0 : (n - 1 - i) * 50, easing: comFuracao() ? 'linear' : 'cubic-bezier(.16,1,.3,1)' }), virar(c, false, 0, rm() ? 1 : 280)]);
+    }),
+    mover(foco.querySelector('.foco-fundo'), [{ opacity: 1 }, { opacity: 0 }], { duration: rm() ? 1 : 420, delay: rm() ? 0 : 520 }),
+  ]);
+  foco.hidden = true; S.animando = false;
+  if (S.pausada && S.estado === 'normal') { S.estado = 'andamento'; guardar(); sincronizarPainel(); }
+  mostrar('hub');
+}
+function clicarCarta(c) {
   if (S.animando) return;
-  S.animando = true; $('#stage').classList.remove('aberto'); S.sel.clear();
-  const m = medidas(); const n = cartas.length; const furacao = S.abertura === 'furacao' && !rm();
-  if (furacao) vortex(-1);
-  await Promise.all(cartas.map((c, i) => {
-    c.el.classList.remove('sel'); c.el.removeAttribute('aria-pressed'); c.el.tabIndex = -1;
-    const de = c.pos; const para = posDeck(i, n); c.pos = para;
-    const quadros = furacao ? espiral(i, n, de, para, m, { voltas: -1 }) : [{ transform: tf(de) }, { transform: tf(para) }];
-    return Promise.all([mover(c.el, quadros, { duration: rm() ? 1 : furacao ? 950 : 420, delay: rm() ? 0 : (n - 1 - i) * 50, easing: furacao ? 'linear' : 'cubic-bezier(.16,1,.3,1)' }),
-      virar(c, false, 0, rm() ? 1 : 280)]);
-  }));
-  S.fase = 'hub'; S.animando = false; atualizarAcoes(); $('#abrir')?.focus({ preventScroll: true });
+  if (S.fase !== 'foco') return S.estado === 'andamento' ? continuar() : entrarFoco();
+  if (c.espera) return toast(`${c.titulo} volta ${c.espera}.`);
+  if (S.feitas.has(c.id)) return abrirRelatorio(S.feitas.get(c.id), 'foco');
+  if (S.pausada && S.pausada.id !== c.id) return toast(`Termine ${S.pausada.titulo} primeiro: ela está em andamento.`);
+  escolher(c);
 }
-async function pulso(lista) {
-  if (rm()) return;
-  await Promise.all(lista.map(c => mover(c.el, [{ transform: tf(c.pos) }, { transform: tf({ ...c.pos, s: c.pos.s * 1.07 }) }, { transform: tf(c.pos) }], { duration: 300, easing: 'ease-in-out' })));
-}
-// Uma carta: a escolhida vai ao centro; as outras voltam em espiral para trás dela e formam o bloco.
-async function escolherUma(c) {
-  S.animando = true; $('#stage').classList.remove('aberto');
-  const m = medidas(); const n = cartas.length; const outras = cartas.filter(x => x !== c); const furacao = S.abertura === 'furacao' && !rm();
-  c.el.style.zIndex = 100;
-  const centro = { x: 0, y: 0, r: 0, s: 1.08 };
+// Brilho discreto na escolhida; ela vai ao centro, as outras voltam em espiral para trás dela (o bloco) e o bloco vira o modo.
+async function escolher(c) {
+  S.animando = true; const foco = $('#foco'); foco.classList.remove('aberto'); $('#foco-dica').classList.remove('on');
+  c.el.classList.add('brilho');
+  if (!rm()) await pausa(320);
+  const m = medidas(foco); const n = cartas.length; const outras = cartas.filter(x => x !== c);
+  c.el.style.zIndex = 100; const centro = { x: 0, y: 0, r: 0, s: 1.06 };
   await Promise.all([
     mover(c.el, [{ transform: tf(c.pos) }, { transform: tf(centro) }], { duration: rm() ? 1 : 520, easing: 'cubic-bezier(.16,1,.3,1)' }),
     ...outras.map((o, k) => {
-      const para = { ...posDeck(k, n), s: .96 };
-      const quadros = furacao ? espiral(k, n, o.pos, para, m, { voltas: -1, raio: .28 }) : [{ transform: tf(o.pos) }, { transform: tf(para) }];
-      o.pos = para;
-      return Promise.all([mover(o.el, quadros, { duration: rm() ? 1 : furacao ? 900 : 420, delay: rm() ? 0 : k * 50, easing: furacao ? 'linear' : 'cubic-bezier(.16,1,.3,1)' }), virar(o, false, rm() ? 0 : k * 50, rm() ? 1 : 300)]);
+      const para = { ...posDeck(k, n), s: .96 }; const quadros = caminho(k, n, o.pos, para, m, { voltas: -1, raio: .28 }); o.pos = para;
+      return Promise.all([mover(o.el, quadros, { duration: tempo(900, 420), delay: rm() ? 0 : k * 50, easing: comFuracao() ? 'linear' : 'cubic-bezier(.16,1,.3,1)' }), virar(o, false, rm() ? 0 : k * 50, rm() ? 1 : 300)]);
     }),
   ]);
   c.pos = centro;
-  await pulso([c, ...outras]);
-  S.sessao = novaSessao([c]);
-  await expandir(c, { titulo: c.titulo, sub: `${c.erros} ${unidade(c)} · ~${c.min} min`, modo: c.modo });
-}
-// Várias cartas: as não escolhidas caem; as escolhidas se juntam em espiral num bloco no centro.
-async function comecarVarias() {
-  const sel = cartas.filter(c => S.sel.has(c.id)); if (!sel.length || S.animando) return;
-  S.animando = true; $('#stage').classList.remove('aberto');
-  const m = medidas(); const resto = cartas.filter(c => !S.sel.has(c.id)); const furacao = S.abertura === 'furacao' && !rm();
-  await Promise.all([
-    ...resto.map((o, k) => mover(o.el, [{ transform: tf(o.pos), opacity: 1 }, { transform: tf({ ...o.pos, y: o.pos.y + m.h * .8, s: .9 }), opacity: 0 }], { duration: rm() ? 1 : 480, delay: rm() ? 0 : k * 40, easing: 'cubic-bezier(.5,0,.75,0)' })),
-    ...sel.map((c, k) => {
-      c.el.classList.remove('sel'); c.el.style.zIndex = 50 + k;
-      const para = { x: k * 4 - (sel.length - 1) * 2, y: -k * 5, r: [-4, 3, -2, 2, -1][k % 5], s: 1.06 };
-      const quadros = furacao ? espiral(k, sel.length, c.pos, para, m, { voltas: .75, raio: .3 }) : [{ transform: tf(c.pos) }, { transform: tf(para) }];
-      c.pos = para;
-      return mover(c.el, quadros, { duration: rm() ? 1 : furacao ? 850 : 460, delay: rm() ? 0 : k * 90, easing: furacao ? 'linear' : 'cubic-bezier(.16,1,.3,1)' });
-    }),
-  ]);
-  await pulso(sel);
-  const topo = sel[sel.length - 1];
-  S.sessao = novaSessao(sel);
-  await expandir(topo, { titulo: `${sel.length} ${sel.length === 1 ? 'carta' : 'cartas'}`, sub: sel.map(c => c.titulo).join(' + '), modo: topo.modo });
+  if (!rm()) await Promise.all([c, ...outras].map(x => mover(x.el, [{ transform: tf(x.pos) }, { transform: tf({ ...x.pos, s: x.pos.s * 1.07 }) }, { transform: tf(x.pos) }], { duration: 300, easing: 'ease-in-out' })));
+  const retomada = S.pausada?.id === c.id;
+  S.sessao = retomada ? S.pausada.sessao : novaSessao(c);
+  S.pausada = null;
+  if (S.estado === 'andamento') { S.estado = 'normal'; guardar(); sincronizarPainel(); }
+  await expandir(c, { titulo: c.titulo, sub: retomada ? `Item ${S.sessao.idx + 1} de ${S.sessao.itens.length}` : `${c.erros} ${unidade(c)} · ~${c.min} min`, modo: c.modo });
 }
 async function continuar() {
-  if (S.animando || !S.andamento) return;
-  S.animando = true;
-  const c = cartas.find(x => x.id === S.andamento.cartas[0].id) || cartas[cartas.length - 1];
-  c.el.style.zIndex = 100; const centro = { x: 0, y: -6, r: 0, s: 1.08 };
-  await Promise.all([mover(c.el, [{ transform: tf(c.pos) }, { transform: tf(centro) }], { duration: rm() ? 1 : 420, easing: 'cubic-bezier(.16,1,.3,1)' }), virar(c, true, 0, rm() ? 1 : 380)]);
-  c.pos = centro;
-  S.sessao = S.andamento;
-  await expandir(c, { titulo: S.andamento.cartas.map(x => x.titulo).join(' + '), sub: `Item ${S.andamento.idx + 1} de ${S.andamento.itens.length}`, modo: c.modo });
+  if (S.animando || !S.pausada) return;
+  const id = S.pausada.id;
+  if (!(await entrarFoco())) return;
+  const c = cartas.find(x => x.id === id); if (c) await escolher(c);
 }
-// O bloco se expande até ocupar a tela e vira a sessão do modo.
+// O bloco cresce até ocupar a tela e vira a sessão do modo.
 async function expandir(c, info) {
   const appEl = $('#app'); const app = appEl.getBoundingClientRect(); const r = c.el.querySelector('.frente').getBoundingClientRect();
-  const ex = $('#expansor'); const cor = MODOS[info.modo].cor;
-  ex.style.setProperty('--c', cor);
+  const ex = $('#expansor');
+  ex.style.setProperty('--c', MODOS[info.modo].cor);
   ex.innerHTML = `<div class="ex-rotulo">${I[info.modo]}<b>${info.titulo}</b><small>${info.sub}</small></div>`;
   ex.hidden = false; ex.style.opacity = 1;
   const x0 = r.left - app.left - appEl.clientLeft, y0 = r.top - app.top - appEl.clientTop;
-  const rotulo = ex.firstElementChild;
-  if (!rm()) rotulo.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 420, delay: 260, fill: 'backwards', easing: 'cubic-bezier(.16,1,.3,1)' });
+  if (!rm()) ex.firstElementChild.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 420, delay: 260, fill: 'backwards', easing: 'cubic-bezier(.16,1,.3,1)' });
   await mover(ex, [
     { left: `${x0}px`, top: `${y0}px`, width: `${r.width}px`, height: `${r.height}px`, borderRadius: '14px' },
     { left: '0px', top: '0px', width: `${appEl.clientWidth}px`, height: `${appEl.clientHeight}px`, borderRadius: '0px' },
   ], { duration: rm() ? 1 : 640, easing: 'cubic-bezier(.7,0,.2,1)' });
   if (!rm()) await pausa(380);
-  mostrar('sessao');
+  $('#foco').hidden = true; c.el.classList.remove('brilho');
+  S.fase = 'sessao'; mostrar('sessao');
   await mover(ex, [{ opacity: 1 }, { opacity: 0 }], { duration: rm() ? 1 : 360 });
+  ex.hidden = true; S.animando = false;
+}
+// Da sessão (ou do resultado) de volta ao foco: a tela encolhe até o baralho, o leque reabre e a carta feita ganha o verde.
+async function voltarAoFoco(cartaId) {
+  S.animando = true; S.fase = 'foco';
+  const foco = $('#foco'); const ex = $('#expansor'); const appEl = $('#app'); const n = cartas.length;
+  const ref = cartas.find(x => x.id === cartaId) || cartas.find(x => x.id === S.pausada?.id) || cartas[n - 1];
+  ex.style.setProperty('--c', MODOS[ref.modo].cor);
+  ex.innerHTML = `<div class="ex-rotulo">${cartaId ? I.check : I[ref.modo]}<b>${ref.titulo}</b><small>${cartaId ? 'Carta concluída' : 'Sessão guardada'}</small></div>`;
+  Object.assign(ex.style, { left: '0px', top: '0px', width: `${appEl.clientWidth}px`, height: `${appEl.clientHeight}px`, borderRadius: '0px', opacity: 1 });
+  ex.hidden = false;
+  if (!rm()) await mover(ex, [{ opacity: 0 }, { opacity: 1 }], { duration: 220 });
+  // Por baixo: só as cartas, empilhadas no centro.
+  $('#sessao').hidden = true; $('#relatorio').hidden = true; $('#hub').hidden = false;
+  foco.hidden = false; foco.classList.remove('aberto'); $('#foco-fim').hidden = true; foco.querySelector('.foco-fundo').style.opacity = 1;
+  cartas.forEach((c, i) => {
+    if (c.el.parentElement !== foco) foco.appendChild(c.el);
+    c.el.classList.remove('brilho'); c.el.style.zIndex = i + 1; aplicarEstadoCarta(c, { semFeita: c.id === cartaId });
+    c.pos = posDeck(i, n); c.el.style.transform = tf(c.pos); c.frente = false; c.el.querySelector('.flip').style.transform = 'rotateY(180deg)';
+  });
+  if (!rm()) {
+    const alvo = cartas[n - 1].el.getBoundingClientRect(); const app = appEl.getBoundingClientRect();
+    ex.firstElementChild.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, fill: 'forwards' });
+    await pausa(160);
+    await mover(ex, [
+      { left: '0px', top: '0px', width: `${appEl.clientWidth}px`, height: `${appEl.clientHeight}px`, borderRadius: '0px' },
+      { left: `${alvo.left - app.left - appEl.clientLeft}px`, top: `${alvo.top - app.top - appEl.clientTop}px`, width: `${alvo.width}px`, height: `${alvo.height}px`, borderRadius: '14px' },
+    ], { duration: 560, easing: 'cubic-bezier(.7,0,.2,1)' });
+    await mover(ex, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  }
   ex.hidden = true;
+  await abrirLeque();
+  const feita = cartas.find(x => x.id === cartaId);
+  if (feita) {
+    aplicarEstadoCarta(feita);
+    if (!rm()) {
+      feita.el.querySelector('.feito').animate([{ transform: 'scale(2.6)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 460, easing: 'cubic-bezier(.2,1.4,.4,1)' });
+      feita.el.querySelector('.frente').animate([{ filter: 'brightness(1.7)' }, { filter: 'brightness(1)' }], { duration: 700 });
+    }
+  }
+  if (todasFeitas()) mostrarFim();
   S.animando = false;
+}
+// Do resultado de uma carta feita (aberto pelo foco) de volta ao foco, sem refazer o leque.
+async function reabrirFoco() {
+  $('#relatorio').hidden = true; $('#hub').hidden = false;
+  const foco = $('#foco'); foco.hidden = false; S.fase = 'foco';
+  if (!rm()) await mover(foco, [{ opacity: 0 }, { opacity: 1 }], { duration: 240 });
 }
 
 // ---------- Sessão ----------
-function novaSessao(lista) {
-  return { cartas: lista.map(c => ({ id: c.id, titulo: c.titulo, modo: c.modo })), itens: lista.flatMap(c => c.itens.map(k => ITENS[k])), idx: 0, respostas: [] };
-}
-function sessaoDeExemplo() { const s = novaSessao([CARTAS[0]]); s.idx = 1; s.respostas = [{ escolha: 0, acertou: true }]; return s; }
+const novaSessao = c => ({ carta: { id: c.id, titulo: c.titulo, modo: c.modo }, itens: c.itens.map(k => ITENS[k]), idx: 0, respostas: [] });
+function pausadaDeExemplo() { const c = CARTAS[0]; const s = novaSessao(c); s.idx = 1; s.respostas = [{ escolha: 0, acertou: true }]; return { id: c.id, titulo: c.titulo, sessao: s }; }
 function renderSessao() {
   const s = S.sessao; const it = s.itens[s.idx]; const m = MODOS[it.modo]; const resp = s.respostas[s.idx];
   const v = $('#sessao'); v.style.setProperty('--c', m.cor);
   const ultimo = s.idx === s.itens.length - 1;
   v.innerHTML = `
-    <header class="topo"><button class="icone-btn" id="sair" aria-label="Sair e guardar a sessão">${I.voltar}</button>
-      <h1><small style="color:${m.cor}">Revisão · ${m.rotulo}${it.parecida ? ' · parecida' : ''}</small>Item ${s.idx + 1} de ${s.itens.length}</h1></header>
-    ${s.cartas.length > 1 ? `<div class="chips">${s.cartas.map(c => `<span class="chip" style="--c:${MODOS[c.modo].cor}">${c.titulo}</span>`).join('')}</div>` : ''}
+    <header class="topo"><button class="icone-btn" id="sair" aria-label="Sair e voltar às cartas">${I.voltar}</button>
+      <h1><small style="color:${m.cor}">Revisão · ${s.carta.titulo}</small>Item ${s.idx + 1} de ${s.itens.length}</h1></header>
     <div class="progresso"><i style="width:${(s.idx + (resp ? 1 : 0)) / s.itens.length * 100}%"></i></div>
     <div class="sessao-corpo"><p class="tema">${it.tema}</p><h2 class="enunciado">${it.enunciado}</h2>
       <div class="opcoes">${it.opcoes.map((o, k) => `<button class="op ${resp ? (k === it.certa ? 'certa' : k === resp.escolha ? 'errada' : 'apagada') : ''}" data-k="${k}" ${resp ? 'disabled' : ''}><span class="tecla">${k + 1}</span>${o}</button>`).join('')}</div>
       ${resp ? `<div class="fb ${resp.acertou ? 'sim' : 'nao'}" role="status"><b>${resp.acertou ? 'Acertou.' : 'Ainda não.'}</b> ${it.explica}</div>` : ''}</div>
-    <div class="dock">${resp ? `<button class="primario" id="proxima">${ultimo ? 'Ver resultado' : 'Próxima'} ${I.seta}</button>` : '<p class="dica-dock">Escolha uma alternativa · teclas 1 a 4</p>'}</div>`;
+    <div class="dock">${resp ? `<button class="primario" id="proxima">${ultimo ? (S.aoTerminar === 'resultado' ? 'Ver resultado' : 'Concluir carta') : 'Próxima'} ${I.seta}</button>` : '<p class="dica-dock">Escolha uma alternativa · teclas 1 a 4</p>'}</div>`;
   (resp ? $('#proxima') : v.querySelector('.op'))?.focus({ preventScroll: true });
 }
 function responder(k) {
@@ -559,37 +623,52 @@ function responder(k) {
   renderSessao();
 }
 function proxima() {
-  const s = S.sessao; if (!s) return;
-  if (s.idx === s.itens.length - 1) return finalizar(s);
-  s.idx++; renderSessao(); $('#sessao').scrollTop = 0;
+  const s = S.sessao; if (!s || S.animando) return;
+  if (s.idx < s.itens.length - 1) { s.idx++; renderSessao(); $('#sessao').scrollTop = 0; return; }
+  const r = finalizar(s);
+  if (S.aoTerminar === 'resultado') abrirRelatorio(r, 'fim'); else voltarAoFoco(r.cartaId);
 }
-function sairSessao() { S.andamento = S.sessao; S.sessao = null; definir('estado', 'andamento'); }
+function sairSessao() {
+  if (S.animando) return;
+  const s = S.sessao; S.pausada = { id: s.carta.id, titulo: s.carta.titulo, sessao: s }; S.sessao = null;
+  voltarAoFoco(null);
+}
 function finalizar(s) {
   const respondidas = s.respostas.map((r, k) => r && { ...r, it: s.itens[k] }).filter(Boolean);
   const acertos = respondidas.filter(r => r.acertou).length;
-  const r = { titulo: s.cartas.map(c => c.titulo).join(' + '), acertos, total: respondidas.length, dominados: acertos ? 1 : 0, quando: 'agora',
+  const r = { cartaId: s.carta.id, titulo: s.carta.titulo, acertos, total: respondidas.length, dominados: acertos ? 1 : 0, quando: 'agora',
     erros: respondidas.filter(x => !x.acertou).map(x => ({ it: x.it, escolha: x.escolha })) };
-  S.ultimo = r; S.sessao = null; S.andamento = null;
+  S.feitas.set(s.carta.id, r); S.ultimo = r; S.sessao = null;
+  if (S.pausada?.id === s.carta.id) S.pausada = null;
   if (S.estado === 'andamento') { S.estado = 'normal'; guardar(); sincronizarPainel(); }
-  abrirRelatorio(r);
+  return r;
 }
 
 // ---------- Resultado ----------
-function abrirRelatorio(r) { S.rel = r; mostrar('relatorio'); }
+function abrirRelatorio(r, origem) {
+  S.rel = r; S.relOrigem = origem;
+  if (origem === 'foco') { $('#foco').hidden = true; S.fase = 'relatorio'; }
+  mostrar('relatorio');
+}
 function renderRelatorio() {
-  const r = S.rel;
+  const r = S.rel; const paraCartas = S.relOrigem !== 'hub';
   $('#relatorio').innerHTML = `
-    <header class="topo"><button class="icone-btn" id="rel-voltar" aria-label="Voltar ao hub">${I.voltar}</button><h1><small>Resultado da revisão</small>${r.titulo}</h1></header>
+    <header class="topo"><button class="icone-btn" id="rel-voltar" aria-label="${paraCartas ? 'Voltar às cartas' : 'Voltar ao hub'}">${I.voltar}</button><h1><small>Resultado da revisão</small>${r.titulo}</h1></header>
     <div class="rel-corpo"><p class="carimbo ${r.erros.length ? '' : 'ok'}">${r.erros.length ? 'REVEJA OS ERROS' : 'ACERTOU TUDO'}</p>
       <p class="placar">${r.acertos}/${r.total}<small>CERTAS</small></p>
       <div class="linhas"><div><span>Itens revisados</span><b>${r.total}</b></div><div><span>Itens dominados</span><b class="${r.dominados ? 'pos' : ''}">${r.dominados ? `+${r.dominados * 40} XP` : '—'}</b></div>
         <div><span>Próxima vez</span><b>Erradas: na próxima sessão · Certas: em 1 dia</b></div></div>
       ${r.erros.map(({ it, escolha }) => `<article class="erro-item"><b>${I.x}${it.enunciado}</b><p>Sua resposta: ${it.opcoes[escolha]}</p><p>Correta: ${it.opcoes[it.certa]}</p>
         <p class="ia">${it.explica}<small>Explicação gerada por IA. Confira a fonte.</small></p></article>`).join('')}</div>
-    <div class="dock"><button class="primario" id="rel-hub">Voltar ao hub ${I.seta}</button></div>`;
-  $('#rel-hub').focus({ preventScroll: true });
+    <div class="dock"><button class="primario" id="rel-ok">${paraCartas ? 'Voltar às cartas' : 'Voltar ao hub'} ${I.seta}</button></div>`;
+  $('#rel-ok').focus({ preventScroll: true });
 }
-function voltarAoHub() { mostrar('hub'); }
+function sairRelatorio() {
+  if (S.animando) return;
+  if (S.relOrigem === 'fim') voltarAoFoco(S.rel.cartaId);
+  else if (S.relOrigem === 'foco') reabrirFoco();
+  else mostrar('hub');
+}
 
 // ---------- Navegação e painel ----------
 function mostrar(qual) {
@@ -597,6 +676,18 @@ function mostrar(qual) {
   if (qual === 'hub') renderHub(); else if (qual === 'sessao') renderSessao(); else renderRelatorio();
   $('#' + qual).scrollTop = 0;
 }
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b || b.classList.contains('carta')) return;
+  if (b.dataset.jogar) return toast(`No app, abre o ${b.dataset.jogar}.`);
+  const acoes = {
+    abrir: entrarFoco, continuar, 'foco-sair': sairFoco, 'foco-hub': sairFoco,
+    encerrar: () => { if (S.pausada) abrirRelatorio(finalizar(S.pausada.sessao), 'hub'); },
+    ultima: () => abrirRelatorio(S.ultimo, 'hub'), menu: () => toast('No app, volta ao menu.'),
+    sair: sairSessao, proxima, 'rel-ok': sairRelatorio, 'rel-voltar': sairRelatorio,
+  };
+  if (acoes[b.id]) acoes[b.id]();
+  if (b.dataset.k !== undefined) responder(Number(b.dataset.k));
+});
 function sincronizarPainel() {
   document.querySelectorAll('.seg').forEach(g => g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(S[g.dataset.chave] === b.dataset.valor))));
   $('#frame').classList.toggle('celular', S.tela === 'celular');
@@ -604,23 +695,25 @@ function sincronizarPainel() {
 function definir(chave, valor) {
   if (S.animando) return;
   S[chave] = valor; guardar(); sincronizarPainel();
-  if (chave === 'estado' && valor !== 'andamento') S.andamento = null;
-  $('#expansor').hidden = true;
-  mostrar('hub');
+  if (chave !== 'estado') { if (S.fase === 'sessao' && S.sessao) renderSessao(); return; } // vale a partir da próxima ação
+  if (chave === 'estado') { S.feitas.clear(); S.sessao = null; S.pausada = valor === 'andamento' ? pausadaDeExemplo() : null; }
+  $('#foco').hidden = true; $('#expansor').hidden = true; $('#foco-fim').hidden = true;
+  S.fase = 'hub'; mostrar('hub');
 }
 document.querySelectorAll('.seg').forEach(g => g.addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) definir(g.dataset.chave, b.dataset.valor); }));
 const botaoProto = $('#proto-btn'); const painel = $('#proto-painel');
 const rotuloProto = () => { botaoProto.innerHTML = `${painel.hidden ? I.ajuste : I.x} Protótipo`; botaoProto.setAttribute('aria-expanded', String(!painel.hidden)); };
 botaoProto.addEventListener('click', () => { painel.hidden = !painel.hidden; rotuloProto(); });
+$('#foco-sair').innerHTML = I.x;
 document.addEventListener('keydown', ev => {
-  if (ev.key === 'Escape') { if (!painel.hidden) { painel.hidden = true; rotuloProto(); botaoProto.focus(); } else if (S.fase === 'leque') recolher(); return; }
-  if ($('#sessao').hidden || ev.target.closest('input, textarea')) return;
+  if (ev.key === 'Escape') { if (!painel.hidden) { painel.hidden = true; rotuloProto(); botaoProto.focus(); } else if (S.fase === 'foco') sairFoco(); return; }
+  if ($('#sessao').hidden || !S.sessao) return;
   const n = '1234'.indexOf(ev.key);
-  if (n >= 0 && S.sessao && !S.sessao.respostas[S.sessao.idx] && S.sessao.itens[S.sessao.idx].opcoes[n]) { ev.preventDefault(); responder(n); }
+  if (n >= 0 && !S.sessao.respostas[S.sessao.idx] && S.sessao.itens[S.sessao.idx].opcoes[n]) { ev.preventDefault(); responder(n); }
 });
 new ResizeObserver(() => {
-  if (S.fase !== 'leque' || S.animando || !$('#stage')) return;
-  const m = medidas(); cartas.forEach((c, i) => { c.pos = posLeque(i, cartas.length, m); c.el.style.transform = tf(c.pos); c.el.style.setProperty('--r', `${c.pos.r}deg`); });
+  if (S.fase !== 'foco' || S.animando || !$('#foco').classList.contains('aberto')) return;
+  const m = medidas($('#foco')); cartas.forEach((c, i) => { c.pos = posLeque(i, cartas.length, m); c.el.style.transform = tf(c.pos); c.el.style.setProperty('--r', `${c.pos.r}deg`); });
 }).observe($('#app'));
 
 rotuloProto(); sincronizarPainel(); mostrar('hub');
