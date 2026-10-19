@@ -96,7 +96,9 @@ export function responderTreinoPerfil(perfil, modo, entradaId, respostas) {
     const encerradoEm = new Date().toISOString();
     const bonus = valida ? bonusTreino(acertos, 5, segundosEntre(entrada.iniciadoEm, encerradoEm), TEMPO_ESPERADO_TREINO[entrada.variante]) : 0;
     const xp = valida ? XP_JOGO + bonus : 0;
-    const missoes = aplicarProgressoMissoes(lerMissoes(perfil), { rodadas_validas: Number(valida), acertos_treino: acertos });
+    // Rodada sem acerto não conta para missão nenhuma.
+    const missoes = aplicarProgressoMissoes(lerMissoes(perfil), valida ? { rodadas: 1, acertos_treino: acertos,
+      rodada_perfeita: Number(acertos === 5), jogo: { tipo: modo, instante: new Date(encerradoEm).getTime() } } : {});
     base = concederRecompensa(perfil, xp + missoes.xp, ticketRodada + missoes.tickets);
     entrada = { ...entrada, encerradoEm, relatorio: { acertos, total: 5, valida, xp, bonus, xpMissoes: missoes.xp,
       ticketsRodada: ticketRodada, ticketsMissoes: missoes.tickets, ticketsNivel: base.tickets - (Number(perfil.tickets) || 0) - ticketRodada - missoes.tickets,

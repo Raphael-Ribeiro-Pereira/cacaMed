@@ -89,15 +89,8 @@ function prepararRevisaoAPI() {
   return { ...dados, credenciais, perfil };
 }
 
-test('motor gerado contém exatamente as regras e APIs atuais de treino e revisão', () => {
-  const partes = ['economia', 'missoes', 'bancoTreinos', 'treinos', 'revisaoInteligente'].map(nome =>
-    readFileSync(new URL(`./${nome}.js`, import.meta.url), 'utf8').replace(/^import .*;\r?\n/gm, '').replace(/^export /gm, '')).join('\n');
-  const esperado = '// GERADO por node scripts/sincronizar-plantao.mjs. Não editar manualmente.\n' + partes + '\n'
-    + readFileSync(new URL('../../docs/historico/apps-script/treinos-api.gs', import.meta.url), 'utf8') + '\n'
-    + readFileSync(new URL('../../docs/historico/apps-script/revisao-api.gs', import.meta.url), 'utf8');
-  const gerado = readFileSync(new URL('../../docs/historico/apps-script/treinos-motor.gs', import.meta.url), 'utf8');
-  assert.equal(gerado.replace(/\r\n/g, '\n'), esperado.replace(/\r\n/g, '\n'));
-});
+// O motor de treino do Apps Script (docs/historico/apps-script/treinos-motor.gs) ficou congelado na economia v2 em
+// 19/10/2026, como o plantao-motor.gs em 13/10: o site só usa a API do Supabase. Os testes abaixo cobrem o arquivo congelado.
 
 test('reset administrativo reinicia fila e contadores sem apagar o histórico permanente', () => {
   const { contexto, abas, credenciais } = prepararRevisaoAPI();
@@ -563,12 +556,12 @@ test('Quiz real salva tentativas, retoma após recarga e concede ticket só a ca
       assert.equal(contexto.api(pedido).pontuacaoTotal, final.pontuacaoTotal);
       assert.equal(contexto.api({ ...credenciais, acao: 'obterPerfil' }).treinos.quiz.entrada.respostas.length, respostas.length);
     }
-    assert.equal(final.treinos.quiz.entrada.relatorio.xp, 150); // Economia v3: 100 + 25 de acertos + 25 de tempo, em teoria e em casos.
+    assert.equal(final.treinos.quiz.entrada.relatorio.xp, rodada ? 125 : 100);
   }
   assert.equal(final.treinos.quiz.partidas, 2);
   assert.equal(final.treinos.quiz.medidor, 0);
   assert.equal(final.tickets, 3); // jogo + duas missões
-  assert.equal(final.pontuacaoTotal, 400);
+  assert.equal(final.pontuacaoTotal, 325);
   assert.equal(abas.get('RespostasTreino').registros.length, 11);
   assert.equal(abas.get('Partidas').registros.length, 3);
 });
@@ -603,7 +596,7 @@ test('API completa duas rodadas com campos reordenados pelo transporte e rejeita
     final = perfil;
   }
   assert.equal(final.treinos.quiz.partidas, 2);
-  assert.equal(final.pontuacaoTotal, 400);
+  assert.equal(final.pontuacaoTotal, 325);
   assert.equal(final.tickets, 3);
   assert.equal(abas.get('RespostasTreino').registros.length, 11);
   assert.equal(abas.get('Partidas').registros.length, 3);
@@ -629,7 +622,7 @@ test('resposta perdida no encerramento de treino repara histórico e recibo sem 
     const pedido = { ...credenciais, acao: 'responderTreino', modo: 'verdadeMentira', entradaId, respostas };
     assert.throws(() => contexto.api(pedido), /Resposta perdida/);
     const salvo = contexto.api(pedido);
-    assert.equal(salvo.pontuacaoTotal, 200, alvo);
+    assert.equal(salvo.pontuacaoTotal, 150, alvo);
     assert.equal(salvo.tickets, 1, alvo);
     assert.equal(salvo.treinos.verdadeMentira.partidas, 1, alvo);
     assert.equal(abas.get('RespostasTreino').registros.length, 6, alvo);
@@ -672,7 +665,7 @@ test('consulta do perfil repara respostas de treino perdidas após gravação da
     range.setValues = values => { gravar(values); if (!falhou) { falhou = true; throw new Error('Resposta perdida'); } }; return range; };
   assert.throws(() => contexto.api({ ...credenciais, acao: 'responderTreino', modo: 'verdadeMentira', entradaId, respostas }), /Resposta perdida/);
   const recuperado = contexto.api({ ...credenciais, acao: 'obterPerfil' });
-  assert.equal(recuperado.pontuacaoTotal, 200);
+  assert.equal(recuperado.pontuacaoTotal, 150);
   assert.equal(abas.get('RespostasTreino').registros.length, 6);
   assert.equal(abas.get('Partidas').registros.length, 2);
 });

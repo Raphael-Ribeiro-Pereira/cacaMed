@@ -3,8 +3,8 @@ import { operarRevisaoSupabase, eventosRevisao } from './operarRevisaoSupabase.j
 import { emitirCruzadinhaSupabase, registrarPartidaSupabase, operarAdminSupabase, operarPlantaoSupabase, operarAuditoriaSupabase, operarRelacaoSupabase, operarBatalhaSupabase } from './operarJogosSupabase.js';
 import { eventosBatalha } from '../utils/batalhaRevisao.js';
 import { registrarXpSemanal } from '../utils/coroas.js';
-import { migrarEconomia } from '../utils/economia.js';
-import { prepararMissoesDoDia } from '../utils/missoes.js';
+import { concederRecompensa, migrarEconomia } from '../utils/economia.js';
+import { dataLocalHoje, prepararMissoesDoDia } from '../utils/missoes.js';
 import { materiaValida, validarCurso } from '../utils/curso.js';
 
 export const ACOES_REVISAO = ['consultarRevisao', 'iniciarRevisao', 'responderRevisao', 'encerrarRevisao'];
@@ -19,8 +19,10 @@ const tituloCruzadinha = partida => {
 // `banco`: banco de palavras com as dicas de todas as planilhas (só a emissão da cruzadinha usa).
 export function executarPedidoSupabase(original, pedido, { recibos = [], tentativas = [], revisoes = [], agora = new Date(), banco } = {}) {
   let perfil = migrarEconomia(original);
-  const preparo = prepararMissoesDoDia(perfil);
-  if (preparo) perfil = { ...perfil, dataUltimoLogin: preparo.dataUltimoLogin, missoesDiarias: preparo.missoesDiarias };
+  // Primeiro pedido do dia: missões novas, ofensiva e o XP do login (sem ticket).
+  const preparo = prepararMissoesDoDia(perfil, dataLocalHoje(agora));
+  if (preparo) perfil = { ...concederRecompensa(perfil, preparo.xpLogin), dataUltimoLogin: preparo.dataUltimoLogin,
+    missoesDiarias: preparo.missoesDiarias, ofensiva: preparo.ofensiva };
   const base = perfil;
   let eventos = [];
   if (pedido.acao === 'obterPerfil') return { perfil, eventos };

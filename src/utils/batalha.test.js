@@ -3,10 +3,13 @@ import assert from 'node:assert/strict';
 import { CAPITULOS, DOENCAS, EXAMES, HIPOTESES, aplicarAcao, criarEstado, executarBatalha, hipotesesDe, obterDoenca, recompensaBatalha } from './batalha.js';
 import { FONTES_BATALHA } from './batalhaConteudo.js';
 import { executarPedidoSupabase } from '../shared/executarPedidoSupabase.js';
+import { dataLocalHoje, missaoDeLogin } from './missoes.js';
 
 const ID = '11111111-1111-4111-8111-111111111111';
 const ID2 = '22222222-2222-4222-8222-222222222222';
-const admin = (extra = {}) => ({ uid: 'a', role: 'admin', pontuacaoTotal: 0, tickets: 2, xpTopicos: {}, economia: { versao: 2, ultimoNivelPremiado: 1 }, ...extra });
+// Dia já aberto (login pago e missões sorteadas), para o XP medido ser só o da Batalha.
+const admin = (extra = {}) => ({ uid: 'a', role: 'admin', pontuacaoTotal: 0, tickets: 2, xpTopicos: {}, economia: { versao: 2, ultimoNivelPremiado: 1 },
+  dataUltimoLogin: dataLocalHoje(), ofensiva: { dias: 1, ultimoDia: dataLocalHoje() }, missoesDiarias: [missaoDeLogin(1)], ...extra });
 const pedir = (perfil, pedido) => executarPedidoSupabase(perfil, pedido).perfil;
 
 // Partida vencedora: exame-chave, diagnóstico, resposta ao buff e terapia até controlar.

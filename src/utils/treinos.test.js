@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { BANCO_QUIZ, BANCO_FRASES } from './bancoTreinos.js';
 import { MINIMO_CONCEITOS_VM, TEMAS_TREINO, conceitoDoQuiz, criarEntradaTreino, fraseLegada, frasesDoSorteio, responderTreinoPerfil } from './treinos.js';
 import { concederRecompensa, nivelPorXP, migrarEconomia } from './economia.js';
-import { criarMissoesDiarias } from './missoes.js';
+import { CATALOGO_MISSOES, RECOMPENSA_MISSAO, missaoDeLogin } from './missoes.js';
 
 const perfil = entrada => ({ pontuacaoTotal: 0, tickets: 0, missoesDiarias: [], treinos: { [entrada.modo]: { entrada } } });
 const resposta = (entrada, i, acertar = true) => {
@@ -141,11 +141,17 @@ test('verdade ou mentira avalia seleção e rejeição; zero acertos não gera X
   assert.throws(() => responderTreinoPerfil(perfil(entrada), 'verdadeMentira', 'teste', entrada.itens.map(item => ({ itemId: item.id, escolha: false }))), /Selecione/);
 });
 
-test('missões de treino concedem um ticket cada uma e não repetem pagamento', () => {
-  let atual = perfil(criarEntradaTreino('quiz', 'teoria', 'a')); atual.missoesDiarias = criarMissoesDiarias();
+test('missões de treino concedem XP e ticket e não repetem pagamento', () => {
+  // Missões fixas: login, uma rodada (N1), 10 acertos (N2), rodada perfeita (N3) e 3 perfeitas (N4).
+  const nivel = (n, id) => ({ ...CATALOGO_MISSOES[n].find(m => m.id === id), nivel: n, recompensaXP: RECOMPENSA_MISSAO[n][0], recompensaTicket: RECOMPENSA_MISSAO[n][1], progresso: 0, concluida: false });
+  let atual = perfil(criarEntradaTreino('quiz', 'teoria', 'a'));
+  atual.missoesDiarias = [missaoDeLogin(1), nivel(1, 'rodada_qualquer'), nivel(2, 'acertos_10'), nivel(3, 'rodada_perfeita'), nivel(4, 'tres_perfeitas')];
   atual = fecharQuiz(atual, 5);
-  assert.equal(atual.tickets, 1); assert.equal(atual.pontuacaoTotal, 200);
+  // 150 da rodada + 50 (uma rodada) + 150 (rodada perfeita); 2 tickets de missão.
+  assert.equal(atual.tickets, 2); assert.equal(atual.pontuacaoTotal, 350);
   atual.treinos.quiz.entrada = criarEntradaTreino('quiz', 'teoria', 'b');
   atual = fecharQuiz(atual, 1);
-  assert.equal(atual.tickets, 3); assert.equal(atual.pontuacaoTotal, 380);
+  // 130 da rodada; 6 de 10 acertos; a segunda rodada válida completa o ticket do medidor.
+  assert.equal(atual.tickets, 3); assert.equal(atual.pontuacaoTotal, 480);
+  assert.equal(atual.missoesDiarias[2].progresso, 6);
 });

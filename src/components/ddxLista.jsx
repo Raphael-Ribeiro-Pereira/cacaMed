@@ -8,6 +8,9 @@ export function ListaCasos({ itens, abertaId, admin, tickets, aoEscolher }) {
   if (!visiveis.length) return <p className="muted" style={{ padding: 18 }}>Nenhum caso liberado ainda.</p>;
   let n = 0;
   return <div className="dx-lista">
+    {tickets < 1 && <p className="muted" role="status" style={{ padding: '4px 18px 10px' }}>
+      Sem tickets para abrir um caso novo. Ganhe tickets concluindo cruzadinhas (2 por grade), missões do dia (1 ou 2 cada),
+      duas rodadas de Quiz ou Verdade ou mentira com acerto (1) e subindo de nível.</p>}
     {temas.map(tema => <div key={tema} style={{ display: 'contents' }}>
       <div className="dx-grupo">{tema}</div>
       {visiveis.filter(c => c.tema === tema).map(c => {

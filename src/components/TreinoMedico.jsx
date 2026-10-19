@@ -217,7 +217,6 @@ export default function TreinoMedico({ modo, usuario, dadosUsuario, setDadosUsua
     const acertos = (entrada?.resultados || []).filter(r => r.acertou).length;
     let seguidos = 0;
     for (const r of [...(entrada?.resultados || [])].reverse()) { if (!r.acertou) break; seguidos++; }
-    const xpPorAcerto = entrada?.variante === 'casos' ? 25 : 20;
     const ultima = feedback && feedback.indice === entrada.itens.length - 1;
     return raiz(<div className="cbt-scr r-quiz">
       {fase === 'contagem' && <Contagem aoTerminar={() => setContagem(false)} />}
@@ -227,7 +226,7 @@ export default function TreinoMedico({ modo, usuario, dadosUsuario, setDadosUsua
           {ocupado && <span className="sync"><span className="dot" />Conferindo</span>}</div>
         <div className="qhud">
           <span className="streak" style={{ opacity: seguidos ? 1 : .35 }}><Flame />{seguidos} seguida{seguidos === 1 ? '' : 's'}</span>
-          <div className="score"><small>XP DA RODADA</small><b>{acertos * xpPorAcerto}</b></div>
+          <div className="score"><small>ACERTOS</small><b>{acertos}</b></div>
         </div>
         <div className="stepper" style={{ padding: '0 16px 10px' }}>{entrada.itens.map((_, k) => <span key={k} className={k < entrada.respostas.length && !(feedback && k === feedback.indice) ? 'done' : k === indice ? 'cur' : ''} />)}</div>
         <div className="scroll">

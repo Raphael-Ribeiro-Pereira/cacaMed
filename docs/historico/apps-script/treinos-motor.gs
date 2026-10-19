@@ -1,13 +1,5 @@
 // GERADO por node scripts/sincronizar-plantao.mjs. Não editar manualmente.
-// Economia v3 (decidida em 07/10/2026, fórmulas dos bônus aprovadas em 19/10/2026; docs/economia-v3.md).
-const VERSAO_ECONOMIA = 3;
-const XP_JOGO = 100;
-const XP_DDX = 300;
-const XP_BATALHA = 500;
-// Tempo esperado de uma rodada de 5 itens, em segundos. O servidor mede do início à conclusão; a tela não mostra.
-const TEMPO_ESPERADO_TREINO = { teoria: 60, casos: 120, misto: 60 };
-const SEGUNDOS_POR_PALAVRA = 15;
-
+const VERSAO_ECONOMIA = 2;
 const nivelPorXP = xp => Math.floor(Math.sqrt(Math.max(0, Number(xp) || 0) / 500)) + 1;
 const xpParaNivel = nivel => 500 * (Math.max(1, nivel) - 1) ** 2;
 function progressoGlobal(perfil) {
@@ -17,36 +9,9 @@ function progressoGlobal(perfil) {
   const proximo = xpParaNivel(nivel + 1);
   return { nivel, xp, base, proximo, percentual: (xp - base) / (proximo - base) * 100 };
 }
-
-// Tempo: valor cheio até a metade do esperado, cai em linha reta e zera em 1,5 vez o esperado.
-// Tempo desconhecido ou impossível (negativo, não numérico) não paga bônus.
-function bonusTempo(segundos, esperado, maximo) {
-  const s = Number(segundos);
-  if (!Number.isFinite(s) || s < 0 || !(esperado > 0)) return 0;
-  if (s <= esperado * 0.5) return maximo;
-  if (s >= esperado * 1.5) return 0;
-  return Math.round(maximo * (esperado * 1.5 - s) / esperado);
-}
-// Quiz e Verdade ou mentira: até +50, metade pelos acertos e metade pelo tempo.
-const bonusTreino = (acertos, total, segundos, esperado) =>
-  Math.round(25 * Math.max(0, Math.min(acertos, total)) / total) + bonusTempo(segundos, esperado, 25);
-// Cruzadinha: até +50 pelo tempo, menos a penalidade das dicas, sem passar de zero.
-const bonusCruzadinha = (segundos, esperado, penalidadeDicas = 0) =>
-  Math.max(0, bonusTempo(segundos, esperado, 50) - Math.max(0, Number(penalidadeDicas) || 0));
-// DDX: até +100 pela fração de acertos de primeira; sem o caminho seguro, vale metade.
-const bonusDdx = (fracaoPrimeira, seguro) =>
-  Math.round(100 * Math.max(0, Math.min(1, Number(fracaoPrimeira) || 0)) * (seguro ? 1 : 0.5));
-const segundosEntre = (inicio, fim) => {
-  const s = (new Date(fim).getTime() - new Date(inicio).getTime()) / 1000;
-  return Number.isFinite(s) ? s : NaN;
-};
-
-// A troca de versão não paga nada retroativo: XP, tickets e níveis ficam como estão.
 function migrarEconomia(perfil) {
   if (perfil.economia?.versao === VERSAO_ECONOMIA) return perfil;
-  const nivel = nivelPorXP(perfil.pontuacaoTotal);
-  return { ...perfil, economia: { ...perfil.economia, versao: VERSAO_ECONOMIA,
-    ultimoNivelPremiado: Math.max(Number(perfil.economia?.ultimoNivelPremiado) || 0, nivel) } };
+  return { ...perfil, economia: { versao: VERSAO_ECONOMIA, ultimoNivelPremiado: nivelPorXP(perfil.pontuacaoTotal) } };
 }
 function concederRecompensa(perfil, xp, tickets = 0) {
   if (!Number.isInteger(xp) || xp < 0 || !Number.isInteger(tickets) || tickets < 0) throw new Error('Recompensa inválida.');
@@ -2294,13 +2259,10 @@ function responderTreinoPerfil(perfil, modo, entradaId, respostas) {
     const valida = acertos >= 1;
     const medidor = stats.medidor + Number(valida);
     const ticketRodada = Math.floor(medidor / 2);
-    // Economia v3: 100 XP fixos + bônus de acertos e de tempo, só em rodada com pelo menos um acerto.
-    const encerradoEm = new Date().toISOString();
-    const bonus = valida ? bonusTreino(acertos, 5, segundosEntre(entrada.iniciadoEm, encerradoEm), TEMPO_ESPERADO_TREINO[entrada.variante]) : 0;
-    const xp = valida ? XP_JOGO + bonus : 0;
+    const xp = acertos * (modo === 'quiz' && entrada.variante === 'casos' ? 25 : 20);
     const missoes = aplicarProgressoMissoes(lerMissoes(perfil), { rodadas_validas: Number(valida), acertos_treino: acertos });
     base = concederRecompensa(perfil, xp + missoes.xp, ticketRodada + missoes.tickets);
-    entrada = { ...entrada, encerradoEm, relatorio: { acertos, total: 5, valida, xp, bonus, xpMissoes: missoes.xp,
+    entrada = { ...entrada, encerradoEm: new Date().toISOString(), relatorio: { acertos, total: 5, valida, xp, xpMissoes: missoes.xp,
       ticketsRodada: ticketRodada, ticketsMissoes: missoes.tickets, ticketsNivel: base.tickets - (Number(perfil.tickets) || 0) - ticketRodada - missoes.tickets,
       medidor: medidor % 2 } };
     atualizado = { ...stats, entrada, partidas: stats.partidas + 1, validas: stats.validas + Number(valida),

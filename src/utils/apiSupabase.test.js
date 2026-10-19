@@ -5,7 +5,9 @@ import { executarPedidoSupabase } from '../shared/executarPedidoSupabase.js';
 import { BANCO_QUIZ } from './bancoTreinos.js';
 import { obterAuditoria } from './erroMedico.js';
 import { obterRelacao } from './causaEfeito.js';
-import { criarMissoesDiarias, dataLocalHoje } from './missoes.js';
+import { CATALOGO_MISSOES, dataLocalHoje, missaoDeLogin } from './missoes.js';
+// Dia já aberto (login pago hoje), com as missões dadas: o XP medido fica só o da partida e dessas missões.
+const diaAberto = (missoes = []) => ({ dataUltimoLogin: dataLocalHoje(), ofensiva: { dias: 1, ultimoDia: dataLocalHoje() }, missoesDiarias: [missaoDeLogin(1), ...missoes] });
 import { LIMITE_CRUZADINHAS } from '../shared/operarJogosSupabase.js';
 import { criarLimitador } from '../shared/limitador.js';
 import { aprovadaPara } from '../shared/migrarSenhaSupabase.js';
@@ -98,7 +100,7 @@ test('DDX na nova API cobra uma vez, confirma as etapas (uma a uma ou em bloco) 
     { campo: 'erroMedico', iniciar: 'iniciarAuditoria', responder: 'responderAuditoria', chave: 'auditoriaId', caso: obterAuditoria('aud-asma-alta-1') },
     { campo: 'causaEfeito', iniciar: 'iniciarRelacao', responder: 'responderRelacao', chave: 'relacaoId', caso: obterRelacao('ce-asma-1') },
   ]) {
-    let p = { uid: 'admin', role: 'admin', tickets: 10, pontuacaoTotal: 0, economia: { versao: 2, ultimoNivelPremiado: 1 }, dataUltimoLogin: dataLocalHoje(), missoesDiarias: criarMissoesDiarias() };
+    let p = { uid: 'admin', role: 'admin', tickets: 10, pontuacaoTotal: 0, economia: { versao: 2, ultimoNivelPremiado: 1 }, ...diaAberto() };
     for (let rodada = 0; rodada < 2; rodada++) {
       const entradaId = crypto.randomUUID();
       const inicio = { acao: config.iniciar, [config.chave]: config.caso.id, entradaId };
@@ -125,7 +127,7 @@ test('DDX na nova API cobra uma vez, confirma as etapas (uma a uma ou em bloco) 
 });
 
 test('Cruzadinha recalcula XP, ignora saldo do cliente e respeita recibos fora do histórico recente', () => {
-  const p = { uid: 'teste', tickets: 0, pontuacaoTotal: 0, dataUltimoLogin: dataLocalHoje(), missoesDiarias: criarMissoesDiarias() };
+  const p = { uid: 'teste', tickets: 0, pontuacaoTotal: 0, ...diaAberto([{ ...CATALOGO_MISSOES[1][0], nivel: 1, recompensaXP: 50, recompensaTicket: 1, progresso: 0, concluida: false }]) };
   const partida = { id: crypto.randomUUID(), chaveXP: 'ANATOMIA-SISTEMA RESPIRATORIO', subMateria: 'Sistema Respiratorio', palavras: 5, letras: 30, tempo: 100, erros: 2, maiorPalavra: 10, xp: 999999, tickets: 999 };
   const primeiro = executarPedidoSupabase(p, { acao: 'registrarPartida', partida });
   assert.equal(primeiro.perfil.pontuacaoTotal, 158); // v3: 100 + 8 de tempo (100 s numa grade de 75 s) + 50 da missão.

@@ -1,6 +1,26 @@
 # Economia v3
 
-Decidida pelo usuário em 07/10/2026. **Ainda não implementada.** A regra em vigor continua a da [economia v2](jogos-e-economia-v2.md) (`VERSAO_ECONOMIA = 2` em `src/utils/economia.js`) até esta versão ser construída, testada e publicada. O andamento fica no [cronograma](cronograma-recuperacao-caca-med.md#plano-de-07102026--economia-v3-revisão-inteligente-v2-e-app-offline).
+Decidida pelo usuário em 07/10/2026. **Implementada em 19/10/2026 no branch `feat/economia-v3`, ainda não publicada nem levada para a `main`.** Em produção continua a [economia v2](jogos-e-economia-v2.md) até a publicação, que é separada do pacote de 22/10 (API antes do site, numa quinta, com o "sim" do usuário). O andamento fica no [cronograma](cronograma-recuperacao-caca-med.md#plano-de-07102026--economia-v3-revisão-inteligente-v2-e-app-offline).
+
+## Fórmulas dos bônus (aprovadas pelo usuário em 19/10/2026)
+
+Constantes em `src/utils/economia.js`.
+
+- **Tempo:** paga o valor cheio até a metade do tempo esperado, cai em linha reta e zera em 1,5 vez o esperado. Tempo desconhecido ou impossível não paga.
+- **Quiz e Verdade ou mentira (até +50):** 25 × acertos ÷ 5, mais até 25 pelo tempo. Tempo esperado da rodada: 60 s (teoria e V ou M) e 120 s (casos clínicos), medido pelo servidor do início à conclusão.
+- **Cruzadinha (até +50):** até 50 pelo tempo, menos a penalidade das dicas extras (5 ou 15), sem passar de zero. Tempo esperado: 15 s por palavra. Com a grade emitida pelo servidor, o tempo é o da emissão até o registro; abaixo de 3 letras por segundo não ganha bônus.
+- **Erro médico e Causa e efeito (até +100):** 100 × a fração de etapas certas; todas certas contam como caminho seguro, senão o bônus vale metade. Zero acerto não paga nada, como nos jogos.
+- **Plantão (até +100):** o Plantão não tem "acerto de primeira", então foi adaptado: 300 ao encerrar, menos o desconto do destino (alta indevida 80, outro destino 20); no caminho seguro, +50 e mais até 50 pelo tempo da ação-marco (caso sem marco ganha os 50). Plantão com a pontuação clínica zerada (por exemplo, alta sem avaliar nada) não paga.
+- **Batalha:** 500 fixos na vitória (primeira vitória de cada doença na História; toda vitória no Duelo); derrota não paga. O Treinamento continua com 50 na primeira vez.
+
+## Missões e ofensiva como implementadas
+
+- A missão de login entra já concluída no primeiro pedido do dia e paga 25 × dias de ofensiva, sem ticket. Conta nova já nasce com o primeiro dia pago.
+- As 4 missões do dia são sorteadas com uma semente do jogador e do dia: pedir de novo no mesmo dia traz as mesmas.
+- Só contam rodadas com pelo menos um acerto e casos do DDX que renderam XP (repetir um caso já concluído não conta).
+- Catálogo: nível 1, uma rodada de qualquer jogo; nível 2, 3 rodadas ou 10 acertos no Quiz e no V ou M; nível 3, um caso do DDX, cruzadinha sem dica extra ou rodada perfeita; nível 4, 3 rodadas perfeitas ou caso do DDX sem erro e com bônus máximo; nível 5, os quatro jogos em menos de 30 minutos ou cruzadinha sem dica abaixo do tempo esperado.
+- O Paciente DDX não existe mais (fundido no Plantão em 13/10), então a linha dele na tabela abaixo não se aplica.
+- O motor de treino do Apps Script (`docs/historico/apps-script/treinos-motor.gs`) ficou congelado na v2: o site só usa a API do Supabase.
 
 ## Decisões
 

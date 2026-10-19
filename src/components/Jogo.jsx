@@ -297,7 +297,10 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     const maiorPalavra = Math.max(...palavras.map(p => p.palavra.length));
     // Economia v3: 100 XP fixos + bônus de tempo menos as dicas. O servidor mede o tempo e confirma o valor ao salvar.
     const ganho = XP_JOGO + bonusCruzadinha(tempo, numPalavras * SEGUNDOS_POR_PALAVRA, penalidadeXP);
-    const missoes = aplicarProgressoMissoes(lerMissoes(dadosUsuario), { jogar_cruzadinha: 1, acertar_palavras: numPalavras });
+    // Prévia das missões (o servidor confirma): mesmos eventos de registrarPartidaSupabase.
+    const semDica = penalidadeXP === 0;
+    const missoes = aplicarProgressoMissoes(lerMissoes(dadosUsuario), { rodadas: 1, cruzadinha_sem_dica: Number(semDica),
+      cruzadinha_relampago: Number(semDica && tempo < numPalavras * SEGUNDOS_POR_PALAVRA), jogo: { tipo: 'cruzadinha', instante: Date.now() } });
     const concluidas = missoes.missoes.filter((m, i) => !lerMissoes(dadosUsuario)[i]?.concluida && m.concluida);
     setRelatorio({ ganho, letras: numLetras, palavras: numPalavras, penalidade: penalidadeXP, xpMissoes: missoes.xp, missoesConcluidas: concluidas, tempo, nivel: nivelDaGrade });
     if (!partidaId.current) partidaId.current = crypto.randomUUID();

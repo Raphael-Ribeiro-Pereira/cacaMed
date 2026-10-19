@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { bonusTempo, bonusTreino, bonusCruzadinha, bonusDdx, migrarEconomia, VERSAO_ECONOMIA } from './economia.js';
 import { recompensaBatalha } from './batalha.js';
 import { xpCasoDdx } from '../shared/operarJogosSupabase.js';
+import { executarPedidoSupabase } from '../shared/executarPedidoSupabase.js';
 
 test('v3: bônus de tempo cheio até metade do esperado, cai em linha reta e zera em 1,5 vez', () => {
   assert.deepEqual([0, 30, 60, 75, 90, 200].map(s => bonusTempo(s, 60, 25)), [25, 25, 13, 6, 0, 0]);
@@ -33,6 +34,17 @@ test('v3: casos do DDX pagam 300 + até 100; sem caminho seguro o bônus cai pel
 test('v3: Batalha paga 500 fixos na vitória e nada na derrota', () => {
   assert.equal(recompensaBatalha({ fim: 'vitoria', revealed: true, wrongHyp: true, ineff: 4 }, { modo: 'x1' }).xp, 500);
   assert.equal(recompensaBatalha({ fim: 'derrota', revealed: true }, { modo: 'x1' }).xp, 0);
+});
+
+test('v3: o primeiro pedido do dia paga a ofensiva de login uma vez, sem ticket', () => {
+  const agora = new Date('2026-10-19T15:00:00Z');
+  const perfil = { uid: 'u', pontuacaoTotal: 100, tickets: 0, ofensiva: { dias: 1, ultimoDia: '2026-10-18' } };
+  const dia = executarPedidoSupabase(perfil, { acao: 'obterPerfil' }, { agora }).perfil;
+  assert.equal(dia.pontuacaoTotal, 150);
+  assert.equal(dia.tickets, 0);
+  assert.deepEqual(dia.ofensiva, { dias: 2, ultimoDia: '2026-10-19' });
+  assert.equal(dia.missoesDiarias.length, 5);
+  assert.equal(executarPedidoSupabase(dia, { acao: 'obterPerfil' }, { agora }).perfil, dia);
 });
 
 test('v3: migração não paga retroativo e não rebaixa o último nível premiado', () => {

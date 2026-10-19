@@ -1,6 +1,7 @@
 import { executarPedidoSupabase, ACOES_REVISAO, usernameValido } from './executarPedidoSupabase.js';
 import { resumirHistorico } from '../utils/estatisticasPainel.js';
-import { criarMissoesDiarias, dataLocalHoje } from '../utils/missoes.js';
+import { criarMissoesDiarias, dataLocalHoje, XP_LOGIN_POR_DIA } from '../utils/missoes.js';
+import { VERSAO_ECONOMIA } from '../utils/economia.js';
 import { conteudoBatalhaPara, validarPartidaNoBanco } from './operarJogosSupabase.js';
 import { criarLimitador, ipDoPedido, LIMITES_API } from './limitador.js';
 import { materiaValida, validarCurso } from '../utils/curso.js';
@@ -141,7 +142,8 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
           if (row) return answer({ resultado: row.profile });
           const perfil = { uid: user.uid, nome: 'Homologação isolada', username: 'homologacao', role: 'admin',
             pontuacaoTotal: 490, tickets: 10, xpTopicos: {}, estatisticas: {}, estatisticasGerais: {},
-            economia: { versao: 2, ultimoNivelPremiado: 1 }, missoesDiarias: criarMissoesDiarias(), dataUltimoLogin: dataLocalHoje() };
+            economia: { versao: VERSAO_ECONOMIA, ultimoNivelPremiado: 1 }, missoesDiarias: criarMissoesDiarias(), dataUltimoLogin: dataLocalHoje(),
+            ofensiva: { dias: 1, ultimoDia: dataLocalHoje() } };
           try {
             await database('rpc/cacamed_commit', { method: 'POST', body: JSON.stringify({ p_player_id: user.uid, p_expected_version: -1, p_profile: perfil }) });
             return answer({ resultado: perfil });
@@ -165,9 +167,10 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
           const contato = user.source === 'firebase' && user.emailVerified === false ? { emailNaoVerificado: user.email } : { email: user.email };
           const perfil = { uid: user.uid, ...contato, nome, username, titulo: pedido.titulo, role: 'jogador',
             materiaPreferida: pedido.materiaPreferida, especialidade: pedido.materiaPreferida, ...curso,
-            pontuacaoTotal: 0, tickets: 0, xpTopicos: {}, estatisticas: {}, estatisticasGerais: {},
-            economia: { versao: 2, ultimoNivelPremiado: 1 }, missoesDiarias: criarMissoesDiarias(),
-            dataUltimoLogin: dataLocalHoje(), tutorialCruzadinhasConcluido: false, criadoEm: new Date().toISOString() };
+            // Economia v3: o primeiro dia já conta como login da ofensiva (25 XP pagos aqui, missão de login concluída).
+            pontuacaoTotal: XP_LOGIN_POR_DIA, tickets: 0, xpTopicos: {}, estatisticas: {}, estatisticasGerais: {},
+            economia: { versao: VERSAO_ECONOMIA, ultimoNivelPremiado: 1 }, missoesDiarias: criarMissoesDiarias(),
+            ofensiva: { dias: 1, ultimoDia: dataLocalHoje() }, dataUltimoLogin: dataLocalHoje(), tutorialCruzadinhasConcluido: false, criadoEm: new Date().toISOString() };
           try {
             await database('rpc/cacamed_commit', { method: 'POST', body: JSON.stringify({ p_player_id: user.uid, p_expected_version: -1, p_profile: perfil }) });
             if (user.authId) await database('cacamed_player_state?' + filter + '&auth_user_id=is.null', { method: 'PATCH', body: JSON.stringify({ auth_user_id: user.authId }) });

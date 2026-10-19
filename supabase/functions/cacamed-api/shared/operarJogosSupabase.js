@@ -134,7 +134,10 @@ export function registrarPartidaSupabase(perfil, original, recibos = [], agora =
   gerais.historico = [...(gerais.historico || []), {
     data: dia, materia: subMateria, tempo, erros, letrasCorretas: letras,
   }].slice(-30);
-  const progresso = aplicarProgressoMissoes(lerMissoes(perfil), { jogar_cruzadinha: 1, acertar_palavras: palavras });
+  const semDica = penalidade === 0;
+  const progresso = aplicarProgressoMissoes(lerMissoes(perfil), { rodadas: 1, cruzadinha_sem_dica: Number(semDica),
+    cruzadinha_relampago: Number(semDica && tempoPlausivel && segundos < palavras * SEGUNDOS_POR_PALAVRA),
+    jogo: { tipo: 'cruzadinha', instante } });
   const atualizado = {
     ...concederRecompensa(perfil, xp + progresso.xp, 2 + progresso.tickets),
     xpTopicos: { ...perfil.xpTopicos, [chaveXP]: xpAnterior + xp },
@@ -176,7 +179,7 @@ export function operarAdminSupabase(perfil, pedido) {
     atualizado = { ...perfil, xpTopicos: { ...perfil.xpTopicos, [chaveXP]: xp } };
   } else if (operacao === 'resetarProgresso') {
     atualizado = { ...perfil, pontuacaoTotal: 0, xpTopicos: {}, tickets: 0, economia: { versao: VERSAO_ECONOMIA, ultimoNivelPremiado: 1 },
-      medidorTicketsCruzadinha: 0, missoesDiarias: criarMissoesCruzadinha(),
+      medidorTicketsCruzadinha: 0, missoesDiarias: criarMissoesCruzadinha(Math.random, Number(perfil.ofensiva?.dias) || 1),
       estatisticas: {}, estatisticasGerais: {}, cruzadinhasRegistradas: [], treinos: {}, revisao: { reiniciadoEm: new Date().toISOString() }, erroMedico: {}, causaEfeito: {}, ddx: { concluidos: [], historico: [], partidas: 0 }, batalha: {} };
     delete atualizado.nivelGlobalAdmin;
     delete atualizado.coroas;
@@ -185,6 +188,13 @@ export function operarAdminSupabase(perfil, pedido) {
   }
 
   return atualizado;
+}
+
+// Caso do DDX que rende XP (primeira conclusão, com acerto) também conta para as missões do dia.
+function recompensaCasoDdx(perfil, xp, impecavel) {
+  if (!xp) return concederRecompensa(perfil, 0);
+  const missoes = aplicarProgressoMissoes(lerMissoes(perfil), { caso_ddx: 1, caso_ddx_impecavel: Number(impecavel), jogo: { tipo: 'ddx', instante: Date.now() } });
+  return { ...concederRecompensa(perfil, xp + missoes.xp, missoes.tickets), missoesDiarias: missoes.missoes };
 }
 
 export function operarPlantaoSupabase(perfil, pedido, recibos = []) {
@@ -224,7 +234,7 @@ export function operarPlantaoSupabase(perfil, pedido, recibos = []) {
   const chave = caso.id + ':' + caso.versao;
   const xp = relatorio.encerrado && !ddx.concluidos.includes(chave) ? relatorio.xp : 0;
   entrada = { ...entrada, relatorio, ...(relatorio.encerrado ? { xpConcedido: xp, encerradoEm: new Date().toISOString() } : {}) };
-  const atualizado = { ...concederRecompensa(perfil, xp),
+  const atualizado = { ...recompensaCasoDdx(perfil, xp, relatorio.bonus === 100),
     xpTopicos: { ...perfil.xpTopicos, 'DDX-RESPIRATORIO': (Number(perfil.xpTopicos?.['DDX-RESPIRATORIO']) || 0) + xp },
     ddx: { ...ddx, entrada,
       concluidos: relatorio.encerrado ? [...new Set([...ddx.concluidos, chave])] : ddx.concluidos,
@@ -284,7 +294,7 @@ export function operarAuditoriaSupabase(perfil, pedido, recibos = []) {
   const repeticao = stats.concluidos.includes(chave);
   const xp = terminou && !repeticao ? xpCasoDdx(relatorio) : 0;
   entrada = { ...entrada, respostas: [...respostas], ...(terminou ? { relatorio, xpConcedido: xp, repeticao, encerradoEm: new Date().toISOString() } : {}) };
-  const atualizado = { ...concederRecompensa(perfil, xp),
+  const atualizado = { ...recompensaCasoDdx(perfil, xp, relatorio?.acertos === relatorio?.total),
     xpTopicos: { ...perfil.xpTopicos, 'DDX-ERRO-MEDICO-RESPIRATORIO': (Number(perfil.xpTopicos?.['DDX-ERRO-MEDICO-RESPIRATORIO']) || 0) + xp },
     erroMedico: { ...stats, entrada, partidas: stats.partidas + Number(terminou),
       acertos: stats.acertos + (relatorio?.acertos || 0), etapas: stats.etapas + (relatorio?.total || 0), xp: stats.xp + xp,
@@ -337,7 +347,7 @@ export function operarRelacaoSupabase(perfil, pedido, recibos = []) {
   const repeticao = stats.concluidos.includes(chave);
   const xp = terminou && !repeticao ? xpCasoDdx(relatorio) : 0;
   entrada = { ...entrada, respostas: [...respostas], ...(terminou ? { relatorio, xpConcedido: xp, repeticao, encerradoEm: new Date().toISOString() } : {}) };
-  const atualizado = { ...concederRecompensa(perfil, xp),
+  const atualizado = { ...recompensaCasoDdx(perfil, xp, relatorio?.acertos === relatorio?.total),
     xpTopicos: { ...perfil.xpTopicos, 'DDX-CAUSA-EFEITO-RESPIRATORIO': (Number(perfil.xpTopicos?.['DDX-CAUSA-EFEITO-RESPIRATORIO']) || 0) + xp },
     causaEfeito: { ...stats, entrada, partidas: stats.partidas + Number(terminou),
       acertos: stats.acertos + (relatorio?.acertos || 0), etapas: stats.etapas + (relatorio?.total || 0), xp: stats.xp + xp,
