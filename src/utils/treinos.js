@@ -73,7 +73,8 @@ export function avaliarRespostaTreino(entrada, resposta, indice) {
 function mesmaRespostaTreino(a, b) {
   return Boolean(a && b && a.itemId === b.itemId && a.escolha === b.escolha);
 }
-export function responderTreinoPerfil(perfil, modo, entradaId, respostas) {
+// `agora`: hora da conclusão; a fila offline passa a hora do evento no aparelho (já ajustada pelo servidor).
+export function responderTreinoPerfil(perfil, modo, entradaId, respostas, agora = new Date().toISOString()) {
   const stats = { partidas: 0, validas: 0, acertos: 0, itens: 0, xp: 0, medidor: 0, ...perfil.treinos?.[modo] };
   let entrada = stats.entrada;
   if (!entrada || entrada.id !== entradaId) throw new Error('Rodada não encontrada. Consulte o progresso salvo.');
@@ -93,7 +94,7 @@ export function responderTreinoPerfil(perfil, modo, entradaId, respostas) {
     const medidor = stats.medidor + Number(valida);
     const ticketRodada = Math.floor(medidor / 2);
     // Economia v3: 100 XP fixos + bônus de acertos e de tempo, só em rodada com pelo menos um acerto.
-    const encerradoEm = new Date().toISOString();
+    const encerradoEm = new Date(agora).toISOString();
     const bonus = valida ? bonusTreino(acertos, 5, segundosEntre(entrada.iniciadoEm, encerradoEm), TEMPO_ESPERADO_TREINO[entrada.variante]) : 0;
     const xp = valida ? XP_JOGO + bonus : 0;
     // Rodada sem acerto não conta para missão nenhuma.

@@ -42,6 +42,7 @@ export function Resultado({ stamp, tom, sub, linhas, total, unidade = 'XP', extr
         <div className={`save ${fase === 'ok' ? 'ok' : fase === 'erro' ? 'err' : ''}`} role="status">
           {fase === 'salvando' && <><MiniEcg /><span>Registrando no prontuário</span></>}
           {fase === 'ok' && <><Check size={15} /><span>Salvo no prontuário</span></>}
+          {fase === 'fila' && <span>Na fila do aparelho: sai sozinha quando a rede voltar</span>}
           {fase === 'erro' && <span>Não foi possível salvar. Tente de novo: a partida não conta duas vezes.</span>}
         </div>
         {idRecibo && <div className="pid">recibo {idRecibo}</div>}

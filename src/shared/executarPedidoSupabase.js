@@ -3,6 +3,7 @@ import { operarRevisaoSupabase, eventosRevisao } from './operarRevisaoSupabase.j
 import { emitirCruzadinhaSupabase, registrarPartidaSupabase, operarAdminSupabase, operarPlantaoSupabase, operarAuditoriaSupabase, operarRelacaoSupabase, operarBatalhaSupabase } from './operarJogosSupabase.js';
 import { eventosBatalha } from '../utils/batalhaRevisao.js';
 import { tentativaErroMedico } from '../utils/erroMedicoRevisao.js';
+import { operarFilaSupabase } from './operarFilaSupabase.js';
 import { AUDITORIAS } from '../utils/erroMedico.js';
 import { registrarXpSemanal } from '../utils/coroas.js';
 import { concederRecompensa, migrarEconomia } from '../utils/economia.js';
@@ -38,6 +39,7 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
     perfil = registrarPartidaSupabase(perfil, pedido.partida, recibos, agora);
     eventos = [{ id: `recibo:${pedido.partida.id}`, kind: 'recibo', data: { modo: 'cruzadinha', rodadaId: pedido.partida.id, titulo: tituloCruzadinha(pedido.partida) } }];
   } else if (pedido.acao === 'emitirCruzadinha') perfil = emitirCruzadinhaSupabase(perfil, pedido, banco, agora);
+  else if (pedido.acao === 'sincronizarFila') ({ perfil, eventos } = operarFilaSupabase(perfil, pedido.item, recibos, new Date(agora).toISOString()));
   else if (pedido.acao === 'tutorial') perfil = { ...perfil, tutorialCruzadinhasConcluido: true };
   else if (pedido.acao === 'editarPerfil') {
     const nome = String(pedido.nome || '').trim();

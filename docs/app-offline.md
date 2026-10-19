@@ -1,6 +1,20 @@
 # App offline
 
-Decidido pelo usuário em 07/10/2026. **Ainda não implementado.** Hoje o [app instalável](app-instalavel.md) só abre a casca sem rede: login, conteúdo e gravações dependem da internet. O andamento fica no [cronograma](cronograma-recuperacao-caca-med.md#plano-de-07102026--economia-v3-revisão-inteligente-v2-e-app-offline).
+Decidido pelo usuário em 07/10/2026. **Em construção desde 19/10/2026 no branch `feat/economia-v3`, sem publicar.** Hoje, em produção, o [app instalável](app-instalavel.md) só abre a casca sem rede. O andamento fica no [cronograma](cronograma-recuperacao-caca-med.md#plano-de-07102026--economia-v3-revisão-inteligente-v2-e-app-offline).
+
+## Andamento (19/10/2026)
+
+| Etapa da ordem de entrega | Estado |
+| --- | --- |
+| 1. Detecção, fila e `sincronizarFila` com o Quiz | **Feita.** `src/services/conexao.js` (checagem `GET ?acao=ping` com 3 s), `src/services/filaOffline.js` (IndexedDB `cacomed-offline`), `src/components/IndicadorConexao.jsx`, `src/shared/operarFilaSupabase.js` |
+| 3. Verdade ou mentira | **Feita** junto do Quiz (mesmo motor). A Revisão offline ainda não |
+| 2, 4, 5 e 6 | A fazer |
+
+Como ficou:
+- **Treino sem rede:** `src/services/treinoOffline.js` envolve o serviço da API. Sem rede, ou se o pedido cai por falta de rede, a rodada é criada e corrigida no aparelho. No fim, vai para a fila, e a tela mostra "XP provisório" e "Na fila do aparelho".
+- **Envio:** ao abrir, quando a rede volta e ao voltar para a aba; em ordem, um item por vez. Recusa (erro 400) fica visível com o motivo e um botão "Entendi, remover". Falta de rede, sessão vencida (401), limite (429) ou erro do servidor tentam de novo, com espera de 2 s a 5 min.
+- **Servidor:** refaz a rodada com os motores compartilhados e devolve o perfil oficial. O recibo `recibo:<id do item>` impede pagar duas vezes. A data do aparelho vale entre o último evento offline aceito (ou 15 dias atrás) e o envio; fora disso, vira a data do envio. Início de rodada inválido não ganha bônus de tempo.
+- **Limite atual:** o app ainda precisa de rede para abrir (o perfil vem do servidor). Hoje o modo offline vale para quem perde a rede com o app aberto; abrir sem rede é a etapa 6.
 
 ## Decisões
 

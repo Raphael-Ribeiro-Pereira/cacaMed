@@ -1,14 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from 'framer-motion';
 import { BrainCircuit, Check, ChevronLeft, ExternalLink, Flame, Play, ScanLine, Ticket, X } from 'lucide-react';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
+import { guardarNaFila } from '../services/conexao';
+import { servicoTreinoComOffline } from '../services/treinoOffline';
 import { nivelPorXP } from '../utils/economia';
 import { animar, fmt, gravarLocal, lerLocal, registrarLatencia, useLargo } from '../utils/prototipo';
 import { MiniEcg } from './prototipoUi';
 import { BotaoCarregar, Contagem, Resultado, SubiuNivel } from './resultadoUi';
 
 // Quiz e Verdade ou mentira no visual do protótipo de movimento. As regras são as do jogo: cinco itens
-// por rodada, conferidos pelo servidor (o gabarito não fica no aparelho), sem relógio e sem combo.
+// por rodada, conferidos pelo servidor, sem relógio e sem combo. Sem rede, o aparelho corrige com o gabarito guardado
+// (aceito pelo usuário no app offline, 07/10/2026) e o servidor revalida tudo ao sincronizar.
 const CORES = { quiz: '#5cc8ff', verdadeMentira: 'var(--amber)' };
 const REGRAS = {
   quiz: ['5 perguntas de múltipla escolha, uma por vez.', 'Cada rodada com pelo menos 1 acerto vale 100 XP, mais até 50 de bônus de desempenho.', 'Depois de cada resposta, a explicação e a fonte.', 'Duas rodadas com pelo menos 1 acerto valem 1 ticket.'],
@@ -43,8 +46,12 @@ function CartaoArrastar({ frase, n, lancar, aoResponder }) {
   </motion.div>;
 }
 
-export default function TreinoMedico({ modo, usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil = chamarPerfilPlanilha }) {
+export default function TreinoMedico({ modo, usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil: servicoApi = chamarPerfilPlanilha }) {
   const web = useLargo();
+  // App offline: sem rede, a rodada é corrigida no aparelho e vai para a fila (services/treinoOffline.js).
+  const perfilRef = useRef(dadosUsuario);
+  perfilRef.current = dadosUsuario;
+  const servicoPerfil = useMemo(() => servicoTreinoComOffline(servicoApi, { perfilAtual: () => perfilRef.current, guardarNaFila }), [servicoApi]);
   const quiz = modo === 'quiz';
   const titulo = quiz ? 'Quiz médico' : 'Verdade ou mentira';
   const stats = dadosUsuario?.treinos?.[modo] || {};
@@ -169,7 +176,7 @@ export default function TreinoMedico({ modo, usuario, dadosUsuario, setDadosUsua
     const texto = (i, valor) => quiz ? entrada.itens[i].opcoes.find(o => o.id === valor)?.texto : valor ? 'Verdade' : 'Mentira';
     return raiz(<Resultado key={entrada.id} stamp={quiz ? 'QUIZ CONCLUÍDO' : 'RODADA ENCERRADA'} tom="amber" recibo={entrada.id}
       sub={quiz ? `${entrada.variante === 'casos' ? 'Casos clínicos' : 'Teoria'} · ${r.acertos}/${r.total} acertos` : `${r.acertos}/${r.total} frases certas`}
-      linhas={linhas} total={r.xp + (r.xpMissoes || 0)} fase="ok" aviso="Seus erros vão para a revisão futura."
+      linhas={linhas} total={r.xp + (r.xpMissoes || 0)} fase={entrada.provisoria ? 'fila' : 'ok'} aviso={entrada.provisoria ? 'XP provisório: rodada jogada sem internet. Ela é enviada sozinha quando a rede voltar, e o servidor confirma o valor.' : 'Seus erros vão para a revisão futura.'}
       principal={{ rotulo: 'Nova rodada', aoClicar: () => setNovaRodada(true) }} aoVoltar={() => setTelaAtual('menu')}
       detalhes={entrada.resultados.map((res, i) => <div key={res.itemId} className="det">
         <b className={res.acertou ? 'yes' : 'no'}>{res.acertou ? <Check /> : <X />}{i + 1}. {quiz ? entrada.itens[i].enunciado : entrada.itens[i].texto}</b>

@@ -20,7 +20,8 @@ export function criarTransporteSupabase({ url, chavePublica, obterToken, fetchIm
         body: JSON.stringify({ ...dados, acao }),
       });
       const corpo = await resposta.json();
-      if (!resposta.ok || corpo.erro) throw new Error(corpo.erro || `Falha no serviço (HTTP ${resposta.status}).`);
+      // `status` separa a recusa do servidor (400) da falta de rede (erro sem status), que a fila offline reenvia.
+      if (!resposta.ok || corpo.erro) throw Object.assign(new Error(corpo.erro || `Falha no serviço (HTTP ${resposta.status}).`), { status: resposta.status });
       registrarTempoAPI(acao, inicio, true);
       return corpo.resultado;
     } catch (erro) {

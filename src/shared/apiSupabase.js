@@ -7,6 +7,8 @@ import { criarLimitador, ipDoPedido, LIMITES_API } from './limitador.js';
 import { materiaValida, validarCurso } from '../utils/curso.js';
 import { bancoPublico } from '../utils/importarBancoCSV.js';
 import { AVISO_IA, contextoExplicacao, resultadoParaExplicar, textoValido } from './explicacaoRevisao.js';
+import { revisaoLiberada } from './operarRevisaoSupabase.js';
+import { NIVEL_REVISAO } from '../utils/revisaoInteligente.js';
 
 export const ORIGENS_SUPABASE = new Set(['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'https://caca-med.vercel.app', 'https://cacamed.com']);
 // Pré-visualizações deste projeto na Vercel (só a conta do projeto cria esses endereços): servem para testar o site novo
@@ -86,6 +88,8 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         const barrado = ip && barrar('get:' + ip, limites.publico);
         if (barrado) return barrado;
         const publico = { 'Cache-Control': 'public, max-age=60' };
+        // Checagem leve do app offline: Wi-Fi sem internet faz `navigator.onLine` mentir.
+        if (acao === 'ping') return answer({ ok: true });
         if (acao === 'ranking') return answer({ sucesso: true, ranking: await ranking() }, 200, publico);
         if (acao === 'coroas' && coroas) return answer({ sucesso: true, coroas: await coroas() }, 200, publico);
         if (acao === 'palavras') return answer({ resultado: await palavrasPublicas() }, 200, { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400' });
@@ -211,14 +215,14 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
             && await usernameEmUso(database, novoUsername, user.uid)) return answer({ erro: 'Este username já está em uso por outro plantonista.' }, 409);
         let historico = [];
         if (ACOES_REVISAO.includes(acao)) {
-          if (row.profile.role !== 'admin') return answer({ erro: 'Revisão inteligente em piloto para administrador.' }, 403);
+          if (!revisaoLiberada(row.profile)) return answer({ erro: `A Revisão inteligente libera no nível ${NIVEL_REVISAO}.` }, 403);
           for (let offset = 0; ; offset += 1000) {
             const page = await database('cacamed_events?' + filter + '&kind=in.(resposta,revisao)&select=data,kind&order=created_at.asc,event_id.asc&limit=1000&offset=' + offset);
             historico.push(...page);
             if (page.length < 1000) break;
           }
         }
-        const id = pedido.entradaId || pedido.revisaoId || pedido.partida?.id;
+        const id = pedido.entradaId || pedido.revisaoId || pedido.partida?.id || pedido.item?.id;
         const recibo = id ? await database('cacamed_events?' + filter + '&event_id=eq.' + encodeURIComponent('recibo:' + id) + '&select=event_id') : [];
         // O recibo pode ter sido confirmado por outra chamada depois da leitura
         // acima. Nesse caso, devolve o perfil lido DEPOIS do recibo confirmado.

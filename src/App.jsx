@@ -23,6 +23,8 @@ import { animar } from './utils/prototipo';
 import { carregarRanking } from './services/rankingSessao';
 import { BarraLateral } from './components/cascaUi';
 import { Ecg } from './components/entradaUi';
+import IndicadorConexao from './components/IndicadorConexao';
+import { useConexao } from './services/conexao';
 import './prototipo.css';
 
 // Abertura do protótipo de movimento com as etapas reais: sessão, credencial e perfil com as missões do dia.
@@ -144,6 +146,8 @@ function App() {
   }, [tentativaBanco]);
 
   const comCasca = Boolean(usuario && dadosUsuario && TELAS_CASCA.includes(telaAtual) && !carregandoAuth);
+  // App offline: indicador de rede e envio da fila do aparelho; o perfil confirmado pelo servidor substitui o provisório.
+  const conexao = useConexao(dadosUsuario ? usuario : null, setDadosUsuario);
   useEffect(() => {
     document.body.classList.toggle('com-casca', comCasca);
     return () => document.body.classList.remove('com-casca');
@@ -162,6 +166,7 @@ function App() {
   return (
     <Suspense fallback={<div className="stitch-page stitch-loading" role="status">Carregando...</div>}>
       {telaAtual === 'login' && <Login setTelaAtual={setTelaAtual} />}
+      {usuario && dadosUsuario && <IndicadorConexao conexao={conexao} />}
       {comCasca && <BarraLateral tela={telaAtual} ir={setTelaAtual} p={dadosUsuario} foto={fotoDoPerfil(dadosUsuario)} aoPassarRanking={() => { carregarRanking().catch(() => {}); }} />}
       {/* Conta confirmada pelo código: recarrega a sessão, e o App abre o Cadastro 2.0 (ou o menu, se já houver perfil). */}
       {telaAtual === 'cadastro' && <Cadastro setTelaAtual={setTelaAtual} aoCriarConta={ativo => { cadastroEmAndamento.current = ativo; }}
