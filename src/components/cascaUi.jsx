@@ -156,7 +156,7 @@ export function RankPreview({ lista, foto, compact, delta = 0, erro, aoTentar, i
 const NAV = [
   ['menu', 'Centro de comando', Home], null,
   ['topicos', 'Cruzadinhas', Grid3x3], ['quiz', 'Quiz médico', BrainCircuit, 'NOVO'], ['verdadeMentira', 'Verdade ou mentira', ScanLine, 'NOVO'], null,
-  ['selecaoDDX', 'DDX · Casos', HeartPulse, 'REVISÃO'], ['batalha', 'Batalha diagnóstica', Swords, 'PILOTO', true], ['revisaoInteligente', 'Revisão inteligente', RotateCcw, 'PILOTO', true], null,
+  ['selecaoDDX', 'DDX · Casos', HeartPulse, 'REVISÃO'], ['batalha', 'Batalha diagnóstica', Swords, 'PILOTO', true], ['revisaoInteligente', 'Revisão inteligente', RotateCcw], null,
   ['ranking', 'Ranking', Trophy], ['estatisticas', 'Estatísticas', BarChart3],
 ];
 const SECAO = { jogo: 'topicos', erroMedico: 'selecaoDDX', causaEfeito: 'selecaoDDX' };

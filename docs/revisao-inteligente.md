@@ -2,9 +2,26 @@
 
 Implementada em 28/09/2026, como piloto para administrador. Backend publicado na **versão 19** da implantação existente, mantendo URL e permissões. Código.gs e Treinos.gs comparados integralmente com os arquivos locais, normalizando quebras de linha. Interface local em http://localhost:5173/; publicação no Vercel depende da validação do piloto. Deploy automático continua desativado.
 
-## Versão 2: decidida em 07/10/2026, ainda não implementada
+## Versão 2: decidida em 07/10/2026, implementada em 19/10/2026 (branch `feat/economia-v3`, sem publicar)
 
-O usuário redefiniu o modo. As seções seguintes descrevem o piloto em vigor, que continua valendo até esta versão ser construída. O andamento fica no [cronograma](cronograma-recuperacao-caca-med.md#plano-de-07102026--economia-v3-revisão-inteligente-v2-e-app-offline).
+O usuário redefiniu o modo. Em produção continua o piloto do administrador até a publicação. O andamento fica no [cronograma](cronograma-recuperacao-caca-med.md#plano-de-07102026--economia-v3-revisão-inteligente-v2-e-app-offline).
+
+### Como ficou implementada
+
+- **Motor:** `src/utils/revisaoInteligente.js` (cartas, sessão de 7, parecidas, domínio) e `src/utils/erroMedicoRevisao.js` (casos do Erro médico). Servidor em `src/shared/operarRevisaoSupabase.js`; tela em `src/components/RevisaoInteligente.jsx`.
+- **Cartas:** Quiz, Verdade ou mentira e Erro médico. A do Paciente DDX ficou de fora: o modo foi fundido no Plantão em 13/10 (ver pendência abaixo). Os itens da Batalha continuam guardados, sem carta.
+- **Perguntas parecidas:** pontuação por mesmo conceito, mesmo tema e palavras iguais no enunciado. Com o banco atual, algumas cartas ficam com menos de 7 itens, porque não há parecidas suficientes; a sessão fica menor, sem repetir item.
+- **Fila:** pergunta parecida errada na revisão entra na fila como erro. O caso do Erro médico entra quando alguma das três etapas errou e só se o caso estiver revisado.
+- **Tela de revisão no fim da sessão:** mostra a pergunta, a escolha da partida e a da revisão (uma só se forem iguais), a correta e a explicação. No Erro médico, mostra cada etapa.
+- **Explicação da IA:** ação `explicarRevisao` na Edge Function. A chave fica só no segredo `OPENROUTER_API_KEY`; o modelo pode ser trocado pelo segredo `OPENROUTER_MODELO` (padrão `qwen/qwen3.8-27b:free`). Cache na tabela `cacamed_explicacoes`, reportes em `cacamed_explicacoes_reportes` (migração `20261019000000_explicacoes_revisao.sql`). Limite de 30 pedidos por hora por jogador. Sem chave, com falha ou com texto inválido (vazio, com link ou longo demais), aparece a explicação revisada do banco.
+- **XP:** +40 por item dominado (terceiro acerto seguido), uma vez por item e versão, sem ticket e fora das missões.
+- **Liberação:** nível 10 (o administrador sempre entra). O menu mostra a Revisão para todos, com "Libera no nível 10" abaixo disso.
+- **Apps Script:** não recebeu a v2 (motor congelado).
+
+### Pendências da v2 para o usuário
+
+1. **Carta do Paciente DDX:** o Paciente DDX virou os casos `pdx-*` do Plantão. Falta decidir se o Plantão (ou só os `pdx-*`) ganha a carta, com a regra de erro grave abaixo. As marcações `grave` ainda dependem de revisão médica.
+2. **Conteúdo:** mais perguntas por conceito no Quiz e no V ou M, para as cartas completarem 7 itens.
 
 ### Entrada por cartas
 

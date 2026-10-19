@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, BrainCircuit, ClipboardCheck, GitBranch, HeartPulse, Play, RotateCcw, ScanLine, Shuffle, Stethoscope, Ticket, Trophy } from 'lucide-react';
+import { BookOpen, BrainCircuit, ClipboardCheck, GitBranch, HeartPulse, Lock, Play, RotateCcw, ScanLine, Shuffle, Stethoscope, Ticket, Trophy } from 'lucide-react';
 import { obterMeuIdPublico } from '../services/rankingPublico';
 import { carregarRanking, rankingEmCache } from '../services/rankingSessao';
 import { DOENCAS } from '../utils/batalha';
-import { progressoGlobal } from '../utils/economia';
+import { nivelPorXP, progressoGlobal } from '../utils/economia';
+import { NIVEL_REVISAO } from '../utils/revisaoInteligente';
 import { fotoDoPerfil } from '../utils/fotosCracha';
 import { lerMissoes } from '../utils/missoes';
 import { CASOS_PLANTAO } from '../utils/plantao';
@@ -76,14 +77,17 @@ function Rapidos({ ir }) {
   </>;
 }
 
+// Revisão v2: aparece para todos e libera no nível 10 (o administrador sempre entra).
 function Revisao({ p, ir }) {
   const r = p.revisao;
   const andamento = r?.entrada && !r.entrada.encerrada;
+  const liberada = p.role === 'admin' || nivelPorXP(p.pontuacaoTotal) >= NIVEL_REVISAO;
+  const cartas = r?.resumo?.cartas?.length;
   return <button className="mode wide rise" style={{ '--i': 3 }} onClick={() => ir('revisaoInteligente')}>
     <span className="ico" style={{ background: 'rgba(0,245,212,.1)', color: 'var(--mint)' }}><RotateCcw /></span>
     <span style={{ display: 'grid', gap: 2, minWidth: 0 }}><b>Revisão inteligente</b>
-      <small>{andamento ? 'Sessão em andamento' : r?.resumo ? `${n(r.resumo.disponiveis)} itens disponíveis na última consulta` : 'Reveja seus erros em sessões curtas'} · sem ticket</small></span>
-    <span className="ddx-side"><span className="tag">PILOTO</span></span>
+      <small>{!liberada ? `Libera no nível ${NIVEL_REVISAO}. Seus erros já estão sendo guardados.` : andamento ? 'Sessão em andamento' : cartas ? `${cartas} carta${cartas === 1 ? '' : 's'} para rever` : 'Reveja seus erros em sessões curtas'} · sem ticket</small></span>
+    <span className="ddx-side">{!liberada && <span className="tag"><Lock size={11} /> NÍVEL {NIVEL_REVISAO}</span>}</span>
   </button>;
 }
 
@@ -152,7 +156,7 @@ export default function MenuPrincipal({ dadosUsuario, setTelaAtual, usuario, set
         <span className="w-label">ESTUDO RÁPIDO <small>sem ticket</small></span>
         <Hero p={p} web ir={ir} />
         <div className="w-quick"><Rapidos ir={ir} /></div>
-        {admin && <div className="w-ddx"><Revisao p={p} ir={ir} /></div>}
+        <div className="w-ddx"><Revisao p={p} ir={ir} /></div>
         <span className="w-label">CASOS CLÍNICOS <small>1 ticket por caso</small></span>
         <div className="w-ddx"><Ddx p={p} web ir={ir} /></div>
         {admin && <div className="w-bt"><BattleCard p={p} web ir={ir} /></div>}
@@ -178,7 +182,7 @@ export default function MenuPrincipal({ dadosUsuario, setTelaAtual, usuario, set
 
       <div className="sec"><h2>Estudo rápido</h2><span>sem ticket</span></div>
       <Hero p={p} ir={ir} />
-      <div className="modes" style={{ marginTop: 10 }}><Rapidos ir={ir} />{admin && <Revisao p={p} ir={ir} />}</div>
+      <div className="modes" style={{ marginTop: 10 }}><Rapidos ir={ir} /><Revisao p={p} ir={ir} /></div>
 
       <div className="sec"><h2>Casos clínicos</h2><span>1 ticket por caso</span></div>
       <div className="modes"><Ddx p={p} ir={ir} />{admin && <BattleCard p={p} ir={ir} />}</div>
