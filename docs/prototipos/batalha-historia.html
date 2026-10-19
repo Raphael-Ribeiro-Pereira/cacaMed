@@ -102,7 +102,12 @@ svg{display:block}
 /* ---------- Cenas em pixel art (entrada e transmissão) ---------- */
 #cena,#transmissao{background:#05070d;align-items:center;justify-content:center}
 .cena-quadro{position:relative;margin:auto}
-.cena-quadro canvas{width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;display:block;border-radius:6px}
+.cena-quadro svg{width:100%;height:100%;display:block;border-radius:12px;overflow:hidden}
+.ecg-anim{stroke-dasharray:140;animation:ecg 1.6s linear infinite}
+@keyframes ecg{from{stroke-dashoffset:280}to{stroke-dashoffset:0}}
+.zz{animation:zz 2.4s ease-in-out infinite}.zz2{animation-delay:-1.2s}
+@keyframes zz{0%{opacity:0;transform:translate(0,8px)}40%{opacity:1}100%{opacity:0;transform:translate(10px,-14px)}}
+@media (prefers-reduced-motion:reduce){.ecg-anim,.zz{animation:none}}
 .pular{position:absolute;top:calc(12px + env(safe-area-inset-top));right:12px;z-index:20;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.55);color:#fff;font:700 12px var(--mono);letter-spacing:.06em}
 .pular[hidden]{display:none}
 .pular svg{width:14px;height:14px}
@@ -227,7 +232,7 @@ svg{display:block}
       <div class="ficha" id="ficha" hidden role="dialog" aria-label="Paciente"></div>
     </section>
     <section class="tela" id="cena" hidden aria-label="Cutscene de entrada">
-      <div class="cena-quadro" id="quadro-cena"><canvas id="tela-pixel" width="768" height="576"></canvas>
+      <div class="cena-quadro" id="quadro-cena"><svg id="svg-cena" viewBox="0 0 800 600" aria-hidden="true"></svg>
         <div class="caixa" id="caixa-cena" hidden><span class="txt"></span><span class="seta"></span></div></div>
       <button class="pular" id="pular" hidden></button>
     </section>
@@ -245,7 +250,7 @@ svg{display:block}
       <div class="relatorio" id="relatorio" hidden><div class="cartao" id="cartao-rel"></div></div>
     </section>
     <section class="tela" id="transmissao" hidden aria-label="Como a doença chegou ao paciente">
-      <div class="cena-quadro" id="quadro-trans"><canvas id="tela-trans" width="768" height="576"></canvas><span class="rotulo-via" id="rotulo-via"></span>
+      <div class="cena-quadro" id="quadro-trans"><svg id="svg-trans" viewBox="0 0 800 600" aria-hidden="true"></svg><span class="rotulo-via" id="rotulo-via"></span>
         <div class="caixa" id="caixa-trans" hidden><span class="txt"></span><span class="seta"></span></div></div>
     </section>
     <section class="tela" id="pergaminho" hidden aria-label="Pergaminho da doença">
@@ -448,69 +453,93 @@ function proximoPaciente() {
   fecharFicha(); centralizar(true, id); setTimeout(() => abrirFicha(id), rm() ? 0 : 450);
 }
 
-// ---------- Pixel art: utilidades e personagens ----------
-const U = 4;
-const r = (ctx, cor, x, y, w, h) => { ctx.fillStyle = cor; ctx.fillRect(Math.round(x) * U, Math.round(y) * U, w * U, h * U); };
-// `e`: tamanho de cada pixel do desenho, em pixels da cena (2 deixa o personagem com o dobro do tamanho).
-function desenharMapaPixel(ctx, mapa, x, y, pal, espelho = false, e = 1) {
-  mapa.forEach((linha, j) => { const l = espelho ? [...linha].reverse() : [...linha]; l.forEach((c, i) => { if (c !== '.' && pal[c]) { ctx.fillStyle = pal[c]; ctx.fillRect((Math.round(x) + i * e) * U, (Math.round(y) + j * e) * U, U * e, U * e); } }); });
-}
-const PAL_MED = { k: '#1b1f2e', w: '#eef2f8', g: '#b8c2d6', s: '#e2b08a', S: '#c48f6a', h: '#2b2138', p: '#3a4a6b', b: '#151824', m: '#00c9ad' };
-const SPRITES = {
-  cima: [['....hhhh....', '...hhhhhh...', '...hhhhhh...', '...hhhhhh...', '....SssS....', '..gwwwwwwg..', '.wwwwwwwwww.', '.wwwgwwgwww.', '.swwwwwwwws.', '.swwwwwwwws.', '..wwwwwwww..', '..wwwwwwww..', '...pp..pp...', '...pp..pp...', '...pp..bb...', '...bb.......'],
-    ['....hhhh....', '...hhhhhh...', '...hhhhhh...', '...hhhhhh...', '....SssS....', '..gwwwwwwg..', '.wwwwwwwwww.', '.wwwgwwgwww.', '.swwwwwwwws.', '.swwwwwwwws.', '..wwwwwwww..', '..wwwwwwww..', '...pp..pp...', '...pp..pp...', '...bb..pp...', '.......bb...']],
-  lado: [['....hhhh....', '...hhhhhhh..', '...hhhhsss..', '...hhsssks..', '....sssss...', '....SSss....', '...wwwwww...', '..wwwwwmww..', '..wwwwwmww..', '..wwwsswww..', '...wwsswww..', '...wwwwww...', '....pp.pp...', '....pp.pp...', '....pp..bb..', '....bb......'],
-    ['....hhhh....', '...hhhhhhh..', '...hhhhsss..', '...hhsssks..', '....sssss...', '....SSss....', '...wwwwww...', '..wwwwwmww..', '..wwwwwmww..', '..wwwsswww..', '...wwsswww..', '...wwwwww...', '....pp.pp...', '....pp.pp...', '...bb..pp...', '.......bb...']],
-};
-// Pessoa de lado (olhando para a direita); `boca` abre para a tosse e `braco` sobe para levar algo à boca.
-const PESSOA = ['....hhhh....', '...hhhhhh...', '...hhhssss..', '...hhsssks..', '....sssss...', '.....sss....', '...cccccc...', '..cccccccc..', '..ccccccsc..', '..cccccsc...', '..cccccc....', '...cccccc...', '...pppppp...', '...pp..pp...', '...pp..pp...', '...pp..pp...', '...pp..pp...', '...bb..bbb..'];
-// Nas cenas de transmissão as pessoas têm o dobro do tamanho (24 x 36 pixels de cena).
-function desenharPessoa(ctx, x, y, { camisa = '#4f7cc9', cabelo = '#3a2a1e', calca = '#3a4a6b', espelho = false, boca = false, braco = false } = {}) {
-  const e = 2; const pal = { h: cabelo, s: '#e2b08a', k: '#1b1f2e', c: camisa, p: calca, b: '#1b1f2e' };
-  desenharMapaPixel(ctx, PESSOA, x, y, pal, espelho, e);
-  const px = c => espelho ? x + (11 - c) * e : x + c * e; const py = l => y + l * e;
-  if (boca) { r(ctx, '#7a1f1f', px(9), py(4), e, e); r(ctx, '#e2b08a', px(10), py(5), e, 2 * e); }
-  if (braco) { r(ctx, camisa, px(8), py(6), 2 * e, 2 * e); r(ctx, '#e2b08a', px(9), py(4), 2 * e, 2 * e); }
-}
+// ---------- Cenas em desenho animado (SVG, arte original) ----------
+const TRACO = '#1f2633';
 let semente = 7;
 const aleatorio = () => { semente = (semente * 16807) % 2147483647; return semente / 2147483647; };
+// Pessoa de lado, olhando para a direita, com os pés na origem. Partes com id: braço (para levantar) e boca (para tossir).
+function pessoa(id, { x, y, s = .85, camisa = '#4f7cc9', cabelo = '#3a2a1e', calca = '#3a4a6b', pele = '#e2b08a', espelho = false }) {
+  return `<g transform="translate(${x} ${y}) scale(${espelho ? -s : s} ${s})"><g id="${id}">
+    <ellipse cx="0" cy="0" rx="48" ry="10" fill="rgba(0,0,0,.18)"/>
+    <rect x="-22" y="-98" width="20" height="98" rx="10" fill="${calca}" stroke="${TRACO}" stroke-width="4"/>
+    <rect x="4" y="-98" width="20" height="98" rx="10" fill="${calca}" stroke="${TRACO}" stroke-width="4"/>
+    <ellipse cx="-10" cy="-3" rx="19" ry="9" fill="#2a2f3d"/><ellipse cx="18" cy="-3" rx="19" ry="9" fill="#2a2f3d"/>
+    <g id="${id}-tronco"><rect x="-36" y="-204" width="72" height="120" rx="32" fill="${camisa}" stroke="${TRACO}" stroke-width="4"/>
+      <path d="M-30 -120 Q0 -110 30 -120" fill="none" stroke="rgba(0,0,0,.12)" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="6" cy="-250" r="46" fill="${pele}" stroke="${TRACO}" stroke-width="4"/>
+      <path d="M-40 -232 Q-50 -282 -2 -298 Q46 -306 52 -264 Q30 -280 6 -276 Q-20 -268 -24 -236 Z" fill="${cabelo}" stroke="${TRACO}" stroke-width="4" stroke-linejoin="round"/>
+      <ellipse cx="30" cy="-252" rx="5.5" ry="8" fill="${TRACO}"/><circle cx="32" cy="-255" r="2" fill="#fff"/>
+      <circle cx="20" cy="-232" r="9" fill="#ff8fa3" opacity=".35"/>
+      <path id="${id}-boca" d="M30 -226 Q38 -219 46 -226" fill="${TRACO}" stroke="${TRACO}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <g id="${id}-braco"><rect x="6" y="-192" width="22" height="96" rx="11" fill="${camisa}" stroke="${TRACO}" stroke-width="4"/><circle cx="17" cy="-96" r="12" fill="${pele}" stroke="${TRACO}" stroke-width="4"/></g>
+    </g></g></g>`;
+}
+const BOCA_FECHADA = 'M30 -226 Q38 -219 46 -226', BOCA_ABERTA = 'M28 -228 Q37 -206 48 -228 Q38 -234 28 -228 Z';
+const giro = (el, graus, ox, oy) => el?.setAttribute('transform', `rotate(${graus} ${ox} ${oy})`);
 
-// ---------- Cutscene de entrada: enfermaria vista de cima ----------
-function desenharCama(ctx, x, y, { cobertor, cabelo = '#4a3424' }) {
-  r(ctx, '#7d8aa3', x - 1, y - 1, 26, 40); r(ctx, '#aeb9cc', x, y, 24, 38); r(ctx, '#f4f6fa', x + 2, y + 2, 20, 34);
-  r(ctx, '#ffffff', x + 4, y + 3, 16, 7); r(ctx, '#d8dee9', x + 4, y + 9, 16, 1);
-  r(ctx, cabelo, x + 8, y + 3, 8, 4); r(ctx, '#e2b08a', x + 8, y + 6, 8, 5); r(ctx, '#1b1f2e', x + 9, y + 8, 1, 1); r(ctx, '#1b1f2e', x + 14, y + 8, 1, 1);
-  r(ctx, cobertor, x + 2, y + 13, 20, 23); r(ctx, 'rgba(255,255,255,.18)', x + 2, y + 13, 20, 2); r(ctx, 'rgba(0,0,0,.12)', x + 6, y + 18, 12, 14);
-  r(ctx, '#5c6880', x - 1, y + 38, 3, 2); r(ctx, '#5c6880', x + 22, y + 38, 3, 2);
+// ---------- Cutscene de entrada: enfermaria vista de cima, em desenho animado ----------
+function leito(x, y, { cobertor, cabelo, dormindo = false }) {
+  return `<g transform="translate(${x} ${y})">
+    <rect x="-7" y="-7" width="144" height="214" rx="20" fill="#9aa6ba" stroke="${TRACO}" stroke-width="3"/>
+    <rect width="130" height="200" rx="16" fill="#f7f9fc" stroke="${TRACO}" stroke-width="3"/>
+    <rect x="20" y="12" width="90" height="42" rx="16" fill="#fff" stroke="#c9d2e0" stroke-width="3"/>
+    <circle cx="65" cy="40" r="21" fill="#e2b08a" stroke="${TRACO}" stroke-width="3"/>
+    <path d="M44 38 Q46 16 65 16 Q86 16 86 38 Q76 28 65 30 Q52 30 44 38 Z" fill="${cabelo}" stroke="${TRACO}" stroke-width="3" stroke-linejoin="round"/>
+    ${dormindo ? `<path d="M55 46 q4 3 8 0M68 46 q4 3 8 0" fill="none" stroke="${TRACO}" stroke-width="2.5" stroke-linecap="round"/>` : `<circle cx="58" cy="45" r="3" fill="${TRACO}"/><circle cx="73" cy="45" r="3" fill="${TRACO}"/>`}
+    <path d="M8 68 H122 V186 Q122 194 114 194 H16 Q8 194 8 186 Z" fill="${cobertor}" stroke="${TRACO}" stroke-width="3"/>
+    <path d="M8 80 H122" stroke="rgba(255,255,255,.45)" stroke-width="6"/><path d="M40 110 q20 10 50 0M34 150 q30 12 64 0" fill="none" stroke="rgba(0,0,0,.12)" stroke-width="4" stroke-linecap="round"/>
+  </g>`;
 }
-function desenharSala(ctx, t) {
-  for (let j = 2; j < 9; j++) for (let i = 0; i < 12; i++) r(ctx, (i + j) % 2 ? '#d3dae6' : '#dfe5ee', i * 16, j * 16, 16, 16);
-  r(ctx, '#2f5d62', 0, 0, 192, 30); r(ctx, '#264d51', 0, 0, 192, 4); r(ctx, '#1e3e41', 0, 30, 192, 3);
-  r(ctx, '#dfe7f0', 20, 6, 36, 20); r(ctx, '#8fd3e8', 22, 8, 32, 16); r(ctx, '#bfe8f4', 22, 8, 32, 5); r(ctx, '#dfe7f0', 37, 8, 2, 16); r(ctx, '#dfe7f0', 22, 15, 32, 2);
-  r(ctx, '#e9edf3', 90, 8, 24, 14); r(ctx, '#1b1f2e', 92, 10, 20, 10);
-  [0, 0, 0, -3, 4, -1, 0, 0, 0, 0].forEach((dy, i) => r(ctx, '#00f5d4', 93 + i * 2, 15 + dy, 2, 1));
-  r(ctx, '#e9edf3', 150, 8, 12, 12); r(ctx, '#1b1f2e', 155, 10, 1, 5); r(ctx, '#1b1f2e', 156, 14, 3, 1);
-  r(ctx, '#a0663d', 6, 38, 10, 9); r(ctx, '#7a4c2c', 6, 38, 10, 2); [[4, 30, 6, 8], [10, 27, 6, 11], [14, 31, 5, 7], [8, 33, 6, 6]].forEach(([x, y, w, h]) => r(ctx, '#3e9d5c', x, y, w, h)); r(ctx, '#58bf76', 11, 28, 3, 4);
-  desenharCama(ctx, 24, 52, { cobertor: '#8fb3d9', cabelo: '#6b6b6b' }); r(ctx, '#9fd0c9', 54, 46, 3, 44); r(ctx, '#7fb8b0', 54, 46, 1, 44);
-  desenharCama(ctx, 140, 74, { cobertor: '#e8a77c' }); r(ctx, '#9fd0c9', 134, 66, 3, 48); r(ctx, '#7fb8b0', 134, 66, 1, 48);
-  r(ctx, '#4b5568', 168, 70, 14, 12); r(ctx, '#0b1a17', 169, 71, 12, 8);
-  const fase = Math.floor(t / 120) % 12; for (let i = 0; i < 12; i++) r(ctx, i === fase ? '#7dffe9' : '#00c9ad', 169 + i, 75 + (i === fase ? -2 : 0), 1, 1);
-  r(ctx, '#4b5568', 174, 82, 2, 20); r(ctx, '#4b5568', 170, 101, 10, 2);
-  r(ctx, '#9aa6ba', 82, 140, 28, 4); r(ctx, '#2a3242', 84, 141, 24, 3);
+function montarEnfermaria() {
+  return `<defs>
+      <pattern id="piso" width="80" height="80" patternUnits="userSpaceOnUse"><rect width="80" height="80" fill="#e6ecf4"/><rect width="40" height="40" fill="#dde5ef"/><rect x="40" y="40" width="40" height="40" fill="#dde5ef"/><path d="M0 0H80V80" fill="none" stroke="rgba(31,38,51,.06)" stroke-width="2"/></pattern>
+      <linearGradient id="parede" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a8b90"/><stop offset="1" stop-color="#2f6266"/></linearGradient>
+      <linearGradient id="vidro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cdeffa"/><stop offset="1" stop-color="#7cc3dc"/></linearGradient>
+    </defs>
+    <rect width="800" height="600" fill="url(#piso)"/>
+    <rect width="800" height="128" fill="url(#parede)"/><rect y="120" width="800" height="12" fill="#24494c"/>
+    <rect x="70" y="18" width="170" height="88" rx="14" fill="#eef3f8" stroke="${TRACO}" stroke-width="3"/><rect x="82" y="28" width="146" height="68" rx="8" fill="url(#vidro)"/>
+    <path d="M155 28V96M82 62H228" stroke="#eef3f8" stroke-width="6"/><path d="M96 86 L130 36" stroke="rgba(255,255,255,.6)" stroke-width="8" stroke-linecap="round"/>
+    <rect x="350" y="26" width="120" height="70" rx="12" fill="#eef3f8" stroke="${TRACO}" stroke-width="3"/><rect x="360" y="36" width="100" height="50" rx="6" fill="#0b1a17"/>
+    <polyline class="ecg-anim" points="364,62 384,62 392,62 398,44 405,78 411,58 418,62 456,62" fill="none" stroke="#00f5d4" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="660" cy="62" r="30" fill="#fff" stroke="${TRACO}" stroke-width="3"/><path d="M660 62V42M660 62L674 70" stroke="${TRACO}" stroke-width="4" stroke-linecap="round"/>
+    <g transform="translate(38 150)"><rect x="-22" y="20" width="44" height="40" rx="8" fill="#c97b4a" stroke="${TRACO}" stroke-width="3"/>
+      <ellipse cx="-14" cy="0" rx="14" ry="26" fill="#4caf6d" stroke="${TRACO}" stroke-width="3" transform="rotate(-25 -14 0)"/><ellipse cx="14" cy="-4" rx="14" ry="28" fill="#5cc27d" stroke="${TRACO}" stroke-width="3" transform="rotate(22 14 -4)"/><ellipse cx="0" cy="-12" rx="12" ry="26" fill="#6fd08d" stroke="${TRACO}" stroke-width="3"/></g>
+    ${leito(110, 190, { cobertor: '#8fb3d9', cabelo: '#9aa0a8', dormindo: true })}
+    <text class="zz" x="210" y="200" font-family="var(--sans)" font-weight="800" font-size="26" fill="#6c7a94">z</text><text class="zz zz2" x="226" y="178" font-family="var(--sans)" font-weight="800" font-size="20" fill="#6c7a94">z</text>
+    <path d="M286 170 V420" stroke="#9aa6ba" stroke-width="6" stroke-linecap="round"/><path d="M286 176 q14 30 0 60 q14 30 0 60 q14 30 0 60 q14 30 0 60" fill="#a8dcd3" stroke="${TRACO}" stroke-width="3"/>
+    ${leito(560, 270, { cobertor: '#f0a878', cabelo: '#4a3424' })}
+    <g transform="translate(730 300)"><rect x="-34" y="-30" width="68" height="46" rx="8" fill="#4b5568" stroke="${TRACO}" stroke-width="3"/><rect x="-26" y="-22" width="52" height="30" rx="4" fill="#0b1a17"/>
+      <polyline class="ecg-anim" points="-22,-6 -10,-6 -6,-16 -1,4 4,-8 8,-6 22,-6" fill="none" stroke="#00f5d4" stroke-width="2.5" stroke-linejoin="round"/><path d="M0 16V110M-22 110H22" stroke="#4b5568" stroke-width="6" stroke-linecap="round"/></g>
+    <rect x="350" y="586" width="100" height="20" rx="4" fill="#2a3242"/><rect x="342" y="580" width="116" height="8" rx="4" fill="#9aa6ba"/>
+    <g id="medico"><g id="med-corpo">
+      <ellipse cx="0" cy="10" rx="34" ry="24" fill="rgba(0,0,0,.16)"/>
+      <circle id="braco-e" cx="-28" cy="0" r="11" fill="#f4f7fb" stroke="${TRACO}" stroke-width="3"/><circle id="braco-d" cx="28" cy="0" r="11" fill="#f4f7fb" stroke="${TRACO}" stroke-width="3"/>
+      <ellipse cx="0" cy="2" rx="28" ry="19" fill="#f4f7fb" stroke="${TRACO}" stroke-width="3"/>
+      <path d="M-16 -8 Q0 8 16 -8" fill="none" stroke="#00c9ad" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="0" cy="-2" r="16" fill="#e2b08a" stroke="${TRACO}" stroke-width="3"/>
+      <path d="M-16 0 A16 16 0 0 1 16 0 Q16 10 0 12 Q-16 10 -16 0 Z" fill="#2b2138" transform="rotate(180 0 -2)"/>
+      <ellipse cx="0" cy="-17" rx="5" ry="3.5" fill="#d29a74"/>
+    </g></g>
+    <g id="balao" opacity="0"><path d="M-26 -60 h52 a12 12 0 0 1 12 12 v34 a12 12 0 0 1 -12 12 h-18 l-8 12 l-8 -12 h-18 a12 12 0 0 1 -12 -12 v-34 a12 12 0 0 1 12 -12z" fill="#fff" stroke="${TRACO}" stroke-width="3"/>
+      <path d="M0 -50 V-26" stroke="#e5484d" stroke-width="7" stroke-linecap="round"/><circle cx="0" cy="-14" r="4" fill="#e5484d"/></g>`;
 }
-const CENA = { pos: { x: 96, y: 150 }, dir: 'cima', quadro: 0, balao: false };
-let rafCena = null, cenaAtiva = false;
-function loopCena(t) {
-  if (!cenaAtiva) return;
-  const ctx = $('#tela-pixel').getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, 768, 576); desenharSala(ctx, t);
-  desenharMapaPixel(ctx, SPRITES[CENA.dir][CENA.quadro], CENA.pos.x - 6, CENA.pos.y - 16, PAL_MED);
-  if (CENA.balao) { const bx = Math.round(CENA.pos.x) - 3, by = Math.round(CENA.pos.y) - 30; r(ctx, '#1b1f2e', bx - 1, by - 1, 9, 12); r(ctx, '#ffffff', bx, by, 7, 10); r(ctx, '#d63c3c', bx + 3, by + 2, 1, 4); r(ctx, '#d63c3c', bx + 3, by + 7, 1, 1); }
-  rafCena = requestAnimationFrame(loopCena);
+const CENA = { x: 400, y: 640, ang: 0, passo: 0 };
+let cenaAtiva = false, rafCena = null;
+function posicionarMedico() {
+  const med = $('#medico'); if (!med) return;
+  const balanco = Math.sin(CENA.passo) * 7;
+  med.setAttribute('transform', `translate(${CENA.x.toFixed(1)} ${CENA.y.toFixed(1)}) rotate(${CENA.ang}) scale(1.45)`);
+  $('#braco-e').setAttribute('cy', (balanco).toFixed(1)); $('#braco-d').setAttribute('cy', (-balanco).toFixed(1));
+  $('#med-corpo').setAttribute('transform', `scale(${(1 + Math.abs(Math.sin(CENA.passo)) * .03).toFixed(3)})`);
 }
-function andar(x, y, dir, vel = 34) {
+// O médico anda em linha reta até (x, y), virado para onde vai, balançando os braços.
+function andar(x, y, vel = 150) {
   return new Promise(resolve => {
-    CENA.dir = dir; const de = { ...CENA.pos }; const dur = rm() ? 1 : Math.hypot(x - de.x, y - de.y) / vel * 1000; const t0 = performance.now();
-    const passo = t => { const p = Math.min(1, (t - t0) / dur); CENA.pos = { x: de.x + (x - de.x) * p, y: de.y + (y - de.y) * p }; CENA.quadro = Math.floor((t - t0) / 160) % 2; if (p < 1 && cenaAtiva) requestAnimationFrame(passo); else { CENA.quadro = 0; resolve(); } };
+    const de = { x: CENA.x, y: CENA.y }; const dist = Math.hypot(x - de.x, y - de.y); const dur = rm() ? 1 : dist / vel * 1000; const t0 = performance.now();
+    CENA.ang = Math.round(Math.atan2(x - de.x, de.y - y) * 180 / Math.PI);
+    const passo = t => { const p = Math.min(1, (t - t0) / dur); CENA.x = de.x + (x - de.x) * p; CENA.y = de.y + (y - de.y) * p; CENA.passo = (t - t0) / 110; posicionarMedico();
+      if (p < 1 && cenaAtiva) requestAnimationFrame(passo); else { CENA.passo = 0; posicionarMedico(); resolve(); } };
     requestAnimationFrame(passo);
   });
 }
@@ -530,24 +559,28 @@ const minusculo = t => t.charAt(0).toLowerCase() + t.slice(1);
 let pulou = false;
 async function cutscene(id) {
   const d = DOENCA[id]; S.atual = id;
-  mostrar('cena'); pulou = false; cenaAtiva = true; CENA.pos = { x: 96, y: 152 }; CENA.dir = 'cima'; CENA.balao = false;
+  mostrar('cena'); pulou = false; cenaAtiva = true;
+  $('#svg-cena').innerHTML = montarEnfermaria(); Object.assign(CENA, { x: 400, y: 650, ang: 0, passo: 0 }); posicionarMedico();
   $('#caixa-cena').hidden = true; $('#pular').hidden = !(S.pular === 'sempre' || S.visitadas.has(id));
-  rafCena = requestAnimationFrame(loopCena);
-  await andar(96, 100, 'cima'); if (pulou) return;
-  await andar(128, 100, 'lado'); if (pulou) return;
-  CENA.balao = true; await pausa(700); if (pulou) return; CENA.balao = false;
+  await andar(400, 380); if (pulou) return;
+  await andar(500, 380); if (pulou) return;
+  const balao = $('#balao'); balao.setAttribute('transform', `translate(${CENA.x} ${CENA.y - 40})`);
+  if (!rm()) balao.animate([{ opacity: 0, transform: `translate(${CENA.x}px, ${CENA.y - 30}px) scale(.3)` }, { opacity: 1, transform: `translate(${CENA.x}px, ${CENA.y - 40}px) scale(1.15)` }, { opacity: 1, transform: `translate(${CENA.x}px, ${CENA.y - 40}px) scale(1)` }], { duration: 420, easing: 'ease-out' });
+  balao.setAttribute('opacity', '1');
+  await pausa(800); if (pulou) return; balao.setAttribute('opacity', '0');
   await escrever($('#caixa-cena'), `Leito 4. Paciente com ${minusculo(d.caso)}.`); if (pulou) return;
   await escrever($('#caixa-cena'), 'Ninguém sabe ainda o que ele tem. Vamos investigar.'); if (pulou) return;
   irParaBatalha(id);
 }
+
 async function irParaBatalha(id) { S.visitadas.add(id); guardar(); $('#caixa-cena').hidden = true; $('#pular').hidden = true; await microscopio(id); }
 
 // ---------- Transição em microscópio (escolhida) ----------
 async function microscopio(id) {
   const tr = $('#transicao'); tr.hidden = false; tr.innerHTML = '';
   const app = $('#app'); const W = app.clientWidth, H = app.clientHeight;
-  const q = $('#tela-pixel').getBoundingClientRect(); const a = app.getBoundingClientRect();
-  const cx = q.left - a.left + q.width * (152 / 192), cy = q.top - a.top + q.height * (88 / 144); const R = Math.hypot(W, H);
+  const q = $('#svg-cena').getBoundingClientRect(); const a = app.getBoundingClientRect();
+  const cx = q.left - a.left + q.width * (625 / 800), cy = q.top - a.top + q.height * (310 / 600); const R = Math.hypot(W, H);
   const roda = (x, y, rr) => ({ left: `${x - rr}px`, top: `${y - rr}px`, width: `${rr * 2}px`, height: `${rr * 2}px` });
   const iris = document.createElement('div'); iris.className = 'iris'; tr.appendChild(iris); Object.assign(iris.style, roda(cx, cy, R));
   await mover(iris, [roda(cx, cy, R), roda(cx, cy, 34), roda(cx, cy, 34), roda(cx, cy, 0)].map((f, k) => ({ ...f, offset: [0, .55, .8, 1][k] })), { duration: 1000, easing: 'cubic-bezier(.6,0,.3,1)' });
@@ -607,72 +640,126 @@ function mostrarRelatorio(venceu) {
   rel.querySelector('button').focus({ preventScroll: true });
 }
 
-// ---------- Cutscenes de transmissão (5, por via; não dizem o nome da doença) ----------
-let rafTrans = null;
+// ---------- Cutscenes de transmissão (5 cenas por via, em desenho animado) ----------
+// A cena mostra só o último passo (como chegou ao paciente); o começo da cadeia vem na primeira fala.
+// Nada aqui diz o nome da doença. Rascunho para revisão médica.
+const CADEIA = {
+  pneumo: ['A bactéria vive no nariz e na garganta de muita gente saudável, sem causar doença.', 'Alguém tossiu perto do paciente e as gotículas chegaram até ele. Às vezes, depois de uma gripe, a bactéria desce para o pulmão.'],
+  tb: ['Uma pessoa doente, ainda sem tratamento, solta o bacilo ao tossir, falar ou espirrar, e ele fica no ar de lugares fechados.', 'O paciente passou muito tempo nesse ambiente e respirou o bacilo.'],
+  hanse: ['A bactéria passa pelas gotículas do nariz e da boca de uma pessoa doente que ainda não se trata. Com o tratamento, ela para de transmitir.', 'O paciente conviveu de perto, por muito tempo, com essa pessoa.'],
+  meningo: ['A bactéria vive na garganta de pessoas saudáveis, que a carregam sem saber.', 'Num contato próximo, as gotículas e a saliva passaram para o paciente.'],
+  dengue: ['Antes, uma fêmea do mosquito Aedes aegypti picou uma pessoa doente e levou o vírus. Depois de alguns dias, o mosquito ficou pronto para transmitir.', 'Agora, ela picou o paciente.'],
+  malaria: ['Antes, uma fêmea do mosquito Anopheles picou uma pessoa doente e levou o parasita, um protozoário, que amadureceu dentro dela.', 'Agora, ela picou o paciente.'],
+  leish: ['Antes, um mosquito-palha (flebótomo) picou um cão infectado, o principal reservatório na cidade, e levou o parasita.', 'Agora, ele picou o paciente.'],
+  amarela: ['Na mata, mosquitos silvestres picam macacos infectados e levam o vírus. Os macacos adoecem como nós: eles avisam que o vírus está por perto e não devem ser mortos.', 'O paciente, sem vacina, foi picado perto da mata.'],
+  lepto: ['Ratos e outros animais soltam a bactéria na urina. Na enchente, ela se mistura à água e à lama.', 'O paciente andou na água e na lama, e a bactéria entrou pela pele e pelas mucosas.'],
+  esquisto: ['Fezes de pessoas infectadas chegam à água doce. As larvas crescem dentro de um caramujo e saem dele prontas para atravessar a pele.', 'O paciente entrou no açude, e as larvas atravessaram a pele das pernas.'],
+  maculosa: ['O carrapato-estrela se infecta ao picar animais como capivaras e cavalos.', 'No mato, um carrapato se prendeu à pele do paciente e ficou ali por horas, tempo para passar a bactéria.'],
+  chagas: ['O barbeiro infectado pode ser moído junto com frutas, como o açaí, ou sujar o alimento com as fezes.', 'A família tomou o alimento contaminado, e o parasita entrou pela boca.'],
+};
+const CICLO = 5600; // a cena se repete enquanto as falas estão na tela
+const suave = p => p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
 function cenaTransmissao(via, id) {
-  const ctx = $('#tela-trans').getContext('2d'); ctx.imageSmoothingEnabled = false;
-  semente = 11; const parts = Array.from({ length: 14 }, () => ({ dy: aleatorio() * 10 - 5, v: 26 + aleatorio() * 14, t0: aleatorio() * 1800 + (aleatorio() < .5 ? 400 : 1700) }));
-  const flebotomo = id === 'leish';
-  return t => {
-    ctx.clearRect(0, 0, 768, 576);
-    if (via === 'ar') {
-      r(ctx, '#d5e6e8', 0, 0, 192, 104); r(ctx, '#bdd3d6', 0, 96, 192, 8); r(ctx, '#aab6c6', 0, 104, 192, 40);
-      r(ctx, '#e9edf3', 140, 14, 30, 22); r(ctx, '#7fbf9a', 143, 17, 24, 16);
-      r(ctx, '#8a6a45', 20, 96, 156, 4); r(ctx, '#6b5034', 24, 100, 3, 6); r(ctx, '#6b5034', 170, 100, 3, 6); // banco da sala de espera
-      const tosse = (t % 2600 > 500 && t % 2600 < 1100);
-      desenharPessoa(ctx, 40, 70, { camisa: '#e8a77c' });
-      desenharPessoa(ctx, 118, 70 + (tosse ? 1 : 0), { camisa: '#6b8f71', cabelo: '#6b6b6b', espelho: true, boca: tosse });
-      for (const p of parts) { const dt = (t - p.t0) / 1000; if (dt < 0) continue; let x = 121 - dt * p.v * 1.4, y = 79 + p.dy * dt * .7; if (x < 62) { x = 60 + (p.dy > 0 ? 1 : 0); y = 77 + Math.max(-3, Math.min(5, p.dy * .5)); } r(ctx, 'rgba(90,180,70,.95)', x, y, 1, 1); }
-    } else if (via === 'inseto') {
-      ['#ff9e6d', '#e98a77', '#d8758a', '#a96a9a', '#7a5a9c', '#4e4677'].forEach((c, i) => r(ctx, c, 0, i * 17, 192, 17));
-      r(ctx, '#ffd27a', 150, 30, 14, 14); r(ctx, '#2a2f45', 116, 52, 76, 56); r(ctx, '#3a4060', 124, 66, 10, 12); r(ctx, '#ffd27a', 126, 68, 6, 8); r(ctx, '#1e2236', 112, 48, 84, 6);
-      r(ctx, '#3d5a3a', 0, 104, 192, 40); r(ctx, '#4c6e47', 0, 104, 192, 3);
-      desenharPessoa(ctx, 48, 70, { camisa: '#d9534f' });
-      const p = Math.min(1, t / 2400); const pousado = t > 2400 && t < 3400; const sai = Math.max(0, (t - 3400) / 1200);
-      let mx = 190 - (190 - 66) * p, my = 30 + (86 - 30) * p + Math.sin(p * 18) * 8 * (1 - p);
-      if (sai > 0) { mx = 66 - sai * 80; my = 86 - sai * 70; }
-      if (pousado && Math.floor(t / 200) % 2) r(ctx, '#ff3b3b', 65, 89, 1, 1);
-      const corpo = flebotomo ? '#c9a46a' : '#2b2b2b', asa = flebotomo ? 'rgba(240,220,170,.9)' : 'rgba(220,235,255,.9)';
-      const bate = Math.floor(t / 60) % 2;
-      r(ctx, asa, mx - 2, my - 3 - bate, 3, 2); r(ctx, asa, mx + 1, my - 3 - (1 - bate), 3, 2); r(ctx, corpo, mx - 2, my, flebotomo ? 4 : 5, 2); r(ctx, corpo, mx - 3, my + 2, 1, 1); r(ctx, corpo, mx + 2, my + 2, 1, 1); r(ctx, corpo, mx, my + 2, 1, 1);
-    } else if (via === 'agua') {
-      r(ctx, '#9fb0bf', 0, 0, 192, 144); r(ctx, '#b5c3cf', 0, 0, 192, 20);
-      [[8, 40, 40, 64], [56, 30, 34, 74], [146, 36, 40, 68]].forEach(([x, y, w, h]) => { r(ctx, '#6f7f8e', x, y, w, h); r(ctx, '#55636f', x, y, w, 4); for (let j = y + 10; j < y + h - 10; j += 14) for (let i = x + 6; i < x + w - 6; i += 12) r(ctx, '#c9d6e0', i, j, 5, 6); });
-      const andou = Math.min(40, t / 90);
-      desenharPessoa(ctx, 50 + andou, 84 + (Math.floor(t / 300) % 2), { camisa: '#f0c419' });
-      r(ctx, '#8a6a45', 0, 108, 192, 36);
-      for (let i = 0; i < 16; i++) r(ctx, '#a9875e', ((i * 23 + t / 40) % 200) - 8, 110 + (i % 3) * 9, 6, 1);
-      r(ctx, '#a9875e', 46 + andou, 108, 32, 1);
-      for (const p of parts.slice(0, 8)) { const dt = ((t - p.t0 / 2) % 2400) / 2400; if (dt < 0) continue; const x = 6 + (p.v * 3) % 50 + dt * 70, y = 116 + p.dy; if (x < 52 + andou) r(ctx, '#e8d36a', x, y, 2, 1); }
-    } else if (via === 'carrapato') {
-      r(ctx, '#a8d8ea', 0, 0, 192, 92); r(ctx, '#fff6c7', 20, 14, 10, 10);
-      r(ctx, '#6fbf5f', 0, 92, 192, 52); r(ctx, '#5aa64c', 0, 92, 192, 3);
-      desenharPessoa(ctx, 76, 76, { camisa: '#3f72af', calca: '#6b5034' });
-      for (let i = 0; i < 26; i++) { const x = 20 + i * 6 + (i % 2) * 2, h = 10 + (i * 7) % 12; r(ctx, '#3f8f3a', x, 114 - h + (i % 3), 1, h); }
-      const p = Math.min(1, t / 3000); const tx = 140 - (140 - 96) * p, ty = 106 - Math.sin(p * Math.PI) * 5 - 4 * p;
-      r(ctx, '#3b2416', tx, ty, 4, 3); r(ctx, '#5a3a24', tx + 1, ty - 1, 2, 1); [[-1, 0], [-1, 2], [4, 0], [4, 2], [0, 3], [3, 3]].forEach(([dx, dy]) => r(ctx, '#1e130b', tx + dx, ty + dy, 1, 1));
-      if (t > 3200 && Math.floor(t / 220) % 2) r(ctx, '#ff3b3b', tx + 1, ty + 3, 1, 1);
-    } else {
-      r(ctx, '#f2e1c6', 0, 0, 192, 144); r(ctx, '#e2cba8', 0, 0, 192, 6); r(ctx, '#dfe7f0', 120, 16, 40, 30); r(ctx, '#9fd3e8', 122, 18, 36, 26); r(ctx, '#dfe7f0', 139, 18, 2, 26);
-      const sobe = t > 2600 && t < 3800;
-      desenharPessoa(ctx, 36, 70, { camisa: '#8e5ea2', braco: sobe });
-      desenharPessoa(ctx, 132, 70, { camisa: '#5f9e6e', cabelo: '#6b6b6b', espelho: true });
-      r(ctx, '#8a5a2b', 16, 96, 160, 6); r(ctx, '#6b4220', 22, 102, 4, 30); r(ctx, '#6b4220', 166, 102, 4, 30);
-      r(ctx, '#ffffff', 90, 90, 18, 3); r(ctx, '#e8c07a', 92, 88, 14, 2);
-      const cx = sobe ? 56 : 66, cy = sobe ? 78 : 86;
-      r(ctx, '#dfe7f0', cx, cy, 7, 10); r(ctx, '#5b2a6e', cx + 1, cy + 2, 5, 7);
-      if (!sobe && t < 2500) for (const p of parts.slice(0, 6)) { const dt = ((t - p.t0 / 3) % 1800) / 1800; if (dt < 0) continue; r(ctx, '#2a1a10', cx + 3 + Math.round(p.dy / 3), cy - 16 + dt * 18, 1, 1); }
-    }
-  };
+  const el = $('#svg-trans'); semente = 11;
+  const gotas = Array.from({ length: 16 }, () => ({ dy: aleatorio() * 30 - 15, v: .9 + aleatorio() * .5, t0: aleatorio() * 500 + (aleatorio() < .5 ? 500 : 3100), fx: aleatorio() * 14, fy: aleatorio() * 30 - 15 }));
+  const ceu = (a, b, c) => `<defs><linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset=".6" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></linearGradient></defs><rect width="800" height="600" fill="url(#ceu)"/>`;
+  let atualizar = () => {};
+  if (via === 'ar') {
+    el.innerHTML = `${ceu('#e2f0f1', '#d5e8ea', '#c9dfe2')}
+      <rect x="520" y="70" width="170" height="120" rx="14" fill="#fff" stroke="${TRACO}" stroke-width="4"/><path d="M560 150 q0 -50 45 -50 q45 0 45 50 q-45 22 -90 0z" fill="#8fd1b0" stroke="${TRACO}" stroke-width="3"/><path d="M605 104 V150" stroke="${TRACO}" stroke-width="3"/>
+      <rect y="430" width="800" height="170" fill="#b9c6d3"/><rect y="424" width="800" height="12" fill="#a6b4c3"/>
+      <rect x="110" y="368" width="580" height="26" rx="12" fill="#b07a4f" stroke="${TRACO}" stroke-width="4"/><rect x="140" y="390" width="16" height="44" rx="6" fill="#8a5a36"/><rect x="644" y="390" width="16" height="44" rx="6" fill="#8a5a36"/>
+      ${pessoa('pac', { x: 250, y: 520, camisa: '#f0a878' })}${pessoa('tos', { x: 560, y: 520, camisa: '#6b9e74', cabelo: '#8a8f99', espelho: true })}
+      <g id="gotas">${gotas.map((_, i) => `<circle id="g${i}" r="6" fill="#8fd16b" stroke="#3f8f3a" stroke-width="2" opacity="0"/>`).join('')}</g>`;
+    atualizar = t => {
+      const tosse = (t % 2600) > 500 && (t % 2600) < 1100;
+      $('#tos-boca').setAttribute('d', tosse ? BOCA_ABERTA : BOCA_FECHADA); giro($('#tos-tronco'), tosse ? 8 : 0, 0, -90);
+      gotas.forEach((g, i) => {
+        const c = $(`#g${i}`); const dt = (t - g.t0) / 1000; if (dt < 0) { c.setAttribute('opacity', '0'); return; }
+        const p = Math.min(1, dt * g.v); const x = 532 - (532 - (290 + g.fx)) * p, y = 330 + g.dy * Math.sin(p * Math.PI) + (g.fy - 0) * p * .3;
+        c.setAttribute('cx', x.toFixed(1)); c.setAttribute('cy', y.toFixed(1)); c.setAttribute('opacity', p < 1 ? '.9' : '.75');
+      });
+    };
+  } else if (via === 'inseto') {
+    const tipo = id === 'leish' ? 'flebotomo' : id === 'malaria' ? 'anopheles' : 'aedes';
+    el.innerHTML = `${ceu('#ffb27a', '#e07a8d', '#6b5b9c')}
+      <circle cx="640" cy="330" r="60" fill="#ffd27a" opacity=".9"/><path d="M0 430 Q200 360 420 420 T800 400 V600 H0Z" fill="#4e4677" opacity=".6"/>
+      <g transform="translate(560 250)"><rect width="200" height="180" rx="10" fill="#2c2f4a" stroke="${TRACO}" stroke-width="4"/><path d="M-20 0 L100 -80 L220 0Z" fill="#23263d" stroke="${TRACO}" stroke-width="4" stroke-linejoin="round"/><rect x="30" y="40" width="50" height="50" rx="6" fill="#ffd27a"/><rect x="120" y="90" width="44" height="90" rx="6" fill="#3a3f60"/></g>
+      <rect y="470" width="800" height="130" fill="#3f6b46"/><path d="M0 470 Q100 455 200 470 T400 470 T600 470 T800 470" fill="none" stroke="#4f8257" stroke-width="10"/>
+      ${pessoa('pac', { x: 330, y: 540, camisa: '#d9534f' })}
+      <circle id="picada" cx="362" cy="416" r="0" fill="#ff4d4d" opacity=".85"/>
+      <g id="inseto">${tipo === 'flebotomo'
+        ? `<ellipse cx="0" cy="0" rx="9" ry="5" fill="#c9a46a" stroke="${TRACO}" stroke-width="2"/><g id="asas"><ellipse cx="-4" cy="-10" rx="9" ry="6" fill="rgba(245,225,180,.85)" stroke="#a88a55" stroke-width="2" stroke-dasharray="2 2"/><ellipse cx="5" cy="-10" rx="9" ry="6" fill="rgba(245,225,180,.85)" stroke="#a88a55" stroke-width="2" stroke-dasharray="2 2"/></g><path d="M-6 4 l-6 8M0 5 l0 9M6 4 l6 8" stroke="${TRACO}" stroke-width="1.5"/><path d="M9 0 l8 2" stroke="${TRACO}" stroke-width="2"/>`
+        : `<ellipse cx="0" cy="0" rx="16" ry="6" fill="#2b2b33" stroke="${TRACO}" stroke-width="2"/>${tipo === 'aedes' ? '<path d="M-8 -5v10M-2 -6v12M4 -6v12" stroke="#fff" stroke-width="2"/>' : ''}<circle cx="16" cy="-2" r="5" fill="#2b2b33"/><g id="asas"><ellipse cx="-4" cy="-12" rx="13" ry="7" fill="rgba(220,235,255,.85)" stroke="#8ea0bd" stroke-width="2"/><ellipse cx="6" cy="-12" rx="13" ry="7" fill="rgba(220,235,255,.85)" stroke="#8ea0bd" stroke-width="2"/></g><path d="M-10 5 l-8 12M-2 6 l-2 14M6 6 l4 14" stroke="${TRACO}" stroke-width="2"/><path d="M20 0 l14 6" stroke="${TRACO}" stroke-width="2.5"/>`}</g>`;
+    atualizar = t => {
+      giro($('#pac-braco'), -28, 17, -186);
+      const k = id === 'leish' ? 1.4 : 1.7; const pouso = id === 'leish' ? { x: 386, y: 413 } : { x: 420, y: 406 }; let x, y, s = 1;
+      if (t < 2400) { const p = suave(t / 2400); x = 840 - (840 - pouso.x) * p; y = 180 + (pouso.y - 180) * p + Math.sin(p * 16) * 26 * (1 - p); }
+      else if (t < 3600) { x = pouso.x; y = pouso.y + Math.sin(t / 90) * 1.5; }
+      else { const p = suave(Math.min(1, (t - 3600) / 1400)); x = pouso.x + p * 420; y = pouso.y - p * 300; s = 1 - p * .3; }
+      $('#inseto').setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${-k * s} ${k * s})`); // virado para a esquerda, com a tromba no braço
+      $('#asas').setAttribute('transform', `scale(1 ${Math.floor(t / 45) % 2 ? .35 : 1})`);
+      $('#picada').setAttribute('r', t > 2600 ? Math.min(7, (t - 2600) / 120).toFixed(1) : '0');
+    };
+  } else if (via === 'agua') {
+    el.innerHTML = `${ceu('#a9b8c6', '#9aabbb', '#8e9fb0')}
+      ${[[30, 170, 150, 260], [200, 120, 130, 310], [560, 150, 200, 280]].map(([x, y, w, h]) => `<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="#6f7f8e" stroke="${TRACO}" stroke-width="4"/>${Array.from({ length: Math.floor((h - 60) / 70) }, (_, j) => Array.from({ length: Math.floor((w - 20) / 50) }, (__, i) => `<rect x="${x + 18 + i * 50}" y="${y + 24 + j * 70}" width="28" height="36" rx="5" fill="#cfdbe4"/>`).join('')).join('')}</g>`).join('')}
+      <g id="chuva">${Array.from({ length: 26 }, (_, i) => `<path d="M${(i * 37) % 800} ${(i * 53) % 400} l-10 26" stroke="rgba(255,255,255,.45)" stroke-width="3" stroke-linecap="round"/>`).join('')}</g>
+      ${pessoa('pac', { x: 260, y: 556, camisa: '#f0c419' })}
+      <path id="agua" fill="#8a6a45" stroke="${TRACO}" stroke-width="4"/><path id="agua2" fill="none" stroke="#b08c62" stroke-width="5" stroke-linecap="round"/>
+      <g id="agentes">${Array.from({ length: 8 }, (_, i) => `<path id="ag${i}" d="M0 0 q5 -7 10 0 t10 0 t10 0" fill="none" stroke="#f2d64b" stroke-width="4" stroke-linecap="round"/>`).join('')}</g>`;
+    atualizar = t => {
+      const onda = (y0, a, fase) => { let d = `M0 ${y0}`; for (let x = 0; x <= 800; x += 40) d += ` L${x} ${(y0 + Math.sin(x / 60 + fase) * a).toFixed(1)}`; return d; };
+      const fase = t / 400; $('#agua').setAttribute('d', `${onda(505, 8, fase)} V600 H0Z`); $('#agua2').setAttribute('d', onda(532, 6, fase + 1.5));
+      const andou = Math.min(120, t / 40); const bob = Math.sin(t / 220) * 3;
+      $('#pac').parentElement.setAttribute('transform', `translate(${260 + andou} ${556 + bob}) scale(.85 .85)`);
+      $('#chuva').setAttribute('transform', `translate(${-(t / 8) % 40} ${(t / 3) % 60})`);
+      for (let i = 0; i < 8; i++) { const p = ((t + i * 700) % 2800) / 2800; const x = 40 + i * 30 + p * (236 + andou - 40 - i * 30), y = 528 + (i % 3) * 18 + Math.sin(p * 9 + i) * 6; $(`#ag${i}`).setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`); $(`#ag${i}`).setAttribute('opacity', (p > .9 ? (1 - p) * 10 : 1).toFixed(2)); }
+    };
+  } else if (via === 'carrapato') {
+    el.innerHTML = `${ceu('#bfe6f5', '#a8d8ea', '#d8f0c8')}
+      <circle cx="120" cy="100" r="44" fill="#fff3b0"/><g fill="#fff" opacity=".9"><ellipse cx="520" cy="110" rx="70" ry="24"/><ellipse cx="575" cy="96" rx="46" ry="26"/></g>
+      <path d="M0 420 Q200 380 400 410 T800 400 V600 H0Z" fill="#8fd17a"/><rect y="470" width="800" height="130" fill="#77c36a"/>
+      ${pessoa('pac', { x: 380, y: 520, camisa: '#3f72af', calca: '#7a5a3a' })}
+      <g id="capim">${Array.from({ length: 34 }, (_, i) => { const x = 60 + i * 21, h = 50 + (i * 37) % 40; return `<path d="M${x} 540 Q${x + 4} ${540 - h / 2} ${x + (i % 2 ? 10 : -6)} ${540 - h}" fill="none" stroke="#3f8f3a" stroke-width="6" stroke-linecap="round"/>`; }).join('')}</g>
+      <circle id="picada" cx="396" cy="472" r="0" fill="#ff4d4d" opacity=".85"/>
+      <g id="carrapato"><path d="M-8 -4 l-10 -8M-8 0 l-12 0M-8 4 l-10 8M-3 6 l-6 12M8 -4 l10 -8M8 0 l12 0M8 4 l10 8M3 6 l6 12" stroke="${TRACO}" stroke-width="2.5" stroke-linecap="round"/>
+        <ellipse cx="0" cy="0" rx="13" ry="10" fill="#6b4226" stroke="${TRACO}" stroke-width="3"/><ellipse cx="0" cy="-3" rx="7" ry="5" fill="#c9a46a"/><circle cx="0" cy="-12" r="4" fill="#3b2416"/></g>`;
+    atualizar = t => {
+      const de = { x: 610, y: 470 }, ate = { x: 402, y: 470 }; const p = suave(Math.min(1, t / 3200));
+      const x = de.x + (ate.x - de.x) * p, y = de.y - Math.sin(p * Math.PI) * 30 + (t > 3200 ? 0 : Math.sin(t / 70) * 1.5);
+      $('#carrapato').setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${p < 1 ? -90 : -60}) scale(1.6)`);
+      $('#capim').setAttribute('transform', `skewX(${(Math.sin(t / 600) * 2).toFixed(2)})`);
+      $('#picada').setAttribute('r', t > 3400 ? Math.min(6, (t - 3400) / 120).toFixed(1) : '0');
+    };
+  } else {
+    el.innerHTML = `${ceu('#f8e7cd', '#f6e3c6', '#f0d9b5')}
+      <rect x="500" y="60" width="200" height="150" rx="14" fill="#eef3f8" stroke="${TRACO}" stroke-width="4"/><rect x="514" y="74" width="172" height="122" rx="8" fill="#9fd3e8"/><path d="M600 74 V196" stroke="#eef3f8" stroke-width="6"/>
+      <path d="M490 56 q30 80 0 160 h-20 v-160z" fill="#e8a77c" stroke="${TRACO}" stroke-width="3"/><path d="M710 56 q-30 80 0 160 h20 v-160z" fill="#e8a77c" stroke="${TRACO}" stroke-width="3"/>
+      <rect x="80" y="110" width="220" height="14" rx="6" fill="#b07a4f"/><circle cx="120" cy="96" r="14" fill="#7cc4ff" stroke="${TRACO}" stroke-width="3"/><rect x="160" y="80" width="26" height="30" rx="6" fill="#e5484d" stroke="${TRACO}" stroke-width="3"/>
+      ${pessoa('pac', { x: 260, y: 560, camisa: '#8e5ea2' })}${pessoa('fam', { x: 560, y: 560, camisa: '#5f9e6e', cabelo: '#8a8f99', espelho: true })}
+      <rect x="70" y="440" width="660" height="30" rx="12" fill="#b07a4f" stroke="${TRACO}" stroke-width="4"/><rect x="90" y="466" width="620" height="134" fill="#9a6640" stroke="${TRACO}" stroke-width="4"/>
+      <ellipse cx="430" cy="436" rx="56" ry="12" fill="#fff" stroke="${TRACO}" stroke-width="3"/><ellipse cx="430" cy="430" rx="34" ry="8" fill="#6b2f7a"/>
+      <g id="copo"><path d="M-20 -60 h40 l-5 60 h-30z" fill="#eef3f8" stroke="${TRACO}" stroke-width="4" stroke-linejoin="round"/><path d="M-16 -46 h32 l-4 42 h-24z" fill="#5b2a6e"/></g>
+      <g id="sujeira">${Array.from({ length: 6 }, (_, i) => `<circle id="sj${i}" r="4" fill="#2a1a10" opacity="0"/>`).join('')}</g>`;
+    atualizar = t => {
+      const bebe = t > 2800 && t < 4400; const braco = bebe ? -125 : 0;
+      giro($('#pac-braco'), braco, 17, -186);
+      $('#copo').setAttribute('transform', bebe ? 'translate(318 372) rotate(-40)' : 'translate(340 440)');
+      for (let i = 0; i < 6; i++) { const p = ((t + i * 380) % 2400) / 2400; const c = $(`#sj${i}`); if (t > 2600) { c.setAttribute('opacity', '0'); continue; } c.setAttribute('cx', (334 + (i % 3) * 6).toFixed(1)); c.setAttribute('cy', (330 + p * 80).toFixed(1)); c.setAttribute('opacity', (p > .9 ? 0 : .85).toFixed(2)); }
+    };
+  }
+  return atualizar;
 }
+let rafTrans = null;
 async function transmissao(via, id) {
   mostrar('transmissao');
   $('#rotulo-via').textContent = `Transmissão · ${VIAS[via].nome}`; $('#caixa-trans').hidden = true;
-  const desenhar = cenaTransmissao(via, id); const t0 = performance.now(); let ativo = true;
-  const loop = t => { if (!ativo) return; desenhar(rm() ? 4000 : t - t0); rafTrans = requestAnimationFrame(loop); };
-  rafTrans = requestAnimationFrame(loop);
-  await pausa(1600);
-  await escrever($('#caixa-trans'), VIAS[via].fala);
+  const atualizar = cenaTransmissao(via, id); const t0 = performance.now(); let ativo = true;
+  const loop = t => { if (!ativo) return; atualizar(rm() ? 4000 : (t - t0) % CICLO); rafTrans = requestAnimationFrame(loop); };
+  atualizar(rm() ? 4000 : 0); rafTrans = requestAnimationFrame(loop);
+  await pausa(1400);
+  for (const fala of CADEIA[id]) await escrever($('#caixa-trans'), fala);
   ativo = false; cancelAnimationFrame(rafTrans);
 }
 
@@ -681,7 +768,7 @@ function htmlPergaminho(id) {
   const d = DOENCA[id]; const f = FICHAS[id]; const via = VIAS[f.via];
   return `<div class="perg-topo">${d.svg}<div><h2>${d.nome}</h2><p class="tipo">${f.tipo} · ${AGENTE[d.agente]}</p><span class="carimbo">Rascunho · aguarda revisão médica</span></div></div>
     <h3>Resumo</h3><p>${f.resumo}</p>
-    <h3>Como chega ao paciente</h3><p><b>${via.nome}.</b> ${f.historia ? `Neste caso: ${minusculo(f.historia)}` : ''}</p>
+    <h3>Como chega ao paciente</h3><p><b>${via.nome}.</b> ${CADEIA[id].join(' ')}</p>${f.historia ? `<p style="margin-top:6px"><i>Neste caso:</i> ${minusculo(f.historia)}</p>` : ''}
     <h3>Sintomas principais</h3><ul>${f.sintomas.map(s => `<li>${s}</li>`).join('')}</ul>
     ${f.marcante ? `<h3>Complicação a vigiar</h3><p class="destaque"><b>${f.marcante.nome}.</b> ${f.marcante.desc}</p>` : ''}
     <h3>Ponto fraco</h3><p>${CURA[f.cura] || '—'}</p>

@@ -107,15 +107,25 @@ Arquivo: [`docs/prototipos/batalha-historia.html`](prototipos/batalha-historia.h
 6. **Padronizar os ramos**, para poder abrir ramos em todas as direções, e um **botão-guia para a próxima doença**.
 7. **Celular na horizontal:** no celular em pé, a Batalha mostra um aviso para virar o aparelho.
 
+### Decidido pelo usuário em 19/10/2026 (parte 2)
+
+1. **Estilo das cenas: desenho animado, não pixel art.** A cutscene de entrada e as 5 de transmissão foram refeitas em vetor, no mesmo estilo dos desenhos das doenças (contorno escuro, formas arredondadas, cores chapadas com luz).
+2. **Ramos:** aprovados como estão. Mais ramificações (ramos que se dividem) ficam para quando houver mais doenças.
+3. **"Próximo paciente"** e o **aviso de virar o celular** (sem "continuar na vertical"): aprovados.
+4. **Cenas de transmissão:** aprovadas, com mais informação no **texto**. O começo da cadeia de transmissão não precisa aparecer na cena, mas precisa ser dito na fala. Por exemplo: na malária, o mosquito picou antes uma pessoa doente e levou o parasita.
+5. **Profilaxia e sintoma marcante:** o usuário coloca nos próximos lotes de conteúdo; os campos novos no conteúdo e a exibição no pergaminho ficam com o agente.
+
+**Correção registrada:** o usuário lembrou da malária como "um inseto que picou um macaco com o vírus" (e avisou que podia estar errado). A malária é causada por um protozoário (*Plasmodium*); quem transmite é a fêmea do mosquito *Anopheles*, que pica antes uma pessoa doente. O macaco entra na cadeia da **febre amarela**, no ciclo da mata.
+
 ### O que o protótipo mostra agora
 
 1. **Mapa com ramos padronizados (proposta do agente):** o "Início" fica no centro e cada ramo é uma **área**, com **cor, emblema e direção** próprios. Hoje: "Primeiro plantão" (febre aguda no plantão, âmbar, para a direita), "Vigilância no território" (atenção primária, azul, para cima) e "Do mato ao pronto-socorro" (zoonoses, verde, para baixo). Um ramo tracejado à esquerda mostra onde uma área nova entraria. Cada paciente tem uma faixa na cor do ramo. Dentro do ramo, a ordem vai do mais comum ao mais raro.
 2. **"Próximo paciente":** botão que leva o mapa até o próximo paciente aberto, ramo por ramo, e abre a ficha dele.
 3. **Ficha do paciente:** o caso no lugar do nome ("Febre depois da enchente · doença: ??") e "Atender paciente"; descoberto mostra o nome, o agente, "Rever o caso" e o pergaminho.
-4. **Cutscene de entrada em pixel art (original):** a enfermaria vista de cima; o médico entra, anda até o leito, aparece um "!" e duas falas no estilo Pokémon.
+4. **Cutscene de entrada em desenho animado (original):** a enfermaria vista de cima, com janela, monitor de ECG animado, relógio, planta, um leito com outro paciente dormindo ("z" flutuando), cortina e o leito do paciente com o monitor. O médico entra pela porta e anda até o leito, virado para onde vai e balançando os braços; aparece um balão com "!", e vêm duas falas no estilo Pokémon.
 5. **Transição em microscópio** para a batalha.
 6. **Batalha (simulada):** "Simular: acertar o diagnóstico" leva à parte 2.
-7. **Cutscene de transmissão (parte 2), em pixel art original:** uma das 5 cenas, conforme a via, sem dizer o nome da doença. Todas têm um rótulo com a via e uma fala:
+7. **Cutscene de transmissão (parte 2), em desenho animado original:** uma das 5 cenas, conforme a via, sem dizer o nome da doença. A cena se repete enquanto o texto está na tela e mostra só o último passo; as duas falas contam a cadeia inteira: primeiro como o agente chegou ali (só no texto), depois como chegou ao paciente (o que se vê). As cenas:
    - **Ar ou gotículas:** sala de espera; alguém tosse e as gotículas chegam ao rosto do paciente.
    - **Inseto vetor:** fim de tarde; um inseto pousa no braço e pica. Na leishmaniose, o inseto é menor e cor de areia (flebótomo).
    - **Água ou lama:** rua alagada; o paciente anda com os pés na água e os agentes chegam às pernas.
@@ -125,7 +135,7 @@ Arquivo: [`docs/prototipos/batalha-historia.html`](prototipos/batalha-historia.h
 9. **Relatório:** vitória (diagnóstico, turnos, +500 XP e "Ver o pergaminho") ou derrota (só o relatório e a volta ao mapa).
 10. **Pergaminho:** papel envelhecido com dois rolos, que se desenrola. Rascunho montado **só com campos que já existem no app**, marcado "Rascunho · aguarda revisão médica":
     - resumo (`aprendizado`);
-    - como chega ao paciente (via e a história do caso, `exames.anamnese`);
+    - como chega ao paciente (a via, a cadeia de transmissão completa e a história do caso, `exames.anamnese`);
     - sintomas principais (`golpes`);
     - complicação a vigiar (`buff.nome` e `buff.explica`);
     - ponto fraco (`cura`);
@@ -133,17 +143,33 @@ Arquivo: [`docs/prototipos/batalha-historia.html`](prototipos/batalha-historia.h
     - notificação;
     - fontes com a página.
 
-    **Profilaxia** e **sintoma marcante** não existem no conteúdo: precisam ser escritos e revisados.
+    **Profilaxia** e **sintoma marcante** não existem no conteúdo: o usuário vai colocá-los nos próximos lotes. Os campos novos no conteúdo da Batalha e a exibição no pergaminho ficam com o agente, no código.
 11. **Enciclopédia:** botão do livro no mapa; as 12 doenças por ramo; descoberta abre o pergaminho, não descoberta mostra "???" e não abre.
 12. **Volta ao mapa na vitória:** a doença ganha cor, nome e certinho, a linha até o próximo paciente fica verde e ele abre com um salto.
 13. **Celular em pé:** aviso "Vire o celular" (com um celular girando), que bloqueia a Batalha até virar. O botão "Girar a tela" tenta girar sozinho no Android (tela cheia e trava de orientação). No iPhone o navegador não deixa forçar a orientação, então o aviso pede para virar e, se não girar, desligar o bloqueio de rotação. No celular deitado, as cenas em pixel art se ajustam à altura.
 
 **Para o código (quando aprovar):** a orientação não dá para forçar por tela num site; o manifesto do app instalável vale para o app inteiro. Por isso o aviso fica na entrada da Batalha (e o botão de girar no Android). O padrão dos ramos vira dados no conteúdo: cada capítulo ganha cor, emblema e direção.
 
+## Cadeias de transmissão (rascunho para revisão médica)
+
+Texto das duas falas da cutscene de transmissão e do pergaminho. Nenhuma fala diz o nome da doença, porque o jogador só lê o nome na animação de descoberta, logo depois. Escritas pelo agente em 19/10/2026; entram como **não revisadas**.
+
+| Doença | Começo da cadeia (só no texto) | Último passo (na cena) |
+| --- | --- | --- |
+| Pneumonia pneumocócica | A bactéria vive no nariz e na garganta de muita gente saudável, sem causar doença. | Alguém tossiu perto do paciente e as gotículas chegaram até ele. Às vezes, depois de uma gripe, a bactéria desce para o pulmão. |
+| Tuberculose pulmonar | Uma pessoa doente, ainda sem tratamento, solta o bacilo ao tossir, falar ou espirrar, e ele fica no ar de lugares fechados. | O paciente passou muito tempo nesse ambiente e respirou o bacilo. |
+| Hanseníase | A bactéria passa pelas gotículas do nariz e da boca de uma pessoa doente que ainda não se trata. Com o tratamento, ela para de transmitir. | O paciente conviveu de perto, por muito tempo, com essa pessoa. |
+| Doença meningocócica | A bactéria vive na garganta de pessoas saudáveis, que a carregam sem saber. | Num contato próximo, as gotículas e a saliva passaram para o paciente. |
+| Dengue | Antes, uma fêmea do mosquito Aedes aegypti picou uma pessoa doente e levou o vírus. Depois de alguns dias, o mosquito ficou pronto para transmitir. | Agora, ela picou o paciente. |
+| Malária por P. vivax | Antes, uma fêmea do mosquito Anopheles picou uma pessoa doente e levou o parasita, um protozoário, que amadureceu dentro dela. | Agora, ela picou o paciente. |
+| Leishmaniose visceral | Antes, um mosquito-palha (flebótomo) picou um cão infectado, o principal reservatório na cidade, e levou o parasita. | Agora, ele picou o paciente. |
+| Febre amarela | Na mata, mosquitos silvestres picam macacos infectados e levam o vírus. Os macacos adoecem como nós: eles avisam que o vírus está por perto e não devem ser mortos. | O paciente, sem vacina, foi picado perto da mata. |
+| Leptospirose | Ratos e outros animais soltam a bactéria na urina. Na enchente, ela se mistura à água e à lama. | O paciente andou na água e na lama, e a bactéria entrou pela pele e pelas mucosas. |
+| Esquistossomose mansônica | Fezes de pessoas infectadas chegam à água doce. As larvas crescem dentro de um caramujo e saem dele prontas para atravessar a pele. | O paciente entrou no açude, e as larvas atravessaram a pele das pernas. |
+| Febre maculosa brasileira | O carrapato-estrela se infecta ao picar animais como capivaras e cavalos. | No mato, um carrapato se prendeu à pele do paciente e ficou ali por horas, tempo para passar a bactéria. |
+| Doença de Chagas aguda | O barbeiro infectado pode ser moído junto com frutas, como o açaí, ou sujar o alimento com as fezes. | A família tomou o alimento contaminado, e o parasita entrou pela boca. |
+
 ## Perguntas em aberto
 
-1. **Padrão dos ramos** (cor, emblema e direção por área, do mais comum ao mais raro) e as áreas dos 3 ramos de hoje: estão bons?
-2. **"Próximo paciente":** ramo por ramo está bom?
-3. **Aviso de virar o celular:** bloqueia sem "continuar na vertical". Está bom?
-4. **Cutscenes de transmissão:** as 5 cenas estão no tom?
-5. **Pergaminho:** campos e visual. Profilaxia e sintoma marcante precisam ser escritos (e revisados) para as 12 doenças.
+1. **Revisão médica** das cadeias de transmissão acima.
+2. **Mais ramificações** no mapa, quando houver mais doenças (ideia do usuário, sem pressa).
