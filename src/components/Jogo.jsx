@@ -5,7 +5,7 @@ import { ArrowDownUp, Check, ChevronLeft, ChevronRight, CircleHelp, Delete, Sett
 import { gerarTabuleiro, montarGrade } from '../utils/motorTabuleiro';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { aplicarProgressoMissoes, dataLocalHoje, lerMissoes } from '../utils/missoes';
-import { nivelPorXP } from '../utils/economia';
+import { nivelPorXP, bonusCruzadinha, SEGUNDOS_POR_PALAVRA, XP_JOGO } from '../utils/economia';
 import { celulasPreenchidasAteProximaVazia, escolherDirecaoDaEntrada, proximaCelulaDaEntrada, resolverLetraRepetida } from '../utils/navegacaoCruzadinha';
 import { chaveCasa, estadoDaCasa, palavraDaCasa, palavrasDaGrade, palavrasResolvidas, tamanhoDaPalavra } from '../utils/cruzadinha';
 import { montarDicas, NIVEL_DICAS_EXTRAS } from '../utils/dicasCruzadinha';
@@ -23,7 +23,7 @@ const PASSOS_TUTORIAL = [
   { titulo: 'Preencha a grade', texto: 'Digite uma letra por casa, no teclado da tela ou no do computador. O cursor pula letras já preenchidas e aceita a letra repetida de um cruzamento sem duplicá-la; apagar volta para a casa anterior. Arraste e use o zoom para ver a grade toda.' },
   { titulo: 'Entenda as cores', texto: 'Verde: letra certa. Amarelo: a letra existe na palavra, em outra posição. Vermelho: a letra não está na palavra. Quando todas as letras de uma palavra estão certas, ela acende. Complete todas para terminar o plantão.' },
   { titulo: 'Use as dicas', texto: 'A dica do laudo aparece junto da grade; até o nível 2 do tópico, ela já traz a primeira letra. A partir do nível 3, você pode abrir dicas extras que valem para a partida toda: a do residente mostra a primeira letra (5 XP) e a do paciente, a última (mais 10 XP).' },
-  { titulo: 'Receba suas recompensas', texto: 'Letras e palavras formam o XP base. Nível e tempo podem multiplicá-lo; dicas reduzem o resultado, com mínimo de 10 XP por partida. Missões podem dar XP extra, e cada cruzadinha concluída concede 2 tickets, além das recompensas de missão e nível global. O resultado mostra cada parcela.' },
+  { titulo: 'Receba suas recompensas', texto: 'Cada cruzadinha concluída vale 100 XP. Terminar rápido dá até +50 de bônus, e as dicas extras descontam desse bônus. Missões podem dar XP extra, e cada cruzadinha concluída concede 2 tickets, além das recompensas de missão e nível global. O resultado mostra cada parcela.' },
   { titulo: 'Antes de sair', texto: 'Se abandonar o plantão antes de completá-lo, as letras e o progresso desta partida serão perdidos. O botão de voltar pede confirmação.' },
 ];
 const DICAS_EXTRAS = { 2: ['Dica do residente', 5], 3: ['Relato do paciente', 10] };
@@ -295,15 +295,11 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     const numLetras = letras.length;
     const numPalavras = palavras.length;
     const maiorPalavra = Math.max(...palavras.map(p => p.palavra.length));
-    const xpLetras = numLetras * 2, xpPalavras = numPalavras * 10, base = xpLetras + xpPalavras;
-    const multNivel = 1 + (Math.max(1, nivelDaGrade) - 1) * 0.1;
-    const ideal = numPalavras * 15;
-    const multTempo = tempo <= ideal * 0.25 ? 2 : tempo <= ideal * 0.5 ? 1.5 : tempo <= ideal ? 1.2 : 1;
-    const xpCalculado = Math.floor(base * multNivel * multTempo) - penalidadeXP;
-    const ganho = Math.max(10, xpCalculado);
+    // Economia v3: 100 XP fixos + bônus de tempo menos as dicas. O servidor mede o tempo e confirma o valor ao salvar.
+    const ganho = XP_JOGO + bonusCruzadinha(tempo, numPalavras * SEGUNDOS_POR_PALAVRA, penalidadeXP);
     const missoes = aplicarProgressoMissoes(lerMissoes(dadosUsuario), { jogar_cruzadinha: 1, acertar_palavras: numPalavras });
     const concluidas = missoes.missoes.filter((m, i) => !lerMissoes(dadosUsuario)[i]?.concluida && m.concluida);
-    setRelatorio({ ganho, letras: numLetras, palavras: numPalavras, xpLetras, xpPalavras, multNivel, multTempo, penalidade: penalidadeXP, xpCalculado, xpMissoes: missoes.xp, missoesConcluidas: concluidas, tempo, nivel: nivelDaGrade });
+    setRelatorio({ ganho, letras: numLetras, palavras: numPalavras, penalidade: penalidadeXP, xpMissoes: missoes.xp, missoesConcluidas: concluidas, tempo, nivel: nivelDaGrade });
     if (!partidaId.current) partidaId.current = crypto.randomUUID();
     setXpPendente({ status: 'pendente', partida: { id: partidaId.current, chaveXP, subMateria, dia: dataLocalHoje(), xp: ganho, palavras: numPalavras, penalidadeXP, letras: numLetras, tempo, erros, maiorPalavra, respostas, ...(grade.id ? { cruzadinhaId: grade.id } : {}) } });
   }, [valores, gradePronta, palavras, vitoria, nivelDaGrade, tempo, penalidadeXP, dadosUsuario, chaveXP, subMateria, erros, grade.id]);
@@ -385,10 +381,10 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     if (r.xpMissoes > 0) extras.push([`Missões do dia${r.missoesConcluidas?.length ? `: ${r.missoesConcluidas.map(m => m.titulo.toLowerCase()).join(', ')}` : ''}`, `+${r.xpMissoes}`, 'mul']);
     if (r.ticketsRecebidos > 0) extras.push(['Tickets do plantão, missões e nível', `+${r.ticketsRecebidos} ticket${r.ticketsRecebidos > 1 ? 's' : ''}`, 'mul']);
     return raiz(<Resultado key={partidaId.current} stamp="PLANTÃO CONCLUÍDO" sub={`${materia} · ${subMateria} · ${mm}`} recibo={partidaId.current}
-      linhas={[[`Letras certas (${r.letras})`, `+${r.xpLetras}`, 'pos'], [`Palavras (${r.palavras})`, `+${r.xpPalavras}`, 'pos'],
-        [`Multiplicador do nível ${r.nivel}`, `×${r.multNivel.toFixed(1)}`, 'mul'], [`Bônus de tempo (${mm})`, `×${r.multTempo.toFixed(1)}`, 'mul'],
-        [`Dicas extras`, r.penalidade ? `−${r.penalidade}` : '0', r.penalidade ? 'neg' : 'mut']]}
-      total={r.ganho} extras={extras} bonus={r.xpMissoes || 0} fase={fase} aviso={r.xpCalculado < 10 ? 'Aplicado o mínimo de 10 XP por partida.' : null}
+      linhas={[[`Cruzadinha concluída (${r.palavras} palavras)`, `+${XP_JOGO}`, 'pos'],
+        ['Bônus', `+${Math.max(0, r.ganho - XP_JOGO)}`, r.ganho > XP_JOGO ? 'pos' : 'mut'],
+        ...(r.penalidade ? [['Dicas extras (descontadas do bônus)', `−${r.penalidade}`, 'neg']] : [])]}
+      total={r.ganho} extras={extras} bonus={r.xpMissoes || 0} fase={fase}
       aoTentar={() => setXpPendente(prev => ({ ...prev, status: 'pendente' }))}
       principal={{ rotulo: 'Próximo plantão', aoClicar: avancar }} aoVoltar={() => setTelaAtual('menu')} />);
   }

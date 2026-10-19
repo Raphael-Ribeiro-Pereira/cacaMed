@@ -5,7 +5,7 @@ import { CASOS_PLANTAO, executarPlantao, obterCasoPlantao } from '../utils/plant
 import { AUDITORIAS, obterAuditoria } from '../utils/erroMedico';
 import { RELACOES, obterRelacao } from '../utils/causaEfeito';
 import { ListaCasos } from './ddxLista';
-import { nivelPorXP } from '../utils/economia';
+import { nivelPorXP, XP_DDX } from '../utils/economia';
 import { lerVitais, vitaisDoCaso } from '../utils/ddxVisual';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { animar, fmt, registrarLatencia, useLargo } from '../utils/prototipo';
@@ -185,9 +185,9 @@ export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, 
   if (vista === 'resultado' || r.encerrado) {
     const encerradoNoServidor = entrada.relatorio.encerrado;
     const repetido = encerradoNoServidor ? Number(entrada.xpConcedido) === 0 && r.xp > 0 : (ddx.concluidos || []).includes(`${caso.id}:${caso.versao}`);
-    const linhas = [['Raciocínio', `+${r.pontos.raciocinio}`, 'pos'], ['Segurança', `${r.pontos.seguranca >= 0 ? '+' : '−'}${Math.abs(r.pontos.seguranca)}`, r.pontos.seguranca >= 0 ? 'pos' : 'neg'],
-      ['Eficiência', `${r.pontos.eficiencia >= 0 ? '+' : '−'}${Math.abs(r.pontos.eficiencia)}`, r.pontos.eficiencia >= 0 ? 'pos' : 'neg'], ['Destino', r.desconto ? `−${r.desconto}` : '0', r.desconto ? 'neg' : 'mut']];
-    if (r.bonus > 0) linhas.push(['Bônus de desempenho', `+${r.bonus}`, 'pos']);
+    // Economia v3: 300 pelo plantão encerrado (zero se a pontuação clínica zerou), menos o destino, e o bônus.
+    const linhas = [['Plantão encerrado', r.xp ? `+${XP_DDX}` : '+0', r.xp ? 'pos' : 'mut'], ['Destino', r.desconto && r.xp ? `−${r.desconto}` : '0', r.desconto && r.xp ? 'neg' : 'mut']];
+    if (r.bonus > 0) linhas.push(['Bônus', `+${r.bonus}`, 'pos']);
     if (repetido) linhas.push(['Repetição de caso', '×0', 'mut']);
     const fase = encerradoNoServidor ? 'ok' : sync === 'err' ? 'erro' : 'salvando';
     return raiz(<Resultado key={entrada.id} stamp={r.seguro ? 'PLANTÃO SEGURO' : 'PLANTÃO ENCERRADO'} tom={r.seguro ? undefined : 'amber'} recibo={entrada.id}

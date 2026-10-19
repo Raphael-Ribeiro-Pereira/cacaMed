@@ -54,7 +54,7 @@ export default function SelecaoTopicos({ setTelaAtual, iniciarJogo, dadosUsuario
     </div>
   </div></div>;
 
-  const xpEstimado = topico ? estimarXpCruzadinha(topico.palavras, nivel(topico).nivel) : 0;
+  const xpEstimado = topico ? estimarXpCruzadinha(topico.palavras) : 0;
   const lista = <div className="topics">{ala.topicos.map((item, i) => {
     const andamento = nivel(item);
     return <button key={item.chave} className={`topic rise ${item.chave === topico?.chave ? 'on' : ''}`} style={{ '--i': i }} onClick={() => escolher(ala.nome, item.chave)} aria-pressed={item.chave === topico?.chave}>
@@ -64,7 +64,7 @@ export default function SelecaoTopicos({ setTelaAtual, iniciarJogo, dadosUsuario
     </button>;
   })}</div>;
   const dock = <div className="dock">
-    <div className="info"><span>RECOMPENSA ESTIMADA <b>~{fmt(xpEstimado)} XP</b></span><span>+2 TICKETS POR PLANTÃO</span></div>
+    <div className="info"><span>RECOMPENSA <b>{xpEstimado ? `${fmt(xpEstimado)} A ${fmt(xpEstimado + 50)} XP` : '—'}</b></span><span>+2 TICKETS POR PLANTÃO</span></div>
     <button className="primary" disabled={!topico} onClick={() => iniciarJogo(titulo(ala.nome), titulo(topico.nome))}><Play fill="currentColor" /> Iniciar plantão</button>
   </div>;
   const folha = <AnimatePresence>

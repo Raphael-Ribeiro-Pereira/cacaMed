@@ -44,12 +44,10 @@ test('nível do tópico e tamanho da palavra seguem as regras do jogo', () => {
   assert.equal(tamanhoDaPalavra('FEMUR'), '5');
 });
 
-test('estimativa de XP cresce com o nível e respeita o mínimo de 10', () => {
+test('economia v3: a estimativa é a base fixa de 100 XP, sem depender do nível; tópico vazio fica em 0', () => {
   const topico = Array.from({ length: 15 }, (_, i) => ({ palavra: 'CLAVICULA'.slice(0, 5 + (i % 4)) }));
-  const nivel0 = estimarXpCruzadinha(topico, 0);
-  assert.ok(nivel0 > 100 && nivel0 % 10 === 0);
-  assert.ok(estimarXpCruzadinha(topico, 6) > nivel0);
-  assert.equal(estimarXpCruzadinha([], 3), 0);
+  assert.equal(estimarXpCruzadinha(topico), 100);
+  assert.equal(estimarXpCruzadinha([]), 0);
 });
 
 test('funciona sobre uma grade gerada pelo motor', () => {

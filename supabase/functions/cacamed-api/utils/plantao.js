@@ -1,5 +1,6 @@
 // Conteúdo piloto: revisar clinicamente antes de liberar para jogadores.
 import { CASOS_PLANTAO } from './plantaoBanco.js';
+import { XP_DDX } from './economia.js';
 
 export { CASOS_PLANTAO };
 
@@ -80,6 +81,11 @@ export function executarPlantao(caso, escolhas = []) {
     const { limite } = caso.desempenho;
     bonus = minutosMarco <= limite ? 50 : minutosMarco >= limite * 2 ? 0 : Math.round((50 * (limite * 2 - minutosMarco)) / limite);
   }
-  return { escolhas: [...escolhas], eventos, minutos, encerrado, hipotese, destino, seguro, altaInsegura, omissoes, pontos, desconto, bonus, xp: base + bonus,
+  // Economia v3: 300 XP ao encerrar, menos o desconto do destino; bônus de até 100 só no caminho seguro
+  // (50 pelo caminho seguro e até 50 pelo tempo da ação-marco; caso sem marco ganha os 50 do tempo).
+  // Pontuação clínica zerada (por exemplo, alta sem avaliar nada) não paga, como a rodada sem acerto nos jogos.
+  const bonusV3 = seguro ? 50 + (caso.desempenho ? bonus : 50) : 0;
+  return { escolhas: [...escolhas], eventos, minutos, encerrado, hipotese, destino, seguro, altaInsegura, omissoes, pontos, desconto,
+    bonus: bonusV3, xp: encerrado && base > 0 ? Math.max(0, XP_DDX - desconto) + bonusV3 : 0,
     estadoPaciente, vitais, piorando };
 }

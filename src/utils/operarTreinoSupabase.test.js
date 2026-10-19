@@ -17,7 +17,7 @@ test('duas rodadas completas preservam recompensa e recibos permanentes', () => 
     const repetido = operarTreinoSupabase(perfil, { acao: 'responderTreino', modo: 'quiz', entradaId, respostas });
     assert.strictEqual(repetido, perfil);
   }
-  assert.equal(perfil.pontuacaoTotal, 200);
+  assert.equal(perfil.pontuacaoTotal, 300);
   assert.equal(perfil.tickets, 1);
   assert.throws(() => operarTreinoSupabase(perfil, { acao: 'iniciarTreino', modo: 'quiz', variante: 'teoria', entradaId: ids[0] }, ids), /já foi encerrada/);
 });

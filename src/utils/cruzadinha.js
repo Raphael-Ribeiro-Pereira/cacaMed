@@ -52,14 +52,7 @@ export function palavrasResolvidas(palavras, grade, valores) {
 // Tamanho da palavra para a dica: "(9)" ou "(4, 4)" quando o termo tem mais de uma palavra.
 export const tamanhoDaPalavra = palavra => String(palavra || '').trim().split(/\s+/).map(p => p.length).join(', ');
 
-// Estimativa da seleção de tópicos com a mesma conta do jogo: até 12 palavras por grade, letras
-// compartilhadas nos cruzamentos (cerca de 15%), multiplicador do nível e o bônus de tempo de 1,2.
-export function estimarXpCruzadinha(palavrasDoTopico, nivel) {
-  const lista = (palavrasDoTopico || []).filter(p => p?.palavra);
-  if (!lista.length) return 0;
-  const n = Math.min(12, lista.length);
-  const media = lista.reduce((t, p) => t + p.palavra.replace(/\s/g, '').length, 0) / lista.length;
-  const base = Math.round(n * media * 0.85) * 2 + n * 10;
-  const multNivel = 1 + (Math.max(1, nivel) - 1) * 0.1;
-  return Math.max(10, Math.round(base * multNivel * 1.2 / 10) * 10);
+// Economia v3: toda grade vale 100 XP fixos, mais até 50 de bônus de tempo. Tópico sem palavras não tem grade.
+export function estimarXpCruzadinha(palavrasDoTopico) {
+  return (palavrasDoTopico || []).some(p => p?.palavra) ? 100 : 0;
 }

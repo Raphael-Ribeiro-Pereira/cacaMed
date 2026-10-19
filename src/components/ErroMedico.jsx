@@ -7,6 +7,7 @@ import { registrosComHora } from '../utils/ddxVisual';
 import { useLargo } from '../utils/prototipo';
 import { useEnvioDdx } from './ddxTela';
 import { Resultado, SubiuNivel } from './resultadoUi';
+import { XP_DDX } from '../utils/economia';
 
 // Erro médico (desenho novo, 13/10/2026): o prontuário vira um papel. O jogador toca na linha onde o cuidado
 // falhou, escolhe o tipo da falha e a correção. O servidor recebe as três etapas juntas e recalcula o resultado.
@@ -49,7 +50,10 @@ export default function ErroMedico({ usuario, dadosUsuario, setDadosUsuario, set
   if (entrada.relatorio) {
     const r = entrada.relatorio;
     const linhaServidor = Number(String(entrada.respostas?.[0] || '').slice(1)) || linha;
-    const linhas = r.etapas.map(e => [`${e.id === 'linha' ? 'Registro' : e.id === 'categoria' ? 'Tipo da falha' : 'Correção'} ${e.acertou ? '✓' : '✗'}`, e.acertou ? '+25' : '+0', e.acertou ? 'pos' : 'mut']);
+    // Economia v3: as etapas só mostram o acerto; o XP sai em base (300) e bônus.
+    const xp = Number(entrada.xpConcedido) || 0;
+    const linhas = [...r.etapas.map(e => [`${e.id === 'linha' ? 'Registro' : e.id === 'categoria' ? 'Tipo da falha' : 'Correção'} ${e.acertou ? '✓' : '✗'}`, '', e.acertou ? 'pos' : 'mut']),
+      ['Análise concluída', xp ? `+${XP_DDX}` : '+0', xp ? 'pos' : 'mut'], ...(xp > XP_DDX ? [['Bônus', `+${xp - XP_DDX}`, 'pos']] : [])];
     if (entrada.repeticao) linhas.push(['Repetição da versão', '×0', 'mut']);
     const tudo = r.acertos === r.total;
     return raiz(<Resultado key={entrada.id} stamp={tudo ? 'AUDITORIA CONCLUÍDA' : 'AUDITORIA COM PONTOS'} tom={tudo ? 'violet' : 'amber'} recibo={entrada.id}
@@ -90,7 +94,7 @@ export default function ErroMedico({ usuario, dadosUsuario, setDadosUsuario, set
   </div>;
   const dock = <div className="dock">
     {estado === 'erro' && <div className="info" style={{ justifyContent: 'center' }}><button className="sync err" onClick={() => enviar([`l${linha}`, categoria, correcao])}><span className="dot" />Não gravou. Toque para reenviar</button></div>}
-    <div className="info"><span>3 ETAPAS · <b>25 XP</b> CADA</span><span>RESPOSTAS NÃO MUDAM</span></div>
+    <div className="info"><span>3 ETAPAS · <b>300 XP</b> + BÔNUS</span><span>RESPOSTAS NÃO MUDAM</span></div>
     <div style={{ display: 'flex', gap: 8 }}>
       {etapa > 0 && <button className="ghost" style={{ width: 'auto', padding: '0 16px' }} disabled={bloqueado} onClick={() => setEtapa(etapa - 1)}>Voltar</button>}
       <button className="primary violet" disabled={!pronto || bloqueado} onClick={confirmar}>{bloqueado ? 'Registrando o parecer…' : etapa < 2 ? 'Continuar' : 'Registrar parecer'}</button>

@@ -1,6 +1,7 @@
 // Motor da Batalha diagnóstica. Determinístico: o servidor reexecuta a lista de ações do jogador para
 // validar a partida e calcular a recompensa; o navegador usa o mesmo motor para a resposta imediata.
 import { CAPITULOS_BATALHA, DOENCAS_BATALHA, EXTRAS_BATALHA, FONTES_BATALHA } from './batalhaConteudo.js';
+import { XP_BATALHA } from './economia.js';
 
 export const FONTES = FONTES_BATALHA;
 export const CAPITULOS = [...CAPITULOS_BATALHA].sort((a, b) => a.ordem - b.ordem);
@@ -249,14 +250,14 @@ export function recompensaBatalha(estado, { modo, primeiraVez = true } = {}) {
     const linhas = [['Treinamento concluído', primeiraVez ? 50 : 0], [estado.fim === 'vitoria' ? 'Pneumonia controlada' : 'Paciente transferido', 0]];
     return { linhas, xp: primeiraVez ? 50 : 0 };
   }
+  // Economia v3: 500 XP fixos na vitória; derrota não paga. As outras linhas só descrevem a partida.
   const linhas = estado.fim === 'vitoria' ? [
-    ['Doença controlada', 60],
-    [estado.revealed ? (estado.wrongHyp ? 'Diagnóstico com hipóteses erradas' : 'Diagnóstico na primeira hipótese') : 'Sem diagnóstico confirmado', estado.revealed ? (estado.wrongHyp ? 10 : 20) : 0],
-    ['Buff neutralizado', estado.neutral ? 20 : 0],
-    ['Escolhas ineficazes', -5 * estado.ineff],
+    ['Doença controlada', XP_BATALHA],
+    [estado.revealed ? (estado.wrongHyp ? 'Diagnóstico com hipóteses erradas' : 'Diagnóstico na primeira hipótese') : 'Sem diagnóstico confirmado', 0],
+    ...(estado.neutral ? [['Buff neutralizado', 0]] : []),
   ] : [
-    ['Transferência para a UTI', 10],
-    [estado.revealed ? 'Diagnóstico confirmado' : 'Sem diagnóstico confirmado', estado.revealed ? 10 : 0],
+    ['Transferência para a UTI', 0],
+    [estado.revealed ? 'Diagnóstico confirmado' : 'Sem diagnóstico confirmado', 0],
   ];
   let xp = Math.max(0, linhas.reduce((total, [, valor]) => total + valor, 0));
   if (modo === 'historia' && (!primeiraVez || estado.fim !== 'vitoria')) {

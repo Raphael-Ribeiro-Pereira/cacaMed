@@ -89,8 +89,8 @@ test('quiz registra resposta parcial, rejeita edição e só recompensa conclus�
   assert.throws(() => responderTreinoPerfil(parcial, 'quiz', 'teste', [resposta(entrada, 0, false), resposta(entrada, 1)]), /outra aba/);
   assert.throws(() => responderTreinoPerfil(inicial, 'quiz', 'teste', [{ itemId: entrada.itens[0].id, escolha: 'inventada' }]), /Alternativa/);
   const final = fecharQuiz(inicial, 1);
-  assert.equal(final.pontuacaoTotal, 20); assert.equal(final.treinos.quiz.medidor, 1);
-  assert.equal(responderTreinoPerfil(final, 'quiz', 'teste', final.treinos.quiz.entrada.respostas).pontuacaoTotal, 20);
+  assert.equal(final.pontuacaoTotal, 130); assert.equal(final.treinos.quiz.medidor, 1);
+  assert.equal(responderTreinoPerfil(final, 'quiz', 'teste', final.treinos.quiz.entrada.respostas).pontuacaoTotal, 130);
 });
 
 test('quiz compara conteúdo das respostas independentemente da ordem dos campos do transporte', () => {
@@ -124,7 +124,7 @@ test('rodadas de quiz compartilham contador entre teoria e casos; modos não mis
   atual = fecharQuiz(atual, 1);
   atual.treinos.quiz.entrada = criarEntradaTreino('quiz', 'casos', 'c');
   atual = fecharQuiz(atual, 5);
-  assert.equal(atual.pontuacaoTotal, 145); assert.equal(atual.tickets, 1);
+  assert.equal(atual.pontuacaoTotal, 280); assert.equal(atual.tickets, 1);
   assert.equal(atual.treinos.quiz.medidor, 0);
   const outra = criarEntradaTreino('verdadeMentira', '', 'd');
   atual.treinos.verdadeMentira = { entrada: outra };
@@ -137,15 +137,15 @@ test('verdade ou mentira avalia seleção e rejeição; zero acertos não gera X
   const errado = responderTreinoPerfil(perfil(entrada), 'verdadeMentira', 'teste', entrada.itens.map((_, i) => resposta(entrada, i, false)));
   assert.equal(errado.pontuacaoTotal, 0); assert.equal(errado.treinos.verdadeMentira.medidor, 0);
   const certo = responderTreinoPerfil(perfil(entrada), 'verdadeMentira', 'teste', entrada.itens.map((_, i) => resposta(entrada, i)));
-  assert.equal(certo.pontuacaoTotal, 100);
+  assert.equal(certo.pontuacaoTotal, 150);
   assert.throws(() => responderTreinoPerfil(perfil(entrada), 'verdadeMentira', 'teste', entrada.itens.map(item => ({ itemId: item.id, escolha: false }))), /Selecione/);
 });
 
 test('missões de treino concedem um ticket cada uma e não repetem pagamento', () => {
   let atual = perfil(criarEntradaTreino('quiz', 'teoria', 'a')); atual.missoesDiarias = criarMissoesDiarias();
   atual = fecharQuiz(atual, 5);
-  assert.equal(atual.tickets, 1); assert.equal(atual.pontuacaoTotal, 150);
+  assert.equal(atual.tickets, 1); assert.equal(atual.pontuacaoTotal, 200);
   atual.treinos.quiz.entrada = criarEntradaTreino('quiz', 'teoria', 'b');
   atual = fecharQuiz(atual, 1);
-  assert.equal(atual.tickets, 3); assert.equal(atual.pontuacaoTotal, 220);
+  assert.equal(atual.tickets, 3); assert.equal(atual.pontuacaoTotal, 380);
 });

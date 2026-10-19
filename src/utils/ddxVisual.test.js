@@ -27,6 +27,6 @@ test('nomeia as etapas e monta a cadeia com um elo por pergunta', () => {
   assert.deepEqual(cadeiaDe({ id: 'outra', perguntas: [{ id: 'mecanismo' }, { id: 'novo' }] }), ['Estímulo', 'Mecanismo', 'Novo']);
 });
 
-test('o caminho completo do Plantão vale 250 XP no caso respiratório', () => {
-  assert.equal(xpCaminhoCompleto(CASOS_PLANTAO[0], executarPlantao), 250);
+test('o caminho completo do Plantão vale 400 XP no caso respiratório (economia v3)', () => {
+  assert.equal(xpCaminhoCompleto(CASOS_PLANTAO[0], executarPlantao), 400);
 });

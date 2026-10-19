@@ -1,5 +1,5 @@
 import { BANCO_QUIZ, BANCO_FRASES } from './bancoTreinos.js';
-import { concederRecompensa } from './economia.js';
+import { concederRecompensa, bonusTreino, segundosEntre, TEMPO_ESPERADO_TREINO, XP_JOGO } from './economia.js';
 import { aplicarProgressoMissoes, lerMissoes } from './missoes.js';
 
 // Bancos separados (09/10/2026): o V ou M ganha conceitos que não estão no Quiz. Frase do banco novo
@@ -92,10 +92,13 @@ export function responderTreinoPerfil(perfil, modo, entradaId, respostas) {
     const valida = acertos >= 1;
     const medidor = stats.medidor + Number(valida);
     const ticketRodada = Math.floor(medidor / 2);
-    const xp = acertos * (modo === 'quiz' && entrada.variante === 'casos' ? 25 : 20);
+    // Economia v3: 100 XP fixos + bônus de acertos e de tempo, só em rodada com pelo menos um acerto.
+    const encerradoEm = new Date().toISOString();
+    const bonus = valida ? bonusTreino(acertos, 5, segundosEntre(entrada.iniciadoEm, encerradoEm), TEMPO_ESPERADO_TREINO[entrada.variante]) : 0;
+    const xp = valida ? XP_JOGO + bonus : 0;
     const missoes = aplicarProgressoMissoes(lerMissoes(perfil), { rodadas_validas: Number(valida), acertos_treino: acertos });
     base = concederRecompensa(perfil, xp + missoes.xp, ticketRodada + missoes.tickets);
-    entrada = { ...entrada, encerradoEm: new Date().toISOString(), relatorio: { acertos, total: 5, valida, xp, xpMissoes: missoes.xp,
+    entrada = { ...entrada, encerradoEm, relatorio: { acertos, total: 5, valida, xp, bonus, xpMissoes: missoes.xp,
       ticketsRodada: ticketRodada, ticketsMissoes: missoes.tickets, ticketsNivel: base.tickets - (Number(perfil.tickets) || 0) - ticketRodada - missoes.tickets,
       medidor: medidor % 2 } };
     atualizado = { ...stats, entrada, partidas: stats.partidas + 1, validas: stats.validas + Number(valida),

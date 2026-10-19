@@ -4,7 +4,7 @@ export { AUDITORIAS };
 
 // Erro médico (formato v2): o jogador toca na linha do prontuário onde o cuidado falhou, escolhe a categoria da
 // falha e escolhe a correção. As três etapas viram "perguntas" com alternativas, o que mantém o contrato do
-// servidor (uma resposta por etapa, 25 XP cada) e o recálculo do resultado na Edge Function.
+// servidor (uma resposta por etapa; economia v3: 300 XP + bônus, em operarJogosSupabase.js) e o recálculo do resultado na Edge Function.
 export const CATEGORIAS_FALHA = [
   { id: 'omissao', texto: 'Omissão' },
   { id: 'atraso', texto: 'Atraso' },

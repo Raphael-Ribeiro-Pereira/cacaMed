@@ -8,6 +8,7 @@ import { useLargo } from '../utils/prototipo';
 import { Vitais } from './ddxUi';
 import { useEnvioDdx } from './ddxTela';
 import { Resultado, SubiuNivel } from './resultadoUi';
+import { XP_DDX } from '../utils/economia';
 
 // Causa e efeito (desenho novo, 13/10/2026): o jogador monta o circuito colocando cartas nos quatro elos, do
 // estímulo ao tratamento, e testa. A correção é do servidor; o resultado mostra em que elo a corrente quebra.
@@ -55,7 +56,10 @@ export default function CausaEfeito({ usuario, dadosUsuario, setDadosUsuario, se
     const r = entrada.relatorio;
     const resultado = r.etapas.map(e => e.acertou);
     const respondidas = r.etapas.map((e, k) => relacao.cartas.find(c => c.texto === e.escolha)?.id || colocadas[k]);
-    const linhas = r.etapas.map((e, k) => [`${ELOS[k].rotulo} ${e.acertou ? '✓' : '✗'}`, e.acertou ? '+25' : '+0', e.acertou ? 'pos' : 'mut']);
+    // Economia v3: os elos só mostram o acerto; o XP sai em base (300) e bônus.
+    const xp = Number(entrada.xpConcedido) || 0;
+    const linhas = [...r.etapas.map((e, k) => [`${ELOS[k].rotulo} ${e.acertou ? '✓' : '✗'}`, '', e.acertou ? 'pos' : 'mut']),
+      ['Circuito concluído', xp ? `+${XP_DDX}` : '+0', xp ? 'pos' : 'mut'], ...(xp > XP_DDX ? [['Bônus', `+${xp - XP_DDX}`, 'pos']] : [])];
     if (entrada.repeticao) linhas.push(['Repetição da versão', '×0', 'mut']);
     return raiz(<Resultado key={entrada.id} stamp={resultado.every(Boolean) ? 'CIRCUITO FECHADO' : 'CIRCUITO COM FALHA'} tom={resultado.every(Boolean) ? 'violet' : 'amber'} recibo={entrada.id}
       sub={`${relacao.titulo} · ${r.acertos}/${r.total} elos`} linhas={linhas} total={Number(entrada.xpConcedido) || 0} fase="ok"
@@ -89,7 +93,7 @@ export default function CausaEfeito({ usuario, dadosUsuario, setDadosUsuario, se
   </>;
   const dock = <div className="dock">
     {estado === 'erro' && <div className="info" style={{ justifyContent: 'center' }}><button className="sync err" onClick={testar}><span className="dot" />Não gravou. Toque para reenviar</button></div>}
-    <div className="info"><span>{ELOS.length} ELOS · <b>25 XP</b> CADA</span><span>O TESTE É FINAL</span></div>
+    <div className="info"><span>{ELOS.length} ELOS · <b>300 XP</b> + BÔNUS</span><span>O TESTE É FINAL</span></div>
     <button className="primary violet" disabled={!cheio || estado === 'enviando'} onClick={testar}>
       {estado === 'enviando' ? 'Testando o circuito…' : cheio ? <><GitBranch size={16} /> Testar circuito</> : `Faltam ${colocadas.filter(c => !c).length} elos`}</button>
   </div>;

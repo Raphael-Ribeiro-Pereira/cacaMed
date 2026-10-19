@@ -1,4 +1,5 @@
-import { concederRecompensa, nivelPorXP, xpParaNivel, VERSAO_ECONOMIA } from '../utils/economia.js';
+import { concederRecompensa, nivelPorXP, xpParaNivel, VERSAO_ECONOMIA, XP_JOGO, XP_DDX, SEGUNDOS_POR_PALAVRA,
+  bonusCruzadinha, bonusDdx, segundosEntre } from '../utils/economia.js';
 import { aplicarProgressoMissoes, lerMissoes, criarMissoesDiarias, dataLocalHoje } from '../utils/missoes.js';
 import { obterCasoPlantao, executarPlantao } from '../utils/plantao.js';
 import { obterAuditoria, avaliarAuditoria } from '../utils/erroMedico.js';
@@ -102,13 +103,12 @@ export function registrarPartidaSupabase(perfil, original, recibos = [], agora =
   if (horarios.filter(t => instante - t < 3600000).length >= LIMITE_CRUZADINHAS.hora) throw new Error('Muitas cruzadinhas em uma hora. Descanse um pouco e tente de novo.');
   if (horarios.length >= LIMITE_CRUZADINHAS.dia) throw new Error('Você chegou ao limite de cruzadinhas de hoje. Volte amanhã.');
   const xpAnterior = Number(perfil.xpTopicos?.[chaveXP]) || 0;
-  const nivel = xpAnterior === 0 ? 0 : Math.floor(Math.sqrt(xpAnterior / 1000)) + 1;
-  const base = letras * 2 + palavras * 10;
-  const multNivel = 1 + (Math.max(1, nivel) - 1) * 0.1;
-  const ideal = palavras * 15;
-  const tempoPlausivel = tempo >= Math.ceil(letras / LIMITE_CRUZADINHAS.letrasPorSegundo);
-  const multTempo = !tempoPlausivel ? 1 : tempo <= ideal * 0.25 ? 2 : tempo <= ideal * 0.5 ? 1.5 : tempo <= ideal ? 1.2 : 1;
-  const xp = Math.max(10, Math.floor(base * multNivel * multTempo) - penalidade);
+  // Economia v3: 100 XP fixos + até 50 de bônus de tempo, menos a penalidade das dicas. Com a grade emitida, o tempo
+  // vem do servidor (emissão até o registro); tempo abaixo do possível (mais de 3 letras por segundo) não ganha bônus.
+  const segundos = partida !== original ? segundosEntre(perfil.cruzadinha.entrada.emitidaEm, agora) : tempo;
+  const tempoPlausivel = segundos >= Math.ceil(letras / LIMITE_CRUZADINHAS.letrasPorSegundo);
+  const bonus = tempoPlausivel ? bonusCruzadinha(segundos, palavras * SEGUNDOS_POR_PALAVRA, penalidade) : 0;
+  const xp = XP_JOGO + bonus;
   const stats = { ...(perfil.estatisticas || {}) };
   const anterior = stats[chaveXP] || {};
   stats[chaveXP] = {
@@ -237,6 +237,11 @@ export function operarPlantaoSupabase(perfil, pedido, recibos = []) {
   return atualizado;
 }
 
+// Economia v3 do Erro médico e do Causa e efeito: 300 XP + até 100 pela fração de etapas certas (todas certas = caminho
+// seguro). Zero acerto não paga, como nos jogos.
+export const xpCasoDdx = ({ acertos, total }) =>
+  acertos >= 1 ? XP_DDX + bonusDdx(acertos / total, acertos === total) : 0;
+
 export function operarAuditoriaSupabase(perfil, pedido, recibos = []) {
   const stats = { concluidos: [], historico: [], partidas: 0, acertos: 0, etapas: 0, xp: 0, ...perfil.erroMedico };
   let entrada = stats.entrada;
@@ -277,7 +282,7 @@ export function operarAuditoriaSupabase(perfil, pedido, recibos = []) {
   const relatorio = terminou ? avaliarAuditoria(auditoria, respostas) : null;
   const chave = auditoria.id + ':' + auditoria.versao;
   const repeticao = stats.concluidos.includes(chave);
-  const xp = terminou && !repeticao ? relatorio.acertos * 25 : 0;
+  const xp = terminou && !repeticao ? xpCasoDdx(relatorio) : 0;
   entrada = { ...entrada, respostas: [...respostas], ...(terminou ? { relatorio, xpConcedido: xp, repeticao, encerradoEm: new Date().toISOString() } : {}) };
   const atualizado = { ...concederRecompensa(perfil, xp),
     xpTopicos: { ...perfil.xpTopicos, 'DDX-ERRO-MEDICO-RESPIRATORIO': (Number(perfil.xpTopicos?.['DDX-ERRO-MEDICO-RESPIRATORIO']) || 0) + xp },
@@ -330,7 +335,7 @@ export function operarRelacaoSupabase(perfil, pedido, recibos = []) {
   const relatorio = terminou ? avaliarRelacao(auditoria, respostas) : null;
   const chave = auditoria.id + ':' + auditoria.versao;
   const repeticao = stats.concluidos.includes(chave);
-  const xp = terminou && !repeticao ? relatorio.acertos * 25 : 0;
+  const xp = terminou && !repeticao ? xpCasoDdx(relatorio) : 0;
   entrada = { ...entrada, respostas: [...respostas], ...(terminou ? { relatorio, xpConcedido: xp, repeticao, encerradoEm: new Date().toISOString() } : {}) };
   const atualizado = { ...concederRecompensa(perfil, xp),
     xpTopicos: { ...perfil.xpTopicos, 'DDX-CAUSA-EFEITO-RESPIRATORIO': (Number(perfil.xpTopicos?.['DDX-CAUSA-EFEITO-RESPIRATORIO']) || 0) + xp },

@@ -22,14 +22,14 @@ test('exames desnecessários reduzem eficiência e o tempo não altera XP', () =
   assert.equal(extra.pontos.eficiencia, base.pontos.eficiencia - 10);
   assert.ok(extra.minutos > base.minutos);
 });
-test('destino errado desconta: alta indevida 80, encaminhamento desnecessário 20, destino certo nada', () => {
+test('v3: 300 XP menos o desconto do destino (alta indevida 80, encaminhamento desnecessário 20) e +100 no caminho seguro', () => {
   const completo = ['gravidade', 'inicio', 'antecedentes', 'medicamentos', 'alergias', 'associados', 'ausculta', 'pfe', 'asma', 'tratamento', 'antiinflamatorio', 'oxigenio', 'reavaliar', 'orientar'];
-  assert.equal(executarPlantao(caso, [...completo, 'alta']).xp, 250);
-  assert.equal(executarPlantao(caso, [...completo, 'encaminhar']).xp, 230);
+  assert.equal(executarPlantao(caso, [...completo, 'alta']).xp, 400);
+  assert.equal(executarPlantao(caso, [...completo, 'encaminhar']).xp, 280);
   const precisaEncaminhar = { ...caso, destinoAdequado: 'encaminhar' };
-  assert.equal(executarPlantao(precisaEncaminhar, [...completo, 'encaminhar']).xp, 250);
+  assert.equal(executarPlantao(precisaEncaminhar, [...completo, 'encaminhar']).xp, 400);
   const alta = executarPlantao(precisaEncaminhar, [...completo, 'alta']);
-  assert.equal(alta.xp, 170);
+  assert.equal(alta.xp, 220);
   assert.equal(alta.seguro, false);
 });
 
@@ -40,13 +40,13 @@ test('quatro destinos: o certo não desconta, outro desconta 20 e alta indevida 
   const certas = caso.acoes.filter(a => !a.terminal && a.pontos > 0).map(a => a.id);
   const ordem = [];
   while (ordem.length < certas.length) for (const id of certas) { const a = caso.acoes.find(x => x.id === id); if (!ordem.includes(id) && (a.exige || []).every(x => ordem.includes(x))) ordem.push(id); }
-  assert.equal(executarPlantao(caso, [...ordem, 'observacao']).xp, 250);
-  assert.equal(executarPlantao(caso, [...ordem, 'uti']).xp, 230);
-  assert.equal(executarPlantao(caso, [...ordem, 'alta']).xp, 170);
+  assert.equal(executarPlantao(caso, [...ordem, 'observacao']).xp, 400);
+  assert.equal(executarPlantao(caso, [...ordem, 'uti']).xp, 280);
+  assert.equal(executarPlantao(caso, [...ordem, 'alta']).xp, 220);
   assert.equal(executarPlantao(caso, [...ordem, 'observacao']).seguro, true);
 });
 
-test('bônus de desempenho: só em caso seguro, até +50, sem relógio na saída; a demora piora o monitor', () => {
+test('bônus de desempenho: só em caso seguro, até +100 (50 do caminho seguro e 50 do tempo), sem relógio na saída; a demora piora o monitor', () => {
   const caso = obterCasoPlantao('pdx-iamcsst');
   const marco = caso.desempenho.acao;
   const feitas = caso.acoes.filter(a => !a.terminal && a.pontos > 0 && a.id !== marco).map(a => a.id);
@@ -60,9 +60,9 @@ test('bônus de desempenho: só em caso seguro, até +50, sem relógio na saída
   const rapido = executarPlantao(caso, [...ordenar(true), caso.destinoAdequado]);
   const lento = executarPlantao(caso, [...ordenar(false), caso.destinoAdequado]);
   assert.ok(rapido.seguro && lento.seguro);
-  assert.equal(rapido.bonus, 50);
-  assert.ok(lento.bonus < 50);
-  assert.equal(rapido.xp, 300);
+  assert.equal(rapido.bonus, 100);
+  assert.ok(lento.bonus >= 50 && lento.bonus < 100);
+  assert.equal(rapido.xp, 400);
   const investigacao = caso.acoes.filter(a => ['Anamnese', 'Exames', 'Exame físico'].includes(a.grupo)).map(a => a.id);
   const parcial = executarPlantao(caso, investigacao);
   assert.ok(parcial.minutos >= 15);

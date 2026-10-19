@@ -182,7 +182,7 @@ function Hub({ stats, aberta, entrada, tickets, ocupado, onVoltar, onTutorial, o
       <section className="card bh-mode rise" style={{ '--i': 2 }}>
         <div className="bh-mh"><span className="bh-ico" style={{ color: '#ff8fab', background: 'rgba(255,92,138,.12)' }}><Shuffle size={20} /></span><div><b>Duelo clínico</b><small>Modo X1 · nome provisório</small></div><span className="chip" style={{ fontSize: 11, padding: '4px 8px' }}><Ticket />1 ticket</span></div>
         <p className="bh-p">Uma das {DOENCAS.length} doenças é sorteada pelo servidor. Você escolhe o pet antes de saber qual é.</p>
-        <div className="bh-tags"><span>Sorteio a cada partida</span><span>XP em toda partida</span><span>Mais rejogável</span></div>
+        <div className="bh-tags"><span>Sorteio a cada partida</span><span>500 XP em toda vitória</span><span>Mais rejogável</span></div>
         <button className="primary violet" disabled={tickets < 1 || travado} onClick={onDuelo}>{treinar ? <><Lock size={16} />Conclua o treinamento</> : tickets < 1 ? 'Sem tickets. Jogue cruzadinhas' : <><Ticket size={17} /> Entrar no duelo · 1 ticket</>}</button>
       </section>
       <section className="card bh-dex rise" style={{ '--i': 3 }}>

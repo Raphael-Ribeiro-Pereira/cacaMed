@@ -5,7 +5,7 @@ export { RELACOES };
 
 // Causa e efeito (formato v2): o jogador monta o circuito colocando cartas em quatro elos. Cada elo vira uma
 // "pergunta" cujas alternativas são as seis cartas, o que mantém o contrato do servidor (uma resposta por elo,
-// 25 XP cada). O "Testar circuito" da tela envia os quatro elos de uma vez.
+// economia v3: 300 XP + bônus). O "Testar circuito" da tela envia os quatro elos de uma vez.
 export const ELOS = [
   { id: 'mecanismo', rotulo: 'Mecanismo' },
   { id: 'consequencia', rotulo: 'Consequência' },

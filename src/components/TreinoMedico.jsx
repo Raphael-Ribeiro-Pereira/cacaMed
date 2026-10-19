@@ -11,8 +11,8 @@ import { BotaoCarregar, Contagem, Resultado, SubiuNivel } from './resultadoUi';
 // por rodada, conferidos pelo servidor (o gabarito não fica no aparelho), sem relógio e sem combo.
 const CORES = { quiz: '#5cc8ff', verdadeMentira: 'var(--amber)' };
 const REGRAS = {
-  quiz: ['5 perguntas de múltipla escolha, uma por vez.', 'Teoria vale 20 XP por acerto; Casos clínicos, 25 XP.', 'Depois de cada resposta, a explicação e a fonte.', 'Duas rodadas com pelo menos 1 acerto valem 1 ticket.'],
-  verdadeMentira: ['5 afirmações por rodada: de 1 a 4 são verdadeiras, e a quantidade é sorteada.', 'Arraste o cartão: direita é verdade, esquerda é mentira. As setas do teclado também funcionam.', 'No fim, você revisa as cinco e confirma; a correção vem junto.', '20 XP por frase certa. Duas rodadas com pelo menos 1 acerto valem 1 ticket.'],
+  quiz: ['5 perguntas de múltipla escolha, uma por vez.', 'Cada rodada com pelo menos 1 acerto vale 100 XP, mais até 50 de bônus de desempenho.', 'Depois de cada resposta, a explicação e a fonte.', 'Duas rodadas com pelo menos 1 acerto valem 1 ticket.'],
+  verdadeMentira: ['5 afirmações por rodada: de 1 a 4 são verdadeiras, e a quantidade é sorteada.', 'Arraste o cartão: direita é verdade, esquerda é mentira. As setas do teclado também funcionam.', 'No fim, você revisa as cinco e confirma; a correção vem junto.', 'Com pelo menos 1 acerto, a rodada vale 100 XP, mais até 50 de bônus de desempenho. Duas rodadas com pelo menos 1 acerto valem 1 ticket.'],
 };
 const VARIANTES = [['teoria', 'Teoria', 20], ['casos', 'Casos clínicos', 25]];
 
@@ -157,9 +157,11 @@ export default function TreinoMedico({ modo, usuario, dadosUsuario, setDadosUsua
   const raiz = conteudo => <div className={`cbt ${web ? 'web' : ''}`}>{conteudo}<AnimatePresence>{subiu && <SubiuNivel key="lvl" info={subiu} onClose={() => setSubiu(null)} />}</AnimatePresence></div>;
 
   if (fase === 'resultado') {
-    const xpPorAcerto = quiz && entrada.variante === 'casos' ? 25 : 20;
+    // Economia v3: o recibo mostra a base e o bônus, nunca o tempo da rodada.
     const r = relatorio;
-    const linhas = [[`Acertos (${r.acertos}/${r.total} × ${xpPorAcerto} XP)`, `+${r.xp}`, r.xp ? 'pos' : 'mut']];
+    const linhas = r.valida
+      ? [[`Rodada concluída (${r.acertos}/${r.total} acertos)`, `+${r.xp - (r.bonus || 0)}`, 'pos'], ['Bônus', `+${r.bonus || 0}`, r.bonus ? 'pos' : 'mut']]
+      : [[`Acertos (${r.acertos}/${r.total})`, '+0', 'mut']];
     if (r.xpMissoes) linhas.push(['Missões do dia', `+${r.xpMissoes}`, 'mul']);
     linhas.push([r.valida ? 'Rodada válida para o ticket' : 'Sem acerto: não conta para o ticket', r.ticketsRodada ? '+1 ticket' : `${r.medidor}/2`, r.ticketsRodada ? 'mul' : 'mut']);
     const ticketsExtras = (r.ticketsMissoes || 0) + (r.ticketsNivel || 0);
@@ -291,7 +293,7 @@ export default function TreinoMedico({ modo, usuario, dadosUsuario, setDadosUsua
           {(verdades < 1 || verdades > 4) && <div className="fb no" style={{ margin: 0 }}>{verdades < 1 ? 'Marque pelo menos uma verdade.' : 'Pelo menos uma das cinco é mentira: desmarque uma.'}</div>}
           {avisoErro}
         </div>
-        <div className="dock"><div className="info"><span>{verdades} VERDADE{verdades === 1 ? '' : 'S'} MARCADA{verdades === 1 ? '' : 'S'}</span><span>20 XP POR FRASE CERTA</span></div>
+        <div className="dock"><div className="info"><span>{verdades} VERDADE{verdades === 1 ? '' : 'S'} MARCADA{verdades === 1 ? '' : 'S'}</span><span>100 XP + BÔNUS</span></div>
           <button className="primary" disabled={ocupado || verdades < 1 || verdades > 4} onClick={confirmarFrases}><Check size={18} />{ocupado ? 'Conferindo...' : 'Confirmar as cinco frases'}</button></div>
       </>}
     </div>

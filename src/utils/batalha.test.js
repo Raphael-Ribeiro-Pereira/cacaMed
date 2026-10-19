@@ -76,14 +76,15 @@ test('buffs: escudo segura a carga em 25% até a resposta crítica', () => {
   assert.equal(estado.neutral, true);
 });
 
-test('recompensa: tutorial uma vez, História só na primeira vitória, duelo sempre', () => {
+test('recompensa v3: tutorial uma vez, 500 fixos na primeira vitória da História e em toda vitória do duelo; derrota não paga', () => {
   const { estado } = vencer(obterDoenca('pneumo'));
   assert.equal(recompensaBatalha(estado, { modo: 'tutorial', primeiraVez: true }).xp, 50);
   assert.equal(recompensaBatalha(estado, { modo: 'tutorial', primeiraVez: false }).xp, 0);
-  assert.equal(recompensaBatalha(estado, { modo: 'historia', primeiraVez: true }).xp, 100);
+  assert.equal(recompensaBatalha(estado, { modo: 'historia', primeiraVez: true }).xp, 500);
   assert.equal(recompensaBatalha(estado, { modo: 'historia', primeiraVez: false }).xp, 0);
   assert.equal(recompensaBatalha({ ...estado, fim: 'derrota' }, { modo: 'historia', primeiraVez: true }).xp, 0);
-  assert.equal(recompensaBatalha({ ...estado, fim: 'derrota' }, { modo: 'x1' }).xp, 20);
+  assert.equal(recompensaBatalha({ ...estado, fim: 'derrota' }, { modo: 'x1' }).xp, 0);
+  assert.equal(recompensaBatalha(estado, { modo: 'x1' }).xp, 500);
 });
 
 test('servidor: piloto do administrador e treinamento obrigatório', () => {

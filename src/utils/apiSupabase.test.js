@@ -114,7 +114,7 @@ test('DDX na nova API cobra uma vez, confirma as etapas (uma a uma ou em bloco) 
         respostas.push(...certas);
         p = executarPedidoSupabase(p, { acao: config.responder, entradaId, respostas: [...respostas] }).perfil;
       }
-      const xpEsperado = config.caso.perguntas.length * 25;
+      const xpEsperado = 400; // Economia v3: 300 + 100 com todas as etapas certas.
       assert.equal(p[config.campo].entrada.xpConcedido, rodada ? 0 : xpEsperado);
       assert.equal(p.pontuacaoTotal, xpEsperado);
       assert.equal(p.tickets, 9 - rodada);
@@ -128,7 +128,7 @@ test('Cruzadinha recalcula XP, ignora saldo do cliente e respeita recibos fora d
   const p = { uid: 'teste', tickets: 0, pontuacaoTotal: 0, dataUltimoLogin: dataLocalHoje(), missoesDiarias: criarMissoesDiarias() };
   const partida = { id: crypto.randomUUID(), chaveXP: 'ANATOMIA-SISTEMA RESPIRATORIO', subMateria: 'Sistema Respiratorio', palavras: 5, letras: 30, tempo: 100, erros: 2, maiorPalavra: 10, xp: 999999, tickets: 999 };
   const primeiro = executarPedidoSupabase(p, { acao: 'registrarPartida', partida });
-  assert.equal(primeiro.perfil.pontuacaoTotal, 160); // 110 da partida + 50 da missão.
+  assert.equal(primeiro.perfil.pontuacaoTotal, 158); // v3: 100 + 8 de tempo (100 s numa grade de 75 s) + 50 da missão.
   assert.equal(primeiro.perfil.tickets, 3);
   assert.equal(primeiro.eventos.length, 1);
   const semCache = { ...primeiro.perfil, cruzadinhasRegistradas: [] };
@@ -210,8 +210,8 @@ test('S-02: tempo impossível não ganha bônus e há teto de cruzadinhas por ho
     id: crypto.randomUUID(), chaveXP: 'ANATOMIA-OSSOS', subMateria: 'Ossos', palavras: 5, letras: 30, tempo: 100, erros: 0, maiorPalavra: 10, ...extra } }, { agora: new Date(agora) }).perfil;
   const base = { uid: 'teste', tickets: 0, pontuacaoTotal: 0, missoesDiarias: [] };
   const xp = perfil => perfil.xpTopicos['ANATOMIA-OSSOS'];
-  assert.equal(xp(jogar(base, '2026-10-14T12:00:00Z', { tempo: 0 })), 110, 'tempo 0 fica sem multiplicador');
-  assert.equal(xp(jogar(base, '2026-10-14T12:00:00Z', { tempo: 10 })), 220, 'tempo plausível e rápido dobra');
+  assert.equal(xp(jogar(base, '2026-10-14T12:00:00Z', { tempo: 0 })), 100, 'tempo 0 fica sem bônus');
+  assert.equal(xp(jogar(base, '2026-10-14T12:00:00Z', { tempo: 10 })), 150, 'tempo plausível e rápido ganha o bônus cheio');
   let p = base;
   for (let i = 0; i < LIMITE_CRUZADINHAS.hora; i++) p = jogar(p, `2026-10-14T12:${String(i * 4).padStart(2, '0')}:00Z`);
   assert.throws(() => jogar(p, '2026-10-14T12:50:00Z'), /Muitas cruzadinhas em uma hora/);
