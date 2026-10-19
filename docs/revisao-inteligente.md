@@ -155,11 +155,31 @@ Regra decidida: **a entrada da Revisão é sempre o hub**, com as cartas dispon�
 
 ### Protótipo do hub da Revisão
 
-Protótipo em `docs/prototipos/revisao-hub.html`, para aprovação, antes do código. O que ele precisa mostrar:
-- **Hub:** cartas por modo (Quiz, V ou M, Erro médico, Paciente DDX), cada uma com o número de erros e a próxima reapresentação; estados vazio, em dia, bloqueado abaixo do nível 10 e sessão em andamento.
-- **Entrada do relatório:** botão "Ver última revisão" no hub, sem ser a tela de abertura.
-- **Fim de sessão → hub:** "Voltar às cartas" sempre cai no hub.
-- **Web e celular**, nas duas larguras.
+Protótipo em [`docs/prototipos/revisao-hub.html`](prototipos/revisao-hub.html), feito em 19/10/2026, para aprovação antes do código. Abre direto no navegador, sem build. Conteúdo das perguntas é fictício. Segue a ideia do usuário de 19/10:
+1. **Hub:** "Comece sua revisão", quatro estatísticas (itens na fila hoje, itens revisados, taxa de acerto e dominados com o XP) e o baralho fechado no centro da mesa.
+2. **Abertura em furacão:** ao tocar em "Começar revisão" (ou no baralho), as cartas giram em espiral em volta do centro, com um redemoinho de luz atrás, e se abrem num leque de pôquer. Cada carta vira de costas para frente ao chegar.
+3. **Cartas:** uma por modo (Quiz, Verdade ou mentira, Erro médico e Paciente DDX), no estilo de carta de baralho: número de erros no canto, ícone do modo, tempo estimado e temas. Ao passar o mouse, a carta sobe, endireita e cresce para leitura. Carta em espera aparece apagada, com o horário em que volta.
+4. **Escolha:** a carta escolhida vai para o centro e as outras voltam em espiral para trás dela, formando um bloco.
+5. **Expansão:** o bloco cresce até ocupar a tela, na cor do modo, e vira a sessão.
+6. **Fim:** o resultado tem "Voltar ao hub". O hub ganha o link "Ver última revisão", sem abrir nele.
+
+O botão "Protótipo" (canto inferior esquerdo) troca:
+- **situação do jogador:** com cartas, sessão em andamento, em dia, sem erros e abaixo do nível 10;
+- **escolha:** uma carta por sessão (como o servidor faz hoje) ou várias cartas juntas (as escolhidas se juntam num bloco e viram uma sessão só);
+- **abertura:** furacão ou leque simples;
+- **tela:** cheia ou moldura de celular.
+
+Movimento reduzido (preferência do sistema): as cartas vão direto para o lugar, sem espiral.
+
+**Decisões que o protótipo pede ao usuário:**
+1. Uma carta por sessão ou várias cartas juntas?
+2. A abertura em furacão é a animação imaginada?
+3. Cartas em espera aparecem no leque (apagadas, com o horário) ou ficam de fora?
+4. As quatro estatísticas do hub são essas?
+5. "Ver última revisão" como link no hub está bom?
+6. Nome e cor da carta do Paciente DDX.
+
+Regra da memória do projeto: o protótipo traz as decisões de fluxo; no código, o visual segue os componentes atuais do app.
 
 ### Pendências
 

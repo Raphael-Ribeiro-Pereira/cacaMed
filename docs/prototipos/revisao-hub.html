@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Revisão | Protótipo do hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!--
+  Protótipo da Revisão Inteligente (docs/revisao-inteligente.md#protótipo-do-hub-da-revisão).
+  Serve para decidir o fluxo: hub com estatísticas, abertura das cartas em "furacão", leque de cartas (uma por modo),
+  escolha, bloco centralizado e expansão para o modo. Conteúdo das perguntas é fictício. Não é o design final.
+-->
+<style>
+:root{--canvas:#0b0f19;--surface:#111827;--elev:#1a2234;--line:rgba(220,226,247,.09);--line-strong:#2a3550;--text:#dce2f7;--muted:#8d9bb3;--mint:#00f5d4;--mint-ink:#00382f;--crimson:#ff3366;--violet:#b49cff;--ok:#06d6a0;--laranja:#ffb95f;--sans:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace;--ease:cubic-bezier(.16,1,.3,1);color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#05070d;color:var(--text);font:400 14px/1.45 var(--sans)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
+svg{display:block}
+
+/* Moldura: tela cheia ou celular */
+.frame{min-height:100dvh}
+.app{position:relative;width:100%;height:100dvh;overflow:hidden;background:var(--canvas);container-type:inline-size;isolation:isolate}
+.app::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 80% 45% at 80% 0%,rgba(180,156,255,.11),transparent 70%),radial-gradient(ellipse 70% 40% at 0% 100%,rgba(0,245,212,.07),transparent 70%)}
+.frame.celular{display:grid;place-items:center;padding:20px 12px}
+.frame.celular .app{width:min(390px,100%);height:min(820px,calc(100dvh - 40px));border-radius:34px;border:1px solid var(--line-strong);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column}
+.view[hidden]{display:none}
+
+/* Topo */
+.topo{display:flex;align-items:center;gap:12px;padding:14px 16px;position:sticky;top:0;z-index:5;background:linear-gradient(var(--canvas) 72%,transparent)}
+.topo h1{margin:0;font-size:18px;font-weight:800;line-height:1.15;flex:1;min-width:0}
+.topo h1 small{display:block;font:700 10.5px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--violet)}
+.icone-btn{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:12px;border:1px solid var(--line-strong);background:var(--surface)}
+.icone-btn svg{width:20px;height:20px}
+.nivel{font:700 12px var(--mono);padding:6px 10px;border-radius:999px;border:1px solid var(--line-strong);color:var(--muted)}
+
+/* Hub */
+.hub-corpo{display:grid;gap:18px;padding:4px 16px 96px;align-content:start}
+@container (min-width:860px){.hub-corpo{grid-template-columns:minmax(300px,360px) 1fr;gap:32px;padding:16px 32px 40px;align-items:start}.intro{position:sticky;top:80px}}
+.kicker{margin:0;font:700 11px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--violet)}
+.intro h2{margin:6px 0;font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.sub{margin:0;color:var(--muted);max-width:42ch}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.stat{padding:12px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.stat b{display:block;font:800 20px/1.15 var(--mono)}
+.stat span{font-size:12px;color:var(--muted)}
+.barra-nivel{margin-top:14px;display:grid;gap:6px;font:700 11px var(--mono);color:var(--muted)}
+.barra-nivel span{height:8px;border-radius:99px;background:var(--elev);overflow:hidden}
+.barra-nivel i{display:block;height:100%;width:62%;background:linear-gradient(90deg,var(--violet),var(--mint))}
+.mesa{display:grid;gap:12px}
+
+/* Mesa das cartas */
+.stage{position:relative;height:460px;border-radius:24px;border:1px solid var(--line);background:var(--surface);overflow:hidden;--cw:132px;--ch:188px}
+@container (max-width:600px){.stage{height:390px;--cw:96px;--ch:136px}}
+.stage::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgba(220,226,247,.10) 1px,transparent 1px);background-size:22px 22px;-webkit-mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 45%,transparent 100%);mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 45%,transparent 100%)}
+#vortex{position:absolute;left:50%;top:50%;width:min(90%,560px);aspect-ratio:1;translate:-50% -50%;border-radius:50%;pointer-events:none;opacity:0;filter:blur(16px);background:conic-gradient(from 0deg,transparent,rgba(180,156,255,.55),transparent 22%,rgba(0,245,212,.45),transparent 48%,rgba(255,143,163,.4),transparent 72%,rgba(124,196,255,.4),transparent);-webkit-mask-image:radial-gradient(circle,transparent 16%,#000 38%,transparent 70%);mask-image:radial-gradient(circle,transparent 16%,#000 38%,transparent 70%)}
+.rotulo-deck{position:absolute;left:0;right:0;top:calc(50% + var(--ch) / 2 + 18px);text-align:center;font:700 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);transition:opacity .3s;pointer-events:none}
+.stage.aberto .rotulo-deck{opacity:0}
+.dica{position:absolute;left:50%;bottom:12px;translate:-50% 0;z-index:70;display:flex;align-items:center;gap:8px;white-space:nowrap;padding:6px 12px;border-radius:99px;background:rgba(26,34,52,.85);backdrop-filter:blur(8px);border:1px solid var(--line-strong);font-size:12px;color:var(--muted);opacity:0;transition:opacity .3s;pointer-events:none}
+.dica::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--mint)}
+.stage.aberto .dica{opacity:1}
+
+/* Carta */
+.carta{position:absolute;left:50%;top:50%;width:var(--cw);height:var(--ch);margin:calc(var(--ch) / -2) 0 0 calc(var(--cw) / -2);border:0;padding:0;background:none;-webkit-tap-highlight-color:transparent;will-change:transform}
+.carta:focus-visible{outline:none}
+.carta:focus-visible .frente{outline:2px solid var(--mint);outline-offset:3px}
+.stage.aberto .carta:not(.espera):hover{z-index:60!important}
+.corpo{position:absolute;inset:0;display:block;perspective:900px;transition:transform .35s var(--ease)}
+.stage.aberto .carta:not(.espera):hover .corpo,.stage.aberto .carta:focus-visible .corpo{transform:translateY(-16px) rotate(calc(var(--r, 0deg) * -1)) scale(1.08)}
+.stage.aberto .carta.sel .corpo{transform:translateY(-28px)}
+.flip{position:absolute;inset:0;display:block;transform-style:preserve-3d;transform:rotateY(180deg)}
+.face{position:absolute;inset:0;display:block;border-radius:14px;-webkit-backface-visibility:hidden;backface-visibility:hidden;overflow:hidden;text-align:left}
+.frente{background:linear-gradient(165deg,color-mix(in srgb,var(--c) 18%,#1a2234),#111827 62%);border:1px solid color-mix(in srgb,var(--c) 50%,transparent);box-shadow:0 14px 30px rgba(0,0,0,.45);color:var(--text);transition:box-shadow .3s}
+.verso{transform:rotateY(180deg);display:grid;place-items:center;background:radial-gradient(circle at 50% 50%,rgba(180,156,255,.22),transparent 60%),repeating-linear-gradient(45deg,rgba(180,156,255,.10) 0 6px,transparent 6px 12px),#141b2d;border:1px solid rgba(180,156,255,.45);box-shadow:0 14px 30px rgba(0,0,0,.45)}
+.emblema{display:grid;place-items:center;width:64%;aspect-ratio:1;border-radius:50%;border:1px solid rgba(180,156,255,.5);background:#0f1526;font:800 calc(var(--cw) * .12)/1 var(--sans);letter-spacing:-.02em}
+.emblema b{color:var(--mint)}
+.canto{position:absolute;top:8px;left:9px;display:grid;justify-items:center;gap:3px;color:var(--c);font:800 calc(var(--cw) * .15)/1 var(--mono)}
+.canto svg{width:calc(var(--cw) * .12);height:calc(var(--cw) * .12)}
+.canto.inv{top:auto;left:auto;bottom:8px;right:9px;transform:rotate(180deg)}
+.miolo{position:absolute;inset:20% 9% 17%;display:grid;align-content:center;justify-items:center;text-align:center;gap:5px}
+.medalha{width:calc(var(--cw) * .36);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);border:1px solid color-mix(in srgb,var(--c) 40%,transparent)}
+.medalha svg{width:55%;height:55%}
+.miolo strong{font-size:calc(var(--cw) * .105);line-height:1.15;font-weight:800}
+.miolo small{display:flex;align-items:center;gap:4px;font-size:calc(var(--cw) * .085);color:var(--muted)}
+.miolo small svg{width:1.1em;height:1.1em}
+.miolo em{font-style:normal;font-size:calc(var(--cw) * .075);color:var(--muted);opacity:.85}
+@container (max-width:600px){.miolo em{display:none}}
+.selo{position:absolute;top:9px;right:9px;font:800 calc(var(--cw) * .065)/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:3px 5px;border-radius:5px;background:var(--c);color:#0b0f19}
+.marca{position:absolute;bottom:9px;left:9px;width:22px;height:22px;border-radius:50%;background:var(--c);color:#0b0f19;display:none;place-items:center}
+.marca svg{width:14px;height:14px}
+.carta.sel .marca{display:grid}
+.carta.sel .frente{box-shadow:0 0 0 2px var(--c),0 0 32px color-mix(in srgb,var(--c) 45%,transparent)}
+.carta.espera .frente{filter:grayscale(.65) brightness(.62)}
+.carta.espera{cursor:default}
+.trava{position:absolute;inset:0;z-index:70;display:grid;place-content:center;justify-items:center;gap:6px;background:rgba(11,15,25,.45);backdrop-filter:blur(2px)}
+.trava svg{width:30px;height:30px;color:var(--violet)}
+.trava b{font:800 16px var(--mono)}
+.trava small{color:var(--muted)}
+.vazio{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;color:var(--muted)}
+.fantasmas{position:relative;width:calc(var(--cw) * 2);height:var(--ch)}
+.fantasma{position:absolute;left:50%;top:0;width:var(--cw);height:var(--ch);margin-left:calc(var(--cw) / -2);border-radius:14px;border:1.5px dashed var(--line-strong);rotate:calc((var(--i) - 1) * 12deg);translate:calc((var(--i) - 1) * 40px) calc(var(--i) * 0px)}
+
+/* Botões */
+.acoes{display:grid;gap:8px}
+@container (min-width:860px){.acoes{grid-auto-flow:column;justify-content:start;align-items:center}}
+.primario{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 22px;border-radius:14px;border:0;background:var(--mint);color:var(--mint-ink);font-weight:800;font-size:15px}
+.primario:disabled{background:var(--elev);color:var(--muted);cursor:not-allowed}
+.primario svg{width:18px;height:18px}
+.secundario{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 18px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface);font-weight:700}
+.link{background:none;border:0;color:var(--violet);font-weight:600;padding:8px 4px;text-decoration:underline;text-underline-offset:3px}
+.atalhos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* Expansão para o modo */
+#expansor{position:absolute;z-index:90;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--c) 34%,#1a2234),#0b0f19 75%);border:1px solid color-mix(in srgb,var(--c) 50%,transparent)}
+#expansor[hidden]{display:none}
+.ex-rotulo{display:grid;justify-items:center;gap:8px;text-align:center;color:var(--c);padding:0 24px}
+.ex-rotulo svg{width:46px;height:46px}
+.ex-rotulo b{color:var(--text);font-size:24px;font-weight:800}
+.ex-rotulo small{color:var(--muted);font:700 11px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+
+/* Sessão */
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 10px}
+.chip{font:700 11px var(--mono);padding:4px 9px;border-radius:99px;border:1px solid color-mix(in srgb,var(--c) 50%,transparent);color:var(--c)}
+.progresso{height:4px;margin:0 16px;border-radius:99px;background:var(--elev);overflow:hidden;flex:none}
+.progresso i{display:block;height:100%;background:var(--c);transition:width .4s var(--ease)}
+.sessao-corpo{flex:1;padding:20px 16px 24px;max-width:720px;width:100%;margin:0 auto;display:grid;align-content:start;gap:12px}
+.tema{margin:0;font:700 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--c)}
+.enunciado{margin:0;font-size:19px;line-height:1.35;font-weight:700}
+.opcoes{display:grid;gap:8px;margin-top:6px}
+.op{display:flex;gap:12px;align-items:center;text-align:left;padding:14px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface);min-height:52px}
+.op .tecla{font:700 12px var(--mono);width:24px;height:24px;border-radius:7px;display:grid;place-items:center;background:var(--elev);flex:none}
+.op.certa{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--surface))}
+.op.errada{border-color:var(--crimson);background:color-mix(in srgb,var(--crimson) 14%,var(--surface))}
+.op.apagada{opacity:.5}
+.fb{padding:12px 14px;border-radius:14px;border:1px solid}
+.fb.sim{border-color:color-mix(in srgb,var(--ok) 50%,transparent);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+.fb.nao{border-color:color-mix(in srgb,var(--crimson) 50%,transparent);background:color-mix(in srgb,var(--crimson) 10%,transparent)}
+.dock{position:sticky;bottom:0;margin-top:auto;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--canvas) 35%);display:grid;max-width:720px;width:100%;margin-inline:auto}
+.dica-dock{margin:0;text-align:center;color:var(--muted);font-size:13px;padding:14px 0}
+
+/* Resultado */
+.rel-corpo{padding:8px 16px 24px;max-width:720px;margin:0 auto;width:100%;display:grid;gap:12px}
+.carimbo{font:800 12px var(--mono);letter-spacing:.16em;color:var(--crimson);margin:0}
+.carimbo.ok{color:var(--ok)}
+.placar{margin:0;font:800 56px/1 var(--mono)}
+.placar small{font-size:12px;margin-left:8px;color:var(--muted);letter-spacing:.14em}
+.linhas div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.linhas span{color:var(--muted)}
+.linhas b{text-align:right}
+.pos{color:var(--ok)}
+.erro-item{padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);display:grid;gap:4px}
+.erro-item p{margin:0;color:var(--muted)}
+.erro-item>b{display:flex;gap:8px}
+.erro-item>b svg{width:16px;height:16px;flex:none;color:var(--crimson);margin-top:2px}
+.ia{padding:10px;border-radius:10px;background:color-mix(in srgb,var(--violet) 10%,transparent);color:var(--text)!important;margin-top:4px!important}
+.ia small{display:block;color:var(--muted);margin-top:4px}
+
+#toast{position:absolute;left:50%;bottom:24px;translate:-50% 0;z-index:95;max-width:calc(100% - 32px);padding:10px 14px;border-radius:12px;background:var(--elev);border:1px solid var(--line-strong);font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none}
+#toast.on{opacity:1}
+
+/* Painel do protótipo (fora do app) */
+.proto{position:fixed;left:14px;bottom:14px;z-index:200;display:flex;flex-direction:column-reverse;align-items:flex-start;gap:10px;font-size:13px}
+.proto-btn{display:flex;align-items:center;gap:8px;height:42px;padding:0 14px;border-radius:999px;border:1px solid var(--laranja);background:#1b1408;color:var(--laranja);font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.proto-btn svg{width:18px;height:18px}
+.proto-painel{width:min(350px,calc(100vw - 28px));max-height:min(72vh,600px);overflow:auto;padding:14px;border-radius:16px;background:#151b2b;border:1px solid rgba(255,185,95,.35);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.proto-painel[hidden]{display:none}
+.proto-painel h2{margin:0 0 4px;font-size:14px}
+.proto-painel>p{margin:0 0 12px;color:var(--muted);font-size:12px}
+.grupo{margin-bottom:12px}
+.grupo p{margin:0 0 6px;font:700 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--laranja)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{padding:7px 10px;border-radius:9px;border:1px solid var(--line-strong);background:#0f1526;font-size:12.5px}
+.seg button[aria-pressed="true"]{background:var(--laranja);color:#1b1408;border-color:var(--laranja);font-weight:700}
+.decisoes{margin:0;padding-left:18px;color:var(--muted);display:grid;gap:6px;font-size:12.5px}
+.decisoes b{color:var(--text);font-weight:600}
+</style>
+</head>
+<body>
+<div class="frame" id="frame">
+  <div class="app" id="app">
+    <section class="view" id="hub" aria-label="Revisão inteligente"></section>
+    <section class="view" id="sessao" hidden aria-label="Sessão de revisão"></section>
+    <section class="view" id="relatorio" hidden aria-label="Resultado da revisão"></section>
+    <div id="expansor" hidden></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+  </div>
+</div>
+
+<div class="proto">
+  <button class="proto-btn" id="proto-btn" aria-expanded="false" aria-controls="proto-painel"></button>
+  <div class="proto-painel" id="proto-painel" hidden>
+    <h2>Protótipo · Revisão inteligente</h2>
+    <p>Conteúdo fictício. Troque as opções para ver cada caso.</p>
+    <div class="grupo"><p>Situação do jogador</p><div class="seg" data-chave="estado">
+      <button data-valor="normal">Com cartas</button><button data-valor="andamento">Sessão em andamento</button><button data-valor="emdia">Em dia</button><button data-valor="vazio">Sem erros</button><button data-valor="bloqueado">Abaixo do nível 10</button>
+    </div></div>
+    <div class="grupo"><p>Escolha das cartas</p><div class="seg" data-chave="escolha">
+      <button data-valor="uma">Uma carta por sessão</button><button data-valor="varias">Várias cartas juntas</button>
+    </div></div>
+    <div class="grupo"><p>Abertura</p><div class="seg" data-chave="abertura">
+      <button data-valor="furacao">Furacão</button><button data-valor="simples">Leque simples</button>
+    </div></div>
+    <div class="grupo"><p>Tela</p><div class="seg" data-chave="tela">
+      <button data-valor="cheia">Tela cheia</button><button data-valor="celular">Celular</button>
+    </div></div>
+    <div class="grupo"><p>O que decidir</p><ol class="decisoes">
+      <li><b>Uma carta ou várias?</b> Hoje o servidor faz uma carta por sessão. "Várias cartas juntas" mistura os modos numa sessão só.</li>
+      <li><b>A abertura em furacão</b> é a animação que você imaginou?</li>
+      <li><b>Cartas em espera</b> aparecem no leque, apagadas e com o horário, ou ficam de fora?</li>
+      <li><b>As quatro estatísticas</b> do hub são essas?</li>
+      <li><b>"Ver última revisão"</b> como link no hub está bom?</li>
+      <li><b>Carta do Paciente DDX:</b> nome e cor estão bons?</li>
+    </ol></div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const rm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const svg = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const I = {
+  quiz: svg('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 1 1 3.4 2.3c-.6.3-.9.8-.9 1.4v.6"/><path d="M12 16.8h.01"/>'),
+  vm: svg('<path d="M3 12.5l3 3 5-6.5"/><path d="M14 9l6 6"/><path d="M20 9l-6 6"/>'),
+  erro: svg('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 11h6"/><path d="M9 15h4"/>'),
+  pdx: svg('<path d="M3 12h4l2-5 4 10 2-5h6"/>'),
+  voltar: svg('<path d="M15 18l-6-6 6-6"/>'),
+  cadeado: svg('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'),
+  relogio: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  x: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
+  seta: svg('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+  ajuste: svg('<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>'),
+  brilho: svg('<path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9z"/>'),
+};
+
+const MODOS = {
+  quiz: { rotulo: 'Quiz', cor: '#00f5d4' },
+  vm: { rotulo: 'Verdade ou mentira', cor: '#ffd166' },
+  erro: { rotulo: 'Erro médico', cor: '#ff8fa3' },
+  pdx: { rotulo: 'Paciente DDX', cor: '#7cc4ff' },
+};
+// Perguntas fictícias, só para o fluxo da sessão.
+const ITENS = {
+  q1: { modo: 'quiz', tema: 'Farmacologia', enunciado: 'Qual é o tratamento de primeira linha na anafilaxia?', opcoes: ['Adrenalina intramuscular', 'Anti-histamínico intravenoso', 'Corticoide intravenoso', 'Salbutamol inalatório'], certa: 0, explica: 'A adrenalina intramuscular é o tratamento inicial; anti-histamínico e corticoide são adjuvantes.' },
+  q2: { modo: 'quiz', tema: 'Clínica médica', parecida: true, enunciado: 'Na anafilaxia que não responde a doses repetidas de adrenalina intramuscular, o próximo passo é:', opcoes: ['Adrenalina em infusão intravenosa', 'Dobrar a dose do anti-histamínico', 'Aguardar o efeito do corticoide', 'Alta com observação em casa'], certa: 0, explica: 'Na anafilaxia refratária, a adrenalina passa a ser dada em infusão intravenosa, com monitorização.' },
+  q4: { modo: 'quiz', tema: 'Farmacologia', enunciado: 'Qual antídoto reverte a intoxicação por benzodiazepínicos?', opcoes: ['Flumazenil', 'Naloxona', 'Atropina', 'N-acetilcisteína'], certa: 0, explica: 'O flumazenil é o antagonista dos receptores de benzodiazepínicos.' },
+  q3: { modo: 'quiz', tema: 'Microbiologia', enunciado: 'Qual é o agente mais comum da pneumonia adquirida na comunidade em adultos?', opcoes: ['Streptococcus pneumoniae', 'Staphylococcus aureus', 'Pseudomonas aeruginosa', 'Klebsiella pneumoniae'], certa: 0, explica: 'O pneumococo segue como o agente mais frequente da pneumonia comunitária.' },
+  v1: { modo: 'vm', tema: 'Fisiologia', enunciado: '“A heparina não fracionada é monitorada pelo TTPa.”', opcoes: ['Verdadeira', 'Falsa'], certa: 0, explica: 'Verdadeira: o TTPa acompanha o efeito da heparina não fracionada.' },
+  v2: { modo: 'vm', tema: 'Imunologia', enunciado: '“A IgM é a imunoglobulina que atravessa a placenta.”', opcoes: ['Verdadeira', 'Falsa'], certa: 1, explica: 'Falsa: a IgG é a que atravessa a placenta.' },
+  e1: { modo: 'erro', tema: 'Infeccioso · caso inteiro, etapa 1 de 3', enunciado: 'Mulher, 68 anos, febre e confusão há 1 dia. PA 84/50, lactato 4,1. Recebeu dipirona e ficou em observação. Onde está o erro?', opcoes: ['Não colher hemoculturas nem iniciar antibiótico na primeira hora', 'Prescrever dipirona', 'Dosar o lactato', 'Aferir a pressão arterial'], certa: 0, explica: 'Sepse com hipotensão: hemoculturas e antibiótico na primeira hora, com expansão volêmica.' },
+  p1: { modo: 'pdx', tema: 'Cardiovascular', enunciado: 'Homem, 58 anos, dor torácica há 40 minutos, supradesnivelamento de ST em DII, DIII e aVF. Conduta?', opcoes: ['Reperfusão imediata (angioplastia primária)', 'Alta com analgésico', 'Teste ergométrico', 'Repetir o ECG em 6 horas'], certa: 0, explica: 'Infarto com supra de ST: reperfusão o mais cedo possível.' },
+};
+const CARTAS = [
+  { id: 'quiz-1', modo: 'quiz', titulo: 'Quiz 1', erros: 7, un: ['erro', 'erros'], temas: 'Farmacologia · Clínica médica', min: 5, itens: ['q1', 'q2', 'q4'] },
+  { id: 'vm', modo: 'vm', titulo: 'Verdade ou mentira', erros: 5, un: ['erro', 'erros'], temas: 'Fisiologia · Imunologia', min: 3, itens: ['v1', 'v2'] },
+  { id: 'erro', modo: 'erro', titulo: 'Erro médico', erros: 2, un: ['caso', 'casos'], temas: 'Infeccioso', min: 6, itens: ['e1'] },
+  { id: 'pdx', modo: 'pdx', titulo: 'Paciente DDX', erros: 1, un: ['caso', 'casos'], temas: 'Cardiovascular', min: 4, itens: ['p1'], nova: true },
+  { id: 'quiz-2', modo: 'quiz', titulo: 'Quiz 2', erros: 3, un: ['erro', 'erros'], temas: 'Microbiologia', min: 3, itens: ['q3'], espera: 'amanhã, 09:00' },
+];
+const ESPERAS = ['amanhã, 09:00', 'amanhã, 14:30', 'qui., 22/10', 'sex., 23/10', 'sáb., 24/10'];
+
+const S = { estado: 'normal', escolha: 'uma', abertura: 'furacao', tela: 'cheia', fase: 'hub', animando: false, sel: new Set(), sessao: null, andamento: null, ultimo: null, rel: null };
+try { const g = JSON.parse(localStorage.getItem('prototipo-revisao-hub') || '{}'); for (const k of ['estado', 'escolha', 'abertura', 'tela']) if (g[k]) S[k] = g[k]; } catch { /* sem armazenamento */ }
+const guardar = () => { try { localStorage.setItem('prototipo-revisao-hub', JSON.stringify({ estado: S.estado, escolha: S.escolha, abertura: S.abertura, tela: S.tela })); } catch { /* sem armazenamento */ } };
+S.ultimo = { titulo: 'Última revisão · ontem', acertos: 2, total: 5, dominados: 0, quando: 'ontem', erros: [{ it: ITENS.q1, escolha: 1 }, { it: ITENS.v2, escolha: 0 }, { it: ITENS.e1, escolha: 1 }] };
+
+// ---------- Utilidades de animação ----------
+const pausa = ms => new Promise(r => setTimeout(r, ms));
+function mover(el, frames, opcoes) {
+  const a = el.animate(frames, { fill: 'forwards', ...opcoes });
+  return a.finished.then(() => { const { offset, easing, ...fim } = frames[frames.length - 1]; Object.assign(el.style, fim); a.cancel(); }).catch(() => {});
+}
+const tf = p => `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) rotate(${p.r.toFixed(2)}deg) scale(${p.s})`;
+function medidas() {
+  const st = $('#stage'); const r = st.getBoundingClientRect(); const cs = getComputedStyle(st);
+  return { w: r.width, h: r.height, cw: parseFloat(cs.getPropertyValue('--cw')), ch: parseFloat(cs.getPropertyValue('--ch')) };
+}
+const INCLINA = [-4, 3, -2, 5, -1, 2];
+const posDeck = (i, n) => ({ x: (i - (n - 1) / 2) * 1.2, y: -i * 1.6, r: INCLINA[i % INCLINA.length], s: 1 });
+function posLeque(i, n, m) {
+  if (n === 1) return { x: 0, y: 0, r: 0, s: 1 };
+  const abertura = Math.min(m.w < 600 ? 60 : 72, 18 * (n - 1)); const meia = abertura / 2 * Math.PI / 180;
+  // Meia largura da carta da ponta já inclinada, para ela não sair da mesa.
+  const ponta = (m.cw * Math.cos(meia) + m.ch * Math.sin(meia)) / 2;
+  const R = Math.min(m.w < 600 ? 320 : 560, (m.w / 2 - ponta - 8) / Math.sin(meia));
+  const a = -abertura / 2 + i * abertura / (n - 1); const rad = a * Math.PI / 180; const queda = R * (1 - Math.cos(meia));
+  return { x: R * Math.sin(rad), y: R * (1 - Math.cos(rad)) - queda / 2 + 4, r: a, s: 1 };
+}
+// "Furacão": a carta gira em espiral em volta do centro enquanto vai da posição de origem até o destino.
+function espiral(i, n, de, para, m, { voltas = 1.5, raio = .34 } = {}) {
+  const K = 30, quadros = []; const Rw = Math.min(m.w, m.h) * raio; const f0 = (i / Math.max(n, 1)) * 360;
+  for (let k = 0; k <= K; k++) {
+    const t = k / K; const e = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const fi = (f0 + 360 * voltas * e) * Math.PI / 180; const r = Rw * Math.sin(Math.PI * t);
+    const x = de.x + (para.x - de.x) * e + r * Math.cos(fi); const y = de.y + (para.y - de.y) * e + r * Math.sin(fi) * .7;
+    const rot = de.r + (para.r - de.r) * e + 300 * voltas * e * (1 - e);
+    const s = de.s + (para.s - de.s) * e - .12 * Math.sin(Math.PI * t);
+    quadros.push({ transform: tf({ x, y, r: rot, s }), offset: t });
+  }
+  return quadros;
+}
+function virar(c, frente, atraso, dur) {
+  if (c.frente === frente) return Promise.resolve();
+  c.frente = frente;
+  const f = c.el.querySelector('.flip');
+  return mover(f, [{ transform: `rotateY(${frente ? 180 : 0}deg)` }, { transform: `rotateY(${frente ? 0 : 180}deg)` }], { duration: dur, delay: atraso, easing: 'cubic-bezier(.3,.7,.3,1)' });
+}
+function vortex(sentido = 1) {
+  const v = $('#vortex'); if (!v || rm()) return;
+  v.animate([{ opacity: 0, transform: 'rotate(0deg) scale(.35)' }, { opacity: .95, offset: .35 }, { opacity: 0, transform: `rotate(${600 * sentido}deg) scale(1.35)` }], { duration: 1500, easing: 'cubic-bezier(.3,.6,.3,1)' });
+}
+let tempoToast;
+function toast(texto) { const t = $('#toast'); t.textContent = texto; t.classList.add('on'); clearTimeout(tempoToast); tempoToast = setTimeout(() => t.classList.remove('on'), 2200); }
+
+// ---------- Hub ----------
+let cartas = [];
+function cartasDoEstado() {
+  if (S.estado === 'vazio') return [];
+  if (S.estado === 'bloqueado') return CARTAS.slice(0, 3).map(c => ({ ...c, espera: null }));
+  if (S.estado === 'emdia') return CARTAS.map((c, i) => ({ ...c, espera: ESPERAS[i], nova: false }));
+  return CARTAS;
+}
+const unidade = c => c.erros === 1 ? c.un[0] : c.un[1];
+function htmlCarta(c) {
+  const ic = I[c.modo];
+  return `<span class="corpo"><span class="flip">
+    <span class="face frente"><span class="canto"><b>${c.erros}</b>${ic}</span>${c.nova ? '<span class="selo">nova</span>' : ''}
+      <span class="miolo"><span class="medalha">${ic}</span><strong>${c.titulo}</strong>
+        <small>${c.espera ? `${I.relogio} Volta ${c.espera}` : `${c.erros} ${unidade(c)} · ~${c.min} min`}</small><em>${c.temas}</em></span>
+      <span class="canto inv"><b>${c.erros}</b>${ic}</span><span class="marca">${I.check}</span></span>
+    <span class="face verso"><span class="emblema"><span>caco<b>Med</b></span></span></span>
+  </span></span>`;
+}
+function montarCartas() {
+  const st = $('#stage'); const lista = cartasDoEstado(); const n = lista.length;
+  cartas = lista.map((c, i) => {
+    const el = document.createElement('button');
+    el.type = 'button'; el.className = 'carta' + (c.espera ? ' espera' : ''); el.tabIndex = -1;
+    el.style.setProperty('--c', MODOS[c.modo].cor); el.style.zIndex = i + 1;
+    el.setAttribute('aria-label', `${c.titulo}: ${c.espera ? `volta ${c.espera}` : `${c.erros} ${unidade(c)}, cerca de ${c.min} minutos`}`);
+    el.innerHTML = htmlCarta(c);
+    const obj = { ...c, el, pos: posDeck(i, n), frente: false };
+    el.style.transform = tf(obj.pos);
+    el.addEventListener('click', () => clicarCarta(obj));
+    st.appendChild(el);
+    return obj;
+  });
+}
+function renderHub() {
+  if (S.estado === 'andamento' && !S.andamento) S.andamento = sessaoDeExemplo();
+  S.fase = 'hub'; S.sel.clear();
+  const e = S.estado; const lista = cartasDoEstado(); const prontas = lista.filter(c => !c.espera);
+  const itens = prontas.reduce((s, c) => s + c.erros, 0);
+  const textos = {
+    normal: { k: `${prontas.length} cartas prontas`, h: 'Comece sua revisão', s: S.escolha === 'uma' ? 'Cada carta junta até 7 erros de um modo. Escolha uma para começar.' : 'Cada carta junta até 7 erros de um modo. Escolha uma ou mais e jogue tudo numa sessão só.' },
+    andamento: { k: 'Sessão em andamento', h: 'Continue de onde parou', s: S.andamento ? `${S.andamento.cartas.map(c => c.titulo).join(' + ')} · item ${S.andamento.idx + 1} de ${S.andamento.itens.length}` : '' },
+    emdia: { k: 'Revisão em dia', h: 'Nada para rever agora', s: 'A próxima carta volta amanhã, às 09:00. Cada acerto espaça o item: 1, 3 e 7 dias.' },
+    vazio: { k: 'Seu aprendizado começa nos jogos', h: 'Ainda sem erros para rever', s: 'Jogue Quiz, Verdade ou mentira, Erro médico ou um caso do Plantão. Cada erro vira uma carta aqui.' },
+    bloqueado: { k: 'Libera no nível 10', h: 'Revisão bloqueada', s: 'Você está no nível 7. Seus erros já estão sendo guardados: 12 esperando por você.' },
+  }[e];
+  const stats = e === 'vazio' || e === 'bloqueado'
+    ? [['0', 'itens revisados'], ['—', 'de acerto'], ['0', 'dominados'], [e === 'bloqueado' ? '12' : '0', 'erros guardados']]
+    : [[e === 'emdia' ? '0' : String(itens), 'itens na fila hoje'], ['42', 'itens revisados'], ['64%', 'de acerto na Revisão'], ['4', 'dominados · +160 XP']];
+  const rotulo = { normal: `${itens} itens em ${prontas.length} cartas`, andamento: 'Sessão aberta', emdia: `${lista.length} cartas em espera`, bloqueado: '', vazio: '' }[e];
+  $('#hub').innerHTML = `
+    <header class="topo"><button class="icone-btn" id="menu" aria-label="Voltar ao menu">${I.voltar}</button>
+      <h1><small>Aprenda com seus erros</small>Revisão inteligente</h1><span class="nivel">NV ${e === 'bloqueado' ? 7 : 12}</span></header>
+    <div class="hub-corpo">
+      <section class="intro"><p class="kicker">${textos.k}</p><h2>${textos.h}</h2><p class="sub">${textos.s}</p>
+        ${e === 'bloqueado' ? '<div class="barra-nivel"><span><i></i></span>NÍVEL 7 · 62% ATÉ O 8</div>' : ''}
+        <div class="stats">${stats.map(([v, t]) => `<div class="stat"><b>${v}</b><span>${t}</span></div>`).join('')}</div></section>
+      <section class="mesa">
+        <div class="stage" id="stage"><div id="vortex"></div>
+          ${e === 'vazio' ? `<div class="vazio"><div class="fantasmas">${[0, 1, 2].map(i => `<span class="fantasma" style="--i:${i}"></span>`).join('')}</div><span>Seus erros viram cartas</span></div>` : ''}
+          ${e === 'bloqueado' ? `<div class="trava">${I.cadeado}<b>NÍVEL 10</b><small>Faltam 3 níveis</small></div>` : ''}
+          <div class="rotulo-deck">${rotulo}</div><div class="dica" id="dica"></div></div>
+        <div class="acoes" id="acoes"></div>
+      </section>
+    </div>`;
+  montarCartas(); atualizarAcoes();
+}
+function atualizarAcoes() {
+  const a = $('#acoes'); if (!a) return;
+  const e = S.estado; const leque = S.fase === 'leque';
+  const ultima = S.ultimo ? `<button class="link" id="ultima">Ver última revisão · ${S.ultimo.acertos}/${S.ultimo.total} certas · ${S.ultimo.quando}</button>` : '';
+  let h = '';
+  if (e === 'normal') {
+    if (!leque) h = `<button class="primario" id="abrir">Começar revisão ${I.seta}</button>${ultima}`;
+    else if (S.escolha === 'uma') h = '<button class="secundario" id="recolher">Recolher cartas</button>';
+    else {
+      const sel = cartas.filter(c => S.sel.has(c.id));
+      h = `<button class="primario" id="varias" ${sel.length ? '' : 'disabled'}>${sel.length ? `Começar com ${sel.length} ${sel.length === 1 ? 'carta' : 'cartas'}` : 'Escolha as cartas'} ${I.seta}</button><button class="secundario" id="recolher">Recolher cartas</button>`;
+    }
+  } else if (e === 'andamento') h = `<button class="primario" id="continuar">Continuar sessão ${I.seta}</button><button class="link" id="encerrar">Encerrar agora e ver o resultado</button>`;
+  else if (e === 'emdia') h = leque ? '<button class="secundario" id="recolher">Recolher cartas</button>' : `<button class="primario" disabled>Revisão em dia</button><button class="link" id="abrir">Ver as cartas em espera</button>${ultima}`;
+  else if (e === 'vazio') h = `<div class="atalhos">${['Quiz', 'Verdade ou mentira', 'Erro médico', 'Plantão'].map(x => `<button class="secundario" data-jogar="${x}">Jogar ${x}</button>`).join('')}</div>`;
+  else h = `<button class="primario" disabled>${I.cadeado} Libera no nível 10</button>`;
+  a.innerHTML = h;
+  const dica = $('#dica');
+  if (dica) dica.textContent = e === 'emdia' ? 'Estas cartas voltam nos horários marcados' : S.escolha === 'uma' ? 'Toque numa carta para começar' : 'Toque para escolher · toque de novo para tirar';
+}
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  if (b.dataset.jogar) return toast(`No app, abre o ${b.dataset.jogar}.`);
+  const acoes = {
+    abrir: abrirLeque, recolher, varias: comecarVarias, continuar, encerrar: () => finalizar(S.andamento),
+    ultima: () => abrirRelatorio(S.ultimo), menu: () => toast('No app, volta ao menu.'),
+    sair: sairSessao, proxima, 'rel-hub': voltarAoHub, 'rel-voltar': voltarAoHub,
+  };
+  if (acoes[b.id]) acoes[b.id]();
+  if (b.dataset.k !== undefined) responder(Number(b.dataset.k));
+});
+
+// ---------- Leque ----------
+function clicarCarta(c) {
+  if (S.animando) return;
+  if (S.estado === 'bloqueado') return toast('A Revisão libera no nível 10.');
+  if (S.fase !== 'leque') return S.estado === 'andamento' ? continuar() : abrirLeque();
+  if (c.espera) return toast(`${c.titulo} volta ${c.espera}.`);
+  if (S.escolha === 'uma') return escolherUma(c);
+  if (S.sel.has(c.id)) S.sel.delete(c.id); else S.sel.add(c.id);
+  c.el.classList.toggle('sel', S.sel.has(c.id)); c.el.setAttribute('aria-pressed', String(S.sel.has(c.id)));
+  atualizarAcoes();
+}
+async function abrirLeque() {
+  if (S.animando || !cartas.length || S.estado === 'bloqueado' || S.estado === 'andamento') return;
+  S.animando = true; S.fase = 'leque'; atualizarAcoes();
+  $('#stage').scrollIntoView({ block: 'nearest', behavior: rm() ? 'auto' : 'smooth' });
+  const m = medidas(); const n = cartas.length; const furacao = S.abertura === 'furacao' && !rm();
+  if (furacao) vortex(1);
+  await Promise.all(cartas.map((c, i) => {
+    const de = c.pos; const para = posLeque(i, n, m); c.pos = para;
+    const dur = rm() ? 1 : furacao ? 1250 : 520; const atraso = rm() ? 0 : furacao ? i * 80 : i * 45;
+    const quadros = furacao ? espiral(i, n, de, para, m) : [{ transform: tf(de) }, { transform: tf(para) }];
+    if (S.escolha === 'varias') c.el.setAttribute('aria-pressed', 'false');
+    return Promise.all([mover(c.el, quadros, { duration: dur, delay: atraso, easing: furacao ? 'linear' : 'cubic-bezier(.16,1,.3,1)' }),
+      virar(c, true, rm() ? 0 : atraso + dur * (furacao ? .7 : .35), rm() ? 1 : 340)]);
+  }));
+  $('#stage').classList.add('aberto');
+  cartas.forEach(c => { c.el.tabIndex = 0; c.el.style.setProperty('--r', `${c.pos.r}deg`); });
+  cartas.find(c => !c.espera)?.el.focus({ preventScroll: true });
+  S.animando = false;
+}
+async function recolher() {
+  if (S.animando) return;
+  S.animando = true; $('#stage').classList.remove('aberto'); S.sel.clear();
+  const m = medidas(); const n = cartas.length; const furacao = S.abertura === 'furacao' && !rm();
+  if (furacao) vortex(-1);
+  await Promise.all(cartas.map((c, i) => {
+    c.el.classList.remove('sel'); c.el.removeAttribute('aria-pressed'); c.el.tabIndex = -1;
+    const de = c.pos; const para = posDeck(i, n); c.pos = para;
+    const quadros = furacao ? espiral(i, n, de, para, m, { voltas: -1 }) : [{ transform: tf(de) }, { transform: tf(para) }];
+    return Promise.all([mover(c.el, quadros, { duration: rm() ? 1 : furacao ? 950 : 420, delay: rm() ? 0 : (n - 1 - i) * 50, easing: furacao ? 'linear' : 'cubic-bezier(.16,1,.3,1)' }),
+      virar(c, false, 0, rm() ? 1 : 280)]);
+  }));
+  S.fase = 'hub'; S.animando = false; atualizarAcoes(); $('#abrir')?.focus({ preventScroll: true });
+}
+async function pulso(lista) {
+  if (rm()) return;
+  await Promise.all(lista.map(c => mover(c.el, [{ transform: tf(c.pos) }, { transform: tf({ ...c.pos, s: c.pos.s * 1.07 }) }, { transform: tf(c.pos) }], { duration: 300, easing: 'ease-in-out' })));
+}
+// Uma carta: a escolhida vai ao centro; as outras voltam em espiral para trás dela e formam o bloco.
+async function escolherUma(c) {
+  S.animando = true; $('#stage').classList.remove('aberto');
+  const m = medidas(); const n = cartas.length; const outras = cartas.filter(x => x !== c); const furacao = S.abertura === 'furacao' && !rm();
+  c.el.style.zIndex = 100;
+  const centro = { x: 0, y: 0, r: 0, s: 1.08 };
+  await Promise.all([
+    mover(c.el, [{ transform: tf(c.pos) }, { transform: tf(centro) }], { duration: rm() ? 1 : 520, easing: 'cubic-bezier(.16,1,.3,1)' }),
+    ...outras.map((o, k) => {
+      const para = { ...posDeck(k, n), s: .96 };
+      const quadros = furacao ? espiral(k, n, o.pos, para, m, { voltas: -1, raio: .28 }) : [{ transform: tf(o.pos) }, { transform: tf(para) }];
+      o.pos = para;
+      return Promise.all([mover(o.el, quadros, { duration: rm() ? 1 : furacao ? 900 : 420, delay: rm() ? 0 : k * 50, easing: furacao ? 'linear' : 'cubic-bezier(.16,1,.3,1)' }), virar(o, false, rm() ? 0 : k * 50, rm() ? 1 : 300)]);
+    }),
+  ]);
+  c.pos = centro;
+  await pulso([c, ...outras]);
+  S.sessao = novaSessao([c]);
+  await expandir(c, { titulo: c.titulo, sub: `${c.erros} ${unidade(c)} · ~${c.min} min`, modo: c.modo });
+}
+// Várias cartas: as não escolhidas caem; as escolhidas se juntam em espiral num bloco no centro.
+async function comecarVarias() {
+  const sel = cartas.filter(c => S.sel.has(c.id)); if (!sel.length || S.animando) return;
+  S.animando = true; $('#stage').classList.remove('aberto');
+  const m = medidas(); const resto = cartas.filter(c => !S.sel.has(c.id)); const furacao = S.abertura === 'furacao' && !rm();
+  await Promise.all([
+    ...resto.map((o, k) => mover(o.el, [{ transform: tf(o.pos), opacity: 1 }, { transform: tf({ ...o.pos, y: o.pos.y + m.h * .8, s: .9 }), opacity: 0 }], { duration: rm() ? 1 : 480, delay: rm() ? 0 : k * 40, easing: 'cubic-bezier(.5,0,.75,0)' })),
+    ...sel.map((c, k) => {
+      c.el.classList.remove('sel'); c.el.style.zIndex = 50 + k;
+      const para = { x: k * 4 - (sel.length - 1) * 2, y: -k * 5, r: [-4, 3, -2, 2, -1][k % 5], s: 1.06 };
+      const quadros = furacao ? espiral(k, sel.length, c.pos, para, m, { voltas: .75, raio: .3 }) : [{ transform: tf(c.pos) }, { transform: tf(para) }];
+      c.pos = para;
+      return mover(c.el, quadros, { duration: rm() ? 1 : furacao ? 850 : 460, delay: rm() ? 0 : k * 90, easing: furacao ? 'linear' : 'cubic-bezier(.16,1,.3,1)' });
+    }),
+  ]);
+  await pulso(sel);
+  const topo = sel[sel.length - 1];
+  S.sessao = novaSessao(sel);
+  await expandir(topo, { titulo: `${sel.length} ${sel.length === 1 ? 'carta' : 'cartas'}`, sub: sel.map(c => c.titulo).join(' + '), modo: topo.modo });
+}
+async function continuar() {
+  if (S.animando || !S.andamento) return;
+  S.animando = true;
+  const c = cartas.find(x => x.id === S.andamento.cartas[0].id) || cartas[cartas.length - 1];
+  c.el.style.zIndex = 100; const centro = { x: 0, y: -6, r: 0, s: 1.08 };
+  await Promise.all([mover(c.el, [{ transform: tf(c.pos) }, { transform: tf(centro) }], { duration: rm() ? 1 : 420, easing: 'cubic-bezier(.16,1,.3,1)' }), virar(c, true, 0, rm() ? 1 : 380)]);
+  c.pos = centro;
+  S.sessao = S.andamento;
+  await expandir(c, { titulo: S.andamento.cartas.map(x => x.titulo).join(' + '), sub: `Item ${S.andamento.idx + 1} de ${S.andamento.itens.length}`, modo: c.modo });
+}
+// O bloco se expande até ocupar a tela e vira a sessão do modo.
+async function expandir(c, info) {
+  const appEl = $('#app'); const app = appEl.getBoundingClientRect(); const r = c.el.querySelector('.frente').getBoundingClientRect();
+  const ex = $('#expansor'); const cor = MODOS[info.modo].cor;
+  ex.style.setProperty('--c', cor);
+  ex.innerHTML = `<div class="ex-rotulo">${I[info.modo]}<b>${info.titulo}</b><small>${info.sub}</small></div>`;
+  ex.hidden = false; ex.style.opacity = 1;
+  const x0 = r.left - app.left - appEl.clientLeft, y0 = r.top - app.top - appEl.clientTop;
+  const rotulo = ex.firstElementChild;
+  if (!rm()) rotulo.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 420, delay: 260, fill: 'backwards', easing: 'cubic-bezier(.16,1,.3,1)' });
+  await mover(ex, [
+    { left: `${x0}px`, top: `${y0}px`, width: `${r.width}px`, height: `${r.height}px`, borderRadius: '14px' },
+    { left: '0px', top: '0px', width: `${appEl.clientWidth}px`, height: `${appEl.clientHeight}px`, borderRadius: '0px' },
+  ], { duration: rm() ? 1 : 640, easing: 'cubic-bezier(.7,0,.2,1)' });
+  if (!rm()) await pausa(380);
+  mostrar('sessao');
+  await mover(ex, [{ opacity: 1 }, { opacity: 0 }], { duration: rm() ? 1 : 360 });
+  ex.hidden = true;
+  S.animando = false;
+}
+
+// ---------- Sessão ----------
+function novaSessao(lista) {
+  return { cartas: lista.map(c => ({ id: c.id, titulo: c.titulo, modo: c.modo })), itens: lista.flatMap(c => c.itens.map(k => ITENS[k])), idx: 0, respostas: [] };
+}
+function sessaoDeExemplo() { const s = novaSessao([CARTAS[0]]); s.idx = 1; s.respostas = [{ escolha: 0, acertou: true }]; return s; }
+function renderSessao() {
+  const s = S.sessao; const it = s.itens[s.idx]; const m = MODOS[it.modo]; const resp = s.respostas[s.idx];
+  const v = $('#sessao'); v.style.setProperty('--c', m.cor);
+  const ultimo = s.idx === s.itens.length - 1;
+  v.innerHTML = `
+    <header class="topo"><button class="icone-btn" id="sair" aria-label="Sair e guardar a sessão">${I.voltar}</button>
+      <h1><small style="color:${m.cor}">Revisão · ${m.rotulo}${it.parecida ? ' · parecida' : ''}</small>Item ${s.idx + 1} de ${s.itens.length}</h1></header>
+    ${s.cartas.length > 1 ? `<div class="chips">${s.cartas.map(c => `<span class="chip" style="--c:${MODOS[c.modo].cor}">${c.titulo}</span>`).join('')}</div>` : ''}
+    <div class="progresso"><i style="width:${(s.idx + (resp ? 1 : 0)) / s.itens.length * 100}%"></i></div>
+    <div class="sessao-corpo"><p class="tema">${it.tema}</p><h2 class="enunciado">${it.enunciado}</h2>
+      <div class="opcoes">${it.opcoes.map((o, k) => `<button class="op ${resp ? (k === it.certa ? 'certa' : k === resp.escolha ? 'errada' : 'apagada') : ''}" data-k="${k}" ${resp ? 'disabled' : ''}><span class="tecla">${k + 1}</span>${o}</button>`).join('')}</div>
+      ${resp ? `<div class="fb ${resp.acertou ? 'sim' : 'nao'}" role="status"><b>${resp.acertou ? 'Acertou.' : 'Ainda não.'}</b> ${it.explica}</div>` : ''}</div>
+    <div class="dock">${resp ? `<button class="primario" id="proxima">${ultimo ? 'Ver resultado' : 'Próxima'} ${I.seta}</button>` : '<p class="dica-dock">Escolha uma alternativa · teclas 1 a 4</p>'}</div>`;
+  (resp ? $('#proxima') : v.querySelector('.op'))?.focus({ preventScroll: true });
+}
+function responder(k) {
+  const s = S.sessao; if (!s || s.respostas[s.idx]) return;
+  s.respostas[s.idx] = { escolha: k, acertou: k === s.itens[s.idx].certa };
+  renderSessao();
+}
+function proxima() {
+  const s = S.sessao; if (!s) return;
+  if (s.idx === s.itens.length - 1) return finalizar(s);
+  s.idx++; renderSessao(); $('#sessao').scrollTop = 0;
+}
+function sairSessao() { S.andamento = S.sessao; S.sessao = null; definir('estado', 'andamento'); }
+function finalizar(s) {
+  const respondidas = s.respostas.map((r, k) => r && { ...r, it: s.itens[k] }).filter(Boolean);
+  const acertos = respondidas.filter(r => r.acertou).length;
+  const r = { titulo: s.cartas.map(c => c.titulo).join(' + '), acertos, total: respondidas.length, dominados: acertos ? 1 : 0, quando: 'agora',
+    erros: respondidas.filter(x => !x.acertou).map(x => ({ it: x.it, escolha: x.escolha })) };
+  S.ultimo = r; S.sessao = null; S.andamento = null;
+  if (S.estado === 'andamento') { S.estado = 'normal'; guardar(); sincronizarPainel(); }
+  abrirRelatorio(r);
+}
+
+// ---------- Resultado ----------
+function abrirRelatorio(r) { S.rel = r; mostrar('relatorio'); }
+function renderRelatorio() {
+  const r = S.rel;
+  $('#relatorio').innerHTML = `
+    <header class="topo"><button class="icone-btn" id="rel-voltar" aria-label="Voltar ao hub">${I.voltar}</button><h1><small>Resultado da revisão</small>${r.titulo}</h1></header>
+    <div class="rel-corpo"><p class="carimbo ${r.erros.length ? '' : 'ok'}">${r.erros.length ? 'REVEJA OS ERROS' : 'ACERTOU TUDO'}</p>
+      <p class="placar">${r.acertos}/${r.total}<small>CERTAS</small></p>
+      <div class="linhas"><div><span>Itens revisados</span><b>${r.total}</b></div><div><span>Itens dominados</span><b class="${r.dominados ? 'pos' : ''}">${r.dominados ? `+${r.dominados * 40} XP` : '—'}</b></div>
+        <div><span>Próxima vez</span><b>Erradas: na próxima sessão · Certas: em 1 dia</b></div></div>
+      ${r.erros.map(({ it, escolha }) => `<article class="erro-item"><b>${I.x}${it.enunciado}</b><p>Sua resposta: ${it.opcoes[escolha]}</p><p>Correta: ${it.opcoes[it.certa]}</p>
+        <p class="ia">${it.explica}<small>Explicação gerada por IA. Confira a fonte.</small></p></article>`).join('')}</div>
+    <div class="dock"><button class="primario" id="rel-hub">Voltar ao hub ${I.seta}</button></div>`;
+  $('#rel-hub').focus({ preventScroll: true });
+}
+function voltarAoHub() { mostrar('hub'); }
+
+// ---------- Navegação e painel ----------
+function mostrar(qual) {
+  for (const id of ['hub', 'sessao', 'relatorio']) $('#' + id).hidden = id !== qual;
+  if (qual === 'hub') renderHub(); else if (qual === 'sessao') renderSessao(); else renderRelatorio();
+  $('#' + qual).scrollTop = 0;
+}
+function sincronizarPainel() {
+  document.querySelectorAll('.seg').forEach(g => g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(S[g.dataset.chave] === b.dataset.valor))));
+  $('#frame').classList.toggle('celular', S.tela === 'celular');
+}
+function definir(chave, valor) {
+  if (S.animando) return;
+  S[chave] = valor; guardar(); sincronizarPainel();
+  if (chave === 'estado' && valor !== 'andamento') S.andamento = null;
+  $('#expansor').hidden = true;
+  mostrar('hub');
+}
+document.querySelectorAll('.seg').forEach(g => g.addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) definir(g.dataset.chave, b.dataset.valor); }));
+const botaoProto = $('#proto-btn'); const painel = $('#proto-painel');
+const rotuloProto = () => { botaoProto.innerHTML = `${painel.hidden ? I.ajuste : I.x} Protótipo`; botaoProto.setAttribute('aria-expanded', String(!painel.hidden)); };
+botaoProto.addEventListener('click', () => { painel.hidden = !painel.hidden; rotuloProto(); });
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape') { if (!painel.hidden) { painel.hidden = true; rotuloProto(); botaoProto.focus(); } else if (S.fase === 'leque') recolher(); return; }
+  if ($('#sessao').hidden || ev.target.closest('input, textarea')) return;
+  const n = '1234'.indexOf(ev.key);
+  if (n >= 0 && S.sessao && !S.sessao.respostas[S.sessao.idx] && S.sessao.itens[S.sessao.idx].opcoes[n]) { ev.preventDefault(); responder(n); }
+});
+new ResizeObserver(() => {
+  if (S.fase !== 'leque' || S.animando || !$('#stage')) return;
+  const m = medidas(); cartas.forEach((c, i) => { c.pos = posLeque(i, cartas.length, m); c.el.style.transform = tf(c.pos); c.el.style.setProperty('--r', `${c.pos.r}deg`); });
+}).observe($('#app'));
+
+rotuloProto(); sincronizarPainel(); mostrar('hub');
+</script>
+</body>
+</html>
