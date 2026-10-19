@@ -15,8 +15,8 @@ Atualizado em 15/10/2026, depois da publicação da API v16 (cruzadinha) e do si
 - [ ] **Teste de login real** no site: conta comum e Google. Conferir os avisos CSP `[Report Only]` no console.
 - [ ] **Decidir o fim do tópico** (pendência 9): recomeçar o ciclo com aviso, mostrar quantas faltam, priorizar erros ou pedir mais palavras.
 - [ ] **Domínio e Resend (ou Gmail só do jogo como ponte):** para o e-mail do cadastro e da recuperação de senha. Sem isso não há cadastro com código.
-- [ ] **Revisão médica** dos lotes pendentes: plantão lote 1 (15 casos), erro médico (lotes 1 e 2), causa e efeito (lotes 1 a 3), e a lista de [[decisoes-para-responder|decisões para responder]].
-- [ ] **Testar em aparelho real** (iPhone e Android) seguindo o [roteiro](roteiro-smartphone.md).
+- [x] **Revisão médica dos lotes** (aprovada pelo usuário, conferida em 19/10/2026): Plantão lote 1, Erro médico lotes 1 e 2, Causa e efeito lotes 1 a 3 e `vm-lote-002`. Já integrados com `revisado: true` (Plantão 32 de 33, Erro médico 27 de 28, Causa e efeito 35 de 36; só o caso piloto de cada um segue sem revisão). Resta a lista de [[decisoes-para-responder|decisões para responder]] e a revisão do que vier em lotes novos.
+- [x] **Testar em aparelho real** (iPhone e Android): passou tudo normal, informado pelo usuário em 19/10/2026.
 
 **Agente (branch de trabalho, sem publicar)**
 - [x] **Edição de etapa, faculdade e matéria no perfil** (feita na `main` em 16/10; publica junto do cadastro com código, API antes do site).
