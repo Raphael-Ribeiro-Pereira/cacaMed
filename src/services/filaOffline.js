@@ -49,18 +49,22 @@ export function criarFila(armazem, { agora = () => new Date().toISOString(), nov
 // Armazém em IndexedDB (banco `cacomed-offline`, tabela `fila`). Pede armazenamento persistente quando o navegador permite.
 export function armazemIndexedDB(nome = 'cacomed-offline') {
   const abrir = () => new Promise((resolve, reject) => {
-    const pedido = indexedDB.open(nome, 1);
-    pedido.onupgradeneeded = () => pedido.result.createObjectStore('fila', { keyPath: 'id' });
+    // Versão 2: além da fila, a tabela `dados` guarda o último perfil confirmado e o banco de palavras.
+    const pedido = indexedDB.open(nome, 2);
+    pedido.onupgradeneeded = () => {
+      if (!pedido.result.objectStoreNames.contains('fila')) pedido.result.createObjectStore('fila', { keyPath: 'id' });
+      if (!pedido.result.objectStoreNames.contains('dados')) pedido.result.createObjectStore('dados');
+    };
     pedido.onsuccess = () => resolve(pedido.result);
     pedido.onerror = () => reject(pedido.error);
   });
   let banco;
-  const transacao = async (modo, fazer) => {
+  const transacao = async (modo, fazer, tabela = 'fila') => {
     banco ||= abrir();
     const db = await banco;
     return new Promise((resolve, reject) => {
-      const tx = db.transaction('fila', modo);
-      const r = fazer(tx.objectStore('fila'));
+      const tx = db.transaction(tabela, modo);
+      const r = fazer(tx.objectStore(tabela));
       tx.oncomplete = () => resolve(r?.result);
       tx.onerror = () => reject(tx.error);
     });
@@ -70,13 +74,19 @@ export function armazemIndexedDB(nome = 'cacomed-offline') {
     todos: () => transacao('readonly', s => s.getAll()),
     guardar: item => transacao('readwrite', s => s.put(item)),
     apagar: id => transacao('readwrite', s => s.delete(id)),
+    ler: chave => transacao('readonly', s => s.get(chave), 'dados'),
+    gravar: (chave, valor) => transacao('readwrite', s => s.put(valor, chave), 'dados'),
   };
 }
 
 export const armazemMemoria = () => {
   const m = new Map();
-  return { todos: async () => [...m.values()].map(v => structuredClone(v)), guardar: async i => { m.set(i.id, structuredClone(i)); }, apagar: async id => { m.delete(id); } };
+  const d = new Map();
+  return { todos: async () => [...m.values()].map(v => structuredClone(v)), guardar: async i => { m.set(i.id, structuredClone(i)); }, apagar: async id => { m.delete(id); },
+    ler: async k => structuredClone(d.get(k)), gravar: async (k, v) => { d.set(k, structuredClone(v)); } };
 };
 
+let armazemPadrao;
 let filaPadrao;
-export const filaDoAparelho = () => (filaPadrao ||= criarFila(typeof indexedDB === 'undefined' ? armazemMemoria() : armazemIndexedDB()));
+export const armazemDoAparelho = () => (armazemPadrao ||= typeof indexedDB === 'undefined' ? armazemMemoria() : armazemIndexedDB());
+export const filaDoAparelho = () => (filaPadrao ||= criarFila(armazemDoAparelho()));

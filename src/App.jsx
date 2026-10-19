@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { sairDaConta } from './services/sairDaConta';
 import { supabase } from './supabase';
@@ -25,6 +25,7 @@ import { BarraLateral } from './components/cascaUi';
 import { Ecg } from './components/entradaUi';
 import IndicadorConexao from './components/IndicadorConexao';
 import { useConexao } from './services/conexao';
+import { guardarPalavras, guardarPerfil, palavrasGuardadas, perfilGuardado } from './services/perfilOffline';
 import './prototipo.css';
 
 // Abertura do protótipo de movimento com as etapas reais: sessão, credencial e perfil com as missões do dia.
@@ -104,10 +105,18 @@ function App() {
         if (!sessaoAtual()) return;
         if (perfil && animar()) { setEtapaAbertura(3); await espera(350); if (!sessaoAtual()) return; }
         setDadosUsuario(perfil);
+        if (perfil) guardarPerfil(user.uid, perfil, { confirmado: true }).catch(() => {});
         setTelaAtual(perfil ? 'menu' : 'cadastro2');
         setErroPerfil('');
       } catch (erro) {
         if (!sessaoAtual()) return;
+        // App offline: sem rede, abre com o último perfil guardado, se o último contato com o servidor tiver menos de 15 dias.
+        if (!erro.status) {
+          const guardado = await perfilGuardado(user.uid).catch(() => null);
+          if (!sessaoAtual()) return;
+          if (guardado?.perfil) { setDadosUsuario(guardado.perfil); setTelaAtual('menu'); setErroPerfil(''); return; }
+          if (guardado?.vencida) { setErroPerfil('Faz mais de 15 dias do último acesso com internet. Conecte-se para entrar de novo; o que você jogou sem rede continua guardado.'); setTelaAtual('erroPerfil'); return; }
+        }
         setErroPerfil(erro.message || 'Não foi possível carregar seu perfil.');
         setTelaAtual('erroPerfil');
       } finally {
@@ -134,8 +143,12 @@ function App() {
         if (controlador.signal.aborted) return;
         setBancoDePalavras(bancoFormatado);
         setEstadoBanco(Object.keys(bancoFormatado).length ? 'pronto' : 'vazio');
+        guardarPalavras(bancoFormatado);
       } catch (erro) {
         if (controlador.signal.aborted) return;
+        // Sem rede: usa o banco de palavras da última consulta.
+        const guardado = await palavrasGuardadas();
+        if (guardado && !controlador.signal.aborted) { setBancoDePalavras(guardado); setEstadoBanco('pronto'); return; }
         console.error("Erro ao puxar a planilha:", erro);
         setErroBanco(erro.message || 'Não foi possível carregar o banco de palavras.');
         setEstadoBanco('erro');
@@ -147,7 +160,11 @@ function App() {
 
   const comCasca = Boolean(usuario && dadosUsuario && TELAS_CASCA.includes(telaAtual) && !carregandoAuth);
   // App offline: indicador de rede e envio da fila do aparelho; o perfil confirmado pelo servidor substitui o provisório.
-  const conexao = useConexao(dadosUsuario ? usuario : null, setDadosUsuario);
+  const uidAtual = usuario?.uid;
+  const aoConfirmarFila = useCallback(perfil => { setDadosUsuario(perfil); guardarPerfil(uidAtual, perfil, { confirmado: true }).catch(() => {}); }, [uidAtual]);
+  const conexao = useConexao(dadosUsuario ? usuario : null, aoConfirmarFila);
+  // O perfil em tela (inclusive com XP provisório) fica guardado para o app abrir sem rede.
+  useEffect(() => { if (uidAtual && dadosUsuario) guardarPerfil(uidAtual, dadosUsuario).catch(() => {}); }, [uidAtual, dadosUsuario]);
   useEffect(() => {
     document.body.classList.toggle('com-casca', comCasca);
     return () => document.body.classList.remove('com-casca');

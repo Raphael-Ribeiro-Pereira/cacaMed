@@ -64,3 +64,15 @@ test('offline: uma rodada aberta online continua aberta depois da sincronizaçã
   assert.equal(perfil.treinos.quiz.entrada.encerrada, false);
   assert.equal(perfil.treinos.quiz.partidas, 1);
 });
+
+test('offline: cruzadinha jogada sem rede entra pela fila, paga uma vez e gera o recibo', () => {
+  const id = crypto.randomUUID();
+  const partida = { id, chaveXP: 'ANATOMIA-OSSOS', subMateria: 'Ossos', palavras: 5, letras: 30, tempo: 30, erros: 0, maiorPalavra: 10, penalidadeXP: 0, respostas: ['FEMUR', 'TIBIA'] };
+  const item = { id, tipo: 'partidaCruzadinha', dados: { partida, encerradoEm: '2026-10-19T14:50:00Z' } };
+  const { perfil, eventos } = sincronizar(perfilBase(), item);
+  assert.equal(perfil.xpTopicos['ANATOMIA-OSSOS'], 150, '100 + 50 de tempo (30 s numa grade de 75 s)');
+  assert.equal(perfil.tickets, 2);
+  assert.ok(eventos.some(e => e.id === `recibo:${id}` && e.data.modo === 'cruzadinha'));
+  assert.equal(perfil.offline.ultimoEvento, '2026-10-19T14:50:00.000Z');
+  assert.strictEqual(sincronizar(perfil, item).perfil, perfil, 'a mesma partida não paga de novo');
+});

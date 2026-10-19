@@ -8,13 +8,16 @@ Decidido pelo usuário em 07/10/2026. **Em construção desde 19/10/2026 no bran
 | --- | --- |
 | 1. Detecção, fila e `sincronizarFila` com o Quiz | **Feita.** `src/services/conexao.js` (checagem `GET ?acao=ping` com 3 s), `src/services/filaOffline.js` (IndexedDB `cacomed-offline`), `src/components/IndicadorConexao.jsx`, `src/shared/operarFilaSupabase.js` |
 | 3. Verdade ou mentira | **Feita** junto do Quiz (mesmo motor). A Revisão offline ainda não |
-| 2, 4, 5 e 6 | A fazer |
+| 2. Pacote de conteúdo | **Em parte:** o banco de palavras fica guardado (IndexedDB, tabela `dados`); perguntas, frases e casos revisados já vêm no pacote do site. Falta o hash de versão por parte |
+| 4. Cruzadinha | **Feita:** sem rede, a grade sai do banco guardado e a partida vai para a fila (tipo `partidaCruzadinha`, conferida contra o banco de palavras como a partida online) |
+| 5. DDX com tickets offline | A fazer |
+| 6. Sessão de 15 dias | **Feita:** o último perfil fica guardado; sem rede, o app abre com ele se o último contato confirmado com o servidor tiver menos de 15 dias. Depois disso, pede internet, sem apagar a fila. Sair da conta com itens na fila pede confirmação |
 
 Como ficou:
 - **Treino sem rede:** `src/services/treinoOffline.js` envolve o serviço da API. Sem rede, ou se o pedido cai por falta de rede, a rodada é criada e corrigida no aparelho. No fim, vai para a fila, e a tela mostra "XP provisório" e "Na fila do aparelho".
 - **Envio:** ao abrir, quando a rede volta e ao voltar para a aba; em ordem, um item por vez. Recusa (erro 400) fica visível com o motivo e um botão "Entendi, remover". Falta de rede, sessão vencida (401), limite (429) ou erro do servidor tentam de novo, com espera de 2 s a 5 min.
 - **Servidor:** refaz a rodada com os motores compartilhados e devolve o perfil oficial. O recibo `recibo:<id do item>` impede pagar duas vezes. A data do aparelho vale entre o último evento offline aceito (ou 15 dias atrás) e o envio; fora disso, vira a data do envio. Início de rodada inválido não ganha bônus de tempo.
-- **Limite atual:** o app ainda precisa de rede para abrir (o perfil vem do servidor). Hoje o modo offline vale para quem perde a rede com o app aberto; abrir sem rede é a etapa 6.
+- **Abrir sem rede:** depende de o Supabase manter a sessão guardada sem conseguir renová-la. Isso só se confirma em aparelho real (ver o [roteiro de validação](validacao-19-10.md)).
 
 ## Decisões
 

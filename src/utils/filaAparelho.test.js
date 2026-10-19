@@ -78,3 +78,18 @@ test('treino offline: rodada jogada sem rede fica provisória, vai para a fila e
   assert.equal(confirmado.pontuacaoTotal, provisorio, 'o servidor chega ao mesmo XP');
   assert.equal((await fila.resumo('u')).pendentes, 0);
 });
+
+test('sessão offline: o perfil guardado vale por 15 dias desde o último contato confirmado', async () => {
+  const { guardarPerfil, perfilGuardado, sessaoOfflineValida } = await import('../services/perfilOffline.js');
+  const armazem = armazemMemoria();
+  await guardarPerfil('u', { pontuacaoTotal: 10 }, { confirmado: true, armazem });
+  assert.equal((await perfilGuardado('u', { armazem })).perfil.pontuacaoTotal, 10);
+  // Guardar sem confirmação (XP provisório) não renova a validade.
+  const { validadoEm } = await perfilGuardado('u', { armazem });
+  await guardarPerfil('u', { pontuacaoTotal: 160 }, { armazem });
+  assert.equal((await perfilGuardado('u', { armazem })).validadoEm, validadoEm);
+  const depois = Date.parse(validadoEm) + 15 * 86400000;
+  assert.deepEqual(await perfilGuardado('u', { armazem, agora: depois }), { vencida: true });
+  assert.equal(await perfilGuardado('outra', { armazem }), null);
+  assert.equal(sessaoOfflineValida(null), false);
+});

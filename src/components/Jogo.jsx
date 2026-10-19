@@ -5,7 +5,8 @@ import { ArrowDownUp, Check, ChevronLeft, ChevronRight, CircleHelp, Delete, Sett
 import { gerarTabuleiro, montarGrade } from '../utils/motorTabuleiro';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { aplicarProgressoMissoes, dataLocalHoje, lerMissoes } from '../utils/missoes';
-import { nivelPorXP, bonusCruzadinha, SEGUNDOS_POR_PALAVRA, XP_JOGO } from '../utils/economia';
+import { concederRecompensa, nivelPorXP, bonusCruzadinha, SEGUNDOS_POR_PALAVRA, XP_JOGO } from '../utils/economia';
+import { guardarNaFila } from '../services/conexao';
 import { celulasPreenchidasAteProximaVazia, escolherDirecaoDaEntrada, proximaCelulaDaEntrada, resolverLetraRepetida } from '../utils/navegacaoCruzadinha';
 import { chaveCasa, estadoDaCasa, palavraDaCasa, palavrasDaGrade, palavrasResolvidas, tamanhoDaPalavra } from '../utils/cruzadinha';
 import { montarDicas, NIVEL_DICAS_EXTRAS } from '../utils/dicasCruzadinha';
@@ -69,7 +70,8 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
       })
       .catch(erro => {
         if (!ativo) return;
-        if (/Ação desconhecida/.test(erro?.message || '') && bancoDePalavras) setGrade(local());
+        // Sem rede (erro sem status HTTP), a grade sai do banco guardado no aparelho e a partida vai para a fila.
+        if ((/Ação desconhecida/.test(erro?.message || '') || !erro?.status) && bancoDePalavras) setGrade({ ...local(), offline: !erro?.status });
         else setGrade({ estado: 'erro', mensagem: erro?.message || 'Não foi possível montar a grade.' });
       });
     return () => { ativo = false; };
@@ -316,22 +318,34 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   useEffect(() => {
     if (!xpPendente || xpPendente.status !== 'pendente' || !meuUid) return;
     setXpPendente(prev => ({ ...prev, status: 'salvando' }));
+    const aplicar = (dados, status) => {
+      const xpRecebido = (Number(dados.xpTopicos?.[chaveXP]) || 0) - (Number(dadosUsuario?.xpTopicos?.[chaveXP]) || 0);
+      const xpGlobal = (Number(dados.pontuacaoTotal) || 0) - (Number(dadosUsuario?.pontuacaoTotal) || 0);
+      const tickets = (Number(dados.tickets) || 0) - (Number(dadosUsuario?.tickets) || 0);
+      setRelatorio(prev => prev ? { ...prev, ganho: xpRecebido, xpMissoes: Math.max(0, xpGlobal - xpRecebido), ticketsRecebidos: Math.max(0, tickets) } : prev);
+      const anterior = nivelPorXP(dadosUsuario?.pontuacaoTotal), novo = nivelPorXP(dados.pontuacaoTotal);
+      if (novo > anterior) setTimeout(() => setSubiu({ from: anterior, to: novo, xp: Number(dados.pontuacaoTotal) || 0 }), animar() ? 1300 : 0);
+      setDadosUsuario(dados);
+      setXpPendente(prev => ({ ...prev, status }));
+    };
     (registrar ? registrar(meuUid, xpPendente.partida) : registrarPadrao(usuario, meuUid, xpPendente.partida))
-      .then(dados => {
-        const xpRecebido = (Number(dados.xpTopicos?.[chaveXP]) || 0) - (Number(dadosUsuario?.xpTopicos?.[chaveXP]) || 0);
-        const xpGlobal = (Number(dados.pontuacaoTotal) || 0) - (Number(dadosUsuario?.pontuacaoTotal) || 0);
-        const tickets = (Number(dados.tickets) || 0) - (Number(dadosUsuario?.tickets) || 0);
-        setRelatorio(prev => prev ? { ...prev, ganho: xpRecebido, xpMissoes: Math.max(0, xpGlobal - xpRecebido), ticketsRecebidos: Math.max(0, tickets) } : prev);
-        const anterior = nivelPorXP(dadosUsuario?.pontuacaoTotal), novo = nivelPorXP(dados.pontuacaoTotal);
-        if (novo > anterior) setTimeout(() => setSubiu({ from: anterior, to: novo, xp: Number(dados.pontuacaoTotal) || 0 }), animar() ? 1300 : 0);
-        setDadosUsuario(dados);
-        setXpPendente(prev => ({ ...prev, status: 'salvo' }));
-      })
-      .catch(error => {
+      .then(dados => aplicar(dados, 'salvo'))
+      .catch(async error => {
+        // App offline: sem rede, a partida vai para a fila do aparelho e o XP fica provisório (a prévia da tela, sem
+        // tickets) até o servidor confirmar. Recusa do servidor (com status) continua como erro, com "tentar de novo".
+        if (!error?.status && !registrar) {
+          try {
+            await guardarNaFila(usuario, 'partidaCruzadinha', { partida: xpPendente.partida, encerradoEm: new Date().toISOString() }, xpPendente.partida.id);
+            const ganho = relatorio?.ganho || 0;
+            const provisorio = concederRecompensa(dadosUsuario, ganho + (relatorio?.xpMissoes || 0), 0);
+            aplicar({ ...provisorio, tickets: dadosUsuario?.tickets, xpTopicos: { ...dadosUsuario?.xpTopicos, [chaveXP]: (Number(dadosUsuario?.xpTopicos?.[chaveXP]) || 0) + ganho } }, 'fila');
+            return;
+          } catch (falha) { console.error('Falha ao guardar a cruzadinha no aparelho:', falha); }
+        }
         console.error('Falha ao salvar cruzadinha:', error);
         setXpPendente(prev => ({ ...prev, status: 'erro' }));
       });
-  }, [xpPendente, meuUid, setDadosUsuario, chaveXP, dadosUsuario, registrar, usuario]);
+  }, [xpPendente, meuUid, setDadosUsuario, chaveXP, dadosUsuario, registrar, usuario, relatorio]);
 
   const novaPartida = nivel => {
     setNivelDaGrade(nivel);
@@ -345,7 +359,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
     setChaveRecarregamento(c => c + 1);
   };
   const avancar = () => {
-    if (xpPendente?.status !== 'salvo') return;
+    if (!['salvo', 'fila'].includes(xpPendente?.status)) return;
     const xp = Number(dadosUsuario?.xpTopicos?.[chaveXP]) || 0;
     novaPartida(xp === 0 ? 0 : Math.floor(Math.sqrt(xp / 1000)) + 1);
   };
@@ -379,7 +393,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
   if (mostrarResultado && relatorio) {
     const r = relatorio;
     const mm = formatarTempo(r.tempo);
-    const fase = xpPendente?.status === 'salvo' ? 'ok' : xpPendente?.status === 'erro' ? 'erro' : 'salvando';
+    const fase = xpPendente?.status === 'salvo' ? 'ok' : xpPendente?.status === 'fila' ? 'fila' : xpPendente?.status === 'erro' ? 'erro' : 'salvando';
     const extras = [];
     if (r.xpMissoes > 0) extras.push([`Missões do dia${r.missoesConcluidas?.length ? `: ${r.missoesConcluidas.map(m => m.titulo.toLowerCase()).join(', ')}` : ''}`, `+${r.xpMissoes}`, 'mul']);
     if (r.ticketsRecebidos > 0) extras.push(['Tickets do plantão, missões e nível', `+${r.ticketsRecebidos} ticket${r.ticketsRecebidos > 1 ? 's' : ''}`, 'mul']);
@@ -388,6 +402,7 @@ export default function Jogo({ bancoDePalavras, materia, subMateria, setTelaAtua
         ['Bônus', `+${Math.max(0, r.ganho - XP_JOGO)}`, r.ganho > XP_JOGO ? 'pos' : 'mut'],
         ...(r.penalidade ? [['Dicas extras (descontadas do bônus)', `−${r.penalidade}`, 'neg']] : [])]}
       total={r.ganho} extras={extras} bonus={r.xpMissoes || 0} fase={fase}
+      aviso={fase === 'fila' ? 'XP provisório: cruzadinha jogada sem internet. Ela é enviada sozinha quando a rede voltar, e o servidor confirma o valor (e os tickets).' : null}
       aoTentar={() => setXpPendente(prev => ({ ...prev, status: 'pendente' }))}
       principal={{ rotulo: 'Próximo plantão', aoClicar: avancar }} aoVoltar={() => setTelaAtual('menu')} />);
   }

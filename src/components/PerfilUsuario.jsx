@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BarChart3, Brain, Check, ChevronLeft, Crown as CoroaIco, Grid3x3, HeartPulse, KeyRound, Lock, LogOut, Mail, Pencil, RotateCw, Save, ScanLine, Shield, Stethoscope, Swords, UserRound } from 'lucide-react';
 import { supabase } from '../supabase';
+import { filaDoAparelho } from '../services/filaOffline';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { DOENCAS } from '../utils/batalha';
 import { desdeDe, especialidade, matriculaDe, titulosDoCracha, useDisponibilidade } from '../utils/cracha';
@@ -129,6 +130,10 @@ export default function PerfilUsuario({ usuario, dadosUsuario, setDadosUsuario, 
     }
   };
   const sair = async () => {
+    // App offline: partidas jogadas sem rede ainda na fila ficam guardadas para esta conta; avisa antes de sair.
+    const { pendentes } = await filaDoAparelho().resumo(usuario?.uid).catch(() => ({ pendentes: 0 }));
+    if (pendentes && !window.confirm(`Você tem ${pendentes} ${pendentes === 1 ? 'partida jogada' : 'partidas jogadas'} sem internet que ainda não ${pendentes === 1 ? 'foi enviada' : 'foram enviadas'}. `
+      + 'Elas ficam guardadas neste aparelho e são enviadas quando você entrar de novo nesta conta com internet. Sair mesmo assim?')) return;
     setSaindo(true);
     try { await aoSair(); setTelaAtual('login'); } catch (falha) { console.error('Erro ao sair:', falha); setSaindo(false); }
   };

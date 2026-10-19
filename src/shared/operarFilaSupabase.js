@@ -1,12 +1,13 @@
 import { BANCO_QUIZ, BANCO_FRASES } from '../utils/bancoTreinos.js';
 import { responderTreinoPerfil } from '../utils/treinos.js';
 import { eventosTreino } from './operarTreinoSupabase.js';
+import { registrarPartidaSupabase } from './operarJogosSupabase.js';
 
 // App offline (docs/app-offline.md): o aparelho guarda o que foi jogado sem rede numa fila e envia um item por vez.
 // O servidor refaz tudo com os motores compartilhados: o valor oficial é sempre o daqui. Item recusado volta com o
 // motivo (erro 400); a repetição do mesmo item é ignorada pelo recibo `recibo:<id>`.
 export const VALIDADE_SESSAO_OFFLINE = 15 * 86400000;
-export const TIPOS_FILA = ['rodadaTreino'];
+export const TIPOS_FILA = ['rodadaTreino', 'partidaCruzadinha'];
 
 // Data do evento: vale a do aparelho dentro da janela entre o último evento offline aceito (ou 15 dias atrás) e agora.
 // Fora dela, a data vira a do envio. Como a fila vai em ordem, as datas aceitas só andam para a frente.
@@ -47,9 +48,21 @@ function rodadaTreino(perfil, item, agora) {
   return { perfil: { ...atual, offline: { ...atual.offline, ultimoEvento: encerradoEm } }, eventos };
 }
 
+// Cruzadinha jogada sem rede: a mesma gravação da partida online, na data do evento. A API confere antes a partida
+// contra o banco de palavras (validarPartidaNoBanco), como faz no registrarPartida.
+function partidaCruzadinha(perfil, item, agora) {
+  const partida = { ...item.dados?.partida, id: item.id };
+  const data = dataDoEvento(perfil, item.dados?.encerradoEm, agora);
+  const novo = registrarPartidaSupabase(perfil, partida, [], data);
+  if (novo === perfil) return { perfil, eventos: [] };
+  const titulo = `${String(partida.chaveXP || '').split('-')[0]} · ${String(partida.subMateria || '').trim()}`.slice(0, 90);
+  return { perfil: { ...novo, offline: { ...novo.offline, ultimoEvento: data } },
+    eventos: [{ id: `recibo:${item.id}`, kind: 'recibo', data: { modo: 'cruzadinha', rodadaId: item.id, titulo } }] };
+}
+
 export function operarFilaSupabase(perfil, item, recibos = [], agora = new Date().toISOString()) {
   if (!item || typeof item !== 'object' || !/^[0-9a-f-]{36}$/i.test(String(item.id || ''))) throw new Error('Item da fila inválido.');
   if (recibos.includes(item.id)) return { perfil, eventos: [] };
   if (!TIPOS_FILA.includes(item.tipo)) throw new Error('Tipo de item ainda não aceito offline.');
-  return rodadaTreino(perfil, item, agora);
+  return item.tipo === 'partidaCruzadinha' ? partidaCruzadinha(perfil, item, agora) : rodadaTreino(perfil, item, agora);
 }

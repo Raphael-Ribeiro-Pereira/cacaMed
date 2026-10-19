@@ -112,6 +112,10 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
       if (acao === 'registrarPartida' && palavras) {
         try { validarPartidaNoBanco(pedido.partida, (await palavras()).banco); } catch (erro) { return answer({ erro: erro.message }, 400); }
       }
+      // A partida da fila offline passa pela mesma conferência.
+      if (acao === 'sincronizarFila' && pedido.item?.tipo === 'partidaCruzadinha' && palavras) {
+        try { validarPartidaNoBanco(pedido.item.dados?.partida, (await palavras()).banco); } catch (erro) { return answer({ erro: erro.message }, 400); }
+      }
       // O app não sabe o segredo do ID público: pergunta o seu para se achar no ranking e nas Coroas.
       if (acao === 'meuIdPublico' && idPublico) return answer({ resultado: { idPublico: await idPublico(user.uid) } });
       if (acao === 'migrarSenha') return answer({ resultado: await migratePassword(user, pedido) });
