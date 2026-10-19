@@ -88,6 +88,8 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         const barrado = ip && barrar('get:' + ip, limites.publico);
         if (barrado) return barrado;
         const publico = { 'Cache-Control': 'public, max-age=60' };
+        // Checagem leve do app offline: Wi-Fi sem internet faz `navigator.onLine` mentir.
+        if (acao === 'ping') return answer({ ok: true });
         if (acao === 'ranking') return answer({ sucesso: true, ranking: await ranking() }, 200, publico);
         if (acao === 'coroas' && coroas) return answer({ sucesso: true, coroas: await coroas() }, 200, publico);
         if (acao === 'palavras') return answer({ resultado: await palavrasPublicas() }, 200, { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400' });

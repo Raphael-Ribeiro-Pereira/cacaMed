@@ -12,6 +12,10 @@ const modules = [
 for (const module of modules) {
   const destination = new URL(`supabase/functions/cacamed-api/${module}`, root);
   await mkdir(fileURLToPath(new URL('./', destination)), { recursive: true });
-  await copyFile(new URL(`src/${module}`, root), destination);
+  // No Windows, o antivírus ou o editor às vezes seguram o arquivo por um instante (UNKNOWN/EBUSY): tenta de novo.
+  for (let tentativa = 1; ; tentativa++) {
+    try { await copyFile(new URL(`src/${module}`, root), destination); break; }
+    catch (erro) { if (tentativa >= 5) throw erro; await new Promise(r => setTimeout(r, 300 * tentativa)); }
+  }
 }
 console.log('Motor JavaScript da API Supabase sincronizado com as regras atuais.');

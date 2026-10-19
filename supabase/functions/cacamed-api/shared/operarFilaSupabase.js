@@ -41,8 +41,9 @@ function rodadaTreino(perfil, item, agora) {
   const passos = modo === 'quiz' ? [1, 2, 3, 4, 5] : [5];
   for (const n of passos) atual = responderTreinoPerfil(atual, modo, item.id, respostas.slice(0, n).map(r => ({ itemId: r?.itemId, escolha: r?.escolha })), encerradoEm);
   const eventos = eventosTreino(atual, modo, encerradoEm);
-  // Uma rodada aberta online continua aberta: a rodada offline só deixa os números e os recibos.
-  if (anterior && !anterior.encerrada) atual = { ...atual, treinos: { ...atual.treinos, [modo]: { ...atual.treinos[modo], entrada: anterior } } };
+  // Outra rodada aberta online continua aberta: a offline só deixa os números e os recibos. Se a rodada da fila é
+  // a mesma que começou online e caiu a rede no meio, ela fecha aqui.
+  if (anterior && !anterior.encerrada && anterior.id !== item.id) atual = { ...atual, treinos: { ...atual.treinos, [modo]: { ...atual.treinos[modo], entrada: anterior } } };
   return { perfil: { ...atual, offline: { ...atual.offline, ultimoEvento: encerradoEm } }, eventos };
 }
 
