@@ -93,10 +93,27 @@ Hoje a batalha toca as falas em sequência, rápido demais. O comportamento novo
 
 Nada muda no servidor: a lista de ações e os eventos são os mesmos.
 
+## Protótipo, parte 1: mapa, cutscene de entrada e transição (19/10/2026)
+
+Arquivo: [`docs/prototipos/batalha-historia.html`](prototipos/batalha-historia.html). Abre direto no navegador, sem build. Os desenhos das 12 doenças e do médico vêm do app (`Species`, `Blob` e `Doctor` em `src/components/batalhaArte.jsx`), convertidos em SVG fixo; o resto da arte é original.
+
+1. **Mapa estilo conquistas:** fundo escuro texturizado (ruído e grade leve), que se arrasta com o dedo, o mouse ou a roda. No centro da esquerda, o "Início" (o médico); dele saem os **3 ramos** (os capítulos atuais), com 4 pacientes cada, ligados por linhas em ângulo reto. Estados: **bloqueado** (silhueta escura, borda tracejada e cadeado), **disponível** (silhueta escura, borda que brilha e "?") e **descoberto** (colorido, com o nome e um certinho). A linha fica verde quando o caminho até o paciente está aberto. Botão para centralizar.
+2. **Ficha do paciente:** ao tocar num ponto, a ficha mostra o caso no lugar do nome ("Febre depois da enchente", "Primeiro plantão · 3 de 4 · doença: ??") e "Atender paciente". Bloqueado diz qual paciente vencer antes; descoberto mostra o nome, o agente e "Rever o caso".
+3. **Cutscene de entrada em pixel art (original):** a enfermaria vista de cima, com piso em xadrez, janela, monitor de ECG na parede, um leito com outro paciente dormindo, cortinas e o leito do paciente da batalha com o monitor ao lado. O médico entra pela porta, anda até o leito, aparece um "!", e duas falas no estilo Pokémon (letra por letra, seta piscando, toque para avançar): "Leito 4. Paciente com ..." e "Ninguém sabe ainda o que ele tem. Vamos investigar."
+4. **Botão "Pular":** aparece da segunda vez em diante (ou sempre, no painel do protótipo).
+5. **Transição** (duas opções originais para escolher): **batimento** (a linha do monitor cruza a tela com um pico e fecha em persianas, que abrem na batalha) ou **microscópio** (a tela fecha num círculo sobre o paciente e reabre como uma lente sobre a batalha).
+6. **Início da batalha (simulado):** a doença desconhecida (o `Blob` com "?") e o médico de costas, com as duas primeiras falas. Botões "Simular vitória" e "Simular derrota".
+7. **Volta ao mapa:** na vitória, a doença ganha cor, nome e certinho, a linha até o próximo paciente fica verde e ele abre com um salto; no fim do ramo, "Ramo completo". Na derrota, nada muda e a doença continua disponível.
+
+**Regra de progressão usada no protótipo** (interpretação do agente a partir de "cada doença abre a próxima do mesmo ramo"): os três ramos começam abertos, com o primeiro paciente de cada um disponível. Hoje o jogo é linear nas 12 doenças.
+
+**Fica para a parte 2:** cutscenes de transmissão, animação de descoberta, pergaminho e enciclopédia.
+
 ## Perguntas em aberto
 
-1. **A silhueta revela demais?** Hoje o jogador só descobre o tipo do agente (vírus, bactéria etc.) pelas habilidades do pet. Uma silhueta com a forma real da doença já mostra o agente no mapa. Opções: forma real escurecida (como o usuário descreveu) ou uma forma genérica até a descoberta. Decidir no protótipo do mapa.
-2. **Pular cutscenes:** sugestão de um botão "Pular" a partir da segunda vez, para não cansar quem repete uma doença. Confirmar.
-3. **Doenças sem forma própria:** só pneumonia, dengue e malária ainda não têm forma desenhada (`arte: null`); as outras 9 já têm. A arte nova cobre as 12.
-4. **Transição entre cutscene e batalha:** efeito original a definir no protótipo.
-5. **Resumo do pergaminho:** o usuário ainda não detalhou o formato; a tabela acima é proposta.
+1. **A silhueta revela demais?** Hoje o jogador só descobre o tipo do agente (vírus, bactéria etc.) pelas habilidades do pet. Uma silhueta com a forma real da doença já mostra o agente no mapa. Opções: forma real escurecida (como o usuário descreveu) ou uma forma genérica até a descoberta. **As duas estão no protótipo** (painel "Protótipo" → silhueta).
+2. **Pular cutscenes:** sugestão de um botão "Pular" a partir da segunda vez, para não cansar quem repete uma doença. **No protótipo.** Confirmar.
+3. **Doenças sem forma própria:** no `batalhaConteudo.js`, pneumonia, dengue e malária têm `arte: null`, mas já têm desenho próprio no app (`Pneumo`, `Dengue` e `Malaria` em `batalhaArte.jsx`); o protótipo usa os 12 desenhos.
+4. **Transição entre cutscene e batalha:** batimento ou microscópio, **no protótipo**.
+5. **Ramos em paralelo:** os três começam abertos, como no protótipo? (Hoje é linear.)
+6. **Resumo do pergaminho:** o usuário ainda não detalhou o formato; a tabela acima é proposta (parte 2 do protótipo).
