@@ -1,5 +1,5 @@
 // Entrada de desenvolvimento independente; não é incluída na build de produção.
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import TreinoMedico from '../src/components/TreinoMedico';
 import RevisaoInteligente from '../src/components/RevisaoInteligente';
@@ -17,6 +17,7 @@ import Login from '../src/components/Login';
 import Cadastro from '../src/components/Cadastro';
 import Cadastro2 from '../src/components/Cadastro2';
 import { BarraLateral } from '../src/components/cascaUi';
+import AdminSpeedDial from '../src/components/AdminSpeedDial';
 import { fotoDoPerfil } from '../src/utils/fotosCracha';
 import { escolhasDoCadastro } from '../src/utils/entrada';
 import { calcularIdPublico } from '../src/services/rankingPublico';
@@ -245,6 +246,18 @@ const idFicticioDoJogador = usuario => calcularIdPublico(usuario.uid);
 const TELAS_PROTOTIPO = ['batalha', 'ranking', 'estatisticas', 'perfil', 'menu', 'login', 'cadastro', 'cadastro2', 'cadastro2email', 'topicos', 'jogo', 'quiz', 'verdadeMentira', 'revisao', 'selecaoDDX', 'erroMedico', 'causaEfeito'];
 const TELAS_CASCA = ['menu', 'ranking', 'estatisticas', 'perfil', 'topicos'];
 
+// Simulações de falha: alteram as variáveis do módulo fora do componente (regra do React: sem efeito durante a renderização).
+const limparHistorico = () => { historico = { tentativas: [], revisoes: [] }; guardarHistorico(); };
+const simular = {
+  falhaRevisao: () => { simularFalhaRevisao = true; },
+  semInternet: () => { simularSemInternet = !simularSemInternet; },
+  falhaBatalha: () => { simularFalhaBatalha = true; },
+  falhaPerfil: () => { simularFalhaPerfil = true; },
+  falhaCadastro: () => { simularFalhaCadastro = true; },
+  falhaCruzadinha: () => { simularFalhaCruzadinha = true; },
+  falhaGenerica: () => { simularFalhaGenerica = true; },
+};
+
 export function Homologacao() {
   const [modo, setModo] = useState(localStorage.getItem('cacoMed-homologacao-modo') || 'quiz');
   const [dados, setDados] = useState(salvo);
@@ -256,17 +269,31 @@ export function Homologacao() {
   useEffect(() => { navegarFicticio = navegar; });
   const comCasca = TELAS_CASCA.includes(modo);
   useEffect(() => { document.body.classList.toggle('com-casca', comCasca); }, [comCasca]);
-  // As telas do protótipo ocupam a janela inteira; começam abaixo da faixa de homologação.
-  const faixa = useRef(null);
-  const [alturaFaixa, setAlturaFaixa] = useState(86);
-  useLayoutEffect(() => {
-    const medir = () => setAlturaFaixa(faixa.current?.offsetHeight || 86);
-    medir();
-    const observador = new ResizeObserver(medir);
-    observador.observe(faixa.current);
-    return () => observador.disconnect();
-  }, []);
-  return <><aside ref={faixa} style={{ padding: 12, background: '#ffb95f', color: '#0c1322', position: 'relative', zIndex: 100 }}><details open={(localStorage.getItem('cacoMed-homologacao-faixa') || (window.innerWidth >= 960 ? 'aberta' : 'fechada')) === 'aberta'} onToggle={e => localStorage.setItem('cacoMed-homologacao-faixa', e.currentTarget.open ? 'aberta' : 'fechada')}><summary style={{ cursor: 'pointer' }}><strong>HOMOLOGAÇÃO ISOLADA · dados fictícios locais · sem gravação no perfil real</strong></summary><nav style={{ display: 'flex', flexWrap: 'wrap', gap: 20, marginTop: 8 }}><button onClick={() => trocarModo('quiz')}>Testar Quiz</button><button onClick={() => trocarModo('verdadeMentira')}>Testar Verdade ou mentira</button><button onClick={() => trocarModo('revisao')}>Testar Revisão</button><button onClick={() => { historico = { tentativas: [], revisoes: [] }; guardarHistorico(); setDados(guardar(inicial)); trocarModo('quiz'); }}>Reiniciar dados de teste</button><button onClick={() => { setDados(semearErrosRevisao()); trocarModo('revisao'); }}>Criar erros fictícios (Quiz, V ou M e Erro médico)</button><button onClick={() => { simularFalhaRevisao = true; }}>Simular falha na próxima resposta</button><button onClick={() => { simularSemInternet = !simularSemInternet; }}>Simular sem internet no treino (liga/desliga)</button><button onClick={() => trocarModo('batalha')}>Testar Batalha</button><button onClick={() => { setDados(guardar({ ...salvo, tickets: 3, batalha: {} })); trocarModo('batalha'); }}>Reiniciar Batalha (3 tickets)</button><button onClick={() => { simularFalhaBatalha = true; }}>Simular falha no próximo turno</button><button onClick={() => trocarModo('ranking')}>Testar Ranking e Coroas</button><button onClick={() => trocarModo('estatisticas')}>Testar Estatísticas</button><button onClick={() => trocarModo('perfil')}>Testar Crachá</button><button onClick={() => { setDados(semearPainel()); }}>Semear painel, coroas e histórico</button><button onClick={() => { simularFalhaPerfil = true; }}>Simular falha ao salvar o crachá</button><button onClick={() => trocarModo('menu')}>Testar menu</button><button onClick={() => trocarModo('login')}>Testar login</button><button onClick={() => trocarModo('cadastro')}>Testar cadastro</button><button onClick={() => trocarModo('cadastro2')}>Testar Cadastro 2.0</button><button onClick={() => trocarModo('cadastro2email')}>Cadastro 2.0 após confirmar e-mail</button><button onClick={() => { simularFalhaCadastro = true; }}>Simular falha no cadastro</button><button onClick={() => trocarModo('topicos')}>Testar cruzadinhas</button><button onClick={() => { setDados(guardar({ ...salvo, xpTopicos: { ...salvo.xpTopicos, 'ANATOMIA-SISTEMA ESQUELETICO': 4000 } })); }}>Esquelético no nível 3 (dicas extras)</button><button onClick={() => { setDados(guardar({ ...salvo, palavrasRespondidas: {} })); }}>Esquecer palavras respondidas</button><button onClick={() => { simularFalhaCruzadinha = true; }}>Simular falha ao gravar a cruzadinha</button><button onClick={() => { setDados(guardar({ ...salvo, tutorialCruzadinhasConcluido: false, estatisticas: {}, estatisticasGerais: {} })); }}>Rever tutorial da cruzadinha</button><button onClick={() => trocarModo('selecaoDDX')}>Testar DDX</button><button onClick={() => { setDados(guardar({ ...salvo, tickets: Math.max(3, Number(salvo.tickets) || 0) })); }}>Garantir 3 tickets</button><button onClick={() => { simularFalhaGenerica = true; }}>Simular falha no próximo pedido (cruzadinha admin, DDX)</button></nav></details></aside>{TELAS_PROTOTIPO.includes(modo) && <style>{`.cbt { top: ${alturaFaixa}px; }`}</style>}{comCasca && <BarraLateral tela={modo} ir={navegar} p={dados} foto={fotoDoPerfil(dados)} />}{modo === 'topicos' ? <SelecaoTopicos setTelaAtual={navegar} iniciarJogo={iniciarCruzadinha} dadosUsuario={dados} bancoDePalavras={BANCO_FICTICIO} usuario={inicial} setDadosUsuario={setDados} servicoPerfil={servicoGenerico} />
+  // Ferramentas da homologação: um botão flutuante (como o do admin no app), com os atalhos em grupos.
+  const grupos = [
+    { titulo: 'Telas', itens: [['Quiz', () => trocarModo('quiz')], ['Verdade ou mentira', () => trocarModo('verdadeMentira')], ['Revisão', () => trocarModo('revisao')], ['Batalha', () => trocarModo('batalha')],
+      ['Cruzadinhas', () => trocarModo('topicos')], ['DDX', () => trocarModo('selecaoDDX')], ['Ranking e Coroas', () => trocarModo('ranking')], ['Estatísticas', () => trocarModo('estatisticas')],
+      ['Crachá', () => trocarModo('perfil')], ['Menu', () => trocarModo('menu')], ['Login', () => trocarModo('login')], ['Cadastro', () => trocarModo('cadastro')],
+      ['Cadastro 2.0', () => trocarModo('cadastro2')], ['Cadastro 2.0 após confirmar e-mail', () => trocarModo('cadastro2email')]] },
+    { titulo: 'Dados de teste', itens: [['Reiniciar dados de teste', () => { limparHistorico(); setDados(guardar(inicial)); trocarModo('quiz'); }],
+      ['Garantir 3 tickets', () => setDados(guardar({ ...salvo, tickets: Math.max(3, Number(salvo.tickets) || 0) }))],
+      ['Reiniciar Batalha (3 tickets)', () => { setDados(guardar({ ...salvo, tickets: 3, batalha: {} })); trocarModo('batalha'); }],
+      ['Semear painel, coroas e histórico', () => setDados(semearPainel())]] },
+    { titulo: 'Revisão', itens: [['Criar erros fictícios (Quiz, V ou M e Erro médico)', () => { setDados(semearErrosRevisao()); trocarModo('revisao'); }]] },
+    { titulo: 'Cruzadinha', itens: [['Esquelético no nível 3 (dicas extras)', () => setDados(guardar({ ...salvo, xpTopicos: { ...salvo.xpTopicos, 'ANATOMIA-SISTEMA ESQUELETICO': 4000 } }))],
+      ['Esquecer palavras respondidas', () => setDados(guardar({ ...salvo, palavrasRespondidas: {} }))],
+      ['Rever tutorial da cruzadinha', () => setDados(guardar({ ...salvo, tutorialCruzadinhasConcluido: false, estatisticas: {}, estatisticasGerais: {} }))]] },
+    { titulo: 'Simular falhas', itens: [['Falha na próxima resposta da Revisão', simular.falhaRevisao], ['Sem internet no treino (liga/desliga)', simular.semInternet],
+      ['Falha no próximo turno da Batalha', simular.falhaBatalha], ['Falha ao salvar o crachá', simular.falhaPerfil], ['Falha no cadastro', simular.falhaCadastro],
+      ['Falha ao gravar a cruzadinha', simular.falhaCruzadinha], ['Falha no próximo pedido (cruzadinha admin, DDX)', simular.falhaGenerica]] },
+  ];
+  const botaoFerramenta = 'block w-full rounded-lg border border-cyan-500/20 bg-[#0B1120] px-3 py-2 text-left text-sm text-white hover:border-cyan-400';
+  const ferramentas = <AdminSpeedDial titulo="Homologação · dados fictícios locais" lado="esquerda">
+    <p className="mb-3 text-xs text-slate-300">Dados fictícios locais, sem gravação no perfil real. Tela atual: <b>{modo}</b>.</p>
+    {grupos.map((g, i) => <details key={g.titulo} open={i === 0} className="mb-2"><summary className="cursor-pointer py-1 text-sm font-bold text-cyan-400">{g.titulo}</summary>
+      <div className="mt-1 grid gap-1.5">{g.itens.map(([rotulo, aoClicar]) => <button key={rotulo} type="button" className={botaoFerramenta} onClick={aoClicar}>{rotulo}</button>)}</div></details>)}
+  </AdminSpeedDial>;
+  return <>{ferramentas}{comCasca && <BarraLateral tela={modo} ir={navegar} p={dados} foto={fotoDoPerfil(dados)} />}{modo === 'topicos' ? <SelecaoTopicos setTelaAtual={navegar} iniciarJogo={iniciarCruzadinha} dadosUsuario={dados} bancoDePalavras={BANCO_FICTICIO} usuario={inicial} setDadosUsuario={setDados} servicoPerfil={servicoGenerico} />
   : modo === 'jogo' ? <Jogo key={partidaCruzadinha.join('-')} bancoDePalavras={BANCO_FICTICIO} materia={partidaCruzadinha[0]} subMateria={partidaCruzadinha[1]} setTelaAtual={navegar} usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} registrar={registrarFicticio} servicoPerfil={servicoGenerico} />
   : modo === 'selecaoDDX' ? <PlantaoMedico usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoGenerico} />
   : modo === 'erroMedico' ? <ErroMedico usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoGenerico} />

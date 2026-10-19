@@ -17,7 +17,7 @@ const REGRAS = {
   quiz: ['5 perguntas de múltipla escolha, uma por vez.', 'Cada rodada com pelo menos 1 acerto vale 100 XP, mais até 50 de bônus de desempenho.', 'Depois de cada resposta, a explicação e a fonte.', 'Duas rodadas com pelo menos 1 acerto valem 1 ticket.'],
   verdadeMentira: ['5 afirmações por rodada: de 1 a 4 são verdadeiras, e a quantidade é sorteada.', 'Arraste o cartão: direita é verdade, esquerda é mentira. As setas do teclado também funcionam.', 'No fim, você revisa as cinco e confirma; a correção vem junto.', 'Com pelo menos 1 acerto, a rodada vale 100 XP, mais até 50 de bônus de desempenho. Duas rodadas com pelo menos 1 acerto valem 1 ticket.'],
 };
-const VARIANTES = [['teoria', 'Teoria', 20], ['casos', 'Casos clínicos', 25]];
+const VARIANTES = [['teoria', 'Teoria'], ['casos', 'Casos clínicos']];
 
 function CartaoArrastar({ frase, n, lancar, aoResponder }) {
   const x = useMotionValue(0);
@@ -194,7 +194,7 @@ export default function TreinoMedico({ modo, usuario, dadosUsuario, setDadosUsua
       <div className="scroll" style={{ display: 'grid', alignContent: 'center', gap: 16 }}>
         <span className="rise" style={{ width: 72, height: 72, borderRadius: 22, display: 'grid', placeItems: 'center', background: `color-mix(in srgb, ${cor} 14%, transparent)`, color: cor, border: `1px solid color-mix(in srgb, ${cor} 40%, transparent)` }}><Icone size={34} /></span>
         {quiz && <div className="alas rise" style={{ padding: 0, '--i': 1 }} role="radiogroup" aria-label="Tipo de rodada">
-          {VARIANTES.map(([id, nome, xp]) => <button key={id} role="radio" aria-checked={variante === id} className={`ala ${variante === id ? 'on' : ''}`} onClick={() => { setVariante(id); gravarLocal('cacoMed-quiz-variante', id); }}>{nome} · {xp} XP</button>)}
+          {VARIANTES.map(([id, nome]) => <button key={id} role="radio" aria-checked={variante === id} className={`ala ${variante === id ? 'on' : ''}`} onClick={() => { setVariante(id); gravarLocal('cacoMed-quiz-variante', id); }}>{nome}</button>)}
         </div>}
         <div style={{ display: 'grid', gap: 8 }}>{REGRAS[modo].map((r, i) => <div key={i} className="mission rise" style={{ '--i': i + 2, gridTemplateColumns: '26px 1fr' }}><span className="mono" style={{ color: cor, fontWeight: 700 }}>{i + 1}</span><span style={{ fontSize: 13.5 }}>{r}</span></div>)}</div>
         <p className="note">Conteúdo com fontes; cada resposta traz a explicação. Seus erros alimentam a revisão.</p>

@@ -3,7 +3,7 @@ import { Settings2, X } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 
 // acima: sobe o botão para não cobrir a barra de abas do celular.
-export default function AdminSpeedDial({ children, titulo = 'Ferramentas admin', acima = false }) {
+export default function AdminSpeedDial({ children, titulo = 'Ferramentas admin', acima = false, lado = 'direita' }) {
   const [aberto, setAberto] = useState(false);
   const idPainel = useId();
   const botaoRef = useRef(null);
@@ -19,7 +19,7 @@ export default function AdminSpeedDial({ children, titulo = 'Ferramentas admin',
     botaoRef.current?.focus();
   };
 
-  return <div className={`admin-speed-dial fixed ${acima ? 'bottom-24' : 'bottom-4'} right-4 z-[60] flex flex-col items-end gap-3`} onKeyDown={evento => { if (evento.key === 'Escape' && aberto) { evento.stopPropagation(); fechar(); } }}>
+  return <div className={`admin-speed-dial fixed ${acima ? 'bottom-24' : 'bottom-4'} ${lado === 'esquerda' ? 'left-4 items-start' : 'right-4 items-end'} z-[60] flex flex-col gap-3`} onKeyDown={evento => { if (evento.key === 'Escape' && aberto) { evento.stopPropagation(); fechar(); } }}>
     {aberto && <motion.div
       id={idPainel}
       ref={painelRef}
