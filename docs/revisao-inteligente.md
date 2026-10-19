@@ -165,18 +165,28 @@ Protótipo em [`docs/prototipos/revisao-hub.html`](prototipos/revisao-hub.html),
 5. **Fim da carta:** a tela encolhe de volta até o baralho, o leque reabre no modo foco e a carta feita fica verde, com um certinho (e "2/3 certas" no lugar do tempo). O jogador escolhe a próxima entre as que faltam. **Não há mais relatório depois de cada modo** (decidido em 19/10).
 6. **Sair no meio:** a carta fica "Em andamento" no leque; as outras esperam ela terminar (regra do servidor hoje: uma sessão aberta por vez). Aprovado pelo usuário em 19/10.
 
-**Versão 3 (19/10/2026, segunda rodada):**
-7. **Aviso ao começar e trava.** "Começar revisão" abre o aviso: depois de começar, o jogador só sai da revisão quando terminar pelo menos uma carta, e até lá os outros modos do jogo ficam bloqueados, **mesmo fechando e abrindo o app** (o app reabre direto nas cartas). No modo foco, o X dá lugar a "Termine uma carta para sair". A primeira carta feita destrava tudo.
-8. **Relatório geral, só no fim** (referência: vídeo do usuário de 19/10, um anel de imagens com título no centro). Ao terminar a última carta, as cartas feitas saem do leque e formam um **anel** com "Seu relatório" no centro; o anel tem 8 vagas, e as que sobram ficam como contorno vazio.
-9. **Relatório de uma carta.** Ao tocar numa carta, o anel gira até ela parar à direita, maior e reta; dela nasce o painel do relatório completo (no celular, quase a tela inteira; no computador, à direita, com o nome da carta grande à esquerda e o anel apagado ao fundo). O painel tem:
-   - acertos, **tempo médio de pensamento**, **indecisão** e o item mais demorado;
-   - o ritmo item a item (barras: altura é o tempo; verde acertou, vermelho errou);
-   - **"O que pode estar influenciando seus erros"**: análise a partir dos dados do jogador (respondeu rápido demais, ficou entre alternativas, conceito ainda não firme, tema dos erros). No protótipo é por regras; no app, a IA escreve a partir dos mesmos dados, com o aviso de IA;
+**Versões 3 e 4 (19/10/2026, segunda e terceira rodadas):**
+7. **Aviso ao começar e trava.** "Começar revisão" abre o aviso: depois de começar, o jogador só sai da revisão quando **terminar todas as cartas de hoje**, e até lá os outros modos do jogo ficam bloqueados, **mesmo fechando e abrindo o app** (o app reabre direto nas cartas). No modo foco, o X dá lugar a "Termine as cartas de hoje para sair · faltam N". A última carta destrava tudo.
+8. **Relatório geral, só no fim** (referência: vídeo do usuário de 19/10, um anel de imagens com título no centro). Ao terminar a última carta, as cartas feitas saem do leque e formam um **anel** com "Seu relatório" no centro; o anel tem 8 vagas, e as que sobram ficam como contorno vazio. **As cartas ficam em pé** no anel (só a posição gira), como o usuário pediu.
+9. **Relatório de uma carta.** Ao tocar numa carta, o anel gira até ela parar à direita, maior; dela nasce o painel do relatório completo (no celular, quase a tela inteira; no computador, à direita, com o nome da carta grande à esquerda e o anel apagado ao fundo). O painel tem:
+   - acertos, tempo médio por item, **ritmo de leitura e raciocínio** (segundos por palavra) e **indecisão** (segundos e % do tempo), ver a [métrica](#métrica-de-ritmo-e-indecisão-decidida-em-19102026);
+   - o ritmo item a item (barra cheia: tempo para ler e pensar, verde ou vermelho; listrado em âmbar: indecisão);
+   - **"O que pode estar influenciando seus erros"**: análise a partir dos dados do jogador (pressa, dúvida entre alternativas, conceito ainda não firme, acerto com dúvida, tema dos erros). No protótipo é por regras; no app, a IA escreve a partir dos mesmos dados, com o aviso de IA;
    - **cada alternativa explicada**: por que cada uma está certa ou errada, com a fonte revisada do item.
-10. **"Entendi":** o painel volta para a carta, o anel dá uma volta inteira e para no lugar; no meio da carta um certinho se completa, a carta pisca, fica verde e apaga devagar até um verde escuro, saindo de foco. O certinho fica sempre em pé, mesmo nas cartas de cabeça para baixo no anel.
-11. **Fim:** com todas vistas, o cérebro aparece no centro e "come" as cartas uma a uma (cada carta gira em espiral até ele, e ele pulsa e brilha a cada mordida). Depois: "Conhecimento absorvido", o placar do dia e "Voltar ao hub". O hub passa a "Tudo revisado por hoje" com "Ver seu relatório de hoje" (o anel com as cartas já vistas, sem o cérebro de novo).
+10. **"Entendi":** o painel volta para a carta, o anel dá uma volta inteira e para no lugar; no meio da carta um certinho se completa, a carta pisca, fica verde e apaga devagar até um verde escuro, saindo de foco.
+11. **Fim: o monstro do cérebro** (descrito pelo usuário em 19/10, com uma imagem de referência de um polvo roxo com o cérebro numa cúpula de vidro; o desenho do protótipo é original). Ele aparece no centro com cara de fome e devora as cartas uma a uma (a boca abre, morde, o corpo amassa). A cada carta comida, **o verde sobe de baixo para cima** no corpo e nos tentáculos. Totalmente verde, os dois tentáculos de fora sobem e **formam um coração** em volta da cabeça, e ele sorri satisfeito. Depois: "Parabéns! Você concluiu sua revisão de hoje", o placar do dia e o **prêmio** (em aberto, abaixo), com "Voltar ao hub". O hub passa a "Tudo revisado por hoje" com "Ver seu relatório de hoje" (o anel com as cartas já vistas, sem o monstro de novo).
 
-O botão "Protótipo" (canto inferior esquerdo) troca a situação do jogador (com cartas, carta em andamento, em dia, sem erros, abaixo do nível 10), a abertura (furacão ou leque simples) e a tela (cheia ou celular), e tem dois atalhos: **simular fechar e abrir o app** (para ver a trava) e **ir direto ao relatório geral**.
+O botão "Protótipo" (canto inferior esquerdo) troca a situação do jogador (com cartas, carta em andamento, em dia, sem erros, abaixo do nível 10), o prêmio (a ideia do usuário ou a sugestão), a abertura (furacão ou leque simples) e a tela (cheia ou celular), e tem dois atalhos: **simular fechar e abrir o app** (para ver a trava) e **ir direto ao relatório geral**.
+
+#### Métrica de ritmo e indecisão (decidida em 19/10/2026)
+
+Ideia do usuário: o tempo que a pessoa leva por palavra nas perguntas que **acerta** é o seu tempo de leitura e raciocínio; o que passa disso numa pergunta é indecisão.
+- **Ritmo da pessoa** = média de (tempo até responder ÷ número de palavras) nas respostas **certas**, com o histórico dela. Em segundos por palavra.
+- **Tempo esperado de um item** = ritmo × palavras do item.
+- **Indecisão do item** = tempo até responder − tempo esperado (zero se for menor).
+- **Palavras:** o protótipo conta o enunciado e as alternativas, porque a leitura inclui as duas (em aberto: só o enunciado?).
+- **Métricas que saem disso:** ritmo de leitura e raciocínio; indecisão total e em % do tempo; o item com mais dúvida; **pressa** (respondeu em menos de 70% do tempo esperado e errou); **dúvida** (indecisão de pelo menos 3 s e 40% do esperado); **acerto com dúvida** (acertou, mas com indecisão alta: conceito ainda não automático); **conceito não firme** (errou no tempo normal). A análise da IA recebe esses números por item.
+- **Cuidados:** o ritmo só fica confiável depois de algumas respostas certas (o protótipo usa um histórico de exemplo de 12 respostas); casos longos (Erro médico, Paciente DDX) têm prontuário, e o tempo de cada etapa precisa ser medido por etapa; o aparelho mede do item aparecer até o toque, e a fila offline guarda esse tempo junto da resposta.
 
 Movimento reduzido (preferência do sistema): as cartas vão direto para o lugar, sem espiral.
 
@@ -187,17 +197,21 @@ Movimento reduzido (preferência do sistema): as cartas vão direto para o lugar
 4. **Paciente DDX:** nome e cor aprovados.
 5. **Furacão:** aprovado no celular.
 6. **Direto às cartas** ao terminar um modo, sem relatório no meio; **relatório geral** só depois de todas as cartas.
-7. **Aviso e trava** ao começar, que sobrevive a fechar o app; **outros modos bloqueados** enquanto a revisão estiver começada.
+7. **Aviso e trava** ao começar, que sobrevive a fechar o app; **outros modos bloqueados até terminar todas as cartas do dia**.
 8. **Carta em andamento:** aprovada.
+9. **Indecisão pelo ritmo por palavra** ([métrica](#métrica-de-ritmo-e-indecisão-decidida-em-19102026)).
+10. **Cartas em pé no anel** e o anel, o giro e o certinho que apaga aprovados ("quase perfeito").
+11. **Fim com o monstro do cérebro**, que fica verde, faz um coração e sorri, seguido de parabéns e um prêmio.
 
 **Ainda em aberto (no painel do protótipo):**
-1. **Até quando os outros modos ficam bloqueados:** até a primeira carta (como diz o aviso) ou até terminar todas?
-2. **Indecisão:** o protótipo conta por quantas alternativas o mouse passou antes de marcar, o que não existe no celular. Alternativa: contar trocas de escolha antes de confirmar, o que exige um botão "Confirmar" nas perguntas da Revisão.
-3. **Relatório geral:** anel, giro, certinho que apaga e cérebro estão como imaginado?
+1. **Prêmio de conclusão.** Ideia do usuário: 1000 XP e 10 tickets fixos. Parecer do agente: alto e fácil de explorar. Um erro de propósito num jogo já gera uma carta; no dia seguinte, revisar só essa carta pagaria 1000 XP e 10 tickets. 10 tickets valem 20 rodadas de jogo e abrem 10 casos do DDX (mais de 3000 XP) ou 10 batalhas (até 5000 XP). A Revisão foi pensada sem ticket e só com XP de domínio, para não valer a pena errar. Sugestão: proporcional aos itens revisados, **35 XP por item (até 1000) e 1 ticket a cada 7 itens (até 4)**. Uma revisão cheia de 4 cartas, com 28 itens, dá 980 XP e 4 tickets. Uma de 1 carta pequena dá pouco. As duas opções estão no protótipo.
+2. **Palavras do ritmo:** enunciado e alternativas, ou só o enunciado?
+3. **Limite de cartas por dia:** com a trava até o fim, um dia com muitos erros acumulados (por exemplo, 6 cartas e mais de 40 itens) prende o jogador por muito tempo. Sugestão: no máximo 4 cartas por dia; o resto fica para o dia seguinte.
+4. **Monstro:** o desenho do protótipo serve para decidir a animação; o visual final pode ser redesenhado (ilustrador ou arte própria) no padrão do jogo.
 
 **Para o código (quando aprovar):**
-- **Servidor:** guardar a revisão do dia (começada, cartas feitas, trava e relatório visto), para a trava valer em qualquer aparelho e depois de fechar o app; o menu consulta essa trava para bloquear os outros modos.
-- **Dados por resposta:** tempo até responder e a medida de indecisão escolhida, gravados junto da tentativa (hoje só vão a escolha e o acerto).
+- **Servidor:** guardar a revisão do dia (começada, cartas feitas, trava e relatório visto), para a trava valer em qualquer aparelho e depois de fechar o app; o menu consulta essa trava para bloquear os outros modos. O prêmio de conclusão é pago pelo servidor, uma vez por dia.
+- **Dados por resposta:** tempo até responder, gravado junto da tentativa (hoje só vão a escolha e o acerto); o ritmo e a indecisão são calculados no servidor a partir dele.
 - **Relatório:** uma ação nova que junta as cartas do dia e pede à IA a análise, com cache; a explicação de cada alternativa precisa existir no banco. Hoje o Quiz tem uma explicação por pergunta (a da resposta certa); o V ou M, uma por frase (que já cobre as duas opções); o Erro médico, uma por etapa (linha, categoria e correção certas). **O "porquê" de cada alternativa errada é conteúdo novo**, com fonte e revisão médica, sobretudo no Quiz e no Erro médico.
 - **Proposta do agente, a confirmar:** os erros de uma carta feita voltam como carta nova só no dia seguinte, para a carta verde não ser trocada na hora por outra com os mesmos erros.
 
@@ -207,7 +221,7 @@ Regra da memória do projeto: o protótipo traz as decisões de fluxo; no códig
 
 1. **Marcações `grave`:** revisão médica caso a caso no gabarito do Paciente DDX.
 2. **Carta do Paciente DDX:** implementar no motor depois das marcações.
-3. **Hub da Revisão:** protótipo v3 (modo foco, trava e relatório geral) feito; faltam as três respostas em aberto acima para portar ao código.
+3. **Hub da Revisão:** protótipo v4 (modo foco, trava até o fim, relatório geral em anel e o monstro) feito; faltam as quatro respostas em aberto acima para portar ao código.
 4. **Explicação por alternativa:** conteúdo novo, sobretudo no Quiz e no Erro médico, com fonte e revisão médica (pré-requisito do relatório geral).
 
 ## Experiência e decisões

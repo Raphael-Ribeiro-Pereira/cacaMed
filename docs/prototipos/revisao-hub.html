@@ -142,7 +142,7 @@ svg{display:block}
 #rel-titulo p{margin:0;font-size:12px;color:var(--muted)}
 .vaga{position:absolute;left:50%;top:50%;width:var(--cw);height:var(--ch);margin:calc(var(--ch) / -2) 0 0 calc(var(--cw) / -2);border-radius:14px;border:1.5px dashed rgba(220,226,247,.16);opacity:0;pointer-events:none}
 .check-centro{position:absolute;inset:0;z-index:3;display:grid;place-items:center;pointer-events:none}
-.check-centro svg{width:60%;height:auto;overflow:visible;rotate:var(--contra, 0deg)}
+.check-centro svg{width:60%;height:auto;overflow:visible}
 .check-centro circle{fill:rgba(3,37,27,.55);stroke:var(--ok);stroke-width:4}
 .check-centro path{fill:none;stroke:#eafff8;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:62;stroke-dashoffset:62}
 .carta.vista .frente{border-color:var(--ok);background:linear-gradient(165deg,#13c193,#0b5a45 72%);transition:filter 2.8s ease}
@@ -167,6 +167,8 @@ svg{display:block}
 .pr-barra{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%}
 .pr-barra i{display:block;width:100%;max-width:40px;min-height:6px;border-radius:6px 6px 2px 2px;background:var(--ok)}
 .pr-barra.no i{background:var(--crimson)}
+.pr-barra i.duvida{min-height:0;border-radius:6px 6px 0 0;background:repeating-linear-gradient(45deg,var(--ambar) 0 4px,rgba(255,183,3,.3) 4px 8px)}
+.pr-barra i.duvida+i{border-radius:0 0 2px 2px}
 .pr-barra small{font:700 10px var(--mono);color:var(--muted)}
 .pr-nota{margin:8px 0 0;font-size:11.5px;color:var(--muted);display:flex;gap:6px;align-items:center}
 .pr-nota svg{width:14px;height:14px;color:var(--violet);flex:none}
@@ -188,11 +190,25 @@ svg{display:block}
 #lado-rel{position:absolute;z-index:77;left:6%;top:50%;translate:0 -50%;max-width:min(30%,360px);opacity:0;pointer-events:none}
 #lado-rel h2{margin:6px 0;font-size:clamp(28px,3.4vw,46px);font-weight:800;letter-spacing:-.02em;line-height:1}
 #lado-rel p{margin:0;color:var(--muted)}
-#cerebro{position:absolute;left:50%;top:46%;translate:-50% -50%;width:min(62%,300px);z-index:6;opacity:0;pointer-events:none;filter:drop-shadow(0 0 14px rgba(180,156,255,.45))}
-.foco-fim{position:absolute;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));translate:-50% 0;z-index:79;display:grid;justify-items:center;gap:8px;text-align:center;width:min(360px,calc(100% - 32px))}
+/* O monstro do cérebro: um polvo com o cérebro numa cúpula de vidro, que devora as cartas e fica verde */
+#monstro{position:absolute;left:50%;top:42%;translate:-50% -50%;width:min(70%,330px);z-index:6;opacity:0;pointer-events:none;overflow:visible;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45))}
+#monstro .bob{animation:bob 2.6s ease-in-out infinite;transform-origin:120px 150px}
+#monstro .onda{animation:onda 2.2s ease-in-out infinite alternate}
+#monstro .onda:nth-child(2n){animation-delay:-1.1s;animation-direction:alternate-reverse}
+#monstro .onda.parada{animation:none}
+#monstro .boca{transform-origin:120px 166px}
+#monstro .cara-feliz{opacity:0}
+@keyframes bob{50%{transform:translateY(-6px)}}
+@keyframes onda{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+@media (prefers-reduced-motion:reduce){#monstro .bob,#monstro .onda{animation:none}}
+.foco-fim{position:absolute;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));translate:-50% 0;z-index:79;display:grid;justify-items:center;gap:8px;text-align:center;width:min(380px,calc(100% - 32px))}
 .foco-fim[hidden]{display:none}
-.foco-fim b{font-size:15px}
+.foco-fim h2{margin:0;font-size:22px;font-weight:800;line-height:1.15}
+.foco-fim p{margin:0;color:var(--muted)}
 .foco-fim .kicker{color:var(--ok)}
+.premios{display:flex;gap:8px;margin:4px 0}
+.premios span{font:800 18px var(--mono);padding:8px 14px;border-radius:12px;background:rgba(6,214,160,.12);border:1px solid rgba(6,214,160,.45);color:var(--ok)}
+.premios span.ticket{background:rgba(255,183,3,.12);border-color:rgba(255,183,3,.45);color:var(--ambar)}
 
 /* Botões */
 .acoes{display:grid;gap:8px}
@@ -258,17 +274,47 @@ svg{display:block}
     <div id="foco" hidden role="dialog" aria-label="Cartas da revisão">
       <div class="foco-fundo"></div><div class="vortex"></div>
       <div id="rel-titulo"><p class="kicker">Revisão de hoje</p><h2>Seu relatório</h2><p id="rel-sub"></p></div>
-      <svg id="cerebro" viewBox="0 0 200 170" aria-hidden="true">
-        <defs><linearGradient id="gc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b49cff"/><stop offset="1" stop-color="#00f5d4"/></linearGradient>
-          <radialGradient id="gf" cx=".5" cy=".45" r=".6"><stop offset="0" stop-color="rgba(180,156,255,.35)"/><stop offset="1" stop-color="rgba(180,156,255,.04)"/></radialGradient></defs>
-        <g fill="url(#gf)" stroke="url(#gc)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M100 22C82 8 54 12 46 30C28 30 15 47 21 64C8 74 8 97 22 107C18 125 33 141 51 138C60 152 82 156 94 145C97 148 100 149 100 149Z"/>
-          <path d="M100 22C118 8 146 12 154 30C172 30 185 47 179 64C192 74 192 97 178 107C182 125 167 141 149 138C140 152 118 156 106 145C103 148 100 149 100 149Z"/>
-        </g>
-        <g fill="none" stroke="url(#gc)" stroke-width="2.6" stroke-linecap="round" opacity=".85">
-          <path d="M100 24V147"/>
-          <path d="M80 30C88 40 86 52 76 57"/><path d="M58 40C70 46 70 58 59 65"/><path d="M38 74C52 70 66 79 63 92"/><path d="M77 96C89 100 91 114 81 122"/><path d="M45 112C56 107 63 118 58 129"/>
-          <path d="M120 30C112 40 114 52 124 57"/><path d="M142 40C130 46 130 58 141 65"/><path d="M162 74C148 70 134 79 137 92"/><path d="M123 96C111 100 109 114 119 122"/><path d="M155 112C144 107 137 118 142 129"/>
+      <svg id="monstro" viewBox="0 0 240 260" aria-hidden="true">
+        <defs>
+          <!-- O verde sobe de baixo para cima conforme ele come as cartas (os stops mudam pelo script). -->
+          <linearGradient id="g-corpo" gradientUnits="userSpaceOnUse" x1="0" y1="256" x2="0" y2="105">
+            <stop offset="0" stop-color="#7c4fe0"/><stop offset="0" stop-color="#7c4fe0"/><stop offset="0" stop-color="#7c4fe0"/><stop offset="1" stop-color="#7c4fe0"/>
+          </linearGradient>
+          <linearGradient id="g-luz" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="rgba(255,255,255,.16)"/><stop offset=".45" stop-color="rgba(255,255,255,0)"/><stop offset="1" stop-color="rgba(0,0,0,.2)"/></linearGradient>
+        </defs>
+        <g class="bob">
+          <path id="coracao" opacity="0" style="transform-origin:120px 120px" fill="rgba(255,110,160,.18)" d="M120 60C112 42 84 32 60 52C22 84 40 152 78 180L120 200L162 180C200 152 218 84 180 52C156 32 128 42 120 60Z"/>
+          <g fill="none" stroke="url(#g-corpo)" stroke-width="15" stroke-linecap="round">
+            <g class="onda" id="mt1" style="transform-origin:78px 180px"><path d="M78 180C60 196 40 200 34 218C30 230 44 236 50 226"><animate class="coracao-anim" attributeName="d" begin="indefinite" dur="0.9s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".3 0 .2 1" values="M78 180C60 196 40 200 34 218C30 230 44 236 50 226;M78 180C40 152 22 84 60 52C84 34 112 42 120 60"/></path></g>
+            <g class="onda" style="transform-origin:94px 186px"><path d="M94 186C84 208 72 222 76 238C78 248 90 246 88 236"/></g>
+            <g class="onda" style="transform-origin:110px 190px"><path d="M110 190C106 212 102 230 110 246C114 254 124 250 118 240"/></g>
+            <g class="onda" style="transform-origin:130px 190px"><path d="M130 190C134 212 138 230 130 246C126 254 116 250 122 240"/></g>
+            <g class="onda" style="transform-origin:146px 186px"><path d="M146 186C156 208 168 222 164 238C162 248 150 246 152 236"/></g>
+            <g class="onda" id="mt6" style="transform-origin:162px 180px"><path d="M162 180C180 196 200 200 206 218C210 230 196 236 190 226"><animate class="coracao-anim" attributeName="d" begin="indefinite" dur="0.9s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".3 0 .2 1" values="M162 180C180 196 200 200 206 218C210 230 196 236 190 226;M162 180C200 152 218 84 180 52C156 34 128 42 120 60"/></path></g>
+          </g>
+          <path fill="url(#g-corpo)" d="M60 116C56 152 68 180 88 190C104 197 136 197 152 190C172 180 184 152 180 116Z"/>
+          <path fill="url(#g-luz)" d="M60 116C56 152 68 180 88 190C104 197 136 197 152 190C172 180 184 152 180 116Z"/>
+          <g fill="rgba(0,0,0,.14)"><circle cx="76" cy="150" r="4"/><circle cx="166" cy="142" r="3"/><circle cx="152" cy="176" r="5"/><circle cx="92" cy="182" r="3"/></g>
+          <g fill="#f7b7c8" stroke="#dc8aa3" stroke-width="2">
+            <circle cx="120" cy="80" r="11"/><circle cx="92" cy="100" r="15"/><circle cx="148" cy="100" r="15"/><circle cx="110" cy="87" r="15"/><circle cx="130" cy="87" r="15"/><circle cx="102" cy="106" r="12"/><circle cx="138" cy="106" r="12"/><circle cx="120" cy="99" r="15"/>
+          </g>
+          <g fill="none" stroke="#dc8aa3" stroke-width="2" stroke-linecap="round"><path d="M98 92q6-6 12 0"/><path d="M120 90q6 6 12 0"/><path d="M108 104q8 6 16 0"/><path d="M138 97q5-6 10-2"/><path d="M84 102q5 4 10 2"/></g>
+          <path fill="rgba(170,220,255,.22)" stroke="rgba(215,240,255,.9)" stroke-width="3" d="M64 114C64 52 176 52 176 114Z"/>
+          <path fill="none" stroke="rgba(255,255,255,.75)" stroke-width="4" stroke-linecap="round" d="M80 96C82 80 94 70 108 66"/>
+          <path fill="url(#g-corpo)" d="M54 117C54 107 186 107 186 117C186 128 54 128 54 117Z"/>
+          <path fill="rgba(0,0,0,.16)" d="M54 117C54 107 186 107 186 117C186 128 54 128 54 117Z"/>
+          <g class="cara-brava">
+            <ellipse cx="100" cy="146" rx="10" ry="11" fill="#fff"/><ellipse cx="140" cy="146" rx="10" ry="11" fill="#fff"/>
+            <circle cx="101" cy="148" r="5" fill="#1a0f2e"/><circle cx="139" cy="148" r="5" fill="#1a0f2e"/>
+            <circle cx="103" cy="145" r="1.8" fill="#fff"/><circle cx="141" cy="145" r="1.8" fill="#fff"/>
+            <path d="M86 131L110 138M154 131L130 138" stroke="#24123f" stroke-width="5" stroke-linecap="round"/>
+            <g class="boca"><path d="M106 162Q120 182 134 162Z" fill="#2a0f3a"/><path d="M112 170Q120 178 128 170Q120 172 112 170Z" fill="#ff7aa8"/><path d="M109 162L113 170L117 162ZM123 162L127 170L131 162Z" fill="#fff"/></g>
+          </g>
+          <g class="cara-feliz">
+            <path d="M90 148Q100 136 110 148M130 148Q140 136 150 148" fill="none" stroke="#1a0f2e" stroke-width="5" stroke-linecap="round"/>
+            <ellipse cx="86" cy="160" rx="7" ry="4" fill="#ff8fb1" opacity=".75"/><ellipse cx="154" cy="160" rx="7" ry="4" fill="#ff8fb1" opacity=".75"/>
+            <path d="M102 160Q120 184 138 160Q120 170 102 160Z" fill="#2a0f3a"/><path d="M112 168Q120 176 128 168Q120 171 112 168Z" fill="#ff7aa8"/>
+          </g>
         </g>
       </svg>
       <div id="lado-rel"></div>
@@ -283,7 +329,7 @@ svg{display:block}
       <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-titulo">
         <span class="dlg-ic" id="dlg-ic"></span>
         <h2 id="dlg-titulo">Começar a revisão?</h2>
-        <p>Depois de começar, você só sai da revisão quando terminar pelo menos uma carta.</p>
+        <p>Depois de começar, você só sai da revisão quando terminar todas as cartas de hoje.</p>
         <p>Até lá, os outros modos do jogo ficam bloqueados, mesmo se você fechar e abrir o app.</p>
         <div class="dlg-acoes"><button class="secundario" id="dlg-nao">Agora não</button><button class="primario" id="dlg-sim">Começar</button></div>
       </div>
@@ -309,10 +355,14 @@ svg{display:block}
     <div class="grupo"><p>Tela</p><div class="seg" data-chave="tela">
       <button data-valor="cheia">Tela cheia</button><button data-valor="celular">Celular</button>
     </div></div>
+    <div class="grupo"><p>Prêmio de conclusão</p><div class="seg" data-chave="premio">
+      <button data-valor="ideia">1000 XP + 10 tickets (sua ideia)</button><button data-valor="escala">Por itens (sugestão)</button>
+    </div></div>
     <div class="grupo"><p>O que decidir</p><ol class="decisoes">
-      <li><b>Trava:</b> os outros modos ficam bloqueados até terminar a primeira carta (como no aviso) ou até terminar todas?</li>
-      <li><b>Indecisão:</b> o protótipo conta por quantas alternativas o mouse passou antes de marcar. No celular não há mouse. Contar troca de escolha antes de confirmar (precisa de um botão "Confirmar")?</li>
-      <li><b>Relatório geral:</b> o anel, o giro, o certinho que apaga e o cérebro estão como você imaginou?</li>
+      <li><b>Prêmio:</b> fixo (1000 XP + 10 tickets) ou por itens revisados (35 XP por item, até 1000; 1 ticket a cada 7 itens, até 4)?</li>
+      <li><b>Palavras do ritmo:</b> contar o enunciado e as alternativas (como no protótipo) ou só o enunciado?</li>
+      <li><b>Limite de cartas por dia:</b> com a trava até o fim, um dia com muitas cartas prende o jogador por muito tempo. Limitar a revisão do dia (por exemplo, 4 cartas)?</li>
+      <li><b>O monstro:</b> o desenho e a animação estão no caminho? Depois o visual final pode ser redesenhado por um ilustrador.</li>
     </ol></div>
   </div>
 </div>
@@ -374,18 +424,18 @@ const CARTAS = [
 const ESPERAS = ['amanhã, 09:00', 'amanhã, 14:30', 'qui., 22/10', 'sex., 23/10', 'sáb., 24/10'];
 
 // ---------- Estado (e o que sobrevive a fechar e abrir o app) ----------
-const S = { estado: 'normal', abertura: 'furacao', tela: 'cheia', fase: 'hub', animando: false, sessao: null, pausada: null, feitas: new Map(), trava: false, vistas: new Set(), absorvido: false };
+const S = { estado: 'normal', abertura: 'furacao', tela: 'cheia', premio: 'ideia', fase: 'hub', animando: false, sessao: null, pausada: null, feitas: new Map(), trava: false, vistas: new Set(), absorvido: false };
 const CHAVE_OPCOES = 'prototipo-revisao-hub', CHAVE_PROGRESSO = 'prototipo-revisao-progresso';
 const ler = chave => { try { return JSON.parse(localStorage.getItem(chave) || 'null'); } catch { return null; } };
 const gravar = (chave, valor) => { try { localStorage.setItem(chave, JSON.stringify(valor)); } catch { /* sem armazenamento */ } };
-const guardar = () => gravar(CHAVE_OPCOES, { estado: S.estado, abertura: S.abertura, tela: S.tela });
+const guardar = () => gravar(CHAVE_OPCOES, { estado: S.estado, abertura: S.abertura, tela: S.tela, premio: S.premio });
 function guardarProgresso() {
   gravar(CHAVE_PROGRESSO, { trava: S.trava, absorvido: S.absorvido, vistas: [...S.vistas],
     feitas: [...S.feitas].map(([id, r]) => [id, { ...r, respostas: r.respostas.map(x => ({ ...x, it: x.it.k })) }]),
     pausada: S.pausada && { id: S.pausada.id, idx: S.pausada.sessao.idx, respostas: S.pausada.sessao.respostas } });
 }
 function restaurar() {
-  const o = ler(CHAVE_OPCOES) || {}; for (const k of ['estado', 'abertura', 'tela']) if (o[k]) S[k] = o[k];
+  const o = ler(CHAVE_OPCOES) || {}; for (const k of ['estado', 'abertura', 'tela', 'premio']) if (o[k]) S[k] = o[k];
   const p = ler(CHAVE_PROGRESSO); if (!p) return;
   S.trava = Boolean(p.trava); S.absorvido = Boolean(p.absorvido); S.vistas = new Set(p.vistas || []);
   for (const [id, r] of p.feitas || []) S.feitas.set(id, { ...r, respostas: r.respostas.map(x => ({ ...x, it: ITENS[x.it] })) });
@@ -546,7 +596,8 @@ function pedirInicio() {
 function confirmarInicio() { $('#confirmar').hidden = true; S.trava = true; guardarProgresso(); entrarFoco(); }
 function atualizarSaida() {
   $('#foco-sair').hidden = S.trava;
-  const chip = $('#foco-trava'); chip.hidden = !S.trava; chip.innerHTML = `${I.cadeado} Termine uma carta para sair`;
+  const faltam = prontas().filter(c => !S.feitas.has(c.id)).length;
+  const chip = $('#foco-trava'); chip.hidden = !S.trava; chip.innerHTML = `${I.cadeado} Termine as cartas de hoje para sair · faltam ${faltam}`;
 }
 
 // ---------- Modo foco ----------
@@ -574,7 +625,7 @@ async function abrirLeque() {
 function prepararFoco() {
   const foco = $('#foco'); foco.hidden = false; foco.style.opacity = '';
   foco.classList.remove('aberto', 'anel'); $('#foco-fim').hidden = true; $('#painel-rel').hidden = true;
-  for (const id of ['#rel-titulo', '#cerebro', '#lado-rel']) $(id).style.opacity = 0;
+  for (const id of ['#rel-titulo', '#monstro', '#lado-rel']) $(id).style.opacity = 0;
   atualizarSaida();
   return foco;
 }
@@ -592,7 +643,7 @@ async function entrarFoco() {
 }
 async function sairFoco() {
   if (S.animando || !['foco', 'relgeral'].includes(S.fase)) return;
-  if (S.trava) { toast('Termine uma carta para sair da revisão.'); return; }
+  if (S.trava) { toast('Termine as cartas de hoje para sair da revisão.'); return; }
   S.animando = true;
   const foco = $('#foco'); foco.classList.remove('aberto', 'anel'); $('#foco-dica').classList.remove('on');
   aparecer($('#rel-titulo'), 240, 0); document.querySelectorAll('.vaga').forEach(v => aparecer(v, 240, 0));
@@ -701,8 +752,9 @@ async function voltarAoFoco(cartaId) {
       feita.el.querySelector('.feito').animate([{ transform: 'scale(2.6)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 460, easing: 'cubic-bezier(.2,1.4,.4,1)' });
       feita.el.querySelector('.frente').animate([{ filter: 'brightness(1.7)' }, { filter: 'brightness(1)' }], { duration: 700 });
     }
-    // A primeira carta feita destrava a saída e os outros modos.
-    if (S.trava) { S.trava = false; guardarProgresso(); atualizarSaida(); if (!todasFeitas()) toast('Primeira carta feita: agora você pode sair quando quiser.'); }
+    // Só a última carta do dia destrava a saída e os outros modos.
+    if (S.trava && todasFeitas()) { S.trava = false; guardarProgresso(); }
+    atualizarSaida();
   }
   if (todasFeitas()) { if (!rm()) await pausa(1000); await abrirRelatorioGeral(); }
   S.animando = false;
@@ -722,17 +774,13 @@ function renderSessao() {
       <div class="opcoes">${it.opcoes.map((o, k) => `<button class="op ${resp ? (k === it.certa ? 'certa' : k === resp.escolha ? 'errada' : 'apagada') : ''}" data-k="${k}" ${resp ? 'disabled' : ''}><span class="tecla">${k + 1}</span>${o}</button>`).join('')}</div>
       ${resp ? `<div class="fb ${resp.acertou ? 'sim' : 'nao'}" role="status"><b>${resp.acertou ? 'Acertou.' : 'Ainda não.'}</b> ${it.porque[it.certa]}</div>` : ''}</div>
     <div class="dock">${resp ? `<button class="primario" id="proxima">${ultimo ? 'Concluir carta' : 'Próxima'} ${I.seta}</button>` : '<p class="dica-dock">Escolha uma alternativa · teclas 1 a 4</p>'}</div>`;
-  if (!resp) {
-    s.inicio = performance.now(); s.passou = new Set();
-    v.querySelectorAll('.op').forEach(b => b.addEventListener('pointerenter', () => s.passou.add(Number(b.dataset.k))));
-  }
+  if (!resp) s.inicio = performance.now();
   (resp ? $('#proxima') : v.querySelector('.op'))?.focus({ preventScroll: true });
 }
 function responder(k) {
   const s = S.sessao; if (!s || s.respostas[s.idx]) return;
   const tempoMs = Math.round(performance.now() - (s.inicio || performance.now()));
-  const hesitacao = [...(s.passou || [])].filter(x => x !== k).length;
-  s.respostas[s.idx] = { escolha: k, acertou: k === s.itens[s.idx].certa, tempo: tempoMs, hesitacao };
+  s.respostas[s.idx] = { escolha: k, acertou: k === s.itens[s.idx].certa, tempo: tempoMs };
   renderSessao();
 }
 function proxima() {
@@ -761,9 +809,8 @@ function geometriaAnel(m) {
   const R = Math.min(m.w, m.h) * (m.w < 600 ? .35 : .33);
   return { R, k: Math.min(.8, (2 * Math.PI * R / VAGAS) * .62 / m.cw) };
 }
-const noAnel = (ang, g, centro = { x: 0, y: 0 }) => { const a = ang * Math.PI / 180; return { x: centro.x + g.R * Math.cos(a), y: centro.y + g.R * Math.sin(a), r: ang + 90, s: g.k }; };
-// O certinho fica sempre em pé, mesmo nas cartas que o anel deixa de cabeça para baixo.
-const endireitarCheck = c => c.el.style.setProperty('--contra', `${-(c.ang + 90)}deg`);
+// No anel, todas as cartas ficam em pé (pedido do usuário em 19/10); só a posição gira.
+const noAnel = (ang, g, centro = { x: 0, y: 0 }) => { const a = ang * Math.PI / 180; return { x: centro.x + g.R * Math.cos(a), y: centro.y + g.R * Math.sin(a), r: 0, s: g.k }; };
 const relCartas = () => cartas.filter(c => S.feitas.has(c.id));
 function textoSubRel() {
   const lista = relCartas(); const vistas = lista.filter(c => S.vistas.has(c.id)).length;
@@ -783,7 +830,7 @@ async function abrirRelatorioGeral({ direto = false } = {}) {
   await Promise.all([
     ...cartas.filter(c => !S.feitas.has(c.id)).map(c => { c.el.style.pointerEvents = 'none'; c.el.tabIndex = -1; return mover(c.el, [{ opacity: direto ? 0 : 1 }, { opacity: 0 }], { duration: rm() || direto ? 1 : 300 }); }),
     ...lista.map((c, i) => {
-      c.el.classList.remove('feita', 'brilho'); c.el.style.zIndex = 10 + i; endireitarCheck(c);
+      c.el.classList.remove('feita', 'brilho'); c.el.style.zIndex = 10 + i;
       if (S.vistas.has(c.id)) marcarVistaSemAnimar(c);
       const para = noAnel(c.ang, g);
       if (direto) { c.pos = para; c.el.style.transform = tf(para); return virar(c, true, 0, 1); }
@@ -805,12 +852,11 @@ async function verRelatorioDeHoje() {
   await abrirRelatorioGeral({ direto: true });
   S.animando = false;
 }
-// Giro do anel: cada carta anda pelo arco; a escolhida termina reta e maior ("abrir") ou volta ao giro ("fechar").
+// Giro do anel: cada carta anda pelo arco, sempre em pé; a escolhida termina maior ("abrir") ou volta ao tamanho ("fechar").
 function girar(de, ate, c0, c1, g, modo) {
   const K = 28, q = [];
   for (let k = 0; k <= K; k++) {
-    const t = k / K; const e = suave(t); const ang = de + (ate - de) * e; const a = ang * Math.PI / 180; const tang = ang + 90;
-    const r = modo === 'abrir' ? tang * (1 - e) : modo === 'fechar' ? tang * e : tang;
+    const t = k / K; const e = suave(t); const ang = de + (ate - de) * e; const a = ang * Math.PI / 180; const r = 0;
     const s = modo === 'abrir' ? g.k * (1 + .3 * e) : modo === 'fechar' ? g.k * (1.3 - .3 * e) : g.k;
     q.push({ transform: tf({ x: c0.x + (c1.x - c0.x) * e + g.R * Math.cos(a), y: c0.y + (c1.y - c0.y) * e + g.R * Math.sin(a), r, s }), offset: t });
   }
@@ -882,7 +928,7 @@ async function entendi() {
   document.querySelectorAll('.vaga').forEach(v => aparecer(v, 400, 1));
   textoSubRel(); aparecer($('#rel-titulo'), 400, 1);
   S.fase = 'relgeral'; foco.classList.add('anel'); atualizarSaida();
-  if (!S.absorvido && lista.every(x => S.vistas.has(x.id))) { await absorver(); return; }
+  if (!S.absorvido && lista.every(x => S.vistas.has(x.id))) { await devorar(); return; }
   S.animando = false;
   c.el.focus({ preventScroll: true });
 }
@@ -906,36 +952,91 @@ function marcarVistaSemAnimar(c) {
   if (!frente.querySelector('.check-centro')) frente.insertAdjacentHTML('beforeend', CHECK_CENTRO);
   c.el.classList.add('vista', 'apagada');
 }
-// Fim: o cérebro aparece no centro e "come" as cartas, uma a uma.
-async function absorver() {
-  const foco = $('#foco'); foco.classList.remove('anel'); const lista = relCartas(); const cerebro = $('#cerebro');
+// ---------- Fim: o monstro do cérebro devora as cartas ----------
+const VERDE = '#25cf93', ROXO = '#7c4fe0';
+let verdor = 0;
+// O verde sobe de baixo para cima no corpo e nos tentáculos (0 = todo roxo, 1 = todo verde).
+function pintarVerdor(v) {
+  const stops = document.querySelectorAll('#g-corpo stop'); const cheio = v >= .999, vazio = v <= .001;
+  const a = Math.max(0, Math.min(1, v - .07)), b = Math.max(0, Math.min(1, v + .07));
+  const pares = [[0, vazio ? ROXO : VERDE], [cheio ? 1 : a, vazio ? ROXO : VERDE], [cheio ? 1 : b, cheio ? VERDE : ROXO], [1, cheio ? VERDE : ROXO]];
+  stops.forEach((s, i) => { s.setAttribute('offset', pares[i][0]); s.setAttribute('stop-color', pares[i][1]); });
+}
+function tingir(ate, dur) {
+  return new Promise(resolve => {
+    if (rm()) { verdor = ate; pintarVerdor(ate); resolve(); return; }
+    const de = verdor; const t0 = performance.now();
+    const passo = t => { const p = Math.min(1, (t - t0) / dur); verdor = de + (ate - de) * suave(p); pintarVerdor(verdor); if (p < 1) requestAnimationFrame(passo); else resolve(); };
+    requestAnimationFrame(passo);
+  });
+}
+function prepararMonstro() {
+  const mon = $('#monstro'); verdor = 0; pintarVerdor(0);
+  mon.querySelectorAll('animate.coracao-anim').forEach(a => a.replaceWith(a.cloneNode())); // volta os tentáculos ao normal
+  mon.querySelectorAll('.onda').forEach(g => g.classList.remove('parada'));
+  mon.querySelector('.cara-brava').style.opacity = 1; mon.querySelector('.cara-feliz').style.opacity = 0; mon.querySelector('#coracao').style.opacity = 0;
+  return mon;
+}
+// Onde fica a boca do monstro, em coordenadas do modo foco (centro = 0).
+function posBoca() {
+  const f = $('#foco').getBoundingClientRect(); const r = $('#monstro').getBoundingClientRect();
+  return { x: r.left - f.left + r.width * 120 / 240 - f.width / 2, y: r.top - f.top + r.height * 170 / 260 - f.height / 2 };
+}
+async function devorar() {
+  const foco = $('#foco'); foco.classList.remove('anel'); const lista = relCartas(); const mon = prepararMonstro();
   $('#foco-sair').hidden = true;
-  await pausa(rm() ? 0 : 700);
-  aparecer($('#rel-titulo'), 300, 0); document.querySelectorAll('.vaga').forEach(v => aparecer(v, 300, 0));
-  if (!rm()) cerebro.animate([{ transform: 'scale(.5)', opacity: 0 }, { transform: 'scale(1.06)', opacity: 1, offset: .7 }, { transform: 'scale(1)', opacity: 1 }], { duration: 700, easing: 'cubic-bezier(.2,1,.3,1)' });
-  cerebro.style.opacity = 1;
   await pausa(rm() ? 0 : 600);
-  const alvo = { x: 0, y: (parseFloat(getComputedStyle(cerebro).top) - medidas(foco).h / 2) || 0 };
-  await Promise.all(lista.map(async (c, i) => {
-    await pausa(rm() ? 0 : i * 260);
-    const de = c.pos; const K = 22, q = [];
+  aparecer($('#rel-titulo'), 300, 0); document.querySelectorAll('.vaga').forEach(v => aparecer(v, 300, 0));
+  mon.style.opacity = 1;
+  if (!rm()) await mover(mon, [{ transform: 'translateY(60px) scale(.3)', opacity: 0 }, { transform: 'translateY(-8px) scale(1.06)', opacity: 1, offset: .7 }, { transform: 'none', opacity: 1 }], { duration: 750, easing: 'cubic-bezier(.2,1,.3,1)' });
+  const boca = mon.querySelector('.cara-brava .boca');
+  for (const [i, c] of lista.entries()) {
+    const alvo = posBoca();
+    if (!rm()) boca.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.15,1.7)' }], { duration: 260, fill: 'forwards', easing: 'ease-out' });
+    const de = c.pos; const K = 20, q = [];
     for (let k = 0; k <= K; k++) {
-      const t = k / K; const e = t * t; const giro = 1 - t;
-      const ang = Math.atan2(de.y - alvo.y, de.x - alvo.x) + t * 2.4; const dist = Math.hypot(de.x - alvo.x, de.y - alvo.y) * giro;
-      q.push({ transform: tf({ x: alvo.x + dist * Math.cos(ang), y: alvo.y + dist * Math.sin(ang), r: de.r + 420 * e, s: de.s * (1 - .94 * e) }), opacity: t > .85 ? (1 - t) / .15 : 1, offset: t });
+      const t = k / K; const e = t * t * (3 - 2 * t);
+      q.push({ transform: tf({ x: de.x + (alvo.x - de.x) * e, y: de.y + (alvo.y - de.y) * e - Math.sin(Math.PI * t) * 40, r: 540 * e, s: de.s * (1 - .92 * e) }), opacity: t > .9 ? (1 - t) * 10 : 1, offset: t });
     }
-    await mover(c.el, q, { duration: rm() ? 1 : 900, easing: 'cubic-bezier(.5,0,.8,.6)' });
-    if (!rm()) cerebro.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }, { transform: 'scale(.97)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'ease-out' });
-    if (!rm()) cerebro.animate([{ filter: 'drop-shadow(0 0 14px rgba(180,156,255,.45))' }, { filter: 'drop-shadow(0 0 34px rgba(0,245,212,.85))' }, { filter: 'drop-shadow(0 0 18px rgba(180,156,255,.55))' }], { duration: 600 });
-  }));
-  if (!rm()) await mover(cerebro, [{ filter: 'drop-shadow(0 0 18px rgba(180,156,255,.5))' }, { filter: 'drop-shadow(0 0 40px rgba(0,245,212,.9))' }, { filter: 'drop-shadow(0 0 22px rgba(0,245,212,.55))' }], { duration: 1100, easing: 'ease-in-out' });
-  S.absorvido = true; guardarProgresso();
+    await mover(c.el, q, { duration: rm() ? 1 : 720, easing: 'cubic-bezier(.45,0,.7,1)' });
+    if (!rm()) {
+      boca.getAnimations().forEach(a => a.cancel());
+      boca.animate([{ transform: 'scale(1.15,1.7)' }, { transform: 'scale(1.1,.1)' }, { transform: 'scale(1,1.2)' }, { transform: 'scale(1)' }], { duration: 400, easing: 'ease-out' });
+      mon.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08,.93)' }, { transform: 'scale(.97,1.04)' }, { transform: 'scale(1)' }], { duration: 440, easing: 'ease-out' });
+    }
+    await tingir((i + 1) / lista.length, 560);
+    await pausa(rm() ? 0 : 160);
+  }
+  // Satisfeito: some a cara brava, os dois tentáculos de fora fazem um coração e ele sorri.
+  await pausa(rm() ? 0 : 300);
+  mon.querySelectorAll('#mt1, #mt6').forEach(g => g.classList.add('parada'));
+  mon.querySelectorAll('animate.coracao-anim').forEach(a => a.beginElement());
+  mover(mon.querySelector('.cara-brava'), [{ opacity: 1 }, { opacity: 0 }], { duration: rm() ? 1 : 300 });
+  mover(mon.querySelector('.cara-feliz'), [{ opacity: 0 }, { opacity: 1 }], { duration: rm() ? 1 : 400, delay: rm() ? 0 : 200 });
+  await mover(mon.querySelector('#coracao'), [{ opacity: 0 }, { opacity: 1 }], { duration: rm() ? 1 : 700, delay: rm() ? 0 : 500 });
+  if (!rm()) mon.querySelector('#coracao').animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 900, iterations: 2, easing: 'ease-in-out' });
+  await pausa(rm() ? 0 : 500);
+  mostrarParabens();
+}
+// Prêmio de conclusão (em aberto): a ideia do usuário ou a sugestão do agente, proporcional aos itens.
+function premio(itens) {
+  if (S.premio === 'ideia') return { xp: 1000, tickets: 10 };
+  return { xp: Math.min(1000, itens * 35), tickets: Math.min(4, Math.floor(itens / 7)) };
+}
+function mostrarParabens() {
+  const lista = relCartas(); const itens = lista.reduce((s, c) => s + c.erros, 0);
   const certas = lista.reduce((s, c) => s + S.feitas.get(c.id).acertos, 0), total = lista.reduce((s, c) => s + S.feitas.get(c.id).total, 0);
-  const fim = $('#foco-fim');
-  fim.innerHTML = `<p class="kicker">Conhecimento absorvido</p><b>${lista.length} cartas · ${certas}/${total} certas hoje</b><button class="primario" id="fim-menu">Voltar ao hub ${I.seta}</button>`;
+  const p = premio(itens); const fim = $('#foco-fim');
+  fim.innerHTML = `<p class="kicker">Revisão concluída</p><h2>Parabéns! Você concluiu sua revisão de hoje</h2><p>${lista.length} cartas · ${itens} itens · ${certas}/${total} certas</p>
+    <div class="premios"><span id="premio-xp">+0 XP</span><span class="ticket">+${p.tickets} ${p.tickets === 1 ? 'ticket' : 'tickets'}</span></div>
+    <button class="primario" id="fim-menu">Voltar ao hub ${I.seta}</button>`;
   fim.hidden = false;
   if (!rm()) fim.animate([{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.16,1,.3,1)' });
+  const xp = $('#premio-xp'); const t0 = performance.now();
+  const contar = t => { const k = rm() ? 1 : Math.min(1, (t - t0) / 1000); xp.textContent = `+${Math.round(p.xp * suave(k))} XP`; if (k < 1) requestAnimationFrame(contar); };
+  requestAnimationFrame(contar);
   $('#fim-menu').focus({ preventScroll: true });
+  S.absorvido = true; guardarProgresso();
   S.fase = 'absorvido'; S.animando = false;
 }
 async function fecharFoco() {
@@ -947,36 +1048,46 @@ async function fecharFoco() {
 const media = lista => lista.length ? lista.reduce((s, x) => s + x, 0) / lista.length : 0;
 const seg = ms => (ms / 1000).toFixed(ms < 10000 ? 1 : 0).replace('.', ',');
 const curto = t => { const s = t.replace(/[“”]/g, ''); return s.length > 60 ? `${s.slice(0, 57)}...` : s; };
+// Ritmo de raciocínio (decidido em 19/10): a média de segundos por palavra nas respostas CERTAS é o tempo que a pessoa
+// leva para ler e pensar. Esperado de um item = ritmo × palavras (enunciado e alternativas); o que passa disso é indecisão.
+const RITMO_HISTORICO = { sPorPalavra: .42, respostas: 12 }; // exemplo: as respostas certas anteriores da pessoa
+const palavras = it => `${it.enunciado} ${it.opcoes.join(' ')}`.split(/\s+/).filter(w => /[\p{L}\d]/u.test(w)).length;
+function ritmoDaPessoa() {
+  const certas = [...S.feitas.values()].flatMap(r => r.respostas).filter(x => x.acertou);
+  const soma = RITMO_HISTORICO.sPorPalavra * RITMO_HISTORICO.respostas + certas.reduce((s, x) => s + x.tempo / 1000 / palavras(x.it), 0);
+  return soma / (RITMO_HISTORICO.respostas + certas.length);
+}
+function medirItem(x, ritmo) { const p = palavras(x.it); const esperado = ritmo * p * 1000; return { palavras: p, esperado, indecisao: Math.max(0, x.tempo - esperado) }; }
 // Análise por regras, só para o protótipo; no app, a IA escreve a partir dos mesmos dados.
-function analisar(r) {
-  const tempos = r.respostas.map(x => x.tempo); const med = media(tempos); const linhas = [];
-  const erradas = r.respostas.filter(x => !x.acertou);
-  if (!erradas.length) linhas.push('Você acertou tudo nesta carta. Os itens voltam em 1 dia para fixar.');
-  for (const x of erradas) {
-    const marcada = x.it.opcoes[x.escolha];
-    if (x.hesitacao >= 2) linhas.push(`Em “${curto(x.it.enunciado)}”, você passou por ${x.hesitacao + 1} alternativas antes de marcar “${marcada}”: sinal de dúvida entre conceitos parecidos.`);
-    else if (x.tempo < Math.max(6000, med * .7)) linhas.push(`Em “${curto(x.it.enunciado)}”, você respondeu em ${seg(x.tempo)} s, mais rápido que a sua média: pode ter sido pressa ou reconhecimento só de uma palavra.`);
-    else linhas.push(`Em “${curto(x.it.enunciado)}”, você pensou ${seg(x.tempo)} s e marcou “${marcada}”: o conceito ainda não está firme. Vale reler a explicação de cada alternativa abaixo.`);
+function analisar(r, ritmo) {
+  const linhas = []; const erradas = r.respostas.filter(x => !x.acertou);
+  for (const x of r.respostas) {
+    const { esperado, indecisao } = medirItem(x, ritmo); const marcada = x.it.opcoes[x.escolha]; const p = `Em “${curto(x.it.enunciado)}”`;
+    const duvida = indecisao >= Math.max(3000, esperado * .4);
+    if (!x.acertou && duvida) linhas.push(`${p}, você passou ${seg(indecisao)} s além do tempo que costuma levar para ler e pensar uma pergunta deste tamanho (${seg(esperado)} s) e marcou “${marcada}”: sinal de dúvida entre alternativas parecidas.`);
+    else if (!x.acertou && x.tempo < esperado * .7) linhas.push(`${p}, você respondeu em ${seg(x.tempo)} s, menos do que costuma levar só para ler uma pergunta deste tamanho (${seg(esperado)} s): pode ter sido pressa ou leitura incompleta.`);
+    else if (!x.acertou) linhas.push(`${p}, você levou o seu tempo normal (${seg(x.tempo)} s) e marcou “${marcada}”: o conceito ainda não está firme. Vale ler a explicação de cada alternativa abaixo.`);
+    else if (duvida) linhas.push(`${p}, você acertou, mas com ${seg(indecisao)} s de dúvida: o conceito ainda não está automático.`);
   }
-  const certas = r.respostas.filter(x => x.acertou);
-  if (certas.length && erradas.length && media(certas.map(x => x.tempo)) > media(erradas.map(x => x.tempo))) linhas.push('Quando você levou mais tempo, acertou mais: ler com calma está funcionando.');
+  if (!linhas.length) linhas.push('Você acertou tudo no seu ritmo, sem dúvida aparente. Os itens voltam em 1 dia para fixar.');
   const temas = [...new Set(erradas.map(x => x.it.tema.split(' · ')[0]))];
   if (temas.length) linhas.push(`Os erros desta carta são de ${temas.join(' e ')}.`);
   return linhas;
 }
 function htmlRelatorio(r) {
-  const m = MODOS[r.modo]; const tempos = r.respostas.map(x => x.tempo); const max = Math.max(...tempos, 1);
-  const hes = r.respostas.reduce((s, x) => s + x.hesitacao, 0); const nivelHes = hes / r.total < .5 ? 'Baixa' : hes / r.total <= 1.5 ? 'Média' : 'Alta';
+  const m = MODOS[r.modo]; const ritmo = ritmoDaPessoa(); const medidos = r.respostas.map(x => ({ x, ...medirItem(x, ritmo) }));
+  const tempos = r.respostas.map(x => x.tempo); const max = Math.max(...tempos, 1);
+  const indecisao = medidos.reduce((s, y) => s + y.indecisao, 0); const total = tempos.reduce((s, t) => s + t, 0);
   return `<div class="pr-topo"><span class="pr-ic">${I[r.modo]}</span><div><p class="kicker">Relatório · ${m.rotulo}</p><h2>${r.titulo}</h2></div></div>
     <div class="pr-numeros">
       <div><b>${r.acertos}/${r.total}</b><span>certas</span></div>
-      <div><b>${seg(media(tempos))} s</b><span>tempo médio de pensamento</span></div>
-      <div><b>${nivelHes}</b><span>indecisão (${hes} ${hes === 1 ? 'troca' : 'trocas'} de alternativa)</span></div>
-      <div><b>${seg(max)} s</b><span>item mais demorado</span></div>
+      <div><b>${seg(media(tempos))} s</b><span>tempo médio por item</span></div>
+      <div><b>${ritmo.toFixed(2).replace('.', ',')} s</b><span>por palavra: seu ritmo de leitura e raciocínio</span></div>
+      <div><b>${seg(indecisao)} s</b><span>de indecisão (${Math.round(indecisao / Math.max(total, 1) * 100)}% do tempo)</span></div>
     </div>
-    <section><h3>Seu ritmo, item a item</h3><div class="pr-barras">${r.respostas.map((x, i) => `<div class="pr-barra ${x.acertou ? 'ok' : 'no'}" title="${seg(x.tempo)} s"><i style="height:${Math.max(8, x.tempo / max * 100)}%"></i><small>${i + 1}</small></div>`).join('')}</div>
-      <p class="pr-nota">Verde: acertou. Vermelho: errou. Altura: tempo até responder.</p></section>
-    <section><h3>O que pode estar influenciando seus erros</h3><ul class="pr-analise">${analisar(r).map(l => `<li>${l}</li>`).join('')}</ul>
+    <section><h3>Seu ritmo, item a item</h3><div class="pr-barras">${medidos.map((y, i) => `<div class="pr-barra ${y.x.acertou ? 'ok' : 'no'}" title="${seg(y.x.tempo)} s · esperado ${seg(y.esperado)} s"><i class="duvida" style="height:${y.indecisao / max * 100}%"></i><i style="height:${Math.max(6, (y.x.tempo - y.indecisao) / max * 100)}%"></i><small>${i + 1}</small></div>`).join('')}</div>
+      <p class="pr-nota">Barra cheia: tempo para ler e pensar (verde acertou, vermelho errou). Listrado em âmbar: indecisão, o tempo além do seu ritmo.</p></section>
+    <section><h3>O que pode estar influenciando seus erros</h3><ul class="pr-analise">${analisar(r, ritmo).map(l => `<li>${l}</li>`).join('')}</ul>
       <p class="pr-nota">${I.brilho} Análise gerada por IA a partir das suas respostas. Confira as fontes.</p></section>
     <section><h3>Cada alternativa, explicada</h3>${r.respostas.map((x, i) => `<article class="pr-item"><p class="tema" style="--c:${m.cor}">Item ${i + 1} · ${x.it.tema}</p><b>${x.it.enunciado}</b>
       <ul class="pr-alts">${x.it.opcoes.map((o, k) => `<li class="${k === x.it.certa ? 'certa' : k === x.escolha ? 'errada' : ''}"><span class="pr-marca">${k === x.it.certa ? I.check : I.x}</span><div><b>${o}${k === x.escolha ? '<em>sua resposta</em>' : ''}</b><p>${x.it.porque[k]}</p></div></li>`).join('')}</ul>
@@ -984,20 +1095,22 @@ function htmlRelatorio(r) {
 }
 
 // ---------- Exemplos para os atalhos do painel ----------
-function resultadoExemplo(c, acertos, tempos, hes) {
-  const respostas = c.itens.map((k, i) => { const it = ITENS[k]; const ok = acertos[i % acertos.length]; return { it, escolha: ok ? it.certa : (it.certa + 1) % it.opcoes.length, acertou: ok, tempo: tempos[i % tempos.length], hesitacao: hes[i % hes.length] }; });
+function resultadoExemplo(c, acertos, tempos) {
+  const respostas = c.itens.map((k, i) => { const it = ITENS[k]; const ok = acertos[i % acertos.length]; return { it, escolha: ok ? it.certa : (it.certa + 1) % it.opcoes.length, acertou: ok, tempo: tempos[i % tempos.length] }; });
   return { cartaId: c.id, titulo: c.titulo, modo: c.modo, acertos: respostas.filter(x => x.acertou).length, total: respostas.length, respostas };
 }
+// Tempos de exemplo pensados para mostrar os casos: pressa, dúvida, conceito não firme e acerto com dúvida.
 const EXEMPLOS = {
-  'quiz-1': [[true, false, true], [14200, 4800, 21500], [0, 0, 2]],
-  vm: [[true, false], [9800, 17300], [0, 1]],
-  erro: [[false], [26400], [3]],
-  pdx: [[true], [12100], [1]],
+  'quiz-1': [[true, false, true], [9500, 7000, 21000]],
+  vm: [[true, false], [6200, 19500]],
+  erro: [[false], [31000]],
+  pdx: [[true], [16000]],
 };
+// Reabrir o app com uma carta em andamento: a revisão está travada e abre direto nas cartas.
 function exemploAndamento() {
   S.feitas.clear(); S.feitas.set('erro', resultadoExemplo(CARTAS[2], ...EXEMPLOS.erro));
-  const c = CARTAS[0]; const s = novaSessao(c); s.idx = 1; s.respostas = [{ escolha: 0, acertou: true, tempo: 14200, hesitacao: 0 }];
-  S.pausada = { id: c.id, titulo: c.titulo, sessao: s }; S.trava = false; guardarProgresso();
+  const c = CARTAS[0]; const s = novaSessao(c); s.idx = 1; s.respostas = [{ escolha: 0, acertou: true, tempo: 9500 }];
+  S.pausada = { id: c.id, titulo: c.titulo, sessao: s }; S.trava = true; guardarProgresso();
 }
 async function irAoRelatorio() {
   if (S.animando) return;
@@ -1041,6 +1154,7 @@ function definir(chave, valor) {
   guardarProgresso();
   $('#foco').hidden = true; $('#expansor').hidden = true; $('#confirmar').hidden = true;
   S.fase = 'hub'; mostrar('hub');
+  if (S.trava) entrarFoco().then(() => toast('A revisão continua: termine as cartas de hoje para sair.'));
 }
 document.querySelectorAll('.seg[data-chave]').forEach(g => g.addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) definir(g.dataset.chave, b.dataset.valor); }));
 const botaoProto = $('#proto-btn'); const painel = $('#proto-painel');
@@ -1070,7 +1184,7 @@ new ResizeObserver(() => {
 
 restaurar(); rotuloProto(); sincronizarPainel(); mostrar('hub');
 // A trava sobrevive a fechar e abrir o app: abre direto nas cartas.
-if (S.trava) entrarFoco().then(() => toast('A revisão continua: termine uma carta para sair.'));
+if (S.trava) entrarFoco().then(() => toast('A revisão continua: termine as cartas de hoje para sair.'));
 </script>
 </body>
 </html>
