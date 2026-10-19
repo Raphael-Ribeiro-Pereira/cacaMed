@@ -162,16 +162,21 @@ Protótipo em [`docs/prototipos/revisao-hub.html`](prototipos/revisao-hub.html),
 2. **Modo foco:** ao tocar em "Começar revisão" (ou no baralho), o entorno some e ficam só as cartas, na tela inteira. O baralho vai para o centro girando em espiral ("furacão", com um redemoinho de luz atrás) e se abre num leque de pôquer; cada carta vira de costas para frente ao chegar. Sobram só um X discreto para sair (ou Esc) e uma dica que some em 3,5 s.
 3. **Cartas:** uma por modo (Quiz, Verdade ou mentira, Erro médico e Paciente DDX), no estilo de carta de baralho: número de erros no canto, ícone do modo, tempo estimado e temas. Ao passar o mouse, a carta sobe, endireita e cresce para leitura. Carta em espera aparece no leque, apagada, com o horário em que volta.
 4. **Escolha:** a carta tocada ganha um brilho discreto na cor do modo, vai para o centro, e as outras voltam em espiral para trás dela, formando um bloco. O bloco cresce até ocupar a tela e vira a sessão.
-5. **Fim da carta:** a tela encolhe de volta até o baralho, o leque reabre no modo foco e a carta feita fica verde, com um certinho (e "2/3 certas" no lugar do tempo). O jogador escolhe a próxima entre as que faltam. Tocar numa carta verde abre o resultado dela, com a explicação da IA.
-6. **Sair no meio:** a carta fica "Em andamento" no leque; as outras esperam ela terminar (regra do servidor hoje: uma sessão aberta por vez).
-7. **Todas feitas:** "Revisão de hoje concluída", com o placar do dia e "Voltar ao hub". O hub passa a "Tudo revisado por hoje".
-8. **Hub:** o link "Ver última revisão" abre o último resultado, sem ser a tela de abertura.
+5. **Fim da carta:** a tela encolhe de volta até o baralho, o leque reabre no modo foco e a carta feita fica verde, com um certinho (e "2/3 certas" no lugar do tempo). O jogador escolhe a próxima entre as que faltam. **Não há mais relatório depois de cada modo** (decidido em 19/10).
+6. **Sair no meio:** a carta fica "Em andamento" no leque; as outras esperam ela terminar (regra do servidor hoje: uma sessão aberta por vez). Aprovado pelo usuário em 19/10.
 
-O botão "Protótipo" (canto inferior esquerdo) troca:
-- **situação do jogador:** com cartas, carta em andamento, em dia, sem erros e abaixo do nível 10;
-- **ao terminar uma carta:** volta direto às cartas (padrão, como o usuário descreveu) ou mostra o resultado antes;
-- **abertura:** furacão ou leque simples;
-- **tela:** cheia ou moldura de celular.
+**Versão 3 (19/10/2026, segunda rodada):**
+7. **Aviso ao começar e trava.** "Começar revisão" abre o aviso: depois de começar, o jogador só sai da revisão quando terminar pelo menos uma carta, e até lá os outros modos do jogo ficam bloqueados, **mesmo fechando e abrindo o app** (o app reabre direto nas cartas). No modo foco, o X dá lugar a "Termine uma carta para sair". A primeira carta feita destrava tudo.
+8. **Relatório geral, só no fim** (referência: vídeo do usuário de 19/10, um anel de imagens com título no centro). Ao terminar a última carta, as cartas feitas saem do leque e formam um **anel** com "Seu relatório" no centro; o anel tem 8 vagas, e as que sobram ficam como contorno vazio.
+9. **Relatório de uma carta.** Ao tocar numa carta, o anel gira até ela parar à direita, maior e reta; dela nasce o painel do relatório completo (no celular, quase a tela inteira; no computador, à direita, com o nome da carta grande à esquerda e o anel apagado ao fundo). O painel tem:
+   - acertos, **tempo médio de pensamento**, **indecisão** e o item mais demorado;
+   - o ritmo item a item (barras: altura é o tempo; verde acertou, vermelho errou);
+   - **"O que pode estar influenciando seus erros"**: análise a partir dos dados do jogador (respondeu rápido demais, ficou entre alternativas, conceito ainda não firme, tema dos erros). No protótipo é por regras; no app, a IA escreve a partir dos mesmos dados, com o aviso de IA;
+   - **cada alternativa explicada**: por que cada uma está certa ou errada, com a fonte revisada do item.
+10. **"Entendi":** o painel volta para a carta, o anel dá uma volta inteira e para no lugar; no meio da carta um certinho se completa, a carta pisca, fica verde e apaga devagar até um verde escuro, saindo de foco. O certinho fica sempre em pé, mesmo nas cartas de cabeça para baixo no anel.
+11. **Fim:** com todas vistas, o cérebro aparece no centro e "come" as cartas uma a uma (cada carta gira em espiral até ele, e ele pulsa e brilha a cada mordida). Depois: "Conhecimento absorvido", o placar do dia e "Voltar ao hub". O hub passa a "Tudo revisado por hoje" com "Ver seu relatório de hoje" (o anel com as cartas já vistas, sem o cérebro de novo).
+
+O botão "Protótipo" (canto inferior esquerdo) troca a situação do jogador (com cartas, carta em andamento, em dia, sem erros, abaixo do nível 10), a abertura (furacão ou leque simples) e a tela (cheia ou celular), e tem dois atalhos: **simular fechar e abrir o app** (para ver a trava) e **ir direto ao relatório geral**.
 
 Movimento reduzido (preferência do sistema): as cartas vão direto para o lugar, sem espiral.
 
@@ -181,13 +186,20 @@ Movimento reduzido (preferência do sistema): as cartas vão direto para o lugar
 3. **Estatísticas do hub:** boas no celular. No PC sobra um espaço vazio enorme, o que entra na reformulação geral da versão PC ([pendências](pendencias.md#5-trabalho-do-agente-na-ordem-decidida)).
 4. **Paciente DDX:** nome e cor aprovados.
 5. **Furacão:** aprovado no celular.
+6. **Direto às cartas** ao terminar um modo, sem relatório no meio; **relatório geral** só depois de todas as cartas.
+7. **Aviso e trava** ao começar, que sobrevive a fechar o app; **outros modos bloqueados** enquanto a revisão estiver começada.
+8. **Carta em andamento:** aprovada.
 
 **Ainda em aberto (no painel do protótipo):**
-1. Ao terminar a carta: direto às cartas (o resultado abre ao tocar na carta verde) ou o resultado antes?
-2. Sair no meio: a carta fica "Em andamento" e as outras esperam. Está bom?
-3. Todas feitas: aviso e "Voltar ao hub". Está bom?
+1. **Até quando os outros modos ficam bloqueados:** até a primeira carta (como diz o aviso) ou até terminar todas?
+2. **Indecisão:** o protótipo conta por quantas alternativas o mouse passou antes de marcar, o que não existe no celular. Alternativa: contar trocas de escolha antes de confirmar, o que exige um botão "Confirmar" nas perguntas da Revisão.
+3. **Relatório geral:** anel, giro, certinho que apaga e cérebro estão como imaginado?
 
-**Para o código (quando aprovar):** o servidor já faz uma carta por sessão. Falta guardar quais cartas foram feitas no dia (para o verde) e devolver ao hub o resultado de cada uma. Proposta do agente, a confirmar: os erros de uma carta feita voltam como carta nova só no dia seguinte, para a carta verde não ser trocada na hora por outra com os mesmos erros.
+**Para o código (quando aprovar):**
+- **Servidor:** guardar a revisão do dia (começada, cartas feitas, trava e relatório visto), para a trava valer em qualquer aparelho e depois de fechar o app; o menu consulta essa trava para bloquear os outros modos.
+- **Dados por resposta:** tempo até responder e a medida de indecisão escolhida, gravados junto da tentativa (hoje só vão a escolha e o acerto).
+- **Relatório:** uma ação nova que junta as cartas do dia e pede à IA a análise, com cache; a explicação de cada alternativa precisa existir no banco. Hoje o Quiz tem uma explicação por pergunta (a da resposta certa); o V ou M, uma por frase (que já cobre as duas opções); o Erro médico, uma por etapa (linha, categoria e correção certas). **O "porquê" de cada alternativa errada é conteúdo novo**, com fonte e revisão médica, sobretudo no Quiz e no Erro médico.
+- **Proposta do agente, a confirmar:** os erros de uma carta feita voltam como carta nova só no dia seguinte, para a carta verde não ser trocada na hora por outra com os mesmos erros.
 
 Regra da memória do projeto: o protótipo traz as decisões de fluxo; no código, o visual segue os componentes atuais do app.
 
@@ -195,7 +207,8 @@ Regra da memória do projeto: o protótipo traz as decisões de fluxo; no códig
 
 1. **Marcações `grave`:** revisão médica caso a caso no gabarito do Paciente DDX.
 2. **Carta do Paciente DDX:** implementar no motor depois das marcações.
-3. **Hub da Revisão:** protótipo v2 (modo foco) feito; faltam as três respostas em aberto acima para portar ao código.
+3. **Hub da Revisão:** protótipo v3 (modo foco, trava e relatório geral) feito; faltam as três respostas em aberto acima para portar ao código.
+4. **Explicação por alternativa:** conteúdo novo, sobretudo no Quiz e no Erro médico, com fonte e revisão médica (pré-requisito do relatório geral).
 
 ## Experiência e decisões
 

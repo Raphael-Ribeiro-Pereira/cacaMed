@@ -8,10 +8,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!--
-  Protótipo da Revisão Inteligente (docs/revisao-inteligente.md#protótipo-do-hub-da-revisão).
-  Fluxo: hub com estatísticas → modo foco (some o entorno, ficam só as cartas, abertas em "furacão") → carta escolhida
-  com brilho → bloco centralizado que se expande no modo → ao terminar, volta ao modo foco com a carta feita em verde
-  e com um certinho, para escolher a próxima. Conteúdo das perguntas é fictício. Não é o design final.
+  Protótipo da Revisão Inteligente (docs/revisao-inteligente.md#protótipo-do-hub-da-revisão), versão 3.
+  Fluxo: hub → aviso de início (a revisão trava até terminar uma carta, mesmo fechando o app) → modo foco (só as cartas,
+  abertas em "furacão") → carta com brilho → bloco que vira o modo → volta às cartas com a feita em verde → ao terminar
+  todas, o relatório geral: anel de cartas; a escolhida gira até a direita e vira o relatório completo; "Entendi" gira o
+  anel, a carta ganha o certinho, pisca verde e apaga devagar; no fim, o cérebro absorve as cartas.
+  Conteúdo das perguntas e da análise é fictício. Não é o design final.
 -->
 <style>
 :root{--canvas:#0b0f19;--surface:#111827;--elev:#1a2234;--line:rgba(220,226,247,.09);--line-strong:#2a3550;--text:#dce2f7;--muted:#8d9bb3;--mint:#00f5d4;--mint-ink:#00382f;--crimson:#ff3366;--violet:#b49cff;--ok:#06d6a0;--ambar:#ffb703;--laranja:#ffb95f;--sans:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace;--ease:cubic-bezier(.16,1,.3,1);color-scheme:dark}
@@ -57,6 +59,16 @@ svg{display:block}
 .stage::before,.foco-fundo::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgba(220,226,247,.10) 1px,transparent 1px);background-size:22px 22px;-webkit-mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 45%,transparent 100%);mask-image:radial-gradient(ellipse 75% 75% at 50% 50%,#000 45%,transparent 100%)}
 .rotulo-deck{position:absolute;left:0;right:0;top:calc(50% + var(--ch) / 2 + 18px);text-align:center;font:700 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);pointer-events:none}
 
+/* Aviso de início */
+#confirmar{position:absolute;inset:0;z-index:96;display:grid;place-items:center;padding:20px;background:rgba(5,7,13,.72);backdrop-filter:blur(4px)}
+#confirmar[hidden]{display:none}
+.dlg{width:min(400px,100%);padding:22px;border-radius:20px;background:var(--surface);border:1px solid var(--line-strong);box-shadow:0 30px 80px rgba(0,0,0,.6);display:grid;gap:10px}
+.dlg-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(180,156,255,.14);color:var(--violet)}
+.dlg-ic svg{width:22px;height:22px}
+.dlg h2{margin:4px 0 0;font-size:20px;font-weight:800}
+.dlg p{margin:0;color:var(--muted)}
+.dlg-acoes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+
 /* Modo foco: só as cartas */
 #foco{position:absolute;inset:0;z-index:80;overflow:hidden;--cw:116px;--ch:166px}
 #foco[hidden]{display:none}
@@ -64,24 +76,25 @@ svg{display:block}
 @container (min-width:1100px){#foco{--cw:172px;--ch:244px}}
 .foco-fundo{position:absolute;inset:0;opacity:0;background:radial-gradient(ellipse 70% 55% at 50% 50%,rgba(180,156,255,.10),transparent 70%),var(--canvas)}
 .vortex{position:absolute;left:50%;top:50%;width:min(92%,620px);aspect-ratio:1;translate:-50% -50%;border-radius:50%;pointer-events:none;opacity:0;filter:blur(16px);background:conic-gradient(from 0deg,transparent,rgba(180,156,255,.55),transparent 22%,rgba(0,245,212,.45),transparent 48%,rgba(255,143,163,.4),transparent 72%,rgba(124,196,255,.4),transparent);-webkit-mask-image:radial-gradient(circle,transparent 16%,#000 38%,transparent 70%);mask-image:radial-gradient(circle,transparent 16%,#000 38%,transparent 70%)}
-.foco-sair{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;z-index:75;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line-strong);background:rgba(17,24,39,.6);color:var(--muted);opacity:0;pointer-events:none;transition:opacity .3s}
+.foco-sair{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;z-index:79;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line-strong);background:rgba(17,24,39,.6);color:var(--muted);opacity:0;pointer-events:none;transition:opacity .3s}
 .foco-sair svg{width:18px;height:18px}
-#foco.aberto .foco-sair{opacity:1;pointer-events:auto}
+#foco.aberto .foco-sair,#foco.anel .foco-sair{opacity:1;pointer-events:auto}
+.foco-sair[hidden],.foco-trava[hidden]{display:none}
+.foco-trava{position:absolute;top:calc(18px + env(safe-area-inset-top));left:50%;translate:-50% 0;z-index:79;display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:99px;background:rgba(17,24,39,.7);border:1px solid var(--line-strong);font-size:12px;color:var(--muted);white-space:nowrap;opacity:0;transition:opacity .3s}
+.foco-trava svg{width:13px;height:13px;color:var(--violet)}
+#foco.aberto .foco-trava{opacity:1}
 .foco-dica{position:absolute;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));translate:-50% 0;z-index:75;display:flex;align-items:center;gap:8px;white-space:nowrap;padding:6px 12px;border-radius:99px;background:rgba(26,34,52,.8);backdrop-filter:blur(8px);border:1px solid var(--line-strong);font-size:12px;color:var(--muted);opacity:0;transition:opacity .5s;pointer-events:none}
 .foco-dica::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--mint)}
 .foco-dica.on{opacity:1}
-.foco-fim{position:absolute;left:50%;bottom:calc(26px + env(safe-area-inset-bottom));translate:-50% 0;z-index:75;display:grid;justify-items:center;gap:10px;text-align:center;width:min(360px,calc(100% - 32px))}
-.foco-fim[hidden]{display:none}
-.foco-fim b{font-size:15px}
-.foco-fim .kicker{color:var(--ok)}
 
 /* Carta */
 .carta{position:absolute;left:50%;top:50%;width:var(--cw);height:var(--ch);margin:calc(var(--ch) / -2) 0 0 calc(var(--cw) / -2);border:0;padding:0;background:none;-webkit-tap-highlight-color:transparent;will-change:transform}
 .carta:focus-visible{outline:none}
 .carta:focus-visible .frente{outline:2px solid var(--mint);outline-offset:3px}
-#foco.aberto .carta:not(.espera):hover{z-index:60!important}
+#foco.aberto .carta:not(.espera):hover,#foco.anel .carta:hover{z-index:60!important}
 .corpo{position:absolute;inset:0;display:block;perspective:900px;transition:transform .35s var(--ease)}
 #foco.aberto .carta:not(.espera):hover .corpo,#foco.aberto .carta:focus-visible .corpo{transform:translateY(-16px) rotate(calc(var(--r, 0deg) * -1)) scale(1.08)}
+#foco.anel .carta:hover .corpo,#foco.anel .carta:focus-visible .corpo{transform:scale(1.1)}
 .flip{position:absolute;inset:0;display:block;transform-style:preserve-3d;transform:rotateY(180deg)}
 .face{position:absolute;inset:0;display:block;border-radius:14px;-webkit-backface-visibility:hidden;backface-visibility:hidden;overflow:hidden;text-align:left}
 .frente{background:linear-gradient(165deg,color-mix(in srgb,var(--c) 18%,#1a2234),#111827 62%);border:1px solid color-mix(in srgb,var(--c) 50%,transparent);box-shadow:0 14px 30px rgba(0,0,0,.45);color:var(--text);transition:box-shadow .35s,border-color .35s}
@@ -105,13 +118,11 @@ svg{display:block}
 .carta.pausada .selo,.carta.feita .selo{display:none}
 .carta.espera .frente{filter:grayscale(.65) brightness(.62)}
 .carta.espera{cursor:default}
-/* Brilho discreto ao escolher */
 .carta.brilho .frente{box-shadow:0 0 0 1.5px var(--c),0 0 26px color-mix(in srgb,var(--c) 50%,transparent),0 14px 30px rgba(0,0,0,.45)}
-/* Carta feita: verde com um certinho */
+/* Carta feita (no leque): verde com um certinho à esquerda, o canto que fica à mostra */
 .carta.feita .frente{border-color:var(--ok);box-shadow:0 0 0 1px color-mix(in srgb,var(--ok) 60%,transparent),0 0 22px rgba(6,214,160,.22),0 14px 30px rgba(0,0,0,.45)}
 .carta.feita .frente::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(160deg,rgba(6,214,160,.24),rgba(6,214,160,.05) 70%)}
 .carta.feita .miolo small{color:var(--ok)}
-/* No leque, cada carta cobre a ponta direita da anterior: o certinho e o "Em andamento" ficam à esquerda, sempre à mostra. */
 .carta.feita .canto:not(.inv),.carta.pausada .canto:not(.inv){visibility:hidden}
 .carta.pausada .pausa{left:9px;right:auto}
 .feito{position:absolute;top:8px;left:8px;z-index:2;width:calc(var(--cw) * .2);height:calc(var(--cw) * .2);min-width:22px;min-height:22px;border-radius:50%;background:var(--ok);color:#03251b;display:none;place-items:center;box-shadow:0 0 14px rgba(6,214,160,.6)}
@@ -124,6 +135,64 @@ svg{display:block}
 .vazio{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;color:var(--muted)}
 .fantasmas{position:relative;width:calc(var(--cw) * 2);height:var(--ch)}
 .fantasma{position:absolute;left:50%;top:0;width:var(--cw);height:var(--ch);margin-left:calc(var(--cw) / -2);border-radius:14px;border:1.5px dashed var(--line-strong);rotate:calc((var(--i) - 1) * 12deg);translate:calc((var(--i) - 1) * 40px) 0}
+
+/* Relatório geral: anel de cartas */
+#rel-titulo{position:absolute;left:50%;top:50%;translate:-50% -50%;z-index:5;text-align:center;opacity:0;pointer-events:none;width:min(230px,42%)}
+#rel-titulo h2{margin:4px 0;font-size:clamp(20px,5cqi,34px);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+#rel-titulo p{margin:0;font-size:12px;color:var(--muted)}
+.vaga{position:absolute;left:50%;top:50%;width:var(--cw);height:var(--ch);margin:calc(var(--ch) / -2) 0 0 calc(var(--cw) / -2);border-radius:14px;border:1.5px dashed rgba(220,226,247,.16);opacity:0;pointer-events:none}
+.check-centro{position:absolute;inset:0;z-index:3;display:grid;place-items:center;pointer-events:none}
+.check-centro svg{width:60%;height:auto;overflow:visible;rotate:var(--contra, 0deg)}
+.check-centro circle{fill:rgba(3,37,27,.55);stroke:var(--ok);stroke-width:4}
+.check-centro path{fill:none;stroke:#eafff8;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:62;stroke-dashoffset:62}
+.carta.vista .frente{border-color:var(--ok);background:linear-gradient(165deg,#13c193,#0b5a45 72%);transition:filter 2.8s ease}
+.carta.vista .miolo,.carta.vista .canto,.carta.vista .selo{opacity:.28}
+.carta.vista .check-centro path{stroke-dashoffset:0}
+.carta.vista.apagada .frente{filter:brightness(.4) saturate(.7)}
+#painel-rel{position:absolute;z-index:78;display:flex;flex-direction:column;overflow:hidden;border-radius:18px;background:linear-gradient(170deg,color-mix(in srgb,var(--c) 14%,#141b2d),#0f1526 42%);border:1px solid color-mix(in srgb,var(--c) 45%,transparent);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+#painel-rel[hidden]{display:none}
+.pr-scroll{flex:1;overflow:auto;padding:20px 18px 12px}
+.pr-acoes{padding:12px 18px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:grid;background:rgba(11,15,25,.6)}
+.pr-topo{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.pr-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);flex:none}
+.pr-ic svg{width:24px;height:24px}
+.pr-topo h2{margin:2px 0 0;font-size:22px;font-weight:800}
+.pr-numeros{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.pr-numeros div{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+.pr-numeros b{display:block;font:800 18px var(--mono)}
+.pr-numeros span{font-size:11.5px;color:var(--muted)}
+#painel-rel section{margin-bottom:22px}
+#painel-rel h3{margin:0 0 10px;font:800 11px var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--violet)}
+.pr-barras{display:flex;align-items:flex-end;gap:8px;height:96px;padding:0 4px}
+.pr-barra{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%}
+.pr-barra i{display:block;width:100%;max-width:40px;min-height:6px;border-radius:6px 6px 2px 2px;background:var(--ok)}
+.pr-barra.no i{background:var(--crimson)}
+.pr-barra small{font:700 10px var(--mono);color:var(--muted)}
+.pr-nota{margin:8px 0 0;font-size:11.5px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.pr-nota svg{width:14px;height:14px;color:var(--violet);flex:none}
+.pr-analise{margin:0;padding-left:18px;display:grid;gap:8px}
+.pr-item{padding:12px;border-radius:14px;background:rgba(255,255,255,.025);border:1px solid var(--line);display:grid;gap:8px;margin-bottom:10px}
+.pr-item>b{line-height:1.35}
+.pr-alts{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.pr-alts li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:10px;border:1px solid var(--line)}
+.pr-alts li.certa{border-color:color-mix(in srgb,var(--ok) 55%,transparent);background:rgba(6,214,160,.07)}
+.pr-alts li.errada{border-color:color-mix(in srgb,var(--crimson) 55%,transparent);background:rgba(255,51,102,.07)}
+.pr-marca{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;flex:none;margin-top:1px;background:var(--elev);color:var(--muted)}
+.pr-alts li.certa .pr-marca{background:var(--ok);color:#03251b}
+.pr-alts li.errada .pr-marca{background:var(--crimson);color:#fff}
+.pr-marca svg{width:12px;height:12px;stroke-width:3}
+.pr-alts b{font-size:13.5px}
+.pr-alts b em{font:700 9.5px var(--mono);font-style:normal;letter-spacing:.08em;text-transform:uppercase;margin-left:6px;padding:2px 5px;border-radius:4px;background:var(--elev);color:var(--text)}
+.pr-alts p{margin:3px 0 0;font-size:12.5px;color:var(--muted)}
+.pr-fonte{margin:0;font-size:11.5px;color:var(--muted)}
+#lado-rel{position:absolute;z-index:77;left:6%;top:50%;translate:0 -50%;max-width:min(30%,360px);opacity:0;pointer-events:none}
+#lado-rel h2{margin:6px 0;font-size:clamp(28px,3.4vw,46px);font-weight:800;letter-spacing:-.02em;line-height:1}
+#lado-rel p{margin:0;color:var(--muted)}
+#cerebro{position:absolute;left:50%;top:46%;translate:-50% -50%;width:min(62%,300px);z-index:6;opacity:0;pointer-events:none;filter:drop-shadow(0 0 14px rgba(180,156,255,.45))}
+.foco-fim{position:absolute;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));translate:-50% 0;z-index:79;display:grid;justify-items:center;gap:8px;text-align:center;width:min(360px,calc(100% - 32px))}
+.foco-fim[hidden]{display:none}
+.foco-fim b{font-size:15px}
+.foco-fim .kicker{color:var(--ok)}
 
 /* Botões */
 .acoes{display:grid;gap:8px}
@@ -161,38 +230,21 @@ svg{display:block}
 .dock{position:sticky;bottom:0;margin-top:auto;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--canvas) 35%);display:grid;max-width:720px;width:100%;margin-inline:auto}
 .dica-dock{margin:0;text-align:center;color:var(--muted);font-size:13px;padding:14px 0}
 
-/* Resultado */
-.rel-corpo{padding:8px 16px 24px;max-width:720px;margin:0 auto;width:100%;display:grid;gap:12px}
-.carimbo{font:800 12px var(--mono);letter-spacing:.16em;color:var(--crimson);margin:0}
-.carimbo.ok{color:var(--ok)}
-.placar{margin:0;font:800 56px/1 var(--mono)}
-.placar small{font-size:12px;margin-left:8px;color:var(--muted);letter-spacing:.14em}
-.linhas div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
-.linhas span{color:var(--muted)}
-.linhas b{text-align:right}
-.pos{color:var(--ok)}
-.erro-item{padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--line);display:grid;gap:4px}
-.erro-item p{margin:0;color:var(--muted)}
-.erro-item>b{display:flex;gap:8px}
-.erro-item>b svg{width:16px;height:16px;flex:none;color:var(--crimson);margin-top:2px}
-.ia{padding:10px;border-radius:10px;background:color-mix(in srgb,var(--violet) 10%,transparent);color:var(--text)!important;margin-top:4px!important}
-.ia small{display:block;color:var(--muted);margin-top:4px}
-
-#toast{position:absolute;left:50%;bottom:72px;translate:-50% 0;z-index:95;max-width:calc(100% - 32px);padding:10px 14px;border-radius:12px;background:var(--elev);border:1px solid var(--line-strong);font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none}
+#toast{position:absolute;left:50%;bottom:72px;translate:-50% 0;z-index:97;max-width:calc(100% - 32px);padding:10px 14px;border-radius:12px;background:var(--elev);border:1px solid var(--line-strong);font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center}
 #toast.on{opacity:1}
 
 /* Painel do protótipo (fora do app) */
 .proto{position:fixed;left:14px;bottom:14px;z-index:200;display:flex;flex-direction:column-reverse;align-items:flex-start;gap:10px;font-size:13px}
 .proto-btn{display:flex;align-items:center;gap:8px;height:42px;padding:0 14px;border-radius:999px;border:1px solid var(--laranja);background:#1b1408;color:var(--laranja);font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .proto-btn svg{width:18px;height:18px}
-.proto-painel{width:min(350px,calc(100vw - 28px));max-height:min(72vh,600px);overflow:auto;padding:14px;border-radius:16px;background:#151b2b;border:1px solid rgba(255,185,95,.35);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.proto-painel{width:min(350px,calc(100vw - 28px));max-height:min(72vh,620px);overflow:auto;padding:14px;border-radius:16px;background:#151b2b;border:1px solid rgba(255,185,95,.35);box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .proto-painel[hidden]{display:none}
 .proto-painel h2{margin:0 0 4px;font-size:14px}
 .proto-painel>p{margin:0 0 12px;color:var(--muted);font-size:12px}
 .grupo{margin-bottom:12px}
-.grupo p{margin:0 0 6px;font:700 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--laranja)}
+.grupo>p{margin:0 0 6px;font:700 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--laranja)}
 .seg{display:flex;flex-wrap:wrap;gap:6px}
-.seg button{padding:7px 10px;border-radius:9px;border:1px solid var(--line-strong);background:#0f1526;font-size:12.5px}
+.seg button,.atalho-proto{padding:7px 10px;border-radius:9px;border:1px solid var(--line-strong);background:#0f1526;font-size:12.5px}
 .seg button[aria-pressed="true"]{background:var(--laranja);color:#1b1408;border-color:var(--laranja);font-weight:700}
 .decisoes{margin:0;padding-left:18px;color:var(--muted);display:grid;gap:6px;font-size:12.5px}
 .decisoes b{color:var(--text);font-weight:600}
@@ -203,14 +255,39 @@ svg{display:block}
   <div class="app" id="app">
     <section class="view" id="hub" aria-label="Revisão inteligente"></section>
     <section class="view" id="sessao" hidden aria-label="Sessão de revisão"></section>
-    <section class="view" id="relatorio" hidden aria-label="Resultado da revisão"></section>
     <div id="foco" hidden role="dialog" aria-label="Cartas da revisão">
       <div class="foco-fundo"></div><div class="vortex"></div>
+      <div id="rel-titulo"><p class="kicker">Revisão de hoje</p><h2>Seu relatório</h2><p id="rel-sub"></p></div>
+      <svg id="cerebro" viewBox="0 0 200 170" aria-hidden="true">
+        <defs><linearGradient id="gc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b49cff"/><stop offset="1" stop-color="#00f5d4"/></linearGradient>
+          <radialGradient id="gf" cx=".5" cy=".45" r=".6"><stop offset="0" stop-color="rgba(180,156,255,.35)"/><stop offset="1" stop-color="rgba(180,156,255,.04)"/></radialGradient></defs>
+        <g fill="url(#gf)" stroke="url(#gc)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M100 22C82 8 54 12 46 30C28 30 15 47 21 64C8 74 8 97 22 107C18 125 33 141 51 138C60 152 82 156 94 145C97 148 100 149 100 149Z"/>
+          <path d="M100 22C118 8 146 12 154 30C172 30 185 47 179 64C192 74 192 97 178 107C182 125 167 141 149 138C140 152 118 156 106 145C103 148 100 149 100 149Z"/>
+        </g>
+        <g fill="none" stroke="url(#gc)" stroke-width="2.6" stroke-linecap="round" opacity=".85">
+          <path d="M100 24V147"/>
+          <path d="M80 30C88 40 86 52 76 57"/><path d="M58 40C70 46 70 58 59 65"/><path d="M38 74C52 70 66 79 63 92"/><path d="M77 96C89 100 91 114 81 122"/><path d="M45 112C56 107 63 118 58 129"/>
+          <path d="M120 30C112 40 114 52 124 57"/><path d="M142 40C130 46 130 58 141 65"/><path d="M162 74C148 70 134 79 137 92"/><path d="M123 96C111 100 109 114 119 122"/><path d="M155 112C144 107 137 118 142 129"/>
+        </g>
+      </svg>
+      <div id="lado-rel"></div>
+      <div id="painel-rel" hidden role="region" aria-label="Relatório da carta"><div class="pr-scroll" id="pr-scroll"></div><div class="pr-acoes"><button class="primario" id="entendi">Entendi</button></div></div>
       <button class="foco-sair" id="foco-sair" aria-label="Sair das cartas"></button>
+      <div class="foco-trava" id="foco-trava" hidden></div>
       <div class="foco-dica" id="foco-dica"></div>
       <div class="foco-fim" id="foco-fim" hidden></div>
     </div>
     <div id="expansor" hidden></div>
+    <div id="confirmar" hidden>
+      <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-titulo">
+        <span class="dlg-ic" id="dlg-ic"></span>
+        <h2 id="dlg-titulo">Começar a revisão?</h2>
+        <p>Depois de começar, você só sai da revisão quando terminar pelo menos uma carta.</p>
+        <p>Até lá, os outros modos do jogo ficam bloqueados, mesmo se você fechar e abrir o app.</p>
+        <div class="dlg-acoes"><button class="secundario" id="dlg-nao">Agora não</button><button class="primario" id="dlg-sim">Começar</button></div>
+      </div>
+    </div>
     <div id="toast" role="status" aria-live="polite"></div>
   </div>
 </div>
@@ -223,8 +300,8 @@ svg{display:block}
     <div class="grupo"><p>Situação do jogador</p><div class="seg" data-chave="estado">
       <button data-valor="normal">Com cartas</button><button data-valor="andamento">Carta em andamento</button><button data-valor="emdia">Em dia</button><button data-valor="vazio">Sem erros</button><button data-valor="bloqueado">Abaixo do nível 10</button>
     </div></div>
-    <div class="grupo"><p>Ao terminar uma carta</p><div class="seg" data-chave="aoTerminar">
-      <button data-valor="cartas">Volta direto às cartas</button><button data-valor="resultado">Mostra o resultado antes</button>
+    <div class="grupo"><p>Atalhos de teste</p><div class="seg">
+      <button class="atalho-proto" id="sim-reabrir">Simular fechar e abrir o app</button><button class="atalho-proto" id="sim-relatorio">Ir direto ao relatório geral</button>
     </div></div>
     <div class="grupo"><p>Abertura</p><div class="seg" data-chave="abertura">
       <button data-valor="furacao">Furacão</button><button data-valor="simples">Leque simples</button>
@@ -233,9 +310,9 @@ svg{display:block}
       <button data-valor="cheia">Tela cheia</button><button data-valor="celular">Celular</button>
     </div></div>
     <div class="grupo"><p>O que decidir</p><ol class="decisoes">
-      <li><b>Ao terminar uma carta:</b> voltar direto às cartas (o resultado com a explicação da IA abre ao tocar na carta verde) ou ver o resultado antes?</li>
-      <li><b>Sair no meio de uma carta:</b> ela fica "Em andamento" e as outras esperam ela terminar (é a regra do servidor hoje). Está bom?</li>
-      <li><b>Todas feitas:</b> aparece "Revisão de hoje concluída" com o botão de voltar ao hub. Está bom?</li>
+      <li><b>Trava:</b> os outros modos ficam bloqueados até terminar a primeira carta (como no aviso) ou até terminar todas?</li>
+      <li><b>Indecisão:</b> o protótipo conta por quantas alternativas o mouse passou antes de marcar. No celular não há mouse. Contar troca de escolha antes de confirmar (precisa de um botão "Confirmar")?</li>
+      <li><b>Relatório geral:</b> o anel, o giro, o certinho que apaga e o cérebro estão como você imaginou?</li>
     </ol></div>
   </div>
 </div>
@@ -255,8 +332,10 @@ const I = {
   check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
   x: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
   seta: svg('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+  brilho: svg('<path d="M12 3l1.8 4.6L18 9.5l-4.2 1.9L12 16l-1.8-4.6L6 9.5l4.2-1.9z"/>'),
   ajuste: svg('<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>'),
 };
+const CHECK_CENTRO = '<span class="check-centro"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="38"/><path d="M31 52l13 13 26-28"/></svg></span>';
 
 const MODOS = {
   quiz: { rotulo: 'Quiz', cor: '#00f5d4' },
@@ -264,17 +343,27 @@ const MODOS = {
   erro: { rotulo: 'Erro médico', cor: '#ff8fa3' },
   pdx: { rotulo: 'Paciente DDX', cor: '#7cc4ff' },
 };
-// Perguntas fictícias, só para o fluxo da sessão.
+// Perguntas fictícias. `porque`: por que cada alternativa está certa ou errada (no app, das fontes revisadas do item).
+const FONTE = 'fonte revisada do item no banco (exemplo do protótipo)';
 const ITENS = {
-  q1: { modo: 'quiz', tema: 'Farmacologia', enunciado: 'Qual é o tratamento de primeira linha na anafilaxia?', opcoes: ['Adrenalina intramuscular', 'Anti-histamínico intravenoso', 'Corticoide intravenoso', 'Salbutamol inalatório'], certa: 0, explica: 'A adrenalina intramuscular é o tratamento inicial; anti-histamínico e corticoide são adjuvantes.' },
-  q2: { modo: 'quiz', tema: 'Clínica médica · parecida', enunciado: 'Na anafilaxia que não responde a doses repetidas de adrenalina intramuscular, o próximo passo é:', opcoes: ['Adrenalina em infusão intravenosa', 'Dobrar a dose do anti-histamínico', 'Aguardar o efeito do corticoide', 'Alta com observação em casa'], certa: 0, explica: 'Na anafilaxia refratária, a adrenalina passa a ser dada em infusão intravenosa, com monitorização.' },
-  q4: { modo: 'quiz', tema: 'Farmacologia', enunciado: 'Qual antídoto reverte a intoxicação por benzodiazepínicos?', opcoes: ['Flumazenil', 'Naloxona', 'Atropina', 'N-acetilcisteína'], certa: 0, explica: 'O flumazenil é o antagonista dos receptores de benzodiazepínicos.' },
-  q3: { modo: 'quiz', tema: 'Microbiologia', enunciado: 'Qual é o agente mais comum da pneumonia adquirida na comunidade em adultos?', opcoes: ['Streptococcus pneumoniae', 'Staphylococcus aureus', 'Pseudomonas aeruginosa', 'Klebsiella pneumoniae'], certa: 0, explica: 'O pneumococo segue como o agente mais frequente da pneumonia comunitária.' },
-  v1: { modo: 'vm', tema: 'Fisiologia', enunciado: '“A heparina não fracionada é monitorada pelo TTPa.”', opcoes: ['Verdadeira', 'Falsa'], certa: 0, explica: 'Verdadeira: o TTPa acompanha o efeito da heparina não fracionada.' },
-  v2: { modo: 'vm', tema: 'Imunologia', enunciado: '“A IgM é a imunoglobulina que atravessa a placenta.”', opcoes: ['Verdadeira', 'Falsa'], certa: 1, explica: 'Falsa: a IgG é a que atravessa a placenta.' },
-  e1: { modo: 'erro', tema: 'Infeccioso · caso inteiro, etapa 1 de 3', enunciado: 'Mulher, 68 anos, febre e confusão há 1 dia. PA 84/50, lactato 4,1. Recebeu dipirona e ficou em observação. Onde está o erro?', opcoes: ['Não colher hemoculturas nem iniciar antibiótico na primeira hora', 'Prescrever dipirona', 'Dosar o lactato', 'Aferir a pressão arterial'], certa: 0, explica: 'Sepse com hipotensão: hemoculturas e antibiótico na primeira hora, com expansão volêmica.' },
-  p1: { modo: 'pdx', tema: 'Cardiovascular', enunciado: 'Homem, 58 anos, dor torácica há 40 minutos, supradesnivelamento de ST em DII, DIII e aVF. Conduta?', opcoes: ['Reperfusão imediata (angioplastia primária)', 'Alta com analgésico', 'Teste ergométrico', 'Repetir o ECG em 6 horas'], certa: 0, explica: 'Infarto com supra de ST: reperfusão o mais cedo possível.' },
+  q1: { modo: 'quiz', tema: 'Farmacologia', enunciado: 'Qual é o tratamento de primeira linha na anafilaxia?', opcoes: ['Adrenalina intramuscular', 'Anti-histamínico intravenoso', 'Corticoide intravenoso', 'Salbutamol inalatório'], certa: 0,
+    porque: ['Reverte a vasodilatação e o broncoespasmo e estabiliza os mastócitos. É a primeira medida e não deve esperar as outras.', 'Alivia coceira e urticária, mas não reverte o choque nem o edema de via aérea. É adjuvante.', 'O efeito começa em horas; não trata a fase aguda.', 'Ajuda no broncoespasmo que sobra depois da adrenalina, mas não trata a hipotensão.'] },
+  q2: { modo: 'quiz', tema: 'Clínica médica · parecida', enunciado: 'Na anafilaxia que não responde a doses repetidas de adrenalina intramuscular, o próximo passo é:', opcoes: ['Adrenalina em infusão intravenosa', 'Dobrar a dose do anti-histamínico', 'Aguardar o efeito do corticoide', 'Alta com observação em casa'], certa: 0,
+    porque: ['Quando duas doses intramusculares não bastam, a adrenalina passa a correr em infusão venosa, com monitorização.', 'Anti-histamínico não tem efeito sobre a pressão nem sobre a via aérea.', 'O corticoide demora horas; esperar atrasa o que salva a vida.', 'Anafilaxia refratária exige observação e, muitas vezes, terapia intensiva.'] },
+  q4: { modo: 'quiz', tema: 'Farmacologia', enunciado: 'Qual antídoto reverte a intoxicação por benzodiazepínicos?', opcoes: ['Flumazenil', 'Naloxona', 'Atropina', 'N-acetilcisteína'], certa: 0,
+    porque: ['Antagonista competitivo no sítio dos benzodiazepínicos do receptor GABA-A. Usar com cuidado em quem usa o remédio há muito tempo (risco de convulsão).', 'Antagonista dos opioides; não age nos benzodiazepínicos.', 'Antimuscarínico; usado na intoxicação por organofosforados.', 'Antídoto do paracetamol.'] },
+  q3: { modo: 'quiz', tema: 'Microbiologia', enunciado: 'Qual é o agente mais comum da pneumonia adquirida na comunidade em adultos?', opcoes: ['Streptococcus pneumoniae', 'Staphylococcus aureus', 'Pseudomonas aeruginosa', 'Klebsiella pneumoniae'], certa: 0,
+    porque: ['É o agente bacteriano mais identificado na pneumonia comunitária.', 'Menos comum; lembrar depois de influenza ou em pneumonia necrosante.', 'Ligada a fatores de risco: bronquiectasia, internação ou antibiótico recentes.', 'Mais ligada a etilismo e diabetes; menos frequente.'] },
+  v1: { modo: 'vm', tema: 'Fisiologia', enunciado: '“A heparina não fracionada é monitorada pelo TTPa.”', opcoes: ['Verdadeira', 'Falsa'], certa: 0,
+    porque: ['Certo: a heparina não fracionada potencializa a antitrombina e prolonga o TTPa, que guia o ajuste da dose.', 'Errado: quem dispensa monitorização de rotina é a heparina de baixo peso molecular.'] },
+  v2: { modo: 'vm', tema: 'Imunologia', enunciado: '“A IgM é a imunoglobulina que atravessa a placenta.”', opcoes: ['Verdadeira', 'Falsa'], certa: 1,
+    porque: ['Errado: a IgM é um pentâmero grande demais para atravessar a placenta.', 'Certo: só a IgG atravessa, levada pelo receptor FcRn.'] },
+  e1: { modo: 'erro', tema: 'Infeccioso · caso inteiro', enunciado: 'Mulher, 68 anos, febre e confusão há 1 dia. PA 84/50, lactato 4,1. Recebeu dipirona e ficou em observação. Onde está o erro?', opcoes: ['Não colher hemoculturas nem iniciar antibiótico na primeira hora', 'Prescrever dipirona', 'Dosar o lactato', 'Aferir a pressão arterial'], certa: 0,
+    porque: ['É o erro: sepse com hipotensão pede hemoculturas, antibiótico e expansão volêmica na primeira hora.', 'Sintomático; não é o erro principal.', 'Correto: o lactato alto ajuda a reconhecer a gravidade.', 'Correto: foi assim que a hipotensão apareceu.'] },
+  p1: { modo: 'pdx', tema: 'Cardiovascular', enunciado: 'Homem, 58 anos, dor torácica há 40 minutos, supradesnivelamento de ST em DII, DIII e aVF. Conduta?', opcoes: ['Reperfusão imediata (angioplastia primária)', 'Alta com analgésico', 'Teste ergométrico', 'Repetir o ECG em 6 horas'], certa: 0,
+    porque: ['Infarto com supra de ST: abrir a artéria o quanto antes reduz a área de músculo perdida.', 'Erro grave: risco de morte.', 'Contraindicado com síndrome coronariana aguda em curso.', 'Atrasa a reperfusão; o diagnóstico já está feito.'] },
 };
+for (const [k, v] of Object.entries(ITENS)) { v.k = k; v.fonte = FONTE; }
 const CARTAS = [
   { id: 'quiz-1', modo: 'quiz', titulo: 'Quiz 1', erros: 7, un: ['erro', 'erros'], temas: 'Farmacologia · Clínica médica', min: 5, itens: ['q1', 'q2', 'q4'] },
   { id: 'vm', modo: 'vm', titulo: 'Verdade ou mentira', erros: 5, un: ['erro', 'erros'], temas: 'Fisiologia · Imunologia', min: 3, itens: ['v1', 'v2'] },
@@ -284,10 +373,24 @@ const CARTAS = [
 ];
 const ESPERAS = ['amanhã, 09:00', 'amanhã, 14:30', 'qui., 22/10', 'sex., 23/10', 'sáb., 24/10'];
 
-const S = { estado: 'normal', aoTerminar: 'cartas', abertura: 'furacao', tela: 'cheia', fase: 'hub', animando: false, sessao: null, pausada: null, feitas: new Map(), ultimo: null, rel: null, relOrigem: 'hub' };
-try { const g = JSON.parse(localStorage.getItem('prototipo-revisao-hub') || '{}'); for (const k of ['estado', 'aoTerminar', 'abertura', 'tela']) if (g[k]) S[k] = g[k]; } catch { /* sem armazenamento */ }
-const guardar = () => { try { localStorage.setItem('prototipo-revisao-hub', JSON.stringify({ estado: S.estado, aoTerminar: S.aoTerminar, abertura: S.abertura, tela: S.tela })); } catch { /* sem armazenamento */ } };
-S.ultimo = { titulo: 'Última revisão · ontem', acertos: 2, total: 5, dominados: 0, quando: 'ontem', erros: [{ it: ITENS.q1, escolha: 1 }, { it: ITENS.v2, escolha: 0 }, { it: ITENS.e1, escolha: 1 }] };
+// ---------- Estado (e o que sobrevive a fechar e abrir o app) ----------
+const S = { estado: 'normal', abertura: 'furacao', tela: 'cheia', fase: 'hub', animando: false, sessao: null, pausada: null, feitas: new Map(), trava: false, vistas: new Set(), absorvido: false };
+const CHAVE_OPCOES = 'prototipo-revisao-hub', CHAVE_PROGRESSO = 'prototipo-revisao-progresso';
+const ler = chave => { try { return JSON.parse(localStorage.getItem(chave) || 'null'); } catch { return null; } };
+const gravar = (chave, valor) => { try { localStorage.setItem(chave, JSON.stringify(valor)); } catch { /* sem armazenamento */ } };
+const guardar = () => gravar(CHAVE_OPCOES, { estado: S.estado, abertura: S.abertura, tela: S.tela });
+function guardarProgresso() {
+  gravar(CHAVE_PROGRESSO, { trava: S.trava, absorvido: S.absorvido, vistas: [...S.vistas],
+    feitas: [...S.feitas].map(([id, r]) => [id, { ...r, respostas: r.respostas.map(x => ({ ...x, it: x.it.k })) }]),
+    pausada: S.pausada && { id: S.pausada.id, idx: S.pausada.sessao.idx, respostas: S.pausada.sessao.respostas } });
+}
+function restaurar() {
+  const o = ler(CHAVE_OPCOES) || {}; for (const k of ['estado', 'abertura', 'tela']) if (o[k]) S[k] = o[k];
+  const p = ler(CHAVE_PROGRESSO); if (!p) return;
+  S.trava = Boolean(p.trava); S.absorvido = Boolean(p.absorvido); S.vistas = new Set(p.vistas || []);
+  for (const [id, r] of p.feitas || []) S.feitas.set(id, { ...r, respostas: r.respostas.map(x => ({ ...x, it: ITENS[x.it] })) });
+  if (p.pausada) { const c = CARTAS.find(x => x.id === p.pausada.id); if (c) { const s = novaSessao(c); s.idx = p.pausada.idx; s.respostas = p.pausada.respostas; S.pausada = { id: c.id, titulo: c.titulo, sessao: s }; } }
+}
 
 // ---------- Animação ----------
 const pausa = ms => new Promise(r => setTimeout(r, ms));
@@ -295,32 +398,32 @@ function mover(el, quadros, opcoes) {
   const a = el.animate(quadros, { fill: 'forwards', ...opcoes });
   return a.finished.then(() => { const { offset, easing, ...fim } = quadros[quadros.length - 1]; Object.assign(el.style, fim); a.cancel(); }).catch(() => {});
 }
-const tf = p => `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) rotate(${p.r.toFixed(2)}deg) scale(${p.s})`;
+const suave = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const tf = p => `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) rotate(${p.r.toFixed(2)}deg) scale(${p.s.toFixed(3)})`;
 function medidas(el) {
   const cs = getComputedStyle(el);
   return { w: el.clientWidth, h: el.clientHeight, cw: parseFloat(cs.getPropertyValue('--cw')), ch: parseFloat(cs.getPropertyValue('--ch')) };
 }
-// Centro de um elemento em relação ao centro do app (onde fica o centro do modo foco).
 function centroRelativo(el) {
   const appEl = $('#app'); const a = appEl.getBoundingClientRect(); const r = el.getBoundingClientRect();
   return { x: r.left + r.width / 2 - (a.left + appEl.clientLeft + appEl.clientWidth / 2), y: r.top + r.height / 2 - (a.top + appEl.clientTop + appEl.clientHeight / 2) };
 }
+// Retângulo de um elemento em coordenadas do modo foco (para os painéis que crescem a partir da carta).
+function retNoFoco(el) { const f = $('#foco').getBoundingClientRect(); const r = el.getBoundingClientRect(); return { left: r.left - f.left, top: r.top - f.top, width: r.width, height: r.height }; }
 const INCLINA = [-4, 3, -2, 5, -1, 2];
 const posDeck = (i, n) => ({ x: (i - (n - 1) / 2) * 1.2, y: -i * 1.6, r: INCLINA[i % INCLINA.length], s: 1 });
 function posLeque(i, n, m) {
   if (n === 1) return { x: 0, y: 0, r: 0, s: 1 };
   const abertura = Math.min(m.w < 600 ? 60 : 72, 18 * (n - 1)); const meia = abertura / 2 * Math.PI / 180;
-  // Meia largura da carta da ponta já inclinada, para ela não sair da tela.
   const ponta = (m.cw * Math.cos(meia) + m.ch * Math.sin(meia)) / 2;
   const R = Math.min(m.w < 600 ? 320 : 640, (m.w / 2 - ponta - 8) / Math.sin(meia));
   const a = -abertura / 2 + i * abertura / (n - 1); const rad = a * Math.PI / 180; const queda = R * (1 - Math.cos(meia));
   return { x: R * Math.sin(rad), y: R * (1 - Math.cos(rad)) - queda / 2, r: a, s: 1 };
 }
-// "Furacão": a carta gira em espiral em volta do centro enquanto vai da origem até o destino.
 function espiral(i, n, de, para, m, { voltas = 1.5, raio = .34 } = {}) {
   const K = 30, quadros = []; const Rw = Math.min(m.w, m.h) * raio; const f0 = (i / Math.max(n, 1)) * 360;
   for (let k = 0; k <= K; k++) {
-    const t = k / K; const e = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const t = k / K; const e = suave(t);
     const fi = (f0 + 360 * voltas * e) * Math.PI / 180; const r = Rw * Math.sin(Math.PI * t);
     const x = de.x + (para.x - de.x) * e + r * Math.cos(fi); const y = de.y + (para.y - de.y) * e + r * Math.sin(fi) * .7;
     const rot = de.r + (para.r - de.r) * e + 300 * voltas * e * (1 - e);
@@ -330,8 +433,9 @@ function espiral(i, n, de, para, m, { voltas = 1.5, raio = .34 } = {}) {
   return quadros;
 }
 const comFuracao = () => S.abertura === 'furacao' && !rm();
-function caminho(i, n, de, para, m, opcoes) { return comFuracao() ? espiral(i, n, de, para, m, opcoes) : [{ transform: tf(de) }, { transform: tf(para) }]; }
-function tempo(furacao, simples) { return rm() ? 1 : comFuracao() ? furacao : simples; }
+const caminho = (i, n, de, para, m, opcoes) => comFuracao() ? espiral(i, n, de, para, m, opcoes) : [{ transform: tf(de) }, { transform: tf(para) }];
+const tempo = (furacao, simples) => rm() ? 1 : comFuracao() ? furacao : simples;
+const curva = () => comFuracao() ? 'linear' : 'cubic-bezier(.16,1,.3,1)';
 function virar(c, frente, atraso, dur) {
   if (c.frente === frente) return Promise.resolve();
   c.frente = frente;
@@ -341,8 +445,9 @@ function vortex(sentido = 1) {
   if (!comFuracao()) return;
   $('#foco .vortex').animate([{ opacity: 0, transform: 'rotate(0deg) scale(.35)' }, { opacity: .95, offset: .35 }, { opacity: 0, transform: `rotate(${600 * sentido}deg) scale(1.35)` }], { duration: 1500, easing: 'cubic-bezier(.3,.6,.3,1)' });
 }
+const aparecer = (el, dur = 360, ate = 1) => mover(el, [{ opacity: Number(getComputedStyle(el).opacity) }, { opacity: ate }], { duration: rm() ? 1 : dur });
 let tempoToast;
-function toast(texto) { const t = $('#toast'); t.textContent = texto; t.classList.add('on'); clearTimeout(tempoToast); tempoToast = setTimeout(() => t.classList.remove('on'), 2400); }
+function toast(texto) { const t = $('#toast'); t.textContent = texto; t.classList.add('on'); clearTimeout(tempoToast); tempoToast = setTimeout(() => t.classList.remove('on'), 2600); }
 
 // ---------- Cartas ----------
 let cartas = [];
@@ -353,7 +458,8 @@ function cartasDoEstado() {
   return CARTAS;
 }
 const unidade = c => c.erros === 1 ? c.un[0] : c.un[1];
-const todasFeitas = () => { const prontas = cartas.filter(c => !c.espera); return prontas.length > 0 && prontas.every(c => S.feitas.has(c.id)); };
+const prontas = () => cartas.filter(c => !c.espera);
+const todasFeitas = () => prontas().length > 0 && prontas().every(c => S.feitas.has(c.id));
 function htmlCarta(c) {
   const ic = I[c.modo];
   return `<span class="corpo"><span class="flip">
@@ -363,7 +469,6 @@ function htmlCarta(c) {
     <span class="face verso"><span class="emblema"><span>caco<b>Med</b></span></span></span>
   </span></span>`;
 }
-// Feita (verde com certinho), em andamento ou em espera; `semFeita` adia o verde da carta que acabou de terminar.
 function aplicarEstadoCarta(c, { semFeita = false } = {}) {
   const feita = !semFeita && S.feitas.get(c.id); const pausada = S.pausada?.id === c.id;
   c.el.classList.toggle('feita', Boolean(feita)); c.el.classList.toggle('pausada', pausada);
@@ -373,7 +478,7 @@ function aplicarEstadoCarta(c, { semFeita = false } = {}) {
   c.el.setAttribute('aria-label', `${c.titulo}: ${feita ? `feita hoje, ${feita.acertos} de ${feita.total} certas` : pausada ? 'em andamento' : c.espera ? `volta ${c.espera}` : `${c.erros} ${unidade(c)}, cerca de ${c.min} minutos`}`);
 }
 function montarCartas() {
-  document.querySelectorAll('.carta').forEach(e => e.remove());
+  document.querySelectorAll('.carta, .vaga').forEach(e => e.remove());
   const st = $('#stage'); const lista = cartasDoEstado(); const n = lista.length;
   cartas = lista.map((c, i) => {
     const el = document.createElement('button');
@@ -391,15 +496,14 @@ function montarCartas() {
 
 // ---------- Hub ----------
 function renderHub() {
-  if (S.estado === 'andamento' && !S.pausada) S.pausada = pausadaDeExemplo();
+  if (S.estado === 'andamento' && !S.pausada) exemploAndamento();
   S.fase = 'hub';
-  const e = S.estado; const lista = cartasDoEstado(); const prontas = lista.filter(c => !c.espera);
-  const restantes = prontas.filter(c => !S.feitas.has(c.id)); const itens = restantes.reduce((s, c) => s + c.erros, 0);
-  const concluida = e === 'normal' && prontas.length > 0 && !restantes.length;
-  const feitas = [...S.feitas.values()];
-  const textos = {
-    normal: concluida ? { k: 'Revisão de hoje concluída', h: 'Tudo revisado por hoje', s: `Você fez as ${prontas.length} cartas. Os itens voltam nos intervalos programados.` }
-      : { k: `${restantes.length} ${restantes.length === 1 ? 'carta pronta' : 'cartas prontas'}`, h: S.feitas.size ? 'Continue sua revisão' : 'Comece sua revisão', s: 'Cada carta junta até 7 erros de um modo. Faça uma de cada vez, na ordem que quiser.' },
+  const e = S.estado; const lista = cartasDoEstado(); const disponiveis = lista.filter(c => !c.espera);
+  const restantes = disponiveis.filter(c => !S.feitas.has(c.id)); const itens = restantes.reduce((s, c) => s + c.erros, 0);
+  const concluida = (e === 'normal' || e === 'andamento') && disponiveis.length > 0 && !restantes.length;
+  const feitas = [...S.feitas.values()]; const dominados = 4;
+  const textos = concluida ? { k: 'Revisão de hoje concluída', h: 'Tudo revisado por hoje', s: `Você fez as ${disponiveis.length} cartas. Os itens voltam nos intervalos programados.` } : {
+    normal: { k: `${restantes.length} ${restantes.length === 1 ? 'carta pronta' : 'cartas prontas'}`, h: S.feitas.size ? 'Continue sua revisão' : 'Comece sua revisão', s: 'Cada carta junta até 7 erros de um modo. Faça uma de cada vez, na ordem que quiser. No fim, você recebe o relatório completo.' },
     andamento: { k: 'Carta em andamento', h: 'Continue de onde parou', s: S.pausada ? `${S.pausada.titulo} · item ${S.pausada.sessao.idx + 1} de ${S.pausada.sessao.itens.length}` : '' },
     emdia: { k: 'Revisão em dia', h: 'Nada para rever agora', s: 'A próxima carta volta amanhã, às 09:00. Cada acerto espaça o item: 1, 3 e 7 dias.' },
     vazio: { k: 'Seu aprendizado começa nos jogos', h: 'Ainda sem erros para rever', s: 'Jogue Quiz, Verdade ou mentira, Erro médico ou um caso do Plantão. Cada erro vira uma carta aqui.' },
@@ -407,9 +511,8 @@ function renderHub() {
   }[e];
   const stats = e === 'vazio' || e === 'bloqueado'
     ? [['0', 'itens revisados'], ['—', 'de acerto'], ['0', 'dominados'], [e === 'bloqueado' ? '12' : '0', 'erros guardados']]
-    : [[e === 'emdia' ? '0' : String(itens), 'itens na fila hoje'], [String(42 + feitas.reduce((s, r) => s + r.total, 0)), 'itens revisados'], ['64%', 'de acerto na Revisão'],
-      [String(4 + feitas.reduce((s, r) => s + r.dominados, 0)), `dominados · +${(4 + feitas.reduce((s, r) => s + r.dominados, 0)) * 40} XP`]];
-  const rotulo = { normal: concluida ? 'Todas feitas hoje' : `${itens} itens em ${restantes.length} cartas`, andamento: 'Carta em andamento', emdia: `${lista.length} cartas em espera`, bloqueado: '', vazio: '' }[e];
+    : [[e === 'emdia' ? '0' : String(itens), 'itens na fila hoje'], [String(42 + feitas.reduce((s, r) => s + r.total, 0)), 'itens revisados'], ['64%', 'de acerto na Revisão'], [String(dominados), `dominados · +${dominados * 40} XP`]];
+  const rotulo = concluida ? 'Todas feitas hoje' : { normal: `${itens} itens em ${restantes.length} cartas`, andamento: 'Carta em andamento', emdia: `${lista.length} cartas em espera`, bloqueado: '', vazio: '' }[e];
   $('#hub').innerHTML = `
     <header class="topo"><button class="icone-btn" id="menu" aria-label="Voltar ao menu">${I.voltar}</button>
       <h1><small>Aprenda com seus erros</small>Revisão inteligente</h1><span class="nivel">NV ${e === 'bloqueado' ? 7 : 12}</span></header>
@@ -426,12 +529,24 @@ function renderHub() {
       </section>
     </div>`;
   montarCartas();
-  const ultima = S.ultimo ? `<button class="link" id="ultima">Ver última revisão · ${S.ultimo.acertos}/${S.ultimo.total} certas · ${S.ultimo.quando}</button>` : '';
-  $('#acoes').innerHTML = e === 'normal' ? (concluida ? `<button class="secundario" id="abrir">Ver as cartas de hoje</button>${ultima}` : `<button class="primario" id="abrir">${S.feitas.size ? 'Continuar revisão' : 'Começar revisão'} ${I.seta}</button>${ultima}`)
-    : e === 'andamento' ? `<button class="primario" id="continuar">Continuar ${S.pausada?.titulo || ''} ${I.seta}</button><button class="link" id="encerrar">Encerrar agora e ver o resultado</button>`
-      : e === 'emdia' ? `<button class="primario" disabled>Revisão em dia</button><button class="link" id="abrir">Ver as cartas em espera</button>${ultima}`
-        : e === 'vazio' ? `<div class="atalhos">${['Quiz', 'Verdade ou mentira', 'Erro médico', 'Plantão'].map(x => `<button class="secundario" data-jogar="${x}">Jogar ${x}</button>`).join('')}</div>`
-          : `<button class="primario" disabled>${I.cadeado} Libera no nível 10</button>`;
+  $('#acoes').innerHTML = concluida ? `<button class="primario" id="ver-rel">Ver seu relatório de hoje ${I.seta}</button>`
+    : e === 'normal' ? `<button class="primario" id="abrir">${S.feitas.size ? 'Continuar revisão' : 'Começar revisão'} ${I.seta}</button>`
+      : e === 'andamento' ? `<button class="primario" id="continuar">Continuar ${S.pausada?.titulo || ''} ${I.seta}</button>`
+        : e === 'emdia' ? `<button class="primario" disabled>Revisão em dia</button><button class="link" id="abrir">Ver as cartas em espera</button>`
+          : e === 'vazio' ? `<div class="atalhos">${['Quiz', 'Verdade ou mentira', 'Erro médico', 'Plantão'].map(x => `<button class="secundario" data-jogar="${x}">Jogar ${x}</button>`).join('')}</div>`
+            : `<button class="primario" disabled>${I.cadeado} Libera no nível 10</button>`;
+}
+
+// ---------- Aviso de início e trava ----------
+function pedirInicio() {
+  if (S.estado === 'andamento') return continuar();
+  if (S.estado === 'normal' && !S.feitas.size && !S.trava) { $('#confirmar').hidden = false; $('#dlg-sim').focus(); return; }
+  entrarFoco();
+}
+function confirmarInicio() { $('#confirmar').hidden = true; S.trava = true; guardarProgresso(); entrarFoco(); }
+function atualizarSaida() {
+  $('#foco-sair').hidden = S.trava;
+  const chip = $('#foco-trava'); chip.hidden = !S.trava; chip.innerHTML = `${I.cadeado} Termine uma carta para sair`;
 }
 
 // ---------- Modo foco ----------
@@ -442,20 +557,13 @@ function mostrarDica() {
   d.textContent = S.estado === 'emdia' ? 'Estas cartas voltam nos horários marcados' : S.pausada ? `Toque em ${S.pausada.titulo} para continuar` : S.feitas.size ? 'Escolha a próxima carta' : 'Toque numa carta para começar';
   d.classList.add('on'); tempoDica = setTimeout(() => d.classList.remove('on'), 3500);
 }
-function mostrarFim() {
-  const feitas = [...S.feitas.values()]; const fim = $('#foco-fim');
-  fim.innerHTML = `<p class="kicker">Revisão de hoje concluída</p><b>${feitas.length} cartas feitas · ${feitas.reduce((s, r) => s + r.acertos, 0)}/${feitas.reduce((s, r) => s + r.total, 0)} certas</b><button class="primario" id="foco-hub">Voltar ao hub ${I.seta}</button>`;
-  fim.hidden = false;
-  if (!rm()) fim.animate([{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.16,1,.3,1)' });
-}
-// Abre o leque no modo foco, a partir de onde as cartas estiverem.
 async function abrirLeque() {
   const foco = $('#foco'); const m = medidas(foco); const n = cartas.length;
   vortex(1);
   await Promise.all(cartas.map((c, i) => {
     const de = c.pos; const para = posLeque(i, n, m); c.pos = para;
     const dur = tempo(1250, 520); const atraso = rm() ? 0 : comFuracao() ? i * 80 : i * 45;
-    return Promise.all([mover(c.el, caminho(i, n, de, para, m), { duration: dur, delay: atraso, easing: comFuracao() ? 'linear' : 'cubic-bezier(.16,1,.3,1)' }),
+    return Promise.all([mover(c.el, caminho(i, n, de, para, m), { duration: dur, delay: atraso, easing: curva() }),
       virar(c, true, rm() ? 0 : atraso + dur * (comFuracao() ? .7 : .35), rm() ? 1 : 340)]);
   }));
   foco.classList.add('aberto');
@@ -463,33 +571,38 @@ async function abrirLeque() {
   (cartas.find(c => !c.espera && !S.feitas.has(c.id)) || cartas[0])?.el.focus({ preventScroll: true });
   mostrarDica();
 }
-// Do hub para o foco: o entorno some e o baralho vai para o centro da tela abrindo em furacão.
+function prepararFoco() {
+  const foco = $('#foco'); foco.hidden = false; foco.style.opacity = '';
+  foco.classList.remove('aberto', 'anel'); $('#foco-fim').hidden = true; $('#painel-rel').hidden = true;
+  for (const id of ['#rel-titulo', '#cerebro', '#lado-rel']) $(id).style.opacity = 0;
+  atualizarSaida();
+  return foco;
+}
 async function entrarFoco() {
   if (S.animando || !cartas.length) return false;
   if (S.estado === 'bloqueado') { toast('A Revisão libera no nível 10.'); return false; }
   S.animando = true; S.fase = 'foco';
-  const foco = $('#foco'); const st = $('#stage');
-  foco.hidden = false; foco.classList.remove('aberto'); $('#foco-fim').hidden = true;
+  const st = $('#stage'); const foco = prepararFoco();
   const off = centroRelativo(st); const k = medidas(st).cw / medidas(foco).cw; const n = cartas.length;
   cartas.forEach((c, i) => { const d = posDeck(i, n); c.pos = { x: d.x * k + off.x, y: d.y * k + off.y, r: d.r, s: k }; c.el.style.transform = tf(c.pos); foco.appendChild(c.el); });
   mover(foco.querySelector('.foco-fundo'), [{ opacity: 0 }, { opacity: 1 }], { duration: rm() ? 1 : 420, easing: 'ease-out' });
   await abrirLeque();
-  if (todasFeitas()) mostrarFim();
   S.animando = false;
   return true;
 }
-// Do foco de volta ao hub: as cartas voltam em espiral para o baralho e o entorno reaparece.
 async function sairFoco() {
-  if (S.animando || S.fase !== 'foco') return;
+  if (S.animando || !['foco', 'relgeral'].includes(S.fase)) return;
+  if (S.trava) { toast('Termine uma carta para sair da revisão.'); return; }
   S.animando = true;
-  const foco = $('#foco'); foco.classList.remove('aberto'); $('#foco-fim').hidden = true; $('#foco-dica').classList.remove('on');
+  const foco = $('#foco'); foco.classList.remove('aberto', 'anel'); $('#foco-dica').classList.remove('on');
+  aparecer($('#rel-titulo'), 240, 0); document.querySelectorAll('.vaga').forEach(v => aparecer(v, 240, 0));
   const st = $('#stage'); const off = centroRelativo(st); const mF = medidas(foco); const k = medidas(st).cw / mF.cw; const n = cartas.length;
   vortex(-1);
   await Promise.all([
     ...cartas.map((c, i) => {
       const d = posDeck(i, n); const para = { x: d.x * k + off.x, y: d.y * k + off.y, r: d.r, s: k };
       const quadros = caminho(i, n, c.pos, para, mF, { voltas: -1 }); c.pos = para; c.el.tabIndex = -1;
-      return Promise.all([mover(c.el, quadros, { duration: tempo(950, 420), delay: rm() ? 0 : (n - 1 - i) * 50, easing: comFuracao() ? 'linear' : 'cubic-bezier(.16,1,.3,1)' }), virar(c, false, 0, rm() ? 1 : 280)]);
+      return Promise.all([mover(c.el, quadros, { duration: tempo(950, 420), delay: rm() ? 0 : (n - 1 - i) * 50, easing: curva() }), virar(c, false, 0, rm() ? 1 : 280)]);
     }),
     mover(foco.querySelector('.foco-fundo'), [{ opacity: 1 }, { opacity: 0 }], { duration: rm() ? 1 : 420, delay: rm() ? 0 : 520 }),
   ]);
@@ -499,13 +612,14 @@ async function sairFoco() {
 }
 function clicarCarta(c) {
   if (S.animando) return;
-  if (S.fase !== 'foco') return S.estado === 'andamento' ? continuar() : entrarFoco();
+  if (S.fase === 'relgeral') return S.feitas.has(c.id) ? abrirCartaRel(c) : undefined;
+  if (S.fase === 'relcarta') return;
+  if (S.fase !== 'foco') return pedirInicio();
   if (c.espera) return toast(`${c.titulo} volta ${c.espera}.`);
-  if (S.feitas.has(c.id)) return abrirRelatorio(S.feitas.get(c.id), 'foco');
+  if (S.feitas.has(c.id)) return toast('Carta feita. O relatório completo aparece quando você terminar todas.');
   if (S.pausada && S.pausada.id !== c.id) return toast(`Termine ${S.pausada.titulo} primeiro: ela está em andamento.`);
   escolher(c);
 }
-// Brilho discreto na escolhida; ela vai ao centro, as outras voltam em espiral para trás dela (o bloco) e o bloco vira o modo.
 async function escolher(c) {
   S.animando = true; const foco = $('#foco'); foco.classList.remove('aberto'); $('#foco-dica').classList.remove('on');
   c.el.classList.add('brilho');
@@ -516,14 +630,14 @@ async function escolher(c) {
     mover(c.el, [{ transform: tf(c.pos) }, { transform: tf(centro) }], { duration: rm() ? 1 : 520, easing: 'cubic-bezier(.16,1,.3,1)' }),
     ...outras.map((o, k) => {
       const para = { ...posDeck(k, n), s: .96 }; const quadros = caminho(k, n, o.pos, para, m, { voltas: -1, raio: .28 }); o.pos = para;
-      return Promise.all([mover(o.el, quadros, { duration: tempo(900, 420), delay: rm() ? 0 : k * 50, easing: comFuracao() ? 'linear' : 'cubic-bezier(.16,1,.3,1)' }), virar(o, false, rm() ? 0 : k * 50, rm() ? 1 : 300)]);
+      return Promise.all([mover(o.el, quadros, { duration: tempo(900, 420), delay: rm() ? 0 : k * 50, easing: curva() }), virar(o, false, rm() ? 0 : k * 50, rm() ? 1 : 300)]);
     }),
   ]);
   c.pos = centro;
   if (!rm()) await Promise.all([c, ...outras].map(x => mover(x.el, [{ transform: tf(x.pos) }, { transform: tf({ ...x.pos, s: x.pos.s * 1.07 }) }, { transform: tf(x.pos) }], { duration: 300, easing: 'ease-in-out' })));
   const retomada = S.pausada?.id === c.id;
   S.sessao = retomada ? S.pausada.sessao : novaSessao(c);
-  S.pausada = null;
+  S.pausada = null; guardarProgresso();
   if (S.estado === 'andamento') { S.estado = 'normal'; guardar(); sincronizarPainel(); }
   await expandir(c, { titulo: c.titulo, sub: retomada ? `Item ${S.sessao.idx + 1} de ${S.sessao.itens.length}` : `${c.erros} ${unidade(c)} · ~${c.min} min`, modo: c.modo });
 }
@@ -533,7 +647,6 @@ async function continuar() {
   if (!(await entrarFoco())) return;
   const c = cartas.find(x => x.id === id); if (c) await escolher(c);
 }
-// O bloco cresce até ocupar a tela e vira a sessão do modo.
 async function expandir(c, info) {
   const appEl = $('#app'); const app = appEl.getBoundingClientRect(); const r = c.el.querySelector('.frente').getBoundingClientRect();
   const ex = $('#expansor');
@@ -552,19 +665,18 @@ async function expandir(c, info) {
   await mover(ex, [{ opacity: 1 }, { opacity: 0 }], { duration: rm() ? 1 : 360 });
   ex.hidden = true; S.animando = false;
 }
-// Da sessão (ou do resultado) de volta ao foco: a tela encolhe até o baralho, o leque reabre e a carta feita ganha o verde.
+// Da sessão de volta ao foco: a tela encolhe até o baralho, o leque reabre e a carta feita ganha o verde.
 async function voltarAoFoco(cartaId) {
   S.animando = true; S.fase = 'foco';
-  const foco = $('#foco'); const ex = $('#expansor'); const appEl = $('#app'); const n = cartas.length;
+  const ex = $('#expansor'); const appEl = $('#app'); const n = cartas.length;
   const ref = cartas.find(x => x.id === cartaId) || cartas.find(x => x.id === S.pausada?.id) || cartas[n - 1];
   ex.style.setProperty('--c', MODOS[ref.modo].cor);
   ex.innerHTML = `<div class="ex-rotulo">${cartaId ? I.check : I[ref.modo]}<b>${ref.titulo}</b><small>${cartaId ? 'Carta concluída' : 'Sessão guardada'}</small></div>`;
   Object.assign(ex.style, { left: '0px', top: '0px', width: `${appEl.clientWidth}px`, height: `${appEl.clientHeight}px`, borderRadius: '0px', opacity: 1 });
   ex.hidden = false;
   if (!rm()) await mover(ex, [{ opacity: 0 }, { opacity: 1 }], { duration: 220 });
-  // Por baixo: só as cartas, empilhadas no centro.
-  $('#sessao').hidden = true; $('#relatorio').hidden = true; $('#hub').hidden = false;
-  foco.hidden = false; foco.classList.remove('aberto'); $('#foco-fim').hidden = true; foco.querySelector('.foco-fundo').style.opacity = 1;
+  $('#sessao').hidden = true; $('#hub').hidden = false;
+  const foco = prepararFoco(); foco.querySelector('.foco-fundo').style.opacity = 1;
   cartas.forEach((c, i) => {
     if (c.el.parentElement !== foco) foco.appendChild(c.el);
     c.el.classList.remove('brilho'); c.el.style.zIndex = i + 1; aplicarEstadoCarta(c, { semFeita: c.id === cartaId });
@@ -589,20 +701,15 @@ async function voltarAoFoco(cartaId) {
       feita.el.querySelector('.feito').animate([{ transform: 'scale(2.6)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 460, easing: 'cubic-bezier(.2,1.4,.4,1)' });
       feita.el.querySelector('.frente').animate([{ filter: 'brightness(1.7)' }, { filter: 'brightness(1)' }], { duration: 700 });
     }
+    // A primeira carta feita destrava a saída e os outros modos.
+    if (S.trava) { S.trava = false; guardarProgresso(); atualizarSaida(); if (!todasFeitas()) toast('Primeira carta feita: agora você pode sair quando quiser.'); }
   }
-  if (todasFeitas()) mostrarFim();
+  if (todasFeitas()) { if (!rm()) await pausa(1000); await abrirRelatorioGeral(); }
   S.animando = false;
 }
-// Do resultado de uma carta feita (aberto pelo foco) de volta ao foco, sem refazer o leque.
-async function reabrirFoco() {
-  $('#relatorio').hidden = true; $('#hub').hidden = false;
-  const foco = $('#foco'); foco.hidden = false; S.fase = 'foco';
-  if (!rm()) await mover(foco, [{ opacity: 0 }, { opacity: 1 }], { duration: 240 });
-}
 
-// ---------- Sessão ----------
+// ---------- Sessão (com o tempo de cada item e a indecisão) ----------
 const novaSessao = c => ({ carta: { id: c.id, titulo: c.titulo, modo: c.modo }, itens: c.itens.map(k => ITENS[k]), idx: 0, respostas: [] });
-function pausadaDeExemplo() { const c = CARTAS[0]; const s = novaSessao(c); s.idx = 1; s.respostas = [{ escolha: 0, acertou: true }]; return { id: c.id, titulo: c.titulo, sessao: s }; }
 function renderSessao() {
   const s = S.sessao; const it = s.itens[s.idx]; const m = MODOS[it.modo]; const resp = s.respostas[s.idx];
   const v = $('#sessao'); v.style.setProperty('--c', m.cor);
@@ -613,110 +720,357 @@ function renderSessao() {
     <div class="progresso"><i style="width:${(s.idx + (resp ? 1 : 0)) / s.itens.length * 100}%"></i></div>
     <div class="sessao-corpo"><p class="tema">${it.tema}</p><h2 class="enunciado">${it.enunciado}</h2>
       <div class="opcoes">${it.opcoes.map((o, k) => `<button class="op ${resp ? (k === it.certa ? 'certa' : k === resp.escolha ? 'errada' : 'apagada') : ''}" data-k="${k}" ${resp ? 'disabled' : ''}><span class="tecla">${k + 1}</span>${o}</button>`).join('')}</div>
-      ${resp ? `<div class="fb ${resp.acertou ? 'sim' : 'nao'}" role="status"><b>${resp.acertou ? 'Acertou.' : 'Ainda não.'}</b> ${it.explica}</div>` : ''}</div>
-    <div class="dock">${resp ? `<button class="primario" id="proxima">${ultimo ? (S.aoTerminar === 'resultado' ? 'Ver resultado' : 'Concluir carta') : 'Próxima'} ${I.seta}</button>` : '<p class="dica-dock">Escolha uma alternativa · teclas 1 a 4</p>'}</div>`;
+      ${resp ? `<div class="fb ${resp.acertou ? 'sim' : 'nao'}" role="status"><b>${resp.acertou ? 'Acertou.' : 'Ainda não.'}</b> ${it.porque[it.certa]}</div>` : ''}</div>
+    <div class="dock">${resp ? `<button class="primario" id="proxima">${ultimo ? 'Concluir carta' : 'Próxima'} ${I.seta}</button>` : '<p class="dica-dock">Escolha uma alternativa · teclas 1 a 4</p>'}</div>`;
+  if (!resp) {
+    s.inicio = performance.now(); s.passou = new Set();
+    v.querySelectorAll('.op').forEach(b => b.addEventListener('pointerenter', () => s.passou.add(Number(b.dataset.k))));
+  }
   (resp ? $('#proxima') : v.querySelector('.op'))?.focus({ preventScroll: true });
 }
 function responder(k) {
   const s = S.sessao; if (!s || s.respostas[s.idx]) return;
-  s.respostas[s.idx] = { escolha: k, acertou: k === s.itens[s.idx].certa };
+  const tempoMs = Math.round(performance.now() - (s.inicio || performance.now()));
+  const hesitacao = [...(s.passou || [])].filter(x => x !== k).length;
+  s.respostas[s.idx] = { escolha: k, acertou: k === s.itens[s.idx].certa, tempo: tempoMs, hesitacao };
   renderSessao();
 }
 function proxima() {
   const s = S.sessao; if (!s || S.animando) return;
   if (s.idx < s.itens.length - 1) { s.idx++; renderSessao(); $('#sessao').scrollTop = 0; return; }
-  const r = finalizar(s);
-  if (S.aoTerminar === 'resultado') abrirRelatorio(r, 'fim'); else voltarAoFoco(r.cartaId);
+  voltarAoFoco(finalizar(s).cartaId);
 }
 function sairSessao() {
   if (S.animando) return;
-  const s = S.sessao; S.pausada = { id: s.carta.id, titulo: s.carta.titulo, sessao: s }; S.sessao = null;
+  const s = S.sessao; S.pausada = { id: s.carta.id, titulo: s.carta.titulo, sessao: s }; S.sessao = null; guardarProgresso();
   voltarAoFoco(null);
 }
 function finalizar(s) {
-  const respondidas = s.respostas.map((r, k) => r && { ...r, it: s.itens[k] }).filter(Boolean);
-  const acertos = respondidas.filter(r => r.acertou).length;
-  const r = { cartaId: s.carta.id, titulo: s.carta.titulo, acertos, total: respondidas.length, dominados: acertos ? 1 : 0, quando: 'agora',
-    erros: respondidas.filter(x => !x.acertou).map(x => ({ it: x.it, escolha: x.escolha })) };
-  S.feitas.set(s.carta.id, r); S.ultimo = r; S.sessao = null;
+  const respostas = s.respostas.map((r, k) => r && { ...r, it: s.itens[k] }).filter(Boolean);
+  const r = { cartaId: s.carta.id, titulo: s.carta.titulo, modo: s.carta.modo, acertos: respostas.filter(x => x.acertou).length, total: respostas.length, respostas };
+  S.feitas.set(s.carta.id, r); S.sessao = null;
   if (S.pausada?.id === s.carta.id) S.pausada = null;
-  if (S.estado === 'andamento') { S.estado = 'normal'; guardar(); sincronizarPainel(); }
+  guardarProgresso();
   return r;
 }
 
-// ---------- Resultado ----------
-function abrirRelatorio(r, origem) {
-  S.rel = r; S.relOrigem = origem;
-  if (origem === 'foco') { $('#foco').hidden = true; S.fase = 'relatorio'; }
-  mostrar('relatorio');
+// ---------- Relatório geral: anel de cartas ----------
+const VAGAS = 8;
+const angVaga = v => -90 + v * 360 / VAGAS;
+function geometriaAnel(m) {
+  const R = Math.min(m.w, m.h) * (m.w < 600 ? .35 : .33);
+  return { R, k: Math.min(.8, (2 * Math.PI * R / VAGAS) * .62 / m.cw) };
 }
-function renderRelatorio() {
-  const r = S.rel; const paraCartas = S.relOrigem !== 'hub';
-  $('#relatorio').innerHTML = `
-    <header class="topo"><button class="icone-btn" id="rel-voltar" aria-label="${paraCartas ? 'Voltar às cartas' : 'Voltar ao hub'}">${I.voltar}</button><h1><small>Resultado da revisão</small>${r.titulo}</h1></header>
-    <div class="rel-corpo"><p class="carimbo ${r.erros.length ? '' : 'ok'}">${r.erros.length ? 'REVEJA OS ERROS' : 'ACERTOU TUDO'}</p>
-      <p class="placar">${r.acertos}/${r.total}<small>CERTAS</small></p>
-      <div class="linhas"><div><span>Itens revisados</span><b>${r.total}</b></div><div><span>Itens dominados</span><b class="${r.dominados ? 'pos' : ''}">${r.dominados ? `+${r.dominados * 40} XP` : '—'}</b></div>
-        <div><span>Próxima vez</span><b>Erradas: na próxima sessão · Certas: em 1 dia</b></div></div>
-      ${r.erros.map(({ it, escolha }) => `<article class="erro-item"><b>${I.x}${it.enunciado}</b><p>Sua resposta: ${it.opcoes[escolha]}</p><p>Correta: ${it.opcoes[it.certa]}</p>
-        <p class="ia">${it.explica}<small>Explicação gerada por IA. Confira a fonte.</small></p></article>`).join('')}</div>
-    <div class="dock"><button class="primario" id="rel-ok">${paraCartas ? 'Voltar às cartas' : 'Voltar ao hub'} ${I.seta}</button></div>`;
-  $('#rel-ok').focus({ preventScroll: true });
+const noAnel = (ang, g, centro = { x: 0, y: 0 }) => { const a = ang * Math.PI / 180; return { x: centro.x + g.R * Math.cos(a), y: centro.y + g.R * Math.sin(a), r: ang + 90, s: g.k }; };
+// O certinho fica sempre em pé, mesmo nas cartas que o anel deixa de cabeça para baixo.
+const endireitarCheck = c => c.el.style.setProperty('--contra', `${-(c.ang + 90)}deg`);
+const relCartas = () => cartas.filter(c => S.feitas.has(c.id));
+function textoSubRel() {
+  const lista = relCartas(); const vistas = lista.filter(c => S.vistas.has(c.id)).length;
+  $('#rel-sub').textContent = vistas === lista.length ? 'Tudo visto' : vistas ? `${vistas} de ${lista.length} vistos · toque numa carta` : 'Toque numa carta para ver o relatório completo';
 }
-function sairRelatorio() {
+// Do leque para o anel: as cartas feitas vão para as vagas do círculo; as em espera saem de cena.
+async function abrirRelatorioGeral({ direto = false } = {}) {
+  S.fase = 'relgeral'; const foco = $('#foco'); foco.classList.remove('aberto'); $('#foco-dica').classList.remove('on');
+  const m = medidas(foco); const g = geometriaAnel(m); const lista = relCartas(); const n = lista.length;
+  document.querySelectorAll('.vaga').forEach(v => v.remove());
+  const usadas = new Set();
+  lista.forEach((c, i) => { c.vaga = Math.round(i * VAGAS / n) % VAGAS; usadas.add(c.vaga); c.ang = angVaga(c.vaga); });
+  for (let v = 0; v < VAGAS; v++) if (!usadas.has(v)) {
+    const el = document.createElement('span'); el.className = 'vaga'; el.dataset.vaga = v;
+    const p = noAnel(angVaga(v), g); el.style.transform = tf(p); foco.insertBefore(el, $('#rel-titulo'));
+  }
+  await Promise.all([
+    ...cartas.filter(c => !S.feitas.has(c.id)).map(c => { c.el.style.pointerEvents = 'none'; c.el.tabIndex = -1; return mover(c.el, [{ opacity: direto ? 0 : 1 }, { opacity: 0 }], { duration: rm() || direto ? 1 : 300 }); }),
+    ...lista.map((c, i) => {
+      c.el.classList.remove('feita', 'brilho'); c.el.style.zIndex = 10 + i; endireitarCheck(c);
+      if (S.vistas.has(c.id)) marcarVistaSemAnimar(c);
+      const para = noAnel(c.ang, g);
+      if (direto) { c.pos = para; c.el.style.transform = tf(para); return virar(c, true, 0, 1); }
+      const quadros = caminho(i, n, c.pos, para, m, { voltas: 1, raio: .2 }); c.pos = para;
+      return Promise.all([mover(c.el, quadros, { duration: tempo(1100, 600), delay: rm() ? 0 : i * 70, easing: curva() }), virar(c, true, 0, 1)]);
+    }),
+  ]);
+  document.querySelectorAll('.vaga').forEach(v => aparecer(v, 500, 1));
+  textoSubRel(); await aparecer($('#rel-titulo'), 500, 1);
+  foco.classList.add('anel'); atualizarSaida();
+  lista.forEach(c => { c.el.tabIndex = 0; c.el.setAttribute('aria-label', `Relatório: ${c.titulo}`); });
+  lista.find(c => !S.vistas.has(c.id))?.el.focus({ preventScroll: true });
+}
+async function verRelatorioDeHoje() {
   if (S.animando) return;
-  if (S.relOrigem === 'fim') voltarAoFoco(S.rel.cartaId);
-  else if (S.relOrigem === 'foco') reabrirFoco();
-  else mostrar('hub');
+  S.animando = true;
+  const foco = prepararFoco(); mover(foco.querySelector('.foco-fundo'), [{ opacity: 0 }, { opacity: 1 }], { duration: rm() ? 1 : 420 });
+  cartas.forEach(c => foco.appendChild(c.el));
+  await abrirRelatorioGeral({ direto: true });
+  S.animando = false;
+}
+// Giro do anel: cada carta anda pelo arco; a escolhida termina reta e maior ("abrir") ou volta ao giro ("fechar").
+function girar(de, ate, c0, c1, g, modo) {
+  const K = 28, q = [];
+  for (let k = 0; k <= K; k++) {
+    const t = k / K; const e = suave(t); const ang = de + (ate - de) * e; const a = ang * Math.PI / 180; const tang = ang + 90;
+    const r = modo === 'abrir' ? tang * (1 - e) : modo === 'fechar' ? tang * e : tang;
+    const s = modo === 'abrir' ? g.k * (1 + .3 * e) : modo === 'fechar' ? g.k * (1.3 - .3 * e) : g.k;
+    q.push({ transform: tf({ x: c0.x + (c1.x - c0.x) * e + g.R * Math.cos(a), y: c0.y + (c1.y - c0.y) * e + g.R * Math.sin(a), r, s }), offset: t });
+  }
+  return q;
+}
+function ladoLargo(m) { return m.w >= 860; }
+function retPainel(m) {
+  if (!ladoLargo(m)) return { left: 10, top: 10, width: m.w - 20, height: m.h - 20 };
+  const width = Math.min(560, m.w * .46); const height = Math.min(m.h - 48, 760);
+  return { left: m.w - 24 - width, top: (m.h - height) / 2, width, height };
+}
+let anelGiro = 0, anelCentro = { x: 0, y: 0 };
+async function abrirCartaRel(c) {
+  S.animando = true; S.fase = 'relcarta';
+  const foco = $('#foco'); foco.classList.remove('anel'); const m = medidas(foco); const g = geometriaAnel(m); const lista = relCartas();
+  aparecer($('#rel-titulo'), 240, 0); document.querySelectorAll('.vaga').forEach(v => aparecer(v, 240, 0)); $('#foco-sair').hidden = true;
+  const painel = retPainel(m);
+  const xAlvo = ladoLargo(m) ? painel.left + painel.width / 2 - m.w / 2 : 0;
+  const delta = ((0 - c.ang) % 360 + 540) % 360 - 180; anelGiro = delta;
+  const c1 = { x: xAlvo - g.R, y: 0 }; anelCentro = c1;
+  c.el.style.zIndex = 70;
+  await Promise.all(lista.map(x => {
+    const de = x.ang, ate = x.ang + delta;
+    const p = mover(x.el, girar(de, ate, { x: 0, y: 0 }, c1, g, x === c ? 'abrir' : null), { duration: rm() ? 1 : 950, easing: 'linear' });
+    x.angAtual = ate; x.pos = x === c ? { x: xAlvo, y: 0, r: 0, s: g.k * 1.3 } : noAnel(ate, g, c1);
+    if (x !== c) mover(x.el, [{ opacity: 1 }, { opacity: .3 }], { duration: rm() ? 1 : 700, delay: rm() ? 0 : 300 });
+    return p;
+  }));
+  // O painel nasce da carta escolhida e cresce até o relatório completo.
+  const r = S.feitas.get(c.id); const pr = $('#painel-rel'); pr.style.setProperty('--c', MODOS[c.modo].cor);
+  $('#pr-scroll').innerHTML = htmlRelatorio(r); $('#pr-scroll').scrollTop = 0;
+  $('#entendi').innerHTML = `Entendi ${I.check}`;
+  const ini = retNoFoco(c.el.querySelector('.frente'));
+  pr.hidden = false; pr.style.opacity = 1;
+  const conteudo = [$('#pr-scroll'), pr.querySelector('.pr-acoes')];
+  conteudo.forEach(el => { el.style.opacity = 0; });
+  await mover(pr, [
+    { left: `${ini.left}px`, top: `${ini.top}px`, width: `${ini.width}px`, height: `${ini.height}px`, borderRadius: '14px' },
+    { left: `${painel.left}px`, top: `${painel.top}px`, width: `${painel.width}px`, height: `${painel.height}px`, borderRadius: '18px' },
+  ], { duration: rm() ? 1 : 560, easing: 'cubic-bezier(.7,0,.2,1)' });
+  conteudo.forEach(el => aparecer(el, 300, 1));
+  if (ladoLargo(m)) { $('#lado-rel').innerHTML = `<p class="kicker">Relatório</p><h2>${c.titulo}</h2><p>${r.acertos}/${r.total} certas · ${seg(media(r.respostas.map(x => x.tempo)))} s por item</p>`; aparecer($('#lado-rel'), 400, 1); }
+  $('#entendi').focus({ preventScroll: true });
+  S.relAberta = c; S.animando = false;
+}
+async function entendi() {
+  const c = S.relAberta; if (!c || S.animando) return;
+  S.animando = true;
+  const foco = $('#foco'); const m = medidas(foco); const g = geometriaAnel(m); const lista = relCartas(); const pr = $('#painel-rel');
+  aparecer($('#lado-rel'), 200, 0);
+  [$('#pr-scroll'), pr.querySelector('.pr-acoes')].forEach(el => aparecer(el, 160, 0));
+  await pausa(rm() ? 0 : 160);
+  const fim = retNoFoco(c.el.querySelector('.frente'));
+  await mover(pr, [
+    { left: pr.style.left, top: pr.style.top, width: pr.style.width, height: pr.style.height, borderRadius: '18px' },
+    { left: `${fim.left}px`, top: `${fim.top}px`, width: `${fim.width}px`, height: `${fim.height}px`, borderRadius: '14px' },
+  ], { duration: rm() ? 1 : 480, easing: 'cubic-bezier(.7,0,.2,1)' });
+  pr.hidden = true;
+  // Outro giro: o anel dá uma volta inteira e volta ao centro, com as cartas de volta às vagas.
+  await Promise.all(lista.map(x => {
+    const de = x.angAtual; const ate = x.ang + 360;
+    if (x !== c) mover(x.el, [{ opacity: .3 }, { opacity: 1 }], { duration: rm() ? 1 : 600 });
+    x.pos = noAnel(x.ang, g);
+    return mover(x.el, girar(de, ate, anelCentro, { x: 0, y: 0 }, g, x === c ? 'fechar' : null), { duration: rm() ? 1 : 1150, easing: 'linear' });
+  }));
+  lista.forEach(x => { x.el.style.zIndex = 10 + lista.indexOf(x); });
+  S.relAberta = null;
+  if (!S.vistas.has(c.id)) { S.vistas.add(c.id); guardarProgresso(); await marcarVista(c); }
+  document.querySelectorAll('.vaga').forEach(v => aparecer(v, 400, 1));
+  textoSubRel(); aparecer($('#rel-titulo'), 400, 1);
+  S.fase = 'relgeral'; foco.classList.add('anel'); atualizarSaida();
+  if (!S.absorvido && lista.every(x => S.vistas.has(x.id))) { await absorver(); return; }
+  S.animando = false;
+  c.el.focus({ preventScroll: true });
+}
+// Certinho que se completa no meio da carta; ao completar, a carta pisca, fica verde e apaga devagar.
+async function marcarVista(c) {
+  const frente = c.el.querySelector('.frente');
+  if (!frente.querySelector('.check-centro')) frente.insertAdjacentHTML('beforeend', CHECK_CENTRO);
+  const caminhoCheck = frente.querySelector('.check-centro path'); const circulo = frente.querySelector('.check-centro svg');
+  if (!rm()) {
+    frente.animate([{ boxShadow: '0 0 0 0 rgba(6,214,160,0)' }, { boxShadow: '0 0 0 3px rgba(6,214,160,.9), 0 0 34px rgba(6,214,160,.7)' }, { boxShadow: '0 0 0 0 rgba(6,214,160,0)' }], { duration: 500, iterations: 2 });
+    circulo.animate([{ transform: 'scale(.4)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 300, easing: 'cubic-bezier(.2,1.4,.4,1)' });
+    await mover(caminhoCheck, [{ strokeDashoffset: 62 }, { strokeDashoffset: 0 }], { duration: 650, delay: 200, easing: 'ease-out' });
+    frente.animate([{ filter: 'brightness(2.2)' }, { filter: 'brightness(1)' }], { duration: 380 });
+  }
+  c.el.classList.add('vista');
+  await pausa(rm() ? 0 : 450);
+  c.el.classList.add('apagada');
+}
+function marcarVistaSemAnimar(c) {
+  const frente = c.el.querySelector('.frente');
+  if (!frente.querySelector('.check-centro')) frente.insertAdjacentHTML('beforeend', CHECK_CENTRO);
+  c.el.classList.add('vista', 'apagada');
+}
+// Fim: o cérebro aparece no centro e "come" as cartas, uma a uma.
+async function absorver() {
+  const foco = $('#foco'); foco.classList.remove('anel'); const lista = relCartas(); const cerebro = $('#cerebro');
+  $('#foco-sair').hidden = true;
+  await pausa(rm() ? 0 : 700);
+  aparecer($('#rel-titulo'), 300, 0); document.querySelectorAll('.vaga').forEach(v => aparecer(v, 300, 0));
+  if (!rm()) cerebro.animate([{ transform: 'scale(.5)', opacity: 0 }, { transform: 'scale(1.06)', opacity: 1, offset: .7 }, { transform: 'scale(1)', opacity: 1 }], { duration: 700, easing: 'cubic-bezier(.2,1,.3,1)' });
+  cerebro.style.opacity = 1;
+  await pausa(rm() ? 0 : 600);
+  const alvo = { x: 0, y: (parseFloat(getComputedStyle(cerebro).top) - medidas(foco).h / 2) || 0 };
+  await Promise.all(lista.map(async (c, i) => {
+    await pausa(rm() ? 0 : i * 260);
+    const de = c.pos; const K = 22, q = [];
+    for (let k = 0; k <= K; k++) {
+      const t = k / K; const e = t * t; const giro = 1 - t;
+      const ang = Math.atan2(de.y - alvo.y, de.x - alvo.x) + t * 2.4; const dist = Math.hypot(de.x - alvo.x, de.y - alvo.y) * giro;
+      q.push({ transform: tf({ x: alvo.x + dist * Math.cos(ang), y: alvo.y + dist * Math.sin(ang), r: de.r + 420 * e, s: de.s * (1 - .94 * e) }), opacity: t > .85 ? (1 - t) / .15 : 1, offset: t });
+    }
+    await mover(c.el, q, { duration: rm() ? 1 : 900, easing: 'cubic-bezier(.5,0,.8,.6)' });
+    if (!rm()) cerebro.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }, { transform: 'scale(.97)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'ease-out' });
+    if (!rm()) cerebro.animate([{ filter: 'drop-shadow(0 0 14px rgba(180,156,255,.45))' }, { filter: 'drop-shadow(0 0 34px rgba(0,245,212,.85))' }, { filter: 'drop-shadow(0 0 18px rgba(180,156,255,.55))' }], { duration: 600 });
+  }));
+  if (!rm()) await mover(cerebro, [{ filter: 'drop-shadow(0 0 18px rgba(180,156,255,.5))' }, { filter: 'drop-shadow(0 0 40px rgba(0,245,212,.9))' }, { filter: 'drop-shadow(0 0 22px rgba(0,245,212,.55))' }], { duration: 1100, easing: 'ease-in-out' });
+  S.absorvido = true; guardarProgresso();
+  const certas = lista.reduce((s, c) => s + S.feitas.get(c.id).acertos, 0), total = lista.reduce((s, c) => s + S.feitas.get(c.id).total, 0);
+  const fim = $('#foco-fim');
+  fim.innerHTML = `<p class="kicker">Conhecimento absorvido</p><b>${lista.length} cartas · ${certas}/${total} certas hoje</b><button class="primario" id="fim-menu">Voltar ao hub ${I.seta}</button>`;
+  fim.hidden = false;
+  if (!rm()) fim.animate([{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.16,1,.3,1)' });
+  $('#fim-menu').focus({ preventScroll: true });
+  S.fase = 'absorvido'; S.animando = false;
+}
+async function fecharFoco() {
+  const foco = $('#foco'); if (!rm()) await mover(foco, [{ opacity: 1 }, { opacity: 0 }], { duration: 360 });
+  foco.hidden = true; foco.style.opacity = ''; mostrar('hub');
+}
+
+// ---------- Conteúdo do relatório de uma carta ----------
+const media = lista => lista.length ? lista.reduce((s, x) => s + x, 0) / lista.length : 0;
+const seg = ms => (ms / 1000).toFixed(ms < 10000 ? 1 : 0).replace('.', ',');
+const curto = t => { const s = t.replace(/[“”]/g, ''); return s.length > 60 ? `${s.slice(0, 57)}...` : s; };
+// Análise por regras, só para o protótipo; no app, a IA escreve a partir dos mesmos dados.
+function analisar(r) {
+  const tempos = r.respostas.map(x => x.tempo); const med = media(tempos); const linhas = [];
+  const erradas = r.respostas.filter(x => !x.acertou);
+  if (!erradas.length) linhas.push('Você acertou tudo nesta carta. Os itens voltam em 1 dia para fixar.');
+  for (const x of erradas) {
+    const marcada = x.it.opcoes[x.escolha];
+    if (x.hesitacao >= 2) linhas.push(`Em “${curto(x.it.enunciado)}”, você passou por ${x.hesitacao + 1} alternativas antes de marcar “${marcada}”: sinal de dúvida entre conceitos parecidos.`);
+    else if (x.tempo < Math.max(6000, med * .7)) linhas.push(`Em “${curto(x.it.enunciado)}”, você respondeu em ${seg(x.tempo)} s, mais rápido que a sua média: pode ter sido pressa ou reconhecimento só de uma palavra.`);
+    else linhas.push(`Em “${curto(x.it.enunciado)}”, você pensou ${seg(x.tempo)} s e marcou “${marcada}”: o conceito ainda não está firme. Vale reler a explicação de cada alternativa abaixo.`);
+  }
+  const certas = r.respostas.filter(x => x.acertou);
+  if (certas.length && erradas.length && media(certas.map(x => x.tempo)) > media(erradas.map(x => x.tempo))) linhas.push('Quando você levou mais tempo, acertou mais: ler com calma está funcionando.');
+  const temas = [...new Set(erradas.map(x => x.it.tema.split(' · ')[0]))];
+  if (temas.length) linhas.push(`Os erros desta carta são de ${temas.join(' e ')}.`);
+  return linhas;
+}
+function htmlRelatorio(r) {
+  const m = MODOS[r.modo]; const tempos = r.respostas.map(x => x.tempo); const max = Math.max(...tempos, 1);
+  const hes = r.respostas.reduce((s, x) => s + x.hesitacao, 0); const nivelHes = hes / r.total < .5 ? 'Baixa' : hes / r.total <= 1.5 ? 'Média' : 'Alta';
+  return `<div class="pr-topo"><span class="pr-ic">${I[r.modo]}</span><div><p class="kicker">Relatório · ${m.rotulo}</p><h2>${r.titulo}</h2></div></div>
+    <div class="pr-numeros">
+      <div><b>${r.acertos}/${r.total}</b><span>certas</span></div>
+      <div><b>${seg(media(tempos))} s</b><span>tempo médio de pensamento</span></div>
+      <div><b>${nivelHes}</b><span>indecisão (${hes} ${hes === 1 ? 'troca' : 'trocas'} de alternativa)</span></div>
+      <div><b>${seg(max)} s</b><span>item mais demorado</span></div>
+    </div>
+    <section><h3>Seu ritmo, item a item</h3><div class="pr-barras">${r.respostas.map((x, i) => `<div class="pr-barra ${x.acertou ? 'ok' : 'no'}" title="${seg(x.tempo)} s"><i style="height:${Math.max(8, x.tempo / max * 100)}%"></i><small>${i + 1}</small></div>`).join('')}</div>
+      <p class="pr-nota">Verde: acertou. Vermelho: errou. Altura: tempo até responder.</p></section>
+    <section><h3>O que pode estar influenciando seus erros</h3><ul class="pr-analise">${analisar(r).map(l => `<li>${l}</li>`).join('')}</ul>
+      <p class="pr-nota">${I.brilho} Análise gerada por IA a partir das suas respostas. Confira as fontes.</p></section>
+    <section><h3>Cada alternativa, explicada</h3>${r.respostas.map((x, i) => `<article class="pr-item"><p class="tema" style="--c:${m.cor}">Item ${i + 1} · ${x.it.tema}</p><b>${x.it.enunciado}</b>
+      <ul class="pr-alts">${x.it.opcoes.map((o, k) => `<li class="${k === x.it.certa ? 'certa' : k === x.escolha ? 'errada' : ''}"><span class="pr-marca">${k === x.it.certa ? I.check : I.x}</span><div><b>${o}${k === x.escolha ? '<em>sua resposta</em>' : ''}</b><p>${x.it.porque[k]}</p></div></li>`).join('')}</ul>
+      <p class="pr-fonte">Fonte: ${x.it.fonte}</p></article>`).join('')}</section>`;
+}
+
+// ---------- Exemplos para os atalhos do painel ----------
+function resultadoExemplo(c, acertos, tempos, hes) {
+  const respostas = c.itens.map((k, i) => { const it = ITENS[k]; const ok = acertos[i % acertos.length]; return { it, escolha: ok ? it.certa : (it.certa + 1) % it.opcoes.length, acertou: ok, tempo: tempos[i % tempos.length], hesitacao: hes[i % hes.length] }; });
+  return { cartaId: c.id, titulo: c.titulo, modo: c.modo, acertos: respostas.filter(x => x.acertou).length, total: respostas.length, respostas };
+}
+const EXEMPLOS = {
+  'quiz-1': [[true, false, true], [14200, 4800, 21500], [0, 0, 2]],
+  vm: [[true, false], [9800, 17300], [0, 1]],
+  erro: [[false], [26400], [3]],
+  pdx: [[true], [12100], [1]],
+};
+function exemploAndamento() {
+  S.feitas.clear(); S.feitas.set('erro', resultadoExemplo(CARTAS[2], ...EXEMPLOS.erro));
+  const c = CARTAS[0]; const s = novaSessao(c); s.idx = 1; s.respostas = [{ escolha: 0, acertou: true, tempo: 14200, hesitacao: 0 }];
+  S.pausada = { id: c.id, titulo: c.titulo, sessao: s }; S.trava = false; guardarProgresso();
+}
+async function irAoRelatorio() {
+  if (S.animando) return;
+  S.estado = 'normal'; guardar(); sincronizarPainel();
+  S.feitas.clear(); S.vistas.clear(); S.absorvido = false; S.trava = false; S.pausada = null; S.sessao = null;
+  for (const c of CARTAS.filter(x => !x.espera)) S.feitas.set(c.id, resultadoExemplo(c, ...EXEMPLOS[c.id]));
+  guardarProgresso();
+  $('#foco').hidden = true; $('#expansor').hidden = true; mostrar('hub');
+  await entrarFoco(); S.animando = true; await abrirRelatorioGeral(); S.animando = false;
 }
 
 // ---------- Navegação e painel ----------
 function mostrar(qual) {
-  for (const id of ['hub', 'sessao', 'relatorio']) $('#' + id).hidden = id !== qual;
-  if (qual === 'hub') renderHub(); else if (qual === 'sessao') renderSessao(); else renderRelatorio();
+  for (const id of ['hub', 'sessao']) $('#' + id).hidden = id !== qual;
+  if (qual === 'hub') renderHub(); else renderSessao();
   $('#' + qual).scrollTop = 0;
 }
 document.addEventListener('click', ev => {
   const b = ev.target.closest('button'); if (!b || b.classList.contains('carta')) return;
   if (b.dataset.jogar) return toast(`No app, abre o ${b.dataset.jogar}.`);
   const acoes = {
-    abrir: entrarFoco, continuar, 'foco-sair': sairFoco, 'foco-hub': sairFoco,
-    encerrar: () => { if (S.pausada) abrirRelatorio(finalizar(S.pausada.sessao), 'hub'); },
-    ultima: () => abrirRelatorio(S.ultimo, 'hub'), menu: () => toast('No app, volta ao menu.'),
-    sair: sairSessao, proxima, 'rel-ok': sairRelatorio, 'rel-voltar': sairRelatorio,
+    abrir: pedirInicio, continuar, 'dlg-sim': confirmarInicio, 'dlg-nao': () => { $('#confirmar').hidden = true; $('#abrir')?.focus(); },
+    'foco-sair': () => (S.fase === 'absorvido' ? fecharFoco() : sairFoco()), 'fim-menu': fecharFoco, 'ver-rel': verRelatorioDeHoje,
+    menu: () => toast('No app, volta ao menu.'), sair: sairSessao, proxima, entendi,
+    'sim-reabrir': () => { if (S.sessao) { S.pausada = { id: S.sessao.carta.id, titulo: S.sessao.carta.titulo, sessao: S.sessao }; } guardarProgresso(); location.reload(); },
+    'sim-relatorio': irAoRelatorio,
   };
   if (acoes[b.id]) acoes[b.id]();
   if (b.dataset.k !== undefined) responder(Number(b.dataset.k));
 });
 function sincronizarPainel() {
-  document.querySelectorAll('.seg').forEach(g => g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(S[g.dataset.chave] === b.dataset.valor))));
+  document.querySelectorAll('.seg[data-chave]').forEach(g => g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(S[g.dataset.chave] === b.dataset.valor))));
   $('#frame').classList.toggle('celular', S.tela === 'celular');
 }
 function definir(chave, valor) {
   if (S.animando) return;
   S[chave] = valor; guardar(); sincronizarPainel();
-  if (chave !== 'estado') { if (S.fase === 'sessao' && S.sessao) renderSessao(); return; } // vale a partir da próxima ação
-  if (chave === 'estado') { S.feitas.clear(); S.sessao = null; S.pausada = valor === 'andamento' ? pausadaDeExemplo() : null; }
-  $('#foco').hidden = true; $('#expansor').hidden = true; $('#foco-fim').hidden = true;
+  if (chave !== 'estado') return;
+  S.feitas.clear(); S.vistas.clear(); S.absorvido = false; S.sessao = null; S.pausada = null; S.trava = false;
+  if (valor === 'andamento') exemploAndamento();
+  guardarProgresso();
+  $('#foco').hidden = true; $('#expansor').hidden = true; $('#confirmar').hidden = true;
   S.fase = 'hub'; mostrar('hub');
 }
-document.querySelectorAll('.seg').forEach(g => g.addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) definir(g.dataset.chave, b.dataset.valor); }));
+document.querySelectorAll('.seg[data-chave]').forEach(g => g.addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) definir(g.dataset.chave, b.dataset.valor); }));
 const botaoProto = $('#proto-btn'); const painel = $('#proto-painel');
 const rotuloProto = () => { botaoProto.innerHTML = `${painel.hidden ? I.ajuste : I.x} Protótipo`; botaoProto.setAttribute('aria-expanded', String(!painel.hidden)); };
 botaoProto.addEventListener('click', () => { painel.hidden = !painel.hidden; rotuloProto(); });
-$('#foco-sair').innerHTML = I.x;
+$('#foco-sair').innerHTML = I.x; $('#dlg-ic').innerHTML = I.cadeado;
 document.addEventListener('keydown', ev => {
-  if (ev.key === 'Escape') { if (!painel.hidden) { painel.hidden = true; rotuloProto(); botaoProto.focus(); } else if (S.fase === 'foco') sairFoco(); return; }
+  if (ev.key === 'Escape') {
+    if (!painel.hidden) { painel.hidden = true; rotuloProto(); botaoProto.focus(); }
+    else if (!$('#confirmar').hidden) $('#confirmar').hidden = true;
+    else if (S.fase === 'foco' || S.fase === 'relgeral') sairFoco();
+    return;
+  }
   if ($('#sessao').hidden || !S.sessao) return;
   const n = '1234'.indexOf(ev.key);
   if (n >= 0 && !S.sessao.respostas[S.sessao.idx] && S.sessao.itens[S.sessao.idx].opcoes[n]) { ev.preventDefault(); responder(n); }
 });
 new ResizeObserver(() => {
-  if (S.fase !== 'foco' || S.animando || !$('#foco').classList.contains('aberto')) return;
-  const m = medidas($('#foco')); cartas.forEach((c, i) => { c.pos = posLeque(i, cartas.length, m); c.el.style.transform = tf(c.pos); c.el.style.setProperty('--r', `${c.pos.r}deg`); });
+  if (S.animando || $('#foco').hidden) return;
+  const m = medidas($('#foco'));
+  if (S.fase === 'foco' && $('#foco').classList.contains('aberto')) cartas.forEach((c, i) => { c.pos = posLeque(i, cartas.length, m); c.el.style.transform = tf(c.pos); c.el.style.setProperty('--r', `${c.pos.r}deg`); });
+  if (S.fase === 'relgeral') {
+    const g = geometriaAnel(m); relCartas().forEach(c => { c.pos = noAnel(c.ang, g); c.el.style.transform = tf(c.pos); });
+    document.querySelectorAll('.vaga').forEach(v => { v.style.transform = tf(noAnel(angVaga(Number(v.dataset.vaga)), g)); });
+  }
 }).observe($('#app'));
 
-rotuloProto(); sincronizarPainel(); mostrar('hub');
+restaurar(); rotuloProto(); sincronizarPainel(); mostrar('hub');
+// A trava sobrevive a fechar e abrir o app: abre direto nas cartas.
+if (S.trava) entrarFoco().then(() => toast('A revisão continua: termine uma carta para sair.'));
 </script>
 </body>
 </html>
