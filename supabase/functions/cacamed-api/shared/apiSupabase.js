@@ -218,7 +218,8 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         if (acao === 'editarPerfil' && novoUsername !== row.profile.username && usernameValido(novoUsername)
             && await usernameEmUso(database, novoUsername, user.uid)) return answer({ erro: 'Este username já está em uso por outro plantonista.' }, 409);
         let historico = [];
-        if (ACOES_REVISAO.includes(acao)) {
+        // A sessão da Revisão jogada sem rede também precisa do histórico (app offline).
+        if (ACOES_REVISAO.includes(acao) || (acao === 'sincronizarFila' && pedido.item?.tipo === 'sessaoRevisao')) {
           if (!revisaoLiberada(row.profile)) return answer({ erro: `A Revisão inteligente libera no nível ${NIVEL_REVISAO}.` }, 403);
           for (let offset = 0; ; offset += 1000) {
             const page = await database('cacamed_events?' + filter + '&kind=in.(resposta,revisao)&select=data,kind&order=created_at.asc,event_id.asc&limit=1000&offset=' + offset);

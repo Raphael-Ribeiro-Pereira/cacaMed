@@ -44,6 +44,8 @@ export function manterProvisorias(servidor, local) {
     const e = local.treinos?.[modo]?.entrada;
     if (e?.provisoria && !e.encerrada) r = { ...r, treinos: { ...r.treinos, [modo]: { ...r.treinos?.[modo], entrada: e } } };
   }
+  const rev = local.revisao?.entrada;
+  if (rev?.provisoria && !rev.encerrada) r = { ...r, revisao: { ...r.revisao, entrada: rev } };
   for (const [campo, fim] of Object.entries(ENCERRADA)) {
     const e = local[campo]?.entrada;
     if (e?.provisoria && !fim(e)) r = { ...r, [campo]: { ...r[campo], entrada: e } };

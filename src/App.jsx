@@ -168,7 +168,8 @@ function App() {
   const temPerfil = Boolean(dadosUsuario);
   useEffect(() => {
     if (!temPerfil) return undefined;
-    const pre = () => { import('./components/SelecaoTopicos'); import('./components/Jogo'); import('./components/TreinoMedico'); };
+    const pre = () => { for (const tela of [import('./components/SelecaoTopicos'), import('./components/Jogo'), import('./components/TreinoMedico'),
+      import('./components/RevisaoInteligente'), import('./components/PlantaoMedico'), import('./components/ErroMedico'), import('./components/CausaEfeito')]) tela.catch(() => {}); };
     const id = window.requestIdleCallback ? window.requestIdleCallback(pre, { timeout: 5000 }) : setTimeout(pre, 3000);
     return () => (window.cancelIdleCallback ? window.cancelIdleCallback(id) : clearTimeout(id));
   }, [temPerfil]);

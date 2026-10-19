@@ -4,7 +4,7 @@ import { filaDoAparelho } from '../services/filaOffline';
 
 // Indicador discreto do app offline (docs/app-offline.md#1-detecção-de-rede): sem internet, enviando a fila ou itens
 // recusados (toque mostra o motivo). Online e com a fila vazia, não aparece.
-const ROTULO = { rodadaTreino: 'Rodada de treino' };
+const ROTULO = { rodadaTreino: 'Rodada de treino', partidaCruzadinha: 'Cruzadinha', pedidosDdx: 'Caso do DDX', sessaoRevisao: 'Sessão da Revisão' };
 export default function IndicadorConexao({ conexao }) {
   const [aberto, setAberto] = useState(false);
   const { estado, pendentes, recusados } = conexao;

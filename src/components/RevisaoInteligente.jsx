@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BrainCircuit, Check, ChevronLeft, ClipboardCheck, ExternalLink, Flag, Flame, Lock, Play, RotateCcw, ScanLine, Sparkles, X } from 'lucide-react';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
+import { servicoRevisaoComOffline } from '../services/revisaoOffline';
+import { guardarNaFila } from '../services/conexao';
 import { nivelPorXP } from '../utils/economia';
 import { NIVEL_REVISAO, XP_DOMINIO } from '../utils/revisaoInteligente';
 import { animar, registrarLatencia, useLargo } from '../utils/prototipo';
@@ -75,7 +77,9 @@ function CasoErroMedico({ item, resultado, ocupado, aoResponder }) {
   </div>;
 }
 
-export default function RevisaoInteligente({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil = chamarPerfilPlanilha }) {
+export default function RevisaoInteligente({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil: servicoApi = chamarPerfilPlanilha }) {
+  // App offline: sem rede, a carta abre da reserva preparada pelo servidor e a sessão vai para a fila (services/revisaoOffline.js).
+  const servicoPerfil = useMemo(() => servicoRevisaoComOffline(servicoApi, { perfilAtual: () => dadosUsuario, guardarNaFila }), [servicoApi, dadosUsuario]);
   const web = useLargo();
   const liberada = dadosUsuario?.role === 'admin' || nivelPorXP(dadosUsuario?.pontuacaoTotal) >= NIVEL_REVISAO;
   const stats = dadosUsuario?.revisao || {};
@@ -169,8 +173,9 @@ export default function RevisaoInteligente({ usuario, dadosUsuario, setDadosUsua
     const linhas = [['Itens revisados', `${r.respondidos}/${r.total}`, 'pos'], ['Respostas certas', `${r.acertos}/${r.respondidos || 0}`, r.acertos ? 'pos' : 'mut'],
       ...(r.xp ? [['Itens dominados', `+${r.xp} XP`, 'pos']] : []), ['Próxima reapresentação', quando(r.proximaRevisao), 'mut']];
     return <div className={`cbt ${web ? 'web' : ''}`}><Resultado key={entrada.id} stamp={entrada.abandonada ? 'REVISÃO ENCERRADA' : erradas.length ? 'REVEJA OS ERROS' : 'ACERTOU TUDO'} tom="violet" recibo={entrada.id}
-      sub={r.temas.length ? r.temas.join(' · ') : 'Sessão sem respostas'} linhas={linhas} total={r.acertos} unidade="CERTAS" fase="ok"
-      aviso={erradas.length ? 'Os itens errados voltam na próxima sessão; os certos, nos intervalos programados.' : 'Os itens voltam nos intervalos programados.'}
+      sub={r.temas.length ? r.temas.join(' · ') : 'Sessão sem respostas'} linhas={linhas} total={r.acertos} unidade="CERTAS" fase={entrada.provisoria ? 'fila' : 'ok'}
+      aviso={entrada.provisoria ? 'Sessão feita sem internet: ela é enviada sozinha quando a rede voltar, e o servidor confirma os intervalos e o XP de domínio.'
+        : erradas.length ? 'Os itens errados voltam na próxima sessão; os certos, nos intervalos programados.' : 'Os itens voltam nos intervalos programados.'}
       principal={{ rotulo: 'Voltar às cartas', aoClicar: voltarCartas }} aoVoltar={() => setTelaAtual('menu')}
       detalhes={erradas.map(({ res, item: q }) => <div key={`${res.modo}-${res.itemId}`} className="det">
         <b className="no"><X />{q.modo === 'erroMedico' ? q.titulo : q.enunciado || `“${q.texto}”`}{res.parecida ? ' · pergunta parecida' : ''}</b>

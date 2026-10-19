@@ -1,5 +1,5 @@
 import { operarTreinoSupabase, eventosTreino } from './operarTreinoSupabase.js';
-import { operarRevisaoSupabase, eventosRevisao } from './operarRevisaoSupabase.js';
+import { operarRevisaoSupabase, eventosRevisao, sincronizarSessaoRevisao } from './operarRevisaoSupabase.js';
 import { emitirCruzadinhaSupabase, registrarPartidaSupabase, operarAdminSupabase, operarPlantaoSupabase, operarAuditoriaSupabase, operarRelacaoSupabase, operarBatalhaSupabase } from './operarJogosSupabase.js';
 import { eventosBatalha } from '../utils/batalhaRevisao.js';
 import { tentativaErroMedico } from '../utils/erroMedicoRevisao.js';
@@ -53,6 +53,7 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
   if (pedido.acao === 'obterPerfil') return { perfil, eventos };
   // App offline: caso do DDX jogado sem rede chega como a sequência de pedidos e é refeito aqui, em ordem.
   if (pedido.acao === 'sincronizarFila' && pedido.item?.tipo === 'pedidosDdx') return sincronizarPedidosDdx(perfil, pedido.item, { recibos, tentativas, revisoes, agora, banco });
+  if (pedido.acao === 'sincronizarFila' && pedido.item?.tipo === 'sessaoRevisao') return sincronizarSessaoRevisao(perfil, pedido.item, tentativas, revisoes, recibos, new Date(agora).toISOString());
   if (ACOES_REVISAO.includes(pedido.acao)) {
     perfil = operarRevisaoSupabase(perfil, pedido, tentativas, revisoes, recibos);
     eventos = eventosRevisao(perfil);
