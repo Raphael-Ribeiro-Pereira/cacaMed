@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Check, ChevronLeft, ExternalLink, GitBranch, X } from 'lucide-react';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
+import { useServicoDdx } from '../services/ddxOffline';
 import { ELOS, obterRelacao } from '../utils/causaEfeito';
 import { lerVitais } from '../utils/ddxVisual';
 import { useLargo } from '../utils/prototipo';
@@ -33,7 +34,9 @@ function Circuito({ relacao, colocadas, resultado, aoToque, proximo }) {
   </div>;
 }
 
-export default function CausaEfeito({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil = chamarPerfilPlanilha }) {
+export default function CausaEfeito({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil: servicoApi = chamarPerfilPlanilha }) {
+  // App offline: sem rede, o caso roda no aparelho e vai para a fila (services/ddxOffline.js).
+  const servicoPerfil = useServicoDdx(servicoApi, dadosUsuario);
   const web = useLargo();
   const entrada = dadosUsuario?.causaEfeito?.entrada;
   let relacao = null;

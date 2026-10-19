@@ -25,7 +25,7 @@ import { BarraLateral } from './components/cascaUi';
 import { Ecg } from './components/entradaUi';
 import IndicadorConexao from './components/IndicadorConexao';
 import { useConexao } from './services/conexao';
-import { guardarPalavras, guardarPerfil, palavrasGuardadas, perfilGuardado } from './services/perfilOffline';
+import { guardarPalavras, guardarPerfil, manterProvisorias, palavrasGuardadas, perfilGuardado } from './services/perfilOffline';
 import './prototipo.css';
 
 // Abertura do protótipo de movimento com as etapas reais: sessão, credencial e perfil com as missões do dia.
@@ -161,7 +161,7 @@ function App() {
   const comCasca = Boolean(usuario && dadosUsuario && TELAS_CASCA.includes(telaAtual) && !carregandoAuth);
   // App offline: indicador de rede e envio da fila do aparelho; o perfil confirmado pelo servidor substitui o provisório.
   const uidAtual = usuario?.uid;
-  const aoConfirmarFila = useCallback(perfil => { setDadosUsuario(perfil); guardarPerfil(uidAtual, perfil, { confirmado: true }).catch(() => {}); }, [uidAtual]);
+  const aoConfirmarFila = useCallback(perfil => { setDadosUsuario(atual => manterProvisorias(perfil, atual)); guardarPerfil(uidAtual, perfil, { confirmado: true }).catch(() => {}); }, [uidAtual]);
   const conexao = useConexao(dadosUsuario ? usuario : null, aoConfirmarFila);
   // App offline: com o perfil carregado, baixa em segundo plano as telas que funcionam sem rede, para o service worker
   // guardá-las (ele só guarda arquivos que já passaram por ele).

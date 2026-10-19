@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Check, ChevronLeft, ClipboardCheck, ExternalLink, X } from 'lucide-react';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
+import { useServicoDdx } from '../services/ddxOffline';
 import { CATEGORIAS_FALHA, obterAuditoria } from '../utils/erroMedico';
 import { registrosComHora } from '../utils/ddxVisual';
 import { useLargo } from '../utils/prototipo';
@@ -26,7 +27,9 @@ function Prontuario({ auditoria, selecionada, falha, aoToque, desabilitado }) {
   </div>;
 }
 
-export default function ErroMedico({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil = chamarPerfilPlanilha }) {
+export default function ErroMedico({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil: servicoApi = chamarPerfilPlanilha }) {
+  // App offline: sem rede, o caso roda no aparelho e vai para a fila (services/ddxOffline.js).
+  const servicoPerfil = useServicoDdx(servicoApi, dadosUsuario);
   const web = useLargo();
   const entrada = dadosUsuario?.erroMedico?.entrada;
   let auditoria = null;

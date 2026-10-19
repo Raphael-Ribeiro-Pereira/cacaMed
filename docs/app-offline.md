@@ -10,7 +10,7 @@ Decidido pelo usuário em 07/10/2026. **Em construção desde 19/10/2026 no bran
 | 3. Verdade ou mentira | **Feita** junto do Quiz (mesmo motor). A Revisão offline ainda não |
 | 2. Pacote de conteúdo | **Em parte:** o banco de palavras fica guardado (IndexedDB, tabela `dados`); perguntas, frases e casos revisados já vêm no pacote do site. Falta o hash de versão por parte |
 | 4. Cruzadinha | **Feita:** sem rede, a grade sai do banco guardado e a partida vai para a fila (tipo `partidaCruzadinha`, conferida contra o banco de palavras como a partida online) |
-| 5. DDX com tickets offline | A fazer |
+| 5. DDX com tickets offline | **Feita:** sem rede, o aparelho roda o mesmo motor do servidor (`executarPedidoSupabase`) e guarda os pedidos do caso; no fim, eles vão juntos para a fila (tipo `pedidosDdx`) e o servidor refaz em ordem. Só tickets da última confirmação podem ser gastos (`src/services/ddxOffline.js`). Saldo zerado na sincronização recusa o caso com "Sem ticket na sincronização" |
 | 6. Sessão de 15 dias | **Feita:** o último perfil fica guardado; sem rede, o app abre com ele se o último contato confirmado com o servidor tiver menos de 15 dias. Depois disso, pede internet, sem apagar a fila. Sair da conta com itens na fila pede confirmação |
 
 Como ficou:

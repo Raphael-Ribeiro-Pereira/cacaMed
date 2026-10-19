@@ -8,6 +8,7 @@ import { ListaCasos } from './ddxLista';
 import { nivelPorXP, XP_DDX } from '../utils/economia';
 import { lerVitais, vitaisDoCaso } from '../utils/ddxVisual';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
+import { useServicoDdx } from '../services/ddxOffline';
 import { animar, fmt, registrarLatencia, useLargo } from '../utils/prototipo';
 import { Vitais } from './ddxUi';
 import { Resultado, SubiuNivel } from './resultadoUi';
@@ -24,7 +25,9 @@ const MODOS = [
 const NOME_DESTINO = { alta: 'alta', uti: 'UTI', encaminhar: 'encaminhamento', observacao: 'retorno ou observação' };
 const PASSOS_ADMISSAO = ['Validando ticket', 'Registrando entrada', 'Carregando prontuário', 'Paciente na sala'];
 
-export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil = chamarPerfilPlanilha }) {
+export default function PlantaoMedico({ usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil: servicoApi = chamarPerfilPlanilha }) {
+  // App offline: sem rede, o caso roda no aparelho e vai para a fila (services/ddxOffline.js).
+  const servicoPerfil = useServicoDdx(servicoApi, dadosUsuario);
   const web = useLargo();
   const admin = dadosUsuario?.role === 'admin';
   const tickets = Number(dadosUsuario?.tickets) || 0;

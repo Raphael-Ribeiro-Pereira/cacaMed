@@ -49,9 +49,7 @@ function CartaoArrastar({ frase, n, lancar, aoResponder }) {
 export default function TreinoMedico({ modo, usuario, dadosUsuario, setDadosUsuario, setTelaAtual, servicoPerfil: servicoApi = chamarPerfilPlanilha }) {
   const web = useLargo();
   // App offline: sem rede, a rodada é corrigida no aparelho e vai para a fila (services/treinoOffline.js).
-  const perfilRef = useRef(dadosUsuario);
-  perfilRef.current = dadosUsuario;
-  const servicoPerfil = useMemo(() => servicoTreinoComOffline(servicoApi, { perfilAtual: () => perfilRef.current, guardarNaFila }), [servicoApi]);
+  const servicoPerfil = useMemo(() => servicoTreinoComOffline(servicoApi, { perfilAtual: () => dadosUsuario, guardarNaFila }), [servicoApi, dadosUsuario]);
   const quiz = modo === 'quiz';
   const titulo = quiz ? 'Quiz médico' : 'Verdade ou mentira';
   const stats = dadosUsuario?.treinos?.[modo] || {};

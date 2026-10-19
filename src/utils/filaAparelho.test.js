@@ -93,3 +93,49 @@ test('sessão offline: o perfil guardado vale por 15 dias desde o último contat
   assert.equal(await perfilGuardado('outra', { armazem }), null);
   assert.equal(sessaoOfflineValida(null), false);
 });
+
+test('DDX offline: caso jogado sem rede vai para a fila e o servidor refaz com o mesmo XP; só gasta ticket confirmado', async () => {
+  const { servicoDdxComOffline, saldoOffline } = await import('../services/ddxOffline.js');
+  const { executarPedidoSupabase } = await import('../shared/executarPedidoSupabase.js');
+  const { obterAuditoria, AUDITORIAS } = await import('./erroMedico.js');
+  const { missaoDeLogin, dataLocalHoje } = await import('./missoes.js');
+  const hoje = dataLocalHoje();
+  const armazem = armazemMemoria();
+  const fila = criarFila(armazem, { agora: relogio() });
+  let perfil = { uid: 'u', pontuacaoTotal: 0, tickets: 1, dataUltimoLogin: hoje, ofensiva: { dias: 1, ultimoDia: hoje }, missoesDiarias: [missaoDeLogin(1)] };
+  const servidor = structuredClone(perfil);
+  await armazem.gravar('confirmado:u', { tickets: 1 });
+  const servico = servicoDdxComOffline(async () => { throw new TypeError('Failed to fetch'); }, { perfilAtual: () => perfil, armazem, fila, online: () => false });
+  const a = obterAuditoria(AUDITORIAS.find(x => x.revisado).id);
+  const entradaId = crypto.randomUUID();
+  perfil = await servico({ uid: 'u' }, 'iniciarAuditoria', { auditoriaId: a.id, entradaId });
+  assert.equal(perfil.tickets, 0);
+  assert.equal(await saldoOffline('u', { armazem, fila }), 0, 'o caso aberto já conta como gasto');
+  await assert.rejects(servico({ uid: 'u' }, 'iniciarRelacao', { relacaoId: 'x', entradaId: crypto.randomUUID() }), /sem ticket confirmado/);
+  perfil = await servico({ uid: 'u' }, 'responderAuditoria', { entradaId, respostas: a.perguntas.map(p => p.correta) });
+  assert.equal(perfil.erroMedico.entrada.provisoria, true);
+  assert.equal(perfil.pontuacaoTotal, 400);
+  let confirmado;
+  await fila.sincronizar('u', async item => (confirmado = executarPedidoSupabase(servidor, { acao: 'sincronizarFila', item }).perfil));
+  assert.equal(confirmado.pontuacaoTotal, 400);
+  assert.equal(confirmado.tickets, 0);
+  // Outro aparelho gastou o último ticket antes: o caso é recusado com o motivo e não paga.
+  const fila2 = criarFila(armazemMemoria(), { agora: relogio() });
+  await fila2.enfileirar('u', 'pedidosDdx', { pedidos: [{ acao: 'iniciarAuditoria', auditoriaId: a.id, entradaId: crypto.randomUUID() }] });
+  const item = (await fila2.daConta('u'))[0];
+  item.dados.pedidos[0].entradaId = item.id;
+  assert.throws(() => executarPedidoSupabase({ ...servidor, tickets: 0 }, { acao: 'sincronizarFila', item }), /Sem ticket na sincronização/);
+});
+
+test('perfil confirmado pela fila mantém as rodadas e os casos provisórios abertos', async () => {
+  const { manterProvisorias } = await import('../services/perfilOffline.js');
+  const local = { treinos: { quiz: { entrada: { id: 'q', provisoria: true, encerrada: false } } }, erroMedico: { entrada: { id: 'e', provisoria: true } },
+    causaEfeito: { entrada: { id: 'c', provisoria: true, relatorio: {} } } };
+  const servidor = { pontuacaoTotal: 9, treinos: { quiz: { partidas: 3 } }, causaEfeito: { entrada: { id: 'srv' } } };
+  const r = manterProvisorias(servidor, local);
+  assert.equal(r.pontuacaoTotal, 9);
+  assert.equal(r.treinos.quiz.entrada.id, 'q');
+  assert.equal(r.treinos.quiz.partidas, 3);
+  assert.equal(r.erroMedico.entrada.id, 'e');
+  assert.equal(r.causaEfeito.entrada.id, 'srv', 'o caso já encerrado fica com a versão do servidor');
+});

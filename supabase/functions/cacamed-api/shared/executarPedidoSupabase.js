@@ -19,6 +19,28 @@ const tituloCruzadinha = partida => {
   const materia = String(partida.chaveXP || '').split('-')[0].toLocaleLowerCase('pt-BR').replace(/(^|\s)\S/g, l => l.toLocaleUpperCase('pt-BR'));
   return `${materia} · ${String(partida.subMateria || '').trim()}`.slice(0, 90);
 };
+// Caso do DDX da fila offline (docs/app-offline.md#tickets-do-ddx-offline): os pedidos do caso (admissão e respostas,
+// todos com o mesmo entradaId, que é o id do item) passam pelas mesmas regras de um pedido online. Se o saldo zerou
+// antes de a admissão chegar (outro aparelho gastou o último ticket), o caso é recusado e não paga XP.
+export const PEDIDOS_DDX_OFFLINE = ['iniciarPlantao', 'acaoPlantao', 'iniciarAuditoria', 'responderAuditoria', 'iniciarRelacao', 'responderRelacao'];
+function sincronizarPedidosDdx(perfil, item, opcoes) {
+  if (!/^[0-9a-f-]{36}$/i.test(String(item.id || ''))) throw new Error('Item da fila inválido.');
+  if (opcoes.recibos.includes(item.id)) return { perfil, eventos: [] };
+  const pedidos = item.dados?.pedidos;
+  if (!Array.isArray(pedidos) || !pedidos.length || pedidos.length > 60
+      || pedidos.some(p => !PEDIDOS_DDX_OFFLINE.includes(p?.acao) || p.entradaId !== item.id)) throw new Error('Caso da fila inválido.');
+  let atual = perfil;
+  const eventos = [];
+  for (const p of pedidos) {
+    let r;
+    try { r = executarPedidoSupabase(atual, p, { ...opcoes, recibos: [] }); }
+    catch (erro) { throw new Error(/Tickets insuficientes/.test(erro.message) ? 'Sem ticket na sincronização: o caso jogado sem internet não pagou XP.' : erro.message); }
+    atual = r.perfil;
+    eventos.push(...r.eventos);
+  }
+  return { perfil: atual, eventos };
+}
+
 // `banco`: banco de palavras com as dicas de todas as planilhas (só a emissão da cruzadinha usa).
 export function executarPedidoSupabase(original, pedido, { recibos = [], tentativas = [], revisoes = [], agora = new Date(), banco } = {}) {
   let perfil = migrarEconomia(original);
@@ -29,6 +51,8 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
   const base = perfil;
   let eventos = [];
   if (pedido.acao === 'obterPerfil') return { perfil, eventos };
+  // App offline: caso do DDX jogado sem rede chega como a sequência de pedidos e é refeito aqui, em ordem.
+  if (pedido.acao === 'sincronizarFila' && pedido.item?.tipo === 'pedidosDdx') return sincronizarPedidosDdx(perfil, pedido.item, { recibos, tentativas, revisoes, agora, banco });
   if (ACOES_REVISAO.includes(pedido.acao)) {
     perfil = operarRevisaoSupabase(perfil, pedido, tentativas, revisoes, recibos);
     eventos = eventosRevisao(perfil);

@@ -17,6 +17,8 @@ export function guardarPerfil(uid, perfil, { confirmado = false, armazem = armaz
   fila = fila.catch(() => {}).then(async () => {
     const anterior = await armazem.ler(chave(uid)).catch(() => null);
     await armazem.gravar(chave(uid), { perfil, validadoEm: confirmado ? new Date().toISOString() : anterior?.validadoEm || null });
+    // O saldo de tickets que pode ser gasto offline é o da última confirmação (services/ddxOffline.js).
+    if (confirmado) await armazem.gravar(`confirmado:${uid}`, { tickets: Number(perfil.tickets) || 0 });
   });
   return fila;
 }
@@ -31,3 +33,20 @@ export async function perfilGuardado(uid, { agora = Date.now(), armazem = armaze
 // Banco de palavras da última consulta, para a cruzadinha abrir sem rede.
 export const guardarPalavras = (banco, armazem = armazemDoAparelho()) => armazem.gravar('palavras', { banco, guardadoEm: new Date().toISOString() }).catch(() => {});
 export const palavrasGuardadas = async (armazem = armazemDoAparelho()) => (await armazem.ler('palavras').catch(() => null))?.banco || null;
+
+// O perfil confirmado pelo servidor não conhece as rodadas e os casos abertos sem rede: mantém os provisórios abertos
+// do perfil local, para a tela não perder o que está em andamento quando a fila envia outro item.
+const ENCERRADA = { ddx: e => Boolean(e?.relatorio?.encerrado), erroMedico: e => Boolean(e?.relatorio), causaEfeito: e => Boolean(e?.relatorio) };
+export function manterProvisorias(servidor, local) {
+  if (!servidor || !local) return servidor;
+  let r = servidor;
+  for (const modo of ['quiz', 'verdadeMentira']) {
+    const e = local.treinos?.[modo]?.entrada;
+    if (e?.provisoria && !e.encerrada) r = { ...r, treinos: { ...r.treinos, [modo]: { ...r.treinos?.[modo], entrada: e } } };
+  }
+  for (const [campo, fim] of Object.entries(ENCERRADA)) {
+    const e = local[campo]?.entrada;
+    if (e?.provisoria && !fim(e)) r = { ...r, [campo]: { ...r[campo], entrada: e } };
+  }
+  return r;
+}
