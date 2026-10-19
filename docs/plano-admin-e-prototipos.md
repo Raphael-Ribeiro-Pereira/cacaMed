@@ -41,7 +41,7 @@ Defeito e regra estão em [revisao-inteligente.md](revisao-inteligente.md#defeit
 ## Ordem de execução proposta
 
 1. Atualizar as docs (feito em 19/10).
-2. Protótipo A (hub da Revisão): v1 a v4 feitos em 19/10 (modo foco, trava até o fim, relatório geral em anel e o monstro do cérebro); faltam quatro respostas (prêmio, palavras do ritmo, limite de cartas, visual do monstro).
+2. Protótipo A (hub da Revisão): v1 a v5 feitos em 19/10 (modo foco, trava até o fim, relatório geral em anel, o monstro do cérebro e o modo semanal); faltam três respostas sobre o modo semanal.
 3. Protótipo B (Batalha) e aprovação, por partes: mapa, cutscene, transição.
 4. Código: ferramentas de admin e correção da entrada da Revisão (podem andar já, sem esperar o protótipo B).
 5. Código: hub da Revisão aprovado; carta do Paciente DDX; Batalha v2.

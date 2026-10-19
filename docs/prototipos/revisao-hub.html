@@ -273,7 +273,7 @@ svg{display:block}
     <section class="view" id="sessao" hidden aria-label="Sessão de revisão"></section>
     <div id="foco" hidden role="dialog" aria-label="Cartas da revisão">
       <div class="foco-fundo"></div><div class="vortex"></div>
-      <div id="rel-titulo"><p class="kicker">Revisão de hoje</p><h2>Seu relatório</h2><p id="rel-sub"></p></div>
+      <div id="rel-titulo"><p class="kicker">Revisão da semana</p><h2>Seu relatório</h2><p id="rel-sub"></p></div>
       <svg id="monstro" viewBox="0 0 240 260" aria-hidden="true">
         <defs>
           <!-- O verde sobe de baixo para cima conforme ele come as cartas (os stops mudam pelo script). -->
@@ -284,16 +284,11 @@ svg{display:block}
         </defs>
         <g class="bob">
           <path id="coracao" opacity="0" style="transform-origin:120px 120px" fill="rgba(255,110,160,.18)" d="M120 60C112 42 84 32 60 52C22 84 40 152 78 180L120 200L162 180C200 152 218 84 180 52C156 32 128 42 120 60Z"/>
-          <g fill="none" stroke="url(#g-corpo)" stroke-width="15" stroke-linecap="round">
-            <g class="onda" id="mt1" style="transform-origin:78px 180px"><path d="M78 180C60 196 40 200 34 218C30 230 44 236 50 226"><animate class="coracao-anim" attributeName="d" begin="indefinite" dur="0.9s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".3 0 .2 1" values="M78 180C60 196 40 200 34 218C30 230 44 236 50 226;M78 180C40 152 22 84 60 52C84 34 112 42 120 60"/></path></g>
-            <g class="onda" style="transform-origin:94px 186px"><path d="M94 186C84 208 72 222 76 238C78 248 90 246 88 236"/></g>
-            <g class="onda" style="transform-origin:110px 190px"><path d="M110 190C106 212 102 230 110 246C114 254 124 250 118 240"/></g>
-            <g class="onda" style="transform-origin:130px 190px"><path d="M130 190C134 212 138 230 130 246C126 254 116 250 122 240"/></g>
-            <g class="onda" style="transform-origin:146px 186px"><path d="M146 186C156 208 168 222 164 238C162 248 150 246 152 236"/></g>
-            <g class="onda" id="mt6" style="transform-origin:162px 180px"><path d="M162 180C180 196 200 200 206 218C210 230 196 236 190 226"><animate class="coracao-anim" attributeName="d" begin="indefinite" dur="0.9s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".3 0 .2 1" values="M162 180C180 196 200 200 206 218C210 230 196 236 190 226;M162 180C200 152 218 84 180 52C156 34 128 42 120 60"/></path></g>
-          </g>
-          <path fill="url(#g-corpo)" d="M60 116C56 152 68 180 88 190C104 197 136 197 152 190C172 180 184 152 180 116Z"/>
+          <!-- Tentáculos em duas camadas (contorno escuro e cor), no estilo do polvo de referência; os de fora viram o coração. -->
+          <g fill="none" stroke-linecap="round" id="tentaculos"></g>
+          <path fill="url(#g-corpo)" stroke="rgba(30,8,60,.5)" stroke-width="3" d="M60 116C56 152 68 180 88 190C104 197 136 197 152 190C172 180 184 152 180 116Z"/>
           <path fill="url(#g-luz)" d="M60 116C56 152 68 180 88 190C104 197 136 197 152 190C172 180 184 152 180 116Z"/>
+          <ellipse cx="78" cy="136" rx="9" ry="5" fill="rgba(255,255,255,.3)" transform="rotate(-30 78 136)"/>
           <g fill="rgba(0,0,0,.14)"><circle cx="76" cy="150" r="4"/><circle cx="166" cy="142" r="3"/><circle cx="152" cy="176" r="5"/><circle cx="92" cy="182" r="3"/></g>
           <g fill="#f7b7c8" stroke="#dc8aa3" stroke-width="2">
             <circle cx="120" cy="80" r="11"/><circle cx="92" cy="100" r="15"/><circle cx="148" cy="100" r="15"/><circle cx="110" cy="87" r="15"/><circle cx="130" cy="87" r="15"/><circle cx="102" cy="106" r="12"/><circle cx="138" cy="106" r="12"/><circle cx="120" cy="99" r="15"/>
@@ -329,7 +324,7 @@ svg{display:block}
       <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-titulo">
         <span class="dlg-ic" id="dlg-ic"></span>
         <h2 id="dlg-titulo">Começar a revisão?</h2>
-        <p>Depois de começar, você só sai da revisão quando terminar todas as cartas de hoje.</p>
+        <p>Depois de começar, você só sai da revisão quando terminar todas as cartas da semana.</p>
         <p>Até lá, os outros modos do jogo ficam bloqueados, mesmo se você fechar e abrir o app.</p>
         <div class="dlg-acoes"><button class="secundario" id="dlg-nao">Agora não</button><button class="primario" id="dlg-sim">Começar</button></div>
       </div>
@@ -355,14 +350,10 @@ svg{display:block}
     <div class="grupo"><p>Tela</p><div class="seg" data-chave="tela">
       <button data-valor="cheia">Tela cheia</button><button data-valor="celular">Celular</button>
     </div></div>
-    <div class="grupo"><p>Prêmio de conclusão</p><div class="seg" data-chave="premio">
-      <button data-valor="ideia">1000 XP + 10 tickets (sua ideia)</button><button data-valor="escala">Por itens (sugestão)</button>
-    </div></div>
     <div class="grupo"><p>O que decidir</p><ol class="decisoes">
-      <li><b>Prêmio:</b> fixo (1000 XP + 10 tickets) ou por itens revisados (35 XP por item, até 1000; 1 ticket a cada 7 itens, até 4)?</li>
-      <li><b>Palavras do ritmo:</b> contar o enunciado e as alternativas (como no protótipo) ou só o enunciado?</li>
-      <li><b>Limite de cartas por dia:</b> com a trava até o fim, um dia com muitas cartas prende o jogador por muito tempo. Limitar a revisão do dia (por exemplo, 4 cartas)?</li>
-      <li><b>O monstro:</b> o desenho e a animação estão no caminho? Depois o visual final pode ser redesenhado por um ilustrador.</li>
+      <li><b>Revisão semanal:</b> abre uma vez por semana (segunda a domingo, como as Coroas), com os erros acumulados até você começar, em até 4 cartas. O que passa do limite fica para a próxima semana. Está bom?</li>
+      <li><b>Repetição espaçada em semanas:</b> acertou, o item volta em 1 semana; acertou de novo, em 2; no terceiro acerto seguido, está dominado (+40 XP). Errou, volta na semana seguinte. Está bom?</li>
+      <li><b>Se a semana acabar com a revisão começada e não terminada:</b> as cartas que faltam passam para a semana seguinte e a trava continua até terminar?</li>
     </ol></div>
   </div>
 </div>
@@ -419,23 +410,23 @@ const CARTAS = [
   { id: 'vm', modo: 'vm', titulo: 'Verdade ou mentira', erros: 5, un: ['erro', 'erros'], temas: 'Fisiologia · Imunologia', min: 3, itens: ['v1', 'v2'] },
   { id: 'erro', modo: 'erro', titulo: 'Erro médico', erros: 2, un: ['caso', 'casos'], temas: 'Infeccioso', min: 6, itens: ['e1'] },
   { id: 'pdx', modo: 'pdx', titulo: 'Paciente DDX', erros: 1, un: ['caso', 'casos'], temas: 'Cardiovascular', min: 4, itens: ['p1'], nova: true },
-  { id: 'quiz-2', modo: 'quiz', titulo: 'Quiz 2', erros: 3, un: ['erro', 'erros'], temas: 'Microbiologia', min: 3, itens: ['q3'], espera: 'amanhã, 09:00' },
+  { id: 'quiz-2', modo: 'quiz', titulo: 'Quiz 2', erros: 3, un: ['erro', 'erros'], temas: 'Microbiologia', min: 3, itens: ['q3'], espera: 'na próxima semana' },
 ];
-const ESPERAS = ['amanhã, 09:00', 'amanhã, 14:30', 'qui., 22/10', 'sex., 23/10', 'sáb., 24/10'];
+const ESPERAS = ['na seg., 26/10', 'na seg., 26/10', 'na seg., 26/10', 'na seg., 26/10', 'na seg., 26/10'];
 
 // ---------- Estado (e o que sobrevive a fechar e abrir o app) ----------
-const S = { estado: 'normal', abertura: 'furacao', tela: 'cheia', premio: 'ideia', fase: 'hub', animando: false, sessao: null, pausada: null, feitas: new Map(), trava: false, vistas: new Set(), absorvido: false };
+const S = { estado: 'normal', abertura: 'furacao', tela: 'cheia', fase: 'hub', animando: false, sessao: null, pausada: null, feitas: new Map(), trava: false, vistas: new Set(), absorvido: false };
 const CHAVE_OPCOES = 'prototipo-revisao-hub', CHAVE_PROGRESSO = 'prototipo-revisao-progresso';
 const ler = chave => { try { return JSON.parse(localStorage.getItem(chave) || 'null'); } catch { return null; } };
 const gravar = (chave, valor) => { try { localStorage.setItem(chave, JSON.stringify(valor)); } catch { /* sem armazenamento */ } };
-const guardar = () => gravar(CHAVE_OPCOES, { estado: S.estado, abertura: S.abertura, tela: S.tela, premio: S.premio });
+const guardar = () => gravar(CHAVE_OPCOES, { estado: S.estado, abertura: S.abertura, tela: S.tela });
 function guardarProgresso() {
   gravar(CHAVE_PROGRESSO, { trava: S.trava, absorvido: S.absorvido, vistas: [...S.vistas],
     feitas: [...S.feitas].map(([id, r]) => [id, { ...r, respostas: r.respostas.map(x => ({ ...x, it: x.it.k })) }]),
     pausada: S.pausada && { id: S.pausada.id, idx: S.pausada.sessao.idx, respostas: S.pausada.sessao.respostas } });
 }
 function restaurar() {
-  const o = ler(CHAVE_OPCOES) || {}; for (const k of ['estado', 'abertura', 'tela', 'premio']) if (o[k]) S[k] = o[k];
+  const o = ler(CHAVE_OPCOES) || {}; for (const k of ['estado', 'abertura', 'tela']) if (o[k]) S[k] = o[k];
   const p = ler(CHAVE_PROGRESSO); if (!p) return;
   S.trava = Boolean(p.trava); S.absorvido = Boolean(p.absorvido); S.vistas = new Set(p.vistas || []);
   for (const [id, r] of p.feitas || []) S.feitas.set(id, { ...r, respostas: r.respostas.map(x => ({ ...x, it: ITENS[x.it] })) });
@@ -525,7 +516,7 @@ function aplicarEstadoCarta(c, { semFeita = false } = {}) {
   c.el.querySelector('.miolo small').innerHTML = feita ? `${I.check} ${feita.acertos}/${feita.total} certas`
     : pausada ? `Item ${S.pausada.sessao.idx + 1} de ${S.pausada.sessao.itens.length}`
       : c.espera ? `${I.relogio} Volta ${c.espera}` : `${c.erros} ${unidade(c)} · ~${c.min} min`;
-  c.el.setAttribute('aria-label', `${c.titulo}: ${feita ? `feita hoje, ${feita.acertos} de ${feita.total} certas` : pausada ? 'em andamento' : c.espera ? `volta ${c.espera}` : `${c.erros} ${unidade(c)}, cerca de ${c.min} minutos`}`);
+  c.el.setAttribute('aria-label', `${c.titulo}: ${feita ? `feita nesta semana, ${feita.acertos} de ${feita.total} certas` : pausada ? 'em andamento' : c.espera ? `volta ${c.espera}` : `${c.erros} ${unidade(c)}, cerca de ${c.min} minutos`}`);
 }
 function montarCartas() {
   document.querySelectorAll('.carta, .vaga').forEach(e => e.remove());
@@ -552,17 +543,17 @@ function renderHub() {
   const restantes = disponiveis.filter(c => !S.feitas.has(c.id)); const itens = restantes.reduce((s, c) => s + c.erros, 0);
   const concluida = (e === 'normal' || e === 'andamento') && disponiveis.length > 0 && !restantes.length;
   const feitas = [...S.feitas.values()]; const dominados = 4;
-  const textos = concluida ? { k: 'Revisão de hoje concluída', h: 'Tudo revisado por hoje', s: `Você fez as ${disponiveis.length} cartas. Os itens voltam nos intervalos programados.` } : {
-    normal: { k: `${restantes.length} ${restantes.length === 1 ? 'carta pronta' : 'cartas prontas'}`, h: S.feitas.size ? 'Continue sua revisão' : 'Comece sua revisão', s: 'Cada carta junta até 7 erros de um modo. Faça uma de cada vez, na ordem que quiser. No fim, você recebe o relatório completo.' },
+  const textos = concluida ? { k: 'Revisão da semana concluída', h: 'Tudo revisado nesta semana', s: `Você fez as ${disponiveis.length} cartas. A próxima revisão abre na segunda, 26/10.` } : {
+    normal: { k: `${restantes.length} ${restantes.length === 1 ? 'carta pronta' : 'cartas prontas'}`, h: S.feitas.size ? 'Continue sua revisão' : 'Comece sua revisão', s: `Seus erros da semana em até 4 cartas, de até 7 itens cada. Faça uma de cada vez, na ordem que quiser. No fim, você recebe o relatório completo.${lista.length > disponiveis.length ? ' O que passou do limite fica para a próxima semana.' : ''}` },
     andamento: { k: 'Carta em andamento', h: 'Continue de onde parou', s: S.pausada ? `${S.pausada.titulo} · item ${S.pausada.sessao.idx + 1} de ${S.pausada.sessao.itens.length}` : '' },
-    emdia: { k: 'Revisão em dia', h: 'Nada para rever agora', s: 'A próxima carta volta amanhã, às 09:00. Cada acerto espaça o item: 1, 3 e 7 dias.' },
+    emdia: { k: 'Revisão em dia', h: 'Nada para rever nesta semana', s: 'A próxima revisão abre na segunda, 26/10. Cada acerto espaça o item: volta em 1 semana, depois em 2; no terceiro acerto seguido, está dominado.' },
     vazio: { k: 'Seu aprendizado começa nos jogos', h: 'Ainda sem erros para rever', s: 'Jogue Quiz, Verdade ou mentira, Erro médico ou um caso do Plantão. Cada erro vira uma carta aqui.' },
     bloqueado: { k: 'Libera no nível 10', h: 'Revisão bloqueada', s: 'Você está no nível 7. Seus erros já estão sendo guardados: 12 esperando por você.' },
   }[e];
   const stats = e === 'vazio' || e === 'bloqueado'
     ? [['0', 'itens revisados'], ['—', 'de acerto'], ['0', 'dominados'], [e === 'bloqueado' ? '12' : '0', 'erros guardados']]
-    : [[e === 'emdia' ? '0' : String(itens), 'itens na fila hoje'], [String(42 + feitas.reduce((s, r) => s + r.total, 0)), 'itens revisados'], ['64%', 'de acerto na Revisão'], [String(dominados), `dominados · +${dominados * 40} XP`]];
-  const rotulo = concluida ? 'Todas feitas hoje' : { normal: `${itens} itens em ${restantes.length} cartas`, andamento: 'Carta em andamento', emdia: `${lista.length} cartas em espera`, bloqueado: '', vazio: '' }[e];
+    : [[e === 'emdia' ? '0' : String(itens), 'itens na revisão da semana'], [String(42 + feitas.reduce((s, r) => s + r.total, 0)), 'itens revisados'], ['64%', 'de acerto na Revisão'], [String(dominados), `dominados · +${dominados * 40} XP`]];
+  const rotulo = concluida ? 'Todas feitas nesta semana' : { normal: `${itens} itens em ${restantes.length} cartas`, andamento: 'Carta em andamento', emdia: `${lista.length} cartas em espera`, bloqueado: '', vazio: '' }[e];
   $('#hub').innerHTML = `
     <header class="topo"><button class="icone-btn" id="menu" aria-label="Voltar ao menu">${I.voltar}</button>
       <h1><small>Aprenda com seus erros</small>Revisão inteligente</h1><span class="nivel">NV ${e === 'bloqueado' ? 7 : 12}</span></header>
@@ -579,7 +570,7 @@ function renderHub() {
       </section>
     </div>`;
   montarCartas();
-  $('#acoes').innerHTML = concluida ? `<button class="primario" id="ver-rel">Ver seu relatório de hoje ${I.seta}</button>`
+  $('#acoes').innerHTML = concluida ? `<button class="primario" id="ver-rel">Ver seu relatório da semana ${I.seta}</button>`
     : e === 'normal' ? `<button class="primario" id="abrir">${S.feitas.size ? 'Continuar revisão' : 'Começar revisão'} ${I.seta}</button>`
       : e === 'andamento' ? `<button class="primario" id="continuar">Continuar ${S.pausada?.titulo || ''} ${I.seta}</button>`
         : e === 'emdia' ? `<button class="primario" disabled>Revisão em dia</button><button class="link" id="abrir">Ver as cartas em espera</button>`
@@ -597,7 +588,7 @@ function confirmarInicio() { $('#confirmar').hidden = true; S.trava = true; guar
 function atualizarSaida() {
   $('#foco-sair').hidden = S.trava;
   const faltam = prontas().filter(c => !S.feitas.has(c.id)).length;
-  const chip = $('#foco-trava'); chip.hidden = !S.trava; chip.innerHTML = `${I.cadeado} Termine as cartas de hoje para sair · faltam ${faltam}`;
+  const chip = $('#foco-trava'); chip.hidden = !S.trava; chip.innerHTML = `${I.cadeado} Termine as cartas da semana para sair · faltam ${faltam}`;
 }
 
 // ---------- Modo foco ----------
@@ -643,7 +634,7 @@ async function entrarFoco() {
 }
 async function sairFoco() {
   if (S.animando || !['foco', 'relgeral'].includes(S.fase)) return;
-  if (S.trava) { toast('Termine as cartas de hoje para sair da revisão.'); return; }
+  if (S.trava) { toast('Termine as cartas da semana para sair da revisão.'); return; }
   S.animando = true;
   const foco = $('#foco'); foco.classList.remove('aberto', 'anel'); $('#foco-dica').classList.remove('on');
   aparecer($('#rel-titulo'), 240, 0); document.querySelectorAll('.vaga').forEach(v => aparecer(v, 240, 0));
@@ -953,6 +944,22 @@ function marcarVistaSemAnimar(c) {
   c.el.classList.add('vista', 'apagada');
 }
 // ---------- Fim: o monstro do cérebro devora as cartas ----------
+// Tentáculos: [ponto de apoio, forma normal, forma de coração (só os dois de fora)].
+const TENTACULOS = [
+  ['78 180', 'M78 180C60 196 40 200 34 218C30 230 44 236 50 226', 'M78 180C40 152 22 84 60 52C84 34 112 42 120 60'],
+  ['94 186', 'M94 186C84 208 72 222 76 238C78 248 90 246 88 236'],
+  ['110 190', 'M110 190C106 212 102 230 110 246C114 254 124 250 118 240'],
+  ['130 190', 'M130 190C134 212 138 230 130 246C126 254 116 250 122 240'],
+  ['146 186', 'M146 186C156 208 168 222 164 238C162 248 150 246 152 236'],
+  ['162 180', 'M162 180C180 196 200 200 206 218C210 230 196 236 190 226', 'M162 180C200 152 218 84 180 52C156 34 128 42 120 60'],
+];
+function montarTentaculos() {
+  $('#tentaculos').innerHTML = TENTACULOS.map(([apoio, d, coracao]) => {
+    const anim = coracao ? `<animate class="coracao-anim" attributeName="d" begin="indefinite" dur="0.9s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".3 0 .2 1" values="${d};${coracao}"/>` : '';
+    const [x, y] = apoio.split(' ');
+    return `<g class="onda${coracao ? ' de-fora' : ''}" style="transform-origin:${x}px ${y}px"><path d="${d}" stroke="rgba(30,8,60,.5)" stroke-width="19">${anim}</path><path d="${d}" stroke="url(#g-corpo)" stroke-width="14">${anim}</path></g>`;
+  }).join('');
+}
 const VERDE = '#25cf93', ROXO = '#7c4fe0';
 let verdor = 0;
 // O verde sobe de baixo para cima no corpo e nos tentáculos (0 = todo roxo, 1 = todo verde).
@@ -1009,7 +1016,7 @@ async function devorar() {
   }
   // Satisfeito: some a cara brava, os dois tentáculos de fora fazem um coração e ele sorri.
   await pausa(rm() ? 0 : 300);
-  mon.querySelectorAll('#mt1, #mt6').forEach(g => g.classList.add('parada'));
+  mon.querySelectorAll('.de-fora').forEach(g => g.classList.add('parada'));
   mon.querySelectorAll('animate.coracao-anim').forEach(a => a.beginElement());
   mover(mon.querySelector('.cara-brava'), [{ opacity: 1 }, { opacity: 0 }], { duration: rm() ? 1 : 300 });
   mover(mon.querySelector('.cara-feliz'), [{ opacity: 0 }, { opacity: 1 }], { duration: rm() ? 1 : 400, delay: rm() ? 0 : 200 });
@@ -1018,16 +1025,15 @@ async function devorar() {
   await pausa(rm() ? 0 : 500);
   mostrarParabens();
 }
-// Prêmio de conclusão (em aberto): a ideia do usuário ou a sugestão do agente, proporcional aos itens.
+// Prêmio de conclusão, uma vez por semana (decidido em 19/10): 35 XP por item, até 1000; 1 ticket a cada 7 itens, até 4.
 function premio(itens) {
-  if (S.premio === 'ideia') return { xp: 1000, tickets: 10 };
   return { xp: Math.min(1000, itens * 35), tickets: Math.min(4, Math.floor(itens / 7)) };
 }
 function mostrarParabens() {
   const lista = relCartas(); const itens = lista.reduce((s, c) => s + c.erros, 0);
   const certas = lista.reduce((s, c) => s + S.feitas.get(c.id).acertos, 0), total = lista.reduce((s, c) => s + S.feitas.get(c.id).total, 0);
   const p = premio(itens); const fim = $('#foco-fim');
-  fim.innerHTML = `<p class="kicker">Revisão concluída</p><h2>Parabéns! Você concluiu sua revisão de hoje</h2><p>${lista.length} cartas · ${itens} itens · ${certas}/${total} certas</p>
+  fim.innerHTML = `<p class="kicker">Revisão concluída</p><h2>Parabéns! Você concluiu sua revisão da semana</h2><p>${lista.length} cartas · ${itens} itens · ${certas}/${total} certas</p>
     <div class="premios"><span id="premio-xp">+0 XP</span><span class="ticket">+${p.tickets} ${p.tickets === 1 ? 'ticket' : 'tickets'}</span></div>
     <button class="primario" id="fim-menu">Voltar ao hub ${I.seta}</button>`;
   fim.hidden = false;
@@ -1154,7 +1160,7 @@ function definir(chave, valor) {
   guardarProgresso();
   $('#foco').hidden = true; $('#expansor').hidden = true; $('#confirmar').hidden = true;
   S.fase = 'hub'; mostrar('hub');
-  if (S.trava) entrarFoco().then(() => toast('A revisão continua: termine as cartas de hoje para sair.'));
+  if (S.trava) entrarFoco().then(() => toast('A revisão continua: termine as cartas da semana para sair.'));
 }
 document.querySelectorAll('.seg[data-chave]').forEach(g => g.addEventListener('click', ev => { const b = ev.target.closest('button'); if (b) definir(g.dataset.chave, b.dataset.valor); }));
 const botaoProto = $('#proto-btn'); const painel = $('#proto-painel');
@@ -1182,9 +1188,9 @@ new ResizeObserver(() => {
   }
 }).observe($('#app'));
 
-restaurar(); rotuloProto(); sincronizarPainel(); mostrar('hub');
+montarTentaculos(); restaurar(); rotuloProto(); sincronizarPainel(); mostrar('hub');
 // A trava sobrevive a fechar e abrir o app: abre direto nas cartas.
-if (S.trava) entrarFoco().then(() => toast('A revisão continua: termine as cartas de hoje para sair.'));
+if (S.trava) entrarFoco().then(() => toast('A revisão continua: termine as cartas da semana para sair.'));
 </script>
 </body>
 </html>

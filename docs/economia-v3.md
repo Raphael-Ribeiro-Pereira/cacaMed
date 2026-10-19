@@ -34,7 +34,9 @@ Constantes em `src/utils/economia.js`.
 | Plantão, Erro médico e Causa e efeito | Plantão até 250; os outros dois até 100 | 300 XP + bônus | 1 por caso, como hoje |
 | Paciente DDX | Sem XP e sem ticket | 300 XP + bônus, como os outros modos do DDX | **Não cobra** |
 | Batalha diagnóstica | Fórmula aprovada em 06/10/2026 | **500 XP fixos na vitória; derrota não paga** | Sem mudança |
-| Revisão Inteligente | Sem XP e sem ticket | Sem mudança decidida | Gratuita |
+| Revisão Inteligente | Sem XP e sem ticket | +40 XP por item dominado; **prêmio de conclusão semanal: 35 XP por item revisado (até 1000)** (19/10/2026) | Gratuita; o prêmio dá **1 ticket a cada 7 itens (até 4)** |
+
+**Prêmio de conclusão da Revisão** (decidido em 19/10/2026, [detalhe](revisao-inteligente.md#protótipo-do-hub-da-revisão)): pago uma vez por semana, ao terminar todas as cartas da semana. O usuário propôs 1000 XP e 10 tickets fixos; ficou a versão proporcional sugerida pelo agente, porque o prêmio fixo pagaria muito por uma revisão pequena e daria motivo para errar de propósito. Uma revisão cheia (4 cartas, 28 itens) paga 980 XP e 4 tickets.
 
 ### 100 XP fixos e bônus
 
