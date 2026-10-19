@@ -25,9 +25,17 @@ Regra de sempre: **deploy só às quintas, com o seu "sim" no dia.** Chaves e se
 
 ---
 
-## Módulo 1. Decisões pendentes (só você)
+## Módulo 1. Decisões (respondido em 19/10/2026)
 
-Responda no chat quando puder. Nada aqui trava os módulos 2 e 3.
+O usuário validou o módulo 1. Respostas:
+1. **Fórmulas dos bônus:** aprovadas e validadas.
+2. **Catálogo de missões:** aprovado e validado.
+3. **Paciente DDX na Revisão:** ganha carta. Ver [revisao-inteligente.md](revisao-inteligente.md#decisões-de-19102026-e-o-que-sai-da-pendência).
+4. **Itens da Batalha:** não entram na Revisão.
+5. **Conteúdo:** mínimo de 150 itens por lote de cada modo. Lista em [prioridade-conteudo.md](prioridade-conteudo.md).
+6. **Modo história v2 da Batalha:** pode começar pelos protótipos.
+
+O texto abaixo é o enunciado original, mantido para referência.
 
 1. **Fórmulas dos bônus** (aprovadas em 19/10, vale reler): [docs/economia-v3.md](economia-v3.md#fórmulas-dos-bônus-aprovadas-pelo-usuário-em-19102026). Pontos que o agente adaptou:
    - **Plantão:** paga 300 menos o desconto do destino (alta indevida −80, outro destino −20). No caminho seguro, ganha +50 e mais até 50 pelo tempo da ação principal. Plantão com a pontuação clínica zerada não paga.

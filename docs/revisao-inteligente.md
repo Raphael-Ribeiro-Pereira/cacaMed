@@ -100,18 +100,9 @@ Para isso funcionar, cada conduta do gabarito ganha a marcação `grave`:
 
 Essas marcações entram em `pacienteDdxGabarito.js`, gerado por `scripts/gerar-gabarito-paciente.mjs`, e precisam de revisão médica caso a caso.
 
-### Itens da Batalha: pendência
+### Itens da Batalha: decidido em 19/10/2026
 
-Desde 06/10/2026, os erros da Batalha diagnóstica geram itens de revisão de múltipla escolha no piloto atual. A Revisão v2 não tem carta para eles, e o usuário decidiu em 07/10/2026 **deixar isso como pendência**.
-
-Até a decisão:
-- os itens continuam sendo gerados e guardados, sem perder histórico;
-- eles não aparecem nas cartas da v2.
-
-Opções para decidir depois:
-- entrar nas cartas do Quiz;
-- ganhar uma carta própria;
-- deixar de ser gerados.
+Os erros da Batalha **não entram na Revisão**. Desde 06/10/2026 eles geravam itens de múltipla escolha; esse gerador (`src/utils/batalhaRevisao.js`, `eventosBatalha`) deve ser desligado na próxima rodada de código, sem apagar o histórico já guardado. O aprendizado da Batalha fica no pergaminho e na enciclopédia do [modo história v2](modo-historia-v2.md).
 
 ### LLM na tela de revisão
 
@@ -147,10 +138,34 @@ Decidido em 07/10/2026: **+40 XP por item dominado.**
 
 Opções descartadas: sem XP, XP fixo por carta, XP por erro recuperado e missão da Revisão.
 
+### Decisões de 19/10/2026 e o que sai da pendência
+
+- **Paciente DDX (casos `pdx-*` do Plantão):** ganham carta na Revisão. Depende das marcações `grave` revisadas e de uma nova carta no motor (hoje só Quiz, V ou M e Erro médico).
+- **Batalha:** fora da Revisão (ver acima).
+- **Conteúdo:** meta de no mínimo 150 itens por lote de cada modo. A [lista de prioridade de coleta](prioridade-conteudo.md) guia a ordem.
+
+### Defeito achado na homologação de 19/10/2026: a entrada da Revisão
+
+A captura do usuário mostra a Revisão abrindo no relatório da última sessão ("Revisão salva · 2/5 respostas corretas"), com o texto antigo "Até cinco itens". Duas causas:
+
+1. **O que o usuário viu é o código da `main` (v1).** O texto "Até cinco itens dos seus erros" só existe lá; a v2 está só no branch `feat/economia-v3`.
+2. **A v2 tem um defeito parecido.** `RevisaoInteligente.jsx` abre no relatório sempre que a última sessão está encerrada com relatório e o estado `listar` está `false` (valor inicial). Reabrir a Revisão depois de terminar uma sessão mostra o relatório de novo, em vez das cartas.
+
+Regra decidida: **a entrada da Revisão é sempre o hub**, com as cartas disponíveis, o resumo (itens revisados, dominados, próxima revisão) e a opção de rever o último relatório. O relatório só aparece logo ao terminar uma sessão. Antes de mexer no código, o hub é prototipado (ver [plano de protótipos](#prototipo-do-hub-da-revisão)).
+
+### Protótipo do hub da Revisão
+
+Protótipo em `docs/prototipos/revisao-hub.html`, para aprovação, antes do código. O que ele precisa mostrar:
+- **Hub:** cartas por modo (Quiz, V ou M, Erro médico, Paciente DDX), cada uma com o número de erros e a próxima reapresentação; estados vazio, em dia, bloqueado abaixo do nível 10 e sessão em andamento.
+- **Entrada do relatório:** botão "Ver última revisão" no hub, sem ser a tela de abertura.
+- **Fim de sessão → hub:** "Voltar às cartas" sempre cai no hub.
+- **Web e celular**, nas duas larguras.
+
 ### Pendências
 
-1. **Itens da Batalha:** ver acima.
-2. **Marcações `grave`:** revisão médica caso a caso no gabarito do Paciente DDX.
+1. **Marcações `grave`:** revisão médica caso a caso no gabarito do Paciente DDX.
+2. **Carta do Paciente DDX:** implementar no motor depois das marcações.
+3. **Hub da Revisão:** prototipar, aprovar e corrigir a entrada.
 
 ## Experiência e decisões
 
