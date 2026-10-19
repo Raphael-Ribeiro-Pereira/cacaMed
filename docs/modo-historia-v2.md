@@ -93,27 +93,57 @@ Hoje a batalha toca as falas em sequência, rápido demais. O comportamento novo
 
 Nada muda no servidor: a lista de ações e os eventos são os mesmos.
 
-## Protótipo, parte 1: mapa, cutscene de entrada e transição (19/10/2026)
+## Protótipo (19/10/2026): partes 1 e 2
 
 Arquivo: [`docs/prototipos/batalha-historia.html`](prototipos/batalha-historia.html). Abre direto no navegador, sem build. Os desenhos das 12 doenças e do médico vêm do app (`Species`, `Blob` e `Doctor` em `src/components/batalhaArte.jsx`), convertidos em SVG fixo; o resto da arte é original.
 
-1. **Mapa estilo conquistas:** fundo escuro texturizado (ruído e grade leve), que se arrasta com o dedo, o mouse ou a roda. No centro da esquerda, o "Início" (o médico); dele saem os **3 ramos** (os capítulos atuais), com 4 pacientes cada, ligados por linhas em ângulo reto. Estados: **bloqueado** (silhueta escura, borda tracejada e cadeado), **disponível** (silhueta escura, borda que brilha e "?") e **descoberto** (colorido, com o nome e um certinho). A linha fica verde quando o caminho até o paciente está aberto. Botão para centralizar.
-2. **Ficha do paciente:** ao tocar num ponto, a ficha mostra o caso no lugar do nome ("Febre depois da enchente", "Primeiro plantão · 3 de 4 · doença: ??") e "Atender paciente". Bloqueado diz qual paciente vencer antes; descoberto mostra o nome, o agente e "Rever o caso".
-3. **Cutscene de entrada em pixel art (original):** a enfermaria vista de cima, com piso em xadrez, janela, monitor de ECG na parede, um leito com outro paciente dormindo, cortinas e o leito do paciente da batalha com o monitor ao lado. O médico entra pela porta, anda até o leito, aparece um "!", e duas falas no estilo Pokémon (letra por letra, seta piscando, toque para avançar): "Leito 4. Paciente com ..." e "Ninguém sabe ainda o que ele tem. Vamos investigar."
-4. **Botão "Pular":** aparece da segunda vez em diante (ou sempre, no painel do protótipo).
-5. **Transição** (duas opções originais para escolher): **batimento** (a linha do monitor cruza a tela com um pico e fecha em persianas, que abrem na batalha) ou **microscópio** (a tela fecha num círculo sobre o paciente e reabre como uma lente sobre a batalha).
-6. **Início da batalha (simulado):** a doença desconhecida (o `Blob` com "?") e o médico de costas, com as duas primeiras falas. Botões "Simular vitória" e "Simular derrota".
-7. **Volta ao mapa:** na vitória, a doença ganha cor, nome e certinho, a linha até o próximo paciente fica verde e ele abre com um salto; no fim do ramo, "Ramo completo". Na derrota, nada muda e a doença continua disponível.
+### Decidido pelo usuário em 19/10/2026 (parte 1)
 
-**Regra de progressão usada no protótipo** (interpretação do agente a partir de "cada doença abre a próxima do mesmo ramo"): os três ramos começam abertos, com o primeiro paciente de cada um disponível. Hoje o jogo é linear nas 12 doenças.
+1. **Silhueta:** forma real escurecida.
+2. **Ramos em paralelo:** os três começam abertos, e cada vitória abre o próximo paciente do mesmo ramo (por serem da mesma área).
+3. **Transição:** microscópio (a tela fecha num círculo sobre o paciente e reabre como uma lente sobre a batalha). A do batimento saiu.
+4. **Cutscene de entrada e "Pular" da segunda vez em diante:** aprovados.
+5. **Sem brilho piscando nos pacientes disponíveis.** Fica só a animação do caminho: ao abrir o mapa, a linha verde se desenha da raiz até a última "folha" aberta de cada ramo, uma vez.
+6. **Padronizar os ramos**, para poder abrir ramos em todas as direções, e um **botão-guia para a próxima doença**.
+7. **Celular na horizontal:** no celular em pé, a Batalha mostra um aviso para virar o aparelho.
 
-**Fica para a parte 2:** cutscenes de transmissão, animação de descoberta, pergaminho e enciclopédia.
+### O que o protótipo mostra agora
+
+1. **Mapa com ramos padronizados (proposta do agente):** o "Início" fica no centro e cada ramo é uma **área**, com **cor, emblema e direção** próprios. Hoje: "Primeiro plantão" (febre aguda no plantão, âmbar, para a direita), "Vigilância no território" (atenção primária, azul, para cima) e "Do mato ao pronto-socorro" (zoonoses, verde, para baixo). Um ramo tracejado à esquerda mostra onde uma área nova entraria. Cada paciente tem uma faixa na cor do ramo. Dentro do ramo, a ordem vai do mais comum ao mais raro.
+2. **"Próximo paciente":** botão que leva o mapa até o próximo paciente aberto, ramo por ramo, e abre a ficha dele.
+3. **Ficha do paciente:** o caso no lugar do nome ("Febre depois da enchente · doença: ??") e "Atender paciente"; descoberto mostra o nome, o agente, "Rever o caso" e o pergaminho.
+4. **Cutscene de entrada em pixel art (original):** a enfermaria vista de cima; o médico entra, anda até o leito, aparece um "!" e duas falas no estilo Pokémon.
+5. **Transição em microscópio** para a batalha.
+6. **Batalha (simulada):** "Simular: acertar o diagnóstico" leva à parte 2.
+7. **Cutscene de transmissão (parte 2), em pixel art original:** uma das 5 cenas, conforme a via, sem dizer o nome da doença. Todas têm um rótulo com a via e uma fala:
+   - **Ar ou gotículas:** sala de espera; alguém tosse e as gotículas chegam ao rosto do paciente.
+   - **Inseto vetor:** fim de tarde; um inseto pousa no braço e pica. Na leishmaniose, o inseto é menor e cor de areia (flebótomo).
+   - **Água ou lama:** rua alagada; o paciente anda com os pés na água e os agentes chegam às pernas.
+   - **Carrapato:** mato alto; o carrapato sobe do capim e se prende à perna.
+   - **Alimento:** mesa da família; partículas caem na bebida e o paciente bebe.
+8. **Descoberta:** a doença desconhecida encolhe e some; a forma real aparece escura, uma onda de luz sai dela, ela ganha cor, e o nome entra na barra e na fala ("É Leptospirose!"). A batalha continua.
+9. **Relatório:** vitória (diagnóstico, turnos, +500 XP e "Ver o pergaminho") ou derrota (só o relatório e a volta ao mapa).
+10. **Pergaminho:** papel envelhecido com dois rolos, que se desenrola. Rascunho montado **só com campos que já existem no app**, marcado "Rascunho · aguarda revisão médica":
+    - resumo (`aprendizado`);
+    - como chega ao paciente (via e a história do caso, `exames.anamnese`);
+    - sintomas principais (`golpes`);
+    - complicação a vigiar (`buff.nome` e `buff.explica`);
+    - ponto fraco (`cura`);
+    - tratamento recomendado (`conduta`);
+    - notificação;
+    - fontes com a página.
+
+    **Profilaxia** e **sintoma marcante** não existem no conteúdo: precisam ser escritos e revisados.
+11. **Enciclopédia:** botão do livro no mapa; as 12 doenças por ramo; descoberta abre o pergaminho, não descoberta mostra "???" e não abre.
+12. **Volta ao mapa na vitória:** a doença ganha cor, nome e certinho, a linha até o próximo paciente fica verde e ele abre com um salto.
+13. **Celular em pé:** aviso "Vire o celular" (com um celular girando), que bloqueia a Batalha até virar. O botão "Girar a tela" tenta girar sozinho no Android (tela cheia e trava de orientação). No iPhone o navegador não deixa forçar a orientação, então o aviso pede para virar e, se não girar, desligar o bloqueio de rotação. No celular deitado, as cenas em pixel art se ajustam à altura.
+
+**Para o código (quando aprovar):** a orientação não dá para forçar por tela num site; o manifesto do app instalável vale para o app inteiro. Por isso o aviso fica na entrada da Batalha (e o botão de girar no Android). O padrão dos ramos vira dados no conteúdo: cada capítulo ganha cor, emblema e direção.
 
 ## Perguntas em aberto
 
-1. **A silhueta revela demais?** Hoje o jogador só descobre o tipo do agente (vírus, bactéria etc.) pelas habilidades do pet. Uma silhueta com a forma real da doença já mostra o agente no mapa. Opções: forma real escurecida (como o usuário descreveu) ou uma forma genérica até a descoberta. **As duas estão no protótipo** (painel "Protótipo" → silhueta).
-2. **Pular cutscenes:** sugestão de um botão "Pular" a partir da segunda vez, para não cansar quem repete uma doença. **No protótipo.** Confirmar.
-3. **Doenças sem forma própria:** no `batalhaConteudo.js`, pneumonia, dengue e malária têm `arte: null`, mas já têm desenho próprio no app (`Pneumo`, `Dengue` e `Malaria` em `batalhaArte.jsx`); o protótipo usa os 12 desenhos.
-4. **Transição entre cutscene e batalha:** batimento ou microscópio, **no protótipo**.
-5. **Ramos em paralelo:** os três começam abertos, como no protótipo? (Hoje é linear.)
-6. **Resumo do pergaminho:** o usuário ainda não detalhou o formato; a tabela acima é proposta (parte 2 do protótipo).
+1. **Padrão dos ramos** (cor, emblema e direção por área, do mais comum ao mais raro) e as áreas dos 3 ramos de hoje: estão bons?
+2. **"Próximo paciente":** ramo por ramo está bom?
+3. **Aviso de virar o celular:** bloqueia sem "continuar na vertical". Está bom?
+4. **Cutscenes de transmissão:** as 5 cenas estão no tom?
+5. **Pergaminho:** campos e visual. Profilaxia e sintoma marcante precisam ser escritos (e revisados) para as 12 doenças.

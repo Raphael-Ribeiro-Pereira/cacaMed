@@ -8,10 +8,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!--
-  Protótipo do modo história v2 da Batalha diagnóstica (docs/modo-historia-v2.md), parte 1:
-  mapa estilo conquistas (3 ramos de 4 doenças), cutscene de entrada em pixel art (o médico anda até o leito),
-  transição para a batalha e a volta ao mapa com a doença descoberta. Arte original; os desenhos das doenças e do
-  médico vêm do app (src/components/batalhaArte.jsx), convertidos em SVG fixo. Não é o design final.
+  Protótipo do modo história v2 da Batalha diagnóstica (docs/modo-historia-v2.md), partes 1 e 2:
+  mapa estilo conquistas com ramos padronizados (cor, emblema e direção) e o botão "Próximo paciente"; cutscene de
+  entrada em pixel art; transição em microscópio; descoberta com a cutscene de transmissão (5 cenas por via) e a doença
+  ganhando cor; relatório; pergaminho (rascunho montado só com campos que já existem no app) e enciclopédia.
+  No celular em pé, um aviso pede para virar o aparelho. Arte original; os desenhos das doenças e do médico vêm do app
+  (src/components/batalhaArte.jsx), convertidos em SVG fixo. Não é o design final.
 -->
 <style>
 :root{--canvas:#0b0f19;--surface:#111827;--elev:#1a2234;--line:rgba(220,226,247,.09);--line-strong:#2a3550;--text:#dce2f7;--muted:#8d9bb3;--mint:#00f5d4;--mint-ink:#00382f;--violet:#b49cff;--ok:#3ddc84;--ambar:#ffb703;--laranja:#ffb95f;--sans:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace;--ease:cubic-bezier(.16,1,.3,1);color-scheme:dark}
@@ -22,48 +24,56 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
 svg{display:block}
 .frame{min-height:100dvh}
 .app{position:relative;width:100%;height:100dvh;overflow:hidden;background:var(--canvas);container-type:inline-size;isolation:isolate}
-.frame.celular{display:grid;place-items:center;padding:20px 12px}
+.frame.celular,.frame.deitado{display:grid;place-items:center;padding:20px 12px}
 .frame.celular .app{width:min(390px,100%);height:min(820px,calc(100dvh - 40px));border-radius:34px;border:1px solid var(--line-strong);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.frame.deitado .app{width:min(844px,100%);height:min(390px,calc(100dvh - 40px));border-radius:34px;border:1px solid var(--line-strong);box-shadow:0 30px 80px rgba(0,0,0,.6)}
 .tela{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden}
 .tela[hidden]{display:none}
-.topo{position:relative;z-index:5;display:flex;align-items:center;gap:12px;padding:14px 16px}
-.topo h1{margin:0;font-size:18px;font-weight:800;line-height:1.15;flex:1;min-width:0}
-.topo h1 small{display:block;font:700 10.5px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--violet)}
-.icone-btn{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:12px;border:1px solid var(--line-strong);background:rgba(17,24,39,.85)}
+.topo{position:relative;z-index:5;display:flex;align-items:center;gap:10px;padding:12px 14px}
+.topo h1{margin:0;font-size:17px;font-weight:800;line-height:1.15;flex:1;min-width:0}
+.topo h1 small{display:block;font:700 10px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--violet)}
+.icone-btn{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:12px;border:1px solid var(--line-strong);background:rgba(17,24,39,.88)}
 .icone-btn svg{width:20px;height:20px}
-.chip{font:700 12px var(--mono);padding:6px 10px;border-radius:999px;border:1px solid var(--line-strong);background:rgba(17,24,39,.85);color:var(--muted)}
-.primario{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 20px;border-radius:14px;border:0;background:var(--mint);color:var(--mint-ink);font-weight:800;font-size:15px}
-.primario:disabled{background:var(--elev);color:var(--muted);cursor:not-allowed}
+.chip{font:700 12px var(--mono);padding:6px 10px;border-radius:999px;border:1px solid var(--line-strong);background:rgba(17,24,39,.88);color:var(--muted);white-space:nowrap}
+.primario{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:14px;border:0;background:var(--mint);color:var(--mint-ink);font-weight:800;font-size:15px}
 .primario svg{width:18px;height:18px}
-.secundario{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 16px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface);font-weight:700}
+.secundario{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 16px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface);font-weight:700}
+.secundario svg{width:16px;height:16px}
 
 /* ---------- Mapa estilo conquistas (arte original) ---------- */
 #mapa{background:#0a0d14}
 .mundo-vista{position:absolute;inset:0;overflow:hidden;cursor:grab;touch-action:none}
 .mundo-vista.arrastando{cursor:grabbing}
-.mundo{position:absolute;left:0;top:0;width:900px;height:640px;transform-origin:0 0}
-/* Fundo escuro texturizado: pedra e terra, feito com ruído e manchas, sem blocos copiados. */
+.mundo{position:absolute;left:0;top:0;width:1320px;height:1320px;transform-origin:0 0}
 .mundo-vista::before{content:'';position:absolute;inset:-50%;background:
   radial-gradient(ellipse 60% 50% at 50% 50%,rgba(60,90,120,.10),transparent 70%),
   url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .6  0 0 0 0 .7  0 0 0 .09 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>"),
   repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 32px),repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 1px,transparent 1px 32px),#0b0f17;pointer-events:none}
 .mundo-vista::after{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 85% 80% at 50% 50%,transparent 55%,rgba(0,0,0,.55))}
 .linhas{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
-.linhas path{fill:none;stroke-width:6;stroke-linecap:square;stroke-linejoin:miter}
+.linhas path{fill:none;stroke-width:6;stroke-linecap:square}
 .linhas .base{stroke:#1d2433}
 .linhas .fechada{stroke:#3a4458}
-.linhas .aberta{stroke:var(--ok);filter:drop-shadow(0 0 4px rgba(61,220,132,.55))}
-.rotulo-ramo{position:absolute;font:800 11px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:#8ea0bd;white-space:nowrap;pointer-events:none}
-.rotulo-ramo small{display:block;font:500 11px var(--sans);letter-spacing:0;text-transform:none;color:#5f6d86}
-.no{position:absolute;width:78px;height:78px;margin:-39px 0 0 -39px;padding:0;border-radius:16px;border:2px solid #3a4458;background:linear-gradient(160deg,#252d3e,#151b28);box-shadow:inset 0 2px 0 rgba(255,255,255,.07),inset 0 -3px 0 rgba(0,0,0,.35),0 8px 18px rgba(0,0,0,.5);display:grid;place-items:center;transition:border-color .4s,box-shadow .4s,transform .25s var(--ease)}
+.linhas .futura{stroke:#2a3242;stroke-dasharray:6 10}
+.linhas .aberta{stroke:var(--ok);filter:drop-shadow(0 0 4px rgba(61,220,132,.5))}
+/* Cada ramo tem cor, emblema e direção próprios (padrão proposto). */
+.rotulo-ramo{position:absolute;display:flex;gap:8px;align-items:flex-start;pointer-events:none;white-space:nowrap}
+.emblema-ramo{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:color-mix(in srgb,var(--cor) 18%,#151b28);border:1.5px solid var(--cor);color:var(--cor);flex:none}
+.emblema-ramo svg{width:17px;height:17px}
+.rotulo-ramo b{display:block;font:800 11px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--cor)}
+.rotulo-ramo small{display:block;font:500 11px var(--sans);color:#6f7d96}
+.rotulo-ramo.futuro{opacity:.55}
+.no{position:absolute;width:78px;height:78px;margin:-39px 0 0 -39px;padding:0;border-radius:16px;border:2px solid #3a4458;background:linear-gradient(160deg,#252d3e,#151b28);box-shadow:inset 0 2px 0 rgba(255,255,255,.07),inset 0 -3px 0 rgba(0,0,0,.35),0 8px 18px rgba(0,0,0,.5);display:grid;place-items:center;transition:border-color .4s,transform .25s var(--ease)}
+.no::after{content:'';position:absolute;left:10px;right:10px;bottom:-2px;height:4px;border-radius:4px 4px 0 0;background:var(--cor)}
 .no:hover{transform:scale(1.06)}
 .no .arte{width:60px;height:60px;display:grid;place-items:center}
 .no .arte svg{width:60px;height:60px}
 .no.escura .arte svg{filter:brightness(0) drop-shadow(0 0 1.5px rgba(170,185,215,.75));opacity:.92;transition:filter .9s ease,opacity .9s}
 .no.bloqueado{border-style:dashed;opacity:.72}
-.no.disponivel{border-color:var(--mint);animation:chama 2.2s ease-in-out infinite}
-@keyframes chama{50%{box-shadow:inset 0 2px 0 rgba(255,255,255,.07),0 0 0 4px rgba(0,245,212,.12),0 0 22px rgba(0,245,212,.35)}}
+.no.disponivel{border-color:var(--mint)}
 .no.vencido{border-color:#e7c46a;background:linear-gradient(160deg,#3a3420,#1b1a14)}
+.no.futuro{border-style:dashed;border-color:#2a3242;opacity:.4;cursor:default}
+.no.futuro::after{display:none}
 .selo-no{position:absolute;right:-8px;top:-8px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:800 13px var(--mono);border:2px solid #0b0f17}
 .selo-no svg{width:13px;height:13px}
 .no.bloqueado .selo-no{background:#3a4458;color:#c3cbe0}
@@ -71,71 +81,128 @@ svg{display:block}
 .no.vencido .selo-no{background:#e7c46a;color:#2a2108}
 .nome-no{position:absolute;top:calc(100% + 8px);left:50%;translate:-50% 0;width:120px;text-align:center;font:700 11.5px/1.25 var(--sans);color:#f1e3b8;text-shadow:0 2px 4px #000;pointer-events:none}
 .no.raiz{width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;border-color:var(--violet);background:radial-gradient(circle at 50% 35%,#3b2f63,#171428)}
+.no.raiz::after{display:none}
 .no.raiz .arte,.no.raiz .arte svg{width:76px;height:76px}
-.mapa-acoes{position:absolute;right:14px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:6;display:grid;gap:8px}
-.ficha{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));translate:-50% 0;z-index:7;width:min(420px,calc(100% - 24px));padding:16px;border-radius:18px;background:rgba(17,24,39,.96);border:1px solid var(--line-strong);box-shadow:0 20px 60px rgba(0,0,0,.6);display:grid;grid-template-columns:72px 1fr;gap:12px 14px;align-items:center}
+.mapa-acoes{position:absolute;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:6;display:flex;gap:8px;align-items:center}
+.guia{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--mint);background:rgba(0,56,47,.9);color:var(--mint);font-weight:800}
+.guia svg{width:18px;height:18px}
+.ficha{position:absolute;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));translate:-50% 0;z-index:7;width:min(440px,calc(100% - 24px));padding:14px;border-radius:18px;background:rgba(17,24,39,.97);border:1px solid var(--line-strong);box-shadow:0 20px 60px rgba(0,0,0,.6);display:grid;grid-template-columns:64px 1fr;gap:10px 14px;align-items:center}
 .ficha[hidden]{display:none}
-.ficha .arte{width:72px;height:72px;border-radius:14px;background:linear-gradient(160deg,#252d3e,#151b28);display:grid;place-items:center}
-.ficha .arte svg{width:62px;height:62px}
+.ficha .arte{width:64px;height:64px;border-radius:14px;background:linear-gradient(160deg,#252d3e,#151b28);display:grid;place-items:center}
+.ficha .arte svg{width:56px;height:56px}
 .ficha .arte.escura svg{filter:brightness(0) drop-shadow(0 0 1.5px rgba(170,185,215,.75))}
 .ficha p{margin:0}
-.ficha .kicker{font:700 10.5px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--violet)}
-.ficha h2{margin:2px 0 4px;font-size:18px;font-weight:800;line-height:1.2}
+.kicker{margin:0;font:700 10.5px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--violet)}
+.ficha h2{margin:2px 0 3px;font-size:17px;font-weight:800;line-height:1.2;padding-right:24px}
 .ficha .sub{color:var(--muted);font-size:12.5px}
 .ficha .acoes{grid-column:1/-1;display:grid;grid-template-columns:auto 1fr;gap:8px}
-.ficha .fechar-ficha{position:absolute;right:10px;top:10px;width:30px;height:30px;border-radius:50%;border:0;background:transparent;color:var(--muted);display:grid;place-items:center}
-.ficha .fechar-ficha svg{width:16px;height:16px}
+.fechar-ficha{position:absolute;right:8px;top:8px;width:30px;height:30px;border-radius:50%;border:0;background:transparent;color:var(--muted);display:grid;place-items:center}
+.fechar-ficha svg{width:16px;height:16px}
 
-/* ---------- Cutscene de entrada em pixel art ---------- */
-#cena{background:#05070d;align-items:center;justify-content:center}
-.cena-quadro{position:relative;width:min(100%,calc((100dvh - 40px) * 4 / 3),760px);aspect-ratio:4/3;margin:auto}
-#tela-pixel{width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;display:block;border-radius:6px}
-.pular{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;z-index:20;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.55);color:#fff;font:700 12px var(--mono);letter-spacing:.06em}
+/* ---------- Cenas em pixel art (entrada e transmissão) ---------- */
+#cena,#transmissao{background:#05070d;align-items:center;justify-content:center}
+.cena-quadro{position:relative;margin:auto}
+.cena-quadro canvas{width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;display:block;border-radius:6px}
+.pular{position:absolute;top:calc(12px + env(safe-area-inset-top));right:12px;z-index:20;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.55);color:#fff;font:700 12px var(--mono);letter-spacing:.06em}
 .pular[hidden]{display:none}
 .pular svg{width:14px;height:14px}
-/* Caixa de texto da história: digitação letra por letra e seta piscando esperando o toque. */
-.caixa{position:absolute;left:12px;right:12px;bottom:12px;z-index:10;min-height:76px;padding:14px 40px 14px 16px;border-radius:10px;background:#f4f1e8;color:#1c1b26;border:3px solid #1c1b26;box-shadow:inset 0 0 0 3px #f4f1e8,inset 0 0 0 5px #6c7a94;font:600 15px/1.45 var(--mono);cursor:pointer;user-select:none}
+.caixa{position:absolute;left:10px;right:10px;bottom:10px;z-index:10;min-height:64px;padding:12px 38px 12px 14px;border-radius:10px;background:#f4f1e8;color:#1c1b26;border:3px solid #1c1b26;box-shadow:inset 0 0 0 3px #f4f1e8,inset 0 0 0 5px #6c7a94;font:600 14px/1.45 var(--mono);cursor:pointer;user-select:none}
 .caixa[hidden]{display:none}
-.caixa .seta{position:absolute;right:14px;bottom:10px;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid #c0392b;animation:pisca .8s steps(2) infinite;opacity:0}
+.caixa .seta{position:absolute;right:13px;bottom:9px;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid #c0392b;animation:pisca .8s steps(2) infinite;opacity:0}
 .caixa.pronta .seta{opacity:1}
 @keyframes pisca{50%{opacity:0}}
-@container (max-width:600px){.caixa{font-size:13px;min-height:68px}}
+.rotulo-via{position:absolute;left:12px;top:12px;z-index:11;font:800 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.55);padding:6px 10px;border-radius:999px}
 
-/* ---------- Transições ---------- */
+/* ---------- Transição em microscópio ---------- */
 #transicao{position:absolute;inset:0;z-index:50;pointer-events:none;overflow:hidden}
 #transicao[hidden]{display:none}
-.persiana{position:absolute;left:0;right:0;background:#05070d}
-.ecg{position:absolute;inset:0;width:100%;height:100%}
-.ecg path{fill:none;stroke:var(--mint);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(0,245,212,.9))}
 .iris{position:absolute;border-radius:50%;box-shadow:0 0 0 300vmax #05070d}
 .lente{position:absolute;border-radius:50%;border:6px solid #8ea0bd;box-shadow:0 0 0 300vmax #05070d,inset 0 0 40px rgba(0,0,0,.6)}
 
-/* ---------- Início da batalha (simulado) ---------- */
+/* ---------- Batalha (simulada) ---------- */
 #batalha{background:radial-gradient(ellipse 120% 70% at 50% 0%,#1d2b4a,#0b0f19 70%)}
 .arena{position:relative;flex:1;min-height:0}
 .plataforma{position:absolute;border-radius:50%;background:radial-gradient(ellipse at 50% 40%,rgba(160,190,230,.22),rgba(60,80,120,.12) 60%,transparent 72%)}
-.p-inimigo{right:6%;top:16%;width:min(52%,300px);aspect-ratio:3/1}
-.p-medico{left:4%;bottom:6%;width:min(58%,340px);aspect-ratio:3/1}
-.sp-inimigo{position:absolute;right:12%;top:2%;width:min(34%,190px)}
-.sp-medico{position:absolute;left:10%;bottom:4%;width:min(36%,200px)}
-.sp-inimigo svg,.sp-medico svg{width:100%;height:auto}
-.barra-vida{position:absolute;z-index:3;padding:8px 12px;border-radius:12px;background:rgba(17,24,39,.9);border:1px solid var(--line-strong);font:700 12px var(--mono);min-width:150px}
-.barra-vida i{display:block;height:6px;margin-top:6px;border-radius:99px;background:linear-gradient(90deg,var(--ok),#a6f07a)}
-.bv-inimigo{left:14px;top:14px}
-.bv-medico{right:14px;bottom:14px}
-.batalha-baixo{position:relative;padding:12px 12px calc(12px + env(safe-area-inset-bottom));display:grid;gap:10px}
+.p-inimigo{right:6%;top:30%;width:min(46%,300px);aspect-ratio:3/1}
+.p-medico{left:4%;bottom:2%;width:min(50%,340px);aspect-ratio:3/1}
+.sp-inimigo{position:absolute;right:13%;top:4%;height:52%;aspect-ratio:1}
+.sp-medico{position:absolute;left:11%;bottom:4%;height:62%;aspect-ratio:120/130}
+.sp-inimigo svg,.sp-medico svg{width:100%;height:100%}
+.sp-inimigo svg{transition:filter 1.1s ease}
+.sp-inimigo.escura svg{filter:brightness(0) drop-shadow(0 0 2px rgba(170,185,215,.8))}
+.explosao{position:absolute;border-radius:50%;border:4px solid #fff;pointer-events:none}
+.barra-vida{position:absolute;z-index:3;padding:7px 11px;border-radius:12px;background:rgba(17,24,39,.9);border:1px solid var(--line-strong);font:700 12px var(--mono);min-width:140px}
+.barra-vida i{display:block;height:6px;margin-top:5px;border-radius:99px;background:linear-gradient(90deg,var(--ok),#a6f07a)}
+.bv-inimigo{left:12px;top:12px}
+.bv-medico{right:12px;bottom:12px}
+.batalha-baixo{position:relative;padding:10px 10px calc(10px + env(safe-area-inset-bottom));display:grid;gap:8px}
 .batalha-baixo .caixa{position:relative;left:auto;right:auto;bottom:auto}
 .simular{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .simular[hidden]{display:none}
+.simular .primario,.simular .secundario{min-height:42px}
+.relatorio{position:absolute;inset:0;z-index:30;display:grid;place-items:center;padding:16px;background:rgba(5,7,13,.7);backdrop-filter:blur(3px)}
+.relatorio[hidden]{display:none}
+.relatorio .cartao{width:min(380px,100%);padding:18px;border-radius:18px;background:var(--surface);border:1px solid var(--line-strong);display:grid;gap:10px;text-align:center}
+.relatorio h2{margin:0;font-size:26px;font-weight:800}
+.relatorio .linhas-rel{display:grid;gap:4px;text-align:left}
+.relatorio .linhas-rel div{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.relatorio .linhas-rel span{color:var(--muted)}
 
-#toast{position:absolute;left:50%;bottom:92px;translate:-50% 0;z-index:95;max-width:calc(100% - 32px);padding:10px 14px;border-radius:12px;background:var(--elev);border:1px solid var(--line-strong);font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center}
+/* ---------- Pergaminho (arte original) ---------- */
+#pergaminho{background:radial-gradient(ellipse 90% 70% at 50% 30%,#2a2135,#0b0f19 75%)}
+.perg-area{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;padding:4px 12px 0}
+.rolo{width:min(600px,100%);height:22px;flex:none;border-radius:11px;background:linear-gradient(180deg,#8a5a2b,#d8a764 35%,#f0cf8f 50%,#b8803f 70%,#6b4220);box-shadow:0 6px 12px rgba(0,0,0,.45);position:relative;z-index:2}
+.rolo::before,.rolo::after{content:'';position:absolute;top:-4px;width:14px;height:30px;border-radius:5px;background:linear-gradient(180deg,#4a2c12,#8a5a2b 50%,#4a2c12)}
+.rolo::before{left:-8px}.rolo::after{right:-8px}
+.papel{width:min(568px,calc(100% - 32px));flex:1;min-height:0;overflow:auto;margin:-6px 0;padding:22px 22px 26px;color:#3b2a14;font:400 14px/1.55 Georgia,'Times New Roman',serif;
+  background:radial-gradient(ellipse at 20% 15%,rgba(160,110,50,.18),transparent 45%),radial-gradient(ellipse at 85% 80%,rgba(140,90,40,.2),transparent 50%),
+  url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .3  0 0 0 0 .12  0 0 0 .12 0'/></filter><rect width='120' height='120' filter='url(%23n)'/></svg>"),#f1e4c3;
+  box-shadow:inset 12px 0 18px -10px rgba(110,70,25,.45),inset -12px 0 18px -10px rgba(110,70,25,.45)}
+.papel .perg-topo{display:grid;grid-template-columns:84px 1fr;gap:14px;align-items:center;margin-bottom:10px}
+.papel .perg-topo svg{width:84px;height:84px}
+.papel h2{margin:0;font:700 24px/1.1 Georgia,serif;color:#2a1c0b}
+.papel .tipo{margin:2px 0 0;font-style:italic;color:#6b4e2a}
+.carimbo{display:inline-block;margin-top:6px;padding:2px 8px;border:2px solid #9b3a2a;border-radius:4px;color:#9b3a2a;font:700 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;rotate:-2deg}
+.papel h3{margin:16px 0 4px;font:700 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#7a4f1d;border-bottom:1px solid rgba(122,79,29,.3);padding-bottom:3px}
+.papel p{margin:0}
+.papel ul{margin:0;padding-left:20px}
+.papel .falta{color:#8a6a45;font-style:italic}
+.papel .destaque{padding:8px 10px;border-radius:6px;background:rgba(155,58,42,.1);border-left:3px solid #9b3a2a}
+.papel .fontes li{font-size:12.5px;color:#5a4224}
+.perg-acoes{padding:12px 12px calc(12px + env(safe-area-inset-bottom));display:flex;justify-content:center}
+
+/* ---------- Enciclopédia ---------- */
+#enciclopedia{background:#0a0d14}
+.enc-corpo{flex:1;overflow:auto;padding:4px 14px 24px}
+.enc-ramo{margin-bottom:16px}
+.enc-ramo h3{display:flex;align-items:center;gap:8px;margin:0 0 8px;font:800 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--cor)}
+.enc-ramo h3 .emblema-ramo{width:24px;height:24px}
+.enc-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.enc-item{display:grid;justify-items:center;gap:6px;padding:12px 8px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface);text-align:center}
+.enc-item svg{width:56px;height:56px}
+.enc-item.escura svg{filter:brightness(0) drop-shadow(0 0 1.5px rgba(170,185,215,.6))}
+.enc-item b{font-size:12.5px;line-height:1.2}
+.enc-item small{color:var(--muted);font-size:11px}
+.enc-item:disabled{cursor:default;opacity:.7}
+
+/* ---------- Aviso para virar o celular ---------- */
+#girar{position:absolute;inset:0;z-index:150;display:grid;place-content:center;justify-items:center;gap:12px;padding:24px;text-align:center;background:#070a12}
+#girar[hidden]{display:none}
+#girar h2{margin:0;font-size:22px;font-weight:800}
+#girar p{margin:0;color:var(--muted);max-width:30ch}
+.telefone{width:64px;height:104px;border-radius:14px;border:4px solid var(--mint);position:relative;animation:girar-cel 2.4s ease-in-out infinite}
+.telefone::after{content:'';position:absolute;left:50%;bottom:6px;width:16px;height:4px;margin-left:-8px;border-radius:2px;background:var(--mint)}
+@keyframes girar-cel{0%,25%{transform:rotate(0)}55%,85%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
+@media (prefers-reduced-motion:reduce){.telefone{animation:none;transform:rotate(-90deg)}}
+
+#toast{position:absolute;left:50%;bottom:76px;translate:-50% 0;z-index:95;max-width:calc(100% - 32px);padding:10px 14px;border-radius:12px;background:var(--elev);border:1px solid var(--line-strong);font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center}
 #toast.on{opacity:1}
 
 /* Painel do protótipo (fora do app) */
 .proto{position:fixed;left:14px;bottom:14px;z-index:200;display:flex;flex-direction:column-reverse;align-items:flex-start;gap:10px;font-size:13px}
 .proto-btn{display:flex;align-items:center;gap:8px;height:42px;padding:0 14px;border-radius:999px;border:1px solid var(--laranja);background:#1b1408;color:var(--laranja);font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .proto-btn svg{width:18px;height:18px}
-.proto-painel{width:min(350px,calc(100vw - 28px));max-height:min(72vh,620px);overflow:auto;padding:14px;border-radius:16px;background:#151b2b;border:1px solid rgba(255,185,95,.35);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.proto-painel{width:min(360px,calc(100vw - 28px));max-height:min(72vh,640px);overflow:auto;padding:14px;border-radius:16px;background:#151b2b;border:1px solid rgba(255,185,95,.35);box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .proto-painel[hidden]{display:none}
 .proto-painel h2{margin:0 0 4px;font-size:14px}
 .proto-painel>p{margin:0 0 12px;color:var(--muted);font-size:12px}
@@ -154,17 +221,18 @@ svg{display:block}
     <section class="tela" id="mapa" aria-label="Mapa do modo história">
       <div class="mundo-vista" id="vista"><div class="mundo" id="mundo"></div></div>
       <header class="topo"><button class="icone-btn" id="voltar-hub" aria-label="Voltar"></button>
-        <h1><small>Batalha diagnóstica</small>Modo história</h1><span class="chip" id="progresso"></span></header>
-      <div class="mapa-acoes"><button class="icone-btn" id="centralizar" aria-label="Centralizar o mapa"></button></div>
+        <h1><small>Batalha diagnóstica</small>Modo história</h1><span class="chip" id="progresso"></span>
+        <button class="icone-btn" id="abrir-enc" aria-label="Enciclopédia"></button></header>
+      <div class="mapa-acoes"><button class="guia" id="guia"></button><button class="icone-btn" id="centralizar" aria-label="Centralizar no início"></button></div>
       <div class="ficha" id="ficha" hidden role="dialog" aria-label="Paciente"></div>
     </section>
     <section class="tela" id="cena" hidden aria-label="Cutscene de entrada">
-      <div class="cena-quadro"><canvas id="tela-pixel" width="768" height="576"></canvas>
+      <div class="cena-quadro" id="quadro-cena"><canvas id="tela-pixel" width="768" height="576"></canvas>
         <div class="caixa" id="caixa-cena" hidden><span class="txt"></span><span class="seta"></span></div></div>
-      <button class="pular" id="pular" hidden>Pular <span id="ic-pular"></span></button>
+      <button class="pular" id="pular" hidden></button>
     </section>
     <section class="tela" id="batalha" hidden aria-label="Batalha">
-      <div class="arena">
+      <div class="arena" id="arena">
         <div class="barra-vida bv-inimigo"><span id="nome-inimigo">?? · Paciente</span><i></i></div>
         <div class="plataforma p-inimigo"></div><div class="sp-inimigo" id="sp-inimigo"></div>
         <div class="plataforma p-medico"></div><div class="sp-medico" id="sp-medico"></div>
@@ -172,10 +240,31 @@ svg{display:block}
       </div>
       <div class="batalha-baixo">
         <div class="caixa" id="caixa-batalha"><span class="txt"></span><span class="seta"></span></div>
-        <div class="simular" id="simular" hidden><button class="primario" id="sim-vitoria">Simular vitória</button><button class="secundario" id="sim-derrota">Simular derrota</button></div>
+        <div class="simular" id="simular" hidden></div>
       </div>
+      <div class="relatorio" id="relatorio" hidden><div class="cartao" id="cartao-rel"></div></div>
+    </section>
+    <section class="tela" id="transmissao" hidden aria-label="Como a doença chegou ao paciente">
+      <div class="cena-quadro" id="quadro-trans"><canvas id="tela-trans" width="768" height="576"></canvas><span class="rotulo-via" id="rotulo-via"></span>
+        <div class="caixa" id="caixa-trans" hidden><span class="txt"></span><span class="seta"></span></div></div>
+    </section>
+    <section class="tela" id="pergaminho" hidden aria-label="Pergaminho da doença">
+      <header class="topo"><button class="icone-btn" id="perg-voltar" aria-label="Voltar"></button><h1><small>Resumo da doença</small>Pergaminho</h1></header>
+      <div class="perg-area"><div class="rolo"></div><article class="papel" id="papel"></article><div class="rolo" id="rolo-baixo"></div></div>
+      <div class="perg-acoes"><button class="primario" id="perg-ok"></button></div>
+    </section>
+    <section class="tela" id="enciclopedia" hidden aria-label="Enciclopédia">
+      <header class="topo"><button class="icone-btn" id="enc-voltar" aria-label="Voltar ao mapa"></button><h1><small>Diagnósticos descobertos</small>Enciclopédia</h1><span class="chip" id="enc-progresso"></span></header>
+      <div class="enc-corpo" id="enc-corpo"></div>
     </section>
     <div id="transicao" hidden></div>
+    <div id="girar" hidden role="dialog" aria-label="Vire o celular">
+      <div class="telefone" aria-hidden="true"></div>
+      <h2>Vire o celular</h2>
+      <p>A Batalha é jogada com o celular deitado.</p>
+      <button class="primario" id="tentar-girar">Girar a tela</button>
+      <p style="font-size:12px">Se a tela não girar, desligue o bloqueio de rotação do aparelho.</p>
+    </div>
     <div id="toast" role="status" aria-live="polite"></div>
   </div>
 </div>
@@ -183,36 +272,31 @@ svg{display:block}
 <div class="proto">
   <button class="proto-btn" id="proto-btn" aria-expanded="false" aria-controls="proto-painel"></button>
   <div class="proto-painel" id="proto-painel" hidden>
-    <h2>Protótipo · Modo história (parte 1)</h2>
-    <p>Mapa, cutscene de entrada e transição. Arraste o mapa; toque num paciente.</p>
+    <h2>Protótipo · Modo história (partes 1 e 2)</h2>
+    <p>Arraste o mapa e toque num paciente, ou use "Próximo paciente". Na batalha, simule o diagnóstico para ver a transmissão, a descoberta e o pergaminho.</p>
     <div class="grupo"><p>Progresso</p><div class="seg" data-chave="progresso">
       <button data-valor="comeco">Começo</button><button data-valor="meio">Meio</button><button data-valor="tudo">Tudo vencido</button>
     </div></div>
-    <div class="grupo"><p>Silhueta da doença no mapa</p><div class="seg" data-chave="silhueta">
-      <button data-valor="real">Forma real escurecida</button><button data-valor="generica">Forma genérica</button>
-    </div></div>
-    <div class="grupo"><p>Transição para a batalha</p><div class="seg" data-chave="transicao">
-      <button data-valor="ecg">Batimento</button><button data-valor="micro">Microscópio</button>
+    <div class="grupo"><p>Tela</p><div class="seg" data-chave="tela">
+      <button data-valor="cheia">Tela cheia</button><button data-valor="deitado">Celular deitado</button><button data-valor="celular">Celular em pé</button>
     </div></div>
     <div class="grupo"><p>Botão "Pular" na cutscene</p><div class="seg" data-chave="pular">
       <button data-valor="segunda">Da 2ª vez em diante</button><button data-valor="sempre">Sempre</button>
     </div></div>
-    <div class="grupo"><p>Tela</p><div class="seg" data-chave="tela">
-      <button data-valor="cheia">Tela cheia</button><button data-valor="celular">Celular</button>
-    </div></div>
     <div class="grupo"><p>O que decidir</p><ol class="decisoes">
-      <li><b>Silhueta:</b> a forma real escurecida mostra o agente antes da hora? Ou a forma genérica até a descoberta?</li>
-      <li><b>Ramos:</b> os três ramos começam abertos (o primeiro paciente de cada um), e cada vitória abre o próximo do mesmo ramo. Está bom?</li>
-      <li><b>Cutscene:</b> o médico entra pela porta e anda até o leito, com duas falas. Está no tom?</li>
-      <li><b>Transição:</b> batimento (a linha do monitor cruza a tela e fecha em persianas) ou microscópio (a tela fecha no paciente e abre numa lente)?</li>
-      <li><b>Pular:</b> só da segunda vez em diante?</li>
+      <li><b>Padrão dos ramos:</b> cada ramo é uma área, com cor, emblema e direção próprios, saindo do Início para qualquer lado (o ramo tracejado à esquerda mostra onde um ramo novo entraria). Dentro do ramo, do mais comum ao mais raro. Está bom?</li>
+      <li><b>"Próximo paciente":</b> leva ao próximo paciente aberto, ramo por ramo. Está bom?</li>
+      <li><b>Celular em pé:</b> o aviso bloqueia a Batalha até virar (sem "continuar na vertical"). Está bom?</li>
+      <li><b>Cutscenes de transmissão:</b> as 5 cenas (ar, inseto, água, carrapato e alimento) estão no tom?</li>
+      <li><b>Pergaminho:</b> campos e visual. A profilaxia ainda não existe no conteúdo e precisa ser escrita e revisada.</li>
     </ol></div>
   </div>
 </div>
 
 <script>
-// Desenhos do app (src/components/batalhaArte.jsx), gerados em SVG fixo para o protótipo.
-const ARTE = {"capitulos":[{"id":"c1","nome":"Primeiro plantão","sub":"Febre e dor no corpo","ids":["pneumo","dengue","malaria","lepto"]},{"id":"c2","nome":"Vigilância no território","sub":"Doenças que a unidade básica acompanha","ids":["tb","hanse","esquisto","chagas"]},{"id":"c3","nome":"Do mato ao pronto-socorro","sub":"Zoonoses e urgências infecciosas","ids":["maculosa","leish","amarela","meningo"]}],"doencas":[{"id":"pneumo","nome":"Pneumonia pneumocócica","caso":"Tosse, febre e dor ao respirar","agente":"bacteria","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp pneumo \" aria-hidden=\"true\"><defs><radialGradient id=\"pneumo-p_R_0_\" cx=\".35\" cy=\".3\" r=\".8\"><stop offset=\"0\" stop-color=\"#c4adff\"></stop><stop offset=\".55\" stop-color=\"#8b5cf6\"></stop><stop offset=\"1\" stop-color=\"#4c25b8\"></stop></radialGradient></defs><ellipse cx=\"60\" cy=\"62\" rx=\"55\" ry=\"43\" fill=\"rgba(180,156,255,.13)\" stroke=\"rgba(200,180,255,.55)\" stroke-width=\"2\" stroke-dasharray=\"5 6\" class=\"capsule\"></ellipse><ellipse cx=\"38\" cy=\"62\" rx=\"22\" ry=\"29\" transform=\"rotate(-22 38 62)\" fill=\"url(#pneumo-p_R_0_)\" stroke=\"#2e1670\" stroke-width=\"2.5\"></ellipse><ellipse cx=\"82\" cy=\"62\" rx=\"22\" ry=\"29\" transform=\"rotate(22 82 62)\" fill=\"url(#pneumo-p_R_0_)\" stroke=\"#2e1670\" stroke-width=\"2.5\"></ellipse><g fill=\"#fff\"><circle cx=\"31\" cy=\"58\" r=\"5\"></circle><circle cx=\"45\" cy=\"56\" r=\"5\"></circle><circle cx=\"75\" cy=\"56\" r=\"5\"></circle><circle cx=\"89\" cy=\"58\" r=\"5\"></circle></g><g fill=\"#1b0c45\"><circle cx=\"32\" cy=\"59\" r=\"2.4\"></circle><circle cx=\"46\" cy=\"57\" r=\"2.4\"></circle><circle cx=\"76\" cy=\"57\" r=\"2.4\"></circle><circle cx=\"90\" cy=\"59\" r=\"2.4\"></circle></g><g stroke=\"#1b0c45\" stroke-width=\"2.6\" stroke-linecap=\"round\"><path d=\"M26 50l9 3M50 48l-9 3\"></path><path d=\"M70 48l9 3M94 50l-9 3\"></path></g><path d=\"M33 70q5 4 10 0M77 70q5 4 10 0\" stroke=\"#1b0c45\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></svg>"},{"id":"dengue","nome":"Dengue","caso":"Febre e dor no corpo","agente":"virus","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp dengue \" aria-hidden=\"true\"><defs><radialGradient id=\"dengue-d_R_0_\" cx=\".35\" cy=\".3\" r=\".8\"><stop offset=\"0\" stop-color=\"#ffd0a8\"></stop><stop offset=\".5\" stop-color=\"#ff8a5c\"></stop><stop offset=\"1\" stop-color=\"#c23c1c\"></stop></radialGradient></defs><g><line x1=\"93\" y1=\"62\" x2=\"105\" y2=\"62\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"105\" cy=\"62\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"88.57883832488648\" y1=\"78.5\" x2=\"98.97114317029974\" y2=\"84.5\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"98.97114317029974\" cy=\"84.5\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"76.5\" y1=\"90.57883832488648\" x2=\"82.5\" y2=\"100.97114317029974\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"82.5\" cy=\"100.97114317029974\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"60\" y1=\"95\" x2=\"60\" y2=\"107\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"60\" cy=\"107\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"43.50000000000001\" y1=\"90.57883832488648\" x2=\"37.500000000000014\" y2=\"100.97114317029974\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"37.500000000000014\" cy=\"100.97114317029974\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"31.421161675113524\" y1=\"78.5\" x2=\"21.02885682970026\" y2=\"84.5\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"21.02885682970026\" cy=\"84.5\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"27\" y1=\"62.00000000000001\" x2=\"15\" y2=\"62.00000000000001\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"15\" cy=\"62.00000000000001\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"31.421161675113527\" y1=\"45.5\" x2=\"21.02885682970026\" y2=\"39.5\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"21.02885682970026\" cy=\"39.5\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"43.499999999999986\" y1=\"33.42116167511353\" x2=\"37.49999999999998\" y2=\"23.028856829700267\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"37.49999999999998\" cy=\"23.028856829700267\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"59.99999999999999\" y1=\"29\" x2=\"59.99999999999999\" y2=\"17\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"59.99999999999999\" cy=\"17\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"76.5\" y1=\"33.421161675113524\" x2=\"82.5\" y2=\"23.02885682970026\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"82.5\" cy=\"23.02885682970026\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"88.57883832488646\" y1=\"45.499999999999986\" x2=\"98.97114317029973\" y2=\"39.49999999999998\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"98.97114317029973\" cy=\"39.49999999999998\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><circle cx=\"60\" cy=\"62\" r=\"34\" fill=\"url(#dengue-d_R_0_)\" stroke=\"#8f2b12\" stroke-width=\"2.5\"></circle><g fill=\"rgba(255,255,255,.22)\"><circle cx=\"44\" cy=\"46\" r=\"5\"></circle><circle cx=\"76\" cy=\"80\" r=\"4\"></circle><circle cx=\"48\" cy=\"82\" r=\"3\"></circle></g><g fill=\"#fff\"><ellipse cx=\"50\" cy=\"58\" rx=\"6\" ry=\"6.5\"></ellipse><ellipse cx=\"70\" cy=\"58\" rx=\"6\" ry=\"6.5\"></ellipse></g><g fill=\"#3a0d02\"><circle cx=\"51\" cy=\"59.5\" r=\"3\"></circle><circle cx=\"69\" cy=\"59.5\" r=\"3\"></circle></g><path d=\"M44 50l10 3M76 50l-10 3\" stroke=\"#3a0d02\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M49 72q11 8 22 0\" stroke=\"#3a0d02\" stroke-width=\"2.6\" fill=\"#5a1606\" stroke-linecap=\"round\"></path><path d=\"M53 73l2 4 2-3.4M63 73.4l2 3.6 2-4\" fill=\"#fff\"></path></svg>"},{"id":"malaria","nome":"Malária por P. vivax","caso":"Febre que vai e volta","agente":"protozoario","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp malaria \" aria-hidden=\"true\"><defs><radialGradient id=\"malaria-m_R_0_\" cx=\".5\" cy=\".5\" r=\".55\"><stop offset=\"0\" stop-color=\"#ffb1bd\"></stop><stop offset=\".6\" stop-color=\"#f0667e\"></stop><stop offset=\"1\" stop-color=\"#c23a55\"></stop></radialGradient></defs><circle cx=\"60\" cy=\"64\" r=\"46\" fill=\"url(#malaria-m_R_0_)\" stroke=\"#8e2138\" stroke-width=\"2.5\"></circle><circle cx=\"60\" cy=\"66\" r=\"21\" fill=\"rgba(255,255,255,.2)\" stroke=\"#3f6cf0\" stroke-width=\"7\"></circle><circle cx=\"75\" cy=\"50\" r=\"7.5\" fill=\"#23349c\"></circle><g fill=\"#1d2a73\"><circle cx=\"54\" cy=\"64\" r=\"3\"></circle><circle cx=\"66\" cy=\"64\" r=\"3\"></circle></g><path d=\"M50 57l7 2M70 57l-7 2\" stroke=\"#1d2a73\" stroke-width=\"2.4\" stroke-linecap=\"round\"></path><path d=\"M54 73q6 4 12-1\" stroke=\"#1d2a73\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></svg>"},{"id":"lepto","nome":"Leptospirose","caso":"Febre depois da enchente","agente":"bacteria","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen espiral \" aria-hidden=\"true\"><defs><radialGradient id=\"lepto-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#f2c14e\"></stop><stop offset=\"1\" stop-color=\"#a0761a\"></stop></radialGradient></defs><g fill=\"none\" stroke-linecap=\"round\"><path d=\"M14 80C28 36 46 100 62 62S92 28 108 52\" stroke=\"#a0761a\" stroke-width=\"30\"></path><path d=\"M14 80C28 36 46 100 62 62S92 28 108 52\" stroke=\"url(#lepto-g_R_0_)\" stroke-width=\"24\"></path></g><g transform=\"translate(60 64) scale(0.74)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"tb","nome":"Tuberculose pulmonar","caso":"Tosse que não passa","agente":"bacteria","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen bacilo \" aria-hidden=\"true\"><defs><radialGradient id=\"tb-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#7bd88f\"></stop><stop offset=\"1\" stop-color=\"#2f7d46\"></stop></radialGradient></defs><g transform=\"rotate(-16 60 62)\"><rect x=\"12\" y=\"34\" width=\"96\" height=\"56\" rx=\"28\" fill=\"url(#tb-g_R_0_)\" stroke=\"#2f7d46\" stroke-width=\"2.6\"></rect></g><g transform=\"translate(60 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"hanse","nome":"Hanseníase","caso":"A mancha que não coça","agente":"bacteria","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen bacilo \" aria-hidden=\"true\"><defs><radialGradient id=\"hanse-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#d9a47f\"></stop><stop offset=\"1\" stop-color=\"#8a5a3a\"></stop></radialGradient></defs><g transform=\"rotate(-16 60 62)\"><rect x=\"12\" y=\"34\" width=\"96\" height=\"56\" rx=\"28\" fill=\"url(#hanse-g_R_0_)\" stroke=\"#8a5a3a\" stroke-width=\"2.6\"></rect><g fill=\"#8a5a3a\" opacity=\".35\"><circle cx=\"30\" cy=\"52\" r=\"5\"></circle><circle cx=\"86\" cy=\"76\" r=\"4.5\"></circle><circle cx=\"94\" cy=\"50\" r=\"3.5\"></circle><circle cx=\"40\" cy=\"78\" r=\"3.5\"></circle></g></g><g transform=\"translate(60 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"esquisto","nome":"Esquistossomose mansônica","caso":"Fígado grande e diarreia","agente":"helminto","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen verme \" aria-hidden=\"true\"><defs><radialGradient id=\"esquisto-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#e29b6b\"></stop><stop offset=\"1\" stop-color=\"#8f4f2a\"></stop></radialGradient></defs><g fill=\"none\" stroke-linecap=\"round\"><path d=\"M12 86C26 38 52 104 76 64S98 34 108 48\" stroke=\"#8f4f2a\" stroke-width=\"30\"></path><path d=\"M12 86C26 38 52 104 76 64S98 34 108 48\" stroke=\"url(#esquisto-g_R_0_)\" stroke-width=\"24\"></path><path d=\"M12 86C26 38 52 104 76 64S98 34 108 48\" stroke=\"#8f4f2a\" stroke-opacity=\".4\" stroke-width=\"24\" stroke-dasharray=\"2 9\"></path></g><g transform=\"translate(96 52) scale(0.62)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"chagas","nome":"Doença de Chagas aguda","caso":"Febre depois do almoço de família","agente":"protozoario","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen flagelado \" aria-hidden=\"true\"><defs><radialGradient id=\"chagas-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#d07a7a\"></stop><stop offset=\"1\" stop-color=\"#7a2f3a\"></stop></radialGradient></defs><g><path d=\"M84 52c14-4 16-18 30-22\" stroke=\"#7a2f3a\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\" class=\"flag\"></path><ellipse cx=\"52\" cy=\"64\" rx=\"40\" ry=\"31\" fill=\"url(#chagas-g_R_0_)\" stroke=\"#7a2f3a\" stroke-width=\"2.6\"></ellipse><circle cx=\"74\" cy=\"80\" r=\"7\" fill=\"#7a2f3a\" opacity=\".5\"></circle></g><g transform=\"translate(50 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"maculosa","nome":"Febre maculosa brasileira","caso":"Febre depois da fazenda","agente":"bacteria","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen bacilo \" aria-hidden=\"true\"><defs><radialGradient id=\"maculosa-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#e05a6d\"></stop><stop offset=\"1\" stop-color=\"#7d1f33\"></stop></radialGradient></defs><g transform=\"rotate(-16 60 62)\"><rect x=\"12\" y=\"34\" width=\"96\" height=\"56\" rx=\"28\" fill=\"url(#maculosa-g_R_0_)\" stroke=\"#7d1f33\" stroke-width=\"2.6\"></rect><g fill=\"#7d1f33\" opacity=\".35\"><circle cx=\"30\" cy=\"52\" r=\"5\"></circle><circle cx=\"86\" cy=\"76\" r=\"4.5\"></circle><circle cx=\"94\" cy=\"50\" r=\"3.5\"></circle><circle cx=\"40\" cy=\"78\" r=\"3.5\"></circle></g></g><g transform=\"translate(60 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"leish","nome":"Leishmaniose visceral","caso":"Febre longa e barriga grande","agente":"protozoario","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen flagelado \" aria-hidden=\"true\"><defs><radialGradient id=\"leish-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#d6b13a\"></stop><stop offset=\"1\" stop-color=\"#7a6014\"></stop></radialGradient></defs><g><path d=\"M84 52c14-4 16-18 30-22\" stroke=\"#7a6014\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\" class=\"flag\"></path><ellipse cx=\"52\" cy=\"64\" rx=\"40\" ry=\"31\" fill=\"url(#leish-g_R_0_)\" stroke=\"#7a6014\" stroke-width=\"2.6\"></ellipse><circle cx=\"74\" cy=\"80\" r=\"7\" fill=\"#7a6014\" opacity=\".5\"></circle><g fill=\"#7a6014\" opacity=\".3\"><circle cx=\"24\" cy=\"56\" r=\"4\"></circle><circle cx=\"36\" cy=\"84\" r=\"3.4\"></circle></g></g><g transform=\"translate(50 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"amarela","nome":"Febre amarela","caso":"Febre, vômitos e olhos amarelos","agente":"virus","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen virus \" aria-hidden=\"true\"><defs><radialGradient id=\"amarela-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#ffd84a\"></stop><stop offset=\"1\" stop-color=\"#b8860b\"></stop></radialGradient></defs><g><g><line x1=\"92\" y1=\"62\" x2=\"106\" y2=\"62\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"106\" cy=\"62\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"87.71281292110204\" y1=\"78\" x2=\"99.83716857408419\" y2=\"85\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"99.83716857408419\" cy=\"85\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"76\" y1=\"89.71281292110203\" x2=\"83\" y2=\"101.83716857408417\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"83\" cy=\"101.83716857408417\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"60\" y1=\"94\" x2=\"60\" y2=\"108\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"60\" cy=\"108\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"44.00000000000001\" y1=\"89.71281292110204\" x2=\"37.000000000000014\" y2=\"101.83716857408419\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"37.000000000000014\" cy=\"101.83716857408419\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"32.28718707889796\" y1=\"78\" x2=\"20.16283142591582\" y2=\"85\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"20.16283142591582\" cy=\"85\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"28\" y1=\"62.00000000000001\" x2=\"14\" y2=\"62.00000000000001\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"14\" cy=\"62.00000000000001\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"32.287187078897965\" y1=\"46\" x2=\"20.162831425915826\" y2=\"39\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"20.162831425915826\" cy=\"39\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"43.999999999999986\" y1=\"34.28718707889797\" x2=\"36.99999999999998\" y2=\"22.162831425915833\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"36.99999999999998\" cy=\"22.162831425915833\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"59.99999999999999\" y1=\"30\" x2=\"59.99999999999999\" y2=\"16\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"59.99999999999999\" cy=\"16\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"76\" y1=\"34.287187078897965\" x2=\"83\" y2=\"22.162831425915826\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"83\" cy=\"22.162831425915826\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"87.71281292110203\" y1=\"45.999999999999986\" x2=\"99.83716857408416\" y2=\"38.99999999999998\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"99.83716857408416\" cy=\"38.99999999999998\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><circle cx=\"60\" cy=\"62\" r=\"34\" fill=\"url(#amarela-g_R_0_)\" stroke=\"#b8860b\" stroke-width=\"2.6\"></circle></g><g transform=\"translate(60 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"meningo","nome":"Doença meningocócica","caso":"Febre e manchas roxas","agente":"bacteria","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen diplo \" aria-hidden=\"true\"><defs><radialGradient id=\"meningo-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#ff7ab6\"></stop><stop offset=\"1\" stop-color=\"#9c2c66\"></stop></radialGradient></defs><g><circle cx=\"40\" cy=\"64\" r=\"32\" fill=\"url(#meningo-g_R_0_)\" stroke=\"#9c2c66\" stroke-width=\"2.6\"></circle><circle cx=\"82\" cy=\"60\" r=\"32\" fill=\"url(#meningo-g_R_0_)\" stroke=\"#9c2c66\" stroke-width=\"2.6\"></circle></g><g transform=\"translate(61 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"}],"blob":"<svg viewBox=\"0 0 120 120\" class=\"sp blob\" aria-hidden=\"true\"><defs><radialGradient id=\"blob-b_R_0_\" cx=\".38\" cy=\".3\" r=\".75\"><stop offset=\"0\" stop-color=\"#56617c\"></stop><stop offset=\"1\" stop-color=\"#161b29\"></stop></radialGradient></defs><path d=\"M60 10c27 0 47 19 46 46-1 20-8 33-17 42-8 8-19 10-29 5-11 6-23 4-31-5-10-11-17-25-16-43C14 29 33 10 60 10z\" fill=\"url(#blob-b_R_0_)\" stroke=\"#6b7897\" stroke-width=\"2\"></path><path d=\"M30 40c4-10 14-18 26-20\" stroke=\"rgba(255,255,255,.18)\" stroke-width=\"5\" stroke-linecap=\"round\" fill=\"none\"></path><ellipse cx=\"44\" cy=\"50\" rx=\"7\" ry=\"3.2\" fill=\"#c9d3e6\" class=\"blob-eye\"></ellipse><ellipse cx=\"76\" cy=\"50\" rx=\"7\" ry=\"3.2\" fill=\"#c9d3e6\" class=\"blob-eye\"></ellipse><text x=\"60\" y=\"92\" text-anchor=\"middle\" font-size=\"36\" font-weight=\"800\" fill=\"#dce2f7\" opacity=\".9\" font-family=\"var(--sans)\">?</text></svg>","doctor":"<svg viewBox=\"0 0 120 130\" class=\"sp doctor\" aria-hidden=\"true\"><path d=\"M12 132c0-33 18-52 48-54 30 2 48 21 48 54z\" fill=\"#eef2f8\" stroke=\"#aeb9cc\" stroke-width=\"2\"></path><path d=\"M60 86v46\" stroke=\"#cdd5e3\" stroke-width=\"2\"></path><path d=\"M24 112c6-6 12-8 18-9M96 112c-6-6-12-8-18-9\" stroke=\"#d5dce8\" stroke-width=\"2\" fill=\"none\"></path><rect x=\"86\" y=\"98\" width=\"13\" height=\"8\" rx=\"2\" fill=\"#00f5d4\" opacity=\".9\"></rect><rect x=\"51\" y=\"62\" width=\"18\" height=\"20\" rx=\"4\" fill=\"#d9a47f\"></rect><path d=\"M40 84q20 -12 40 0\" stroke=\"#2f3a4f\" stroke-width=\"4.5\" fill=\"none\" stroke-linecap=\"round\"></path><path d=\"M40 84c-4 10 0 22 10 28M80 84c4 10 0 22-10 28\" stroke=\"#2f3a4f\" stroke-width=\"3.4\" fill=\"none\" stroke-linecap=\"round\"></path><ellipse cx=\"37\" cy=\"50\" rx=\"4.5\" ry=\"7\" fill=\"#d9a47f\"></ellipse><ellipse cx=\"83\" cy=\"50\" rx=\"4.5\" ry=\"7\" fill=\"#d9a47f\"></ellipse><circle cx=\"60\" cy=\"46\" r=\"23\" fill=\"#e2b08a\"></circle><path d=\"M36 48c-3-20 9-31 24-31s27 10 24 31c-2 10-9 16-24 16S38 58 36 48z\" fill=\"#2b2138\"></path><path d=\"M44 26c6-5 20-6 28 1\" stroke=\"rgba(255,255,255,.18)\" stroke-width=\"3\" fill=\"none\" stroke-linecap=\"round\"></path></svg>"};
+// Desenhos e dados do app (gerados de src/components/batalhaArte.jsx e src/utils/batalhaConteudo.js).
+const DADOS = {"arte":{"capitulos":[{"id":"c1","nome":"Primeiro plantão","sub":"Febre e dor no corpo","ids":["pneumo","dengue","malaria","lepto"]},{"id":"c2","nome":"Vigilância no território","sub":"Doenças que a unidade básica acompanha","ids":["tb","hanse","esquisto","chagas"]},{"id":"c3","nome":"Do mato ao pronto-socorro","sub":"Zoonoses e urgências infecciosas","ids":["maculosa","leish","amarela","meningo"]}],"doencas":[{"id":"pneumo","nome":"Pneumonia pneumocócica","caso":"Tosse, febre e dor ao respirar","agente":"bacteria","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp pneumo \" aria-hidden=\"true\"><defs><radialGradient id=\"pneumo-p_R_0_\" cx=\".35\" cy=\".3\" r=\".8\"><stop offset=\"0\" stop-color=\"#c4adff\"></stop><stop offset=\".55\" stop-color=\"#8b5cf6\"></stop><stop offset=\"1\" stop-color=\"#4c25b8\"></stop></radialGradient></defs><ellipse cx=\"60\" cy=\"62\" rx=\"55\" ry=\"43\" fill=\"rgba(180,156,255,.13)\" stroke=\"rgba(200,180,255,.55)\" stroke-width=\"2\" stroke-dasharray=\"5 6\" class=\"capsule\"></ellipse><ellipse cx=\"38\" cy=\"62\" rx=\"22\" ry=\"29\" transform=\"rotate(-22 38 62)\" fill=\"url(#pneumo-p_R_0_)\" stroke=\"#2e1670\" stroke-width=\"2.5\"></ellipse><ellipse cx=\"82\" cy=\"62\" rx=\"22\" ry=\"29\" transform=\"rotate(22 82 62)\" fill=\"url(#pneumo-p_R_0_)\" stroke=\"#2e1670\" stroke-width=\"2.5\"></ellipse><g fill=\"#fff\"><circle cx=\"31\" cy=\"58\" r=\"5\"></circle><circle cx=\"45\" cy=\"56\" r=\"5\"></circle><circle cx=\"75\" cy=\"56\" r=\"5\"></circle><circle cx=\"89\" cy=\"58\" r=\"5\"></circle></g><g fill=\"#1b0c45\"><circle cx=\"32\" cy=\"59\" r=\"2.4\"></circle><circle cx=\"46\" cy=\"57\" r=\"2.4\"></circle><circle cx=\"76\" cy=\"57\" r=\"2.4\"></circle><circle cx=\"90\" cy=\"59\" r=\"2.4\"></circle></g><g stroke=\"#1b0c45\" stroke-width=\"2.6\" stroke-linecap=\"round\"><path d=\"M26 50l9 3M50 48l-9 3\"></path><path d=\"M70 48l9 3M94 50l-9 3\"></path></g><path d=\"M33 70q5 4 10 0M77 70q5 4 10 0\" stroke=\"#1b0c45\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></svg>"},{"id":"dengue","nome":"Dengue","caso":"Febre e dor no corpo","agente":"virus","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp dengue \" aria-hidden=\"true\"><defs><radialGradient id=\"dengue-d_R_0_\" cx=\".35\" cy=\".3\" r=\".8\"><stop offset=\"0\" stop-color=\"#ffd0a8\"></stop><stop offset=\".5\" stop-color=\"#ff8a5c\"></stop><stop offset=\"1\" stop-color=\"#c23c1c\"></stop></radialGradient></defs><g><line x1=\"93\" y1=\"62\" x2=\"105\" y2=\"62\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"105\" cy=\"62\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"88.57883832488648\" y1=\"78.5\" x2=\"98.97114317029974\" y2=\"84.5\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"98.97114317029974\" cy=\"84.5\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"76.5\" y1=\"90.57883832488648\" x2=\"82.5\" y2=\"100.97114317029974\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"82.5\" cy=\"100.97114317029974\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"60\" y1=\"95\" x2=\"60\" y2=\"107\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"60\" cy=\"107\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"43.50000000000001\" y1=\"90.57883832488648\" x2=\"37.500000000000014\" y2=\"100.97114317029974\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"37.500000000000014\" cy=\"100.97114317029974\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"31.421161675113524\" y1=\"78.5\" x2=\"21.02885682970026\" y2=\"84.5\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"21.02885682970026\" cy=\"84.5\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"27\" y1=\"62.00000000000001\" x2=\"15\" y2=\"62.00000000000001\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"15\" cy=\"62.00000000000001\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"31.421161675113527\" y1=\"45.5\" x2=\"21.02885682970026\" y2=\"39.5\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"21.02885682970026\" cy=\"39.5\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"43.499999999999986\" y1=\"33.42116167511353\" x2=\"37.49999999999998\" y2=\"23.028856829700267\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"37.49999999999998\" cy=\"23.028856829700267\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"59.99999999999999\" y1=\"29\" x2=\"59.99999999999999\" y2=\"17\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"59.99999999999999\" cy=\"17\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"76.5\" y1=\"33.421161675113524\" x2=\"82.5\" y2=\"23.02885682970026\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"82.5\" cy=\"23.02885682970026\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><g><line x1=\"88.57883832488646\" y1=\"45.499999999999986\" x2=\"98.97114317029973\" y2=\"39.49999999999998\" stroke=\"#8f2b12\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"98.97114317029973\" cy=\"39.49999999999998\" r=\"5\" fill=\"#ffae7a\" stroke=\"#8f2b12\" stroke-width=\"1.5\"></circle></g><circle cx=\"60\" cy=\"62\" r=\"34\" fill=\"url(#dengue-d_R_0_)\" stroke=\"#8f2b12\" stroke-width=\"2.5\"></circle><g fill=\"rgba(255,255,255,.22)\"><circle cx=\"44\" cy=\"46\" r=\"5\"></circle><circle cx=\"76\" cy=\"80\" r=\"4\"></circle><circle cx=\"48\" cy=\"82\" r=\"3\"></circle></g><g fill=\"#fff\"><ellipse cx=\"50\" cy=\"58\" rx=\"6\" ry=\"6.5\"></ellipse><ellipse cx=\"70\" cy=\"58\" rx=\"6\" ry=\"6.5\"></ellipse></g><g fill=\"#3a0d02\"><circle cx=\"51\" cy=\"59.5\" r=\"3\"></circle><circle cx=\"69\" cy=\"59.5\" r=\"3\"></circle></g><path d=\"M44 50l10 3M76 50l-10 3\" stroke=\"#3a0d02\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M49 72q11 8 22 0\" stroke=\"#3a0d02\" stroke-width=\"2.6\" fill=\"#5a1606\" stroke-linecap=\"round\"></path><path d=\"M53 73l2 4 2-3.4M63 73.4l2 3.6 2-4\" fill=\"#fff\"></path></svg>"},{"id":"malaria","nome":"Malária por P. vivax","caso":"Febre que vai e volta","agente":"protozoario","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp malaria \" aria-hidden=\"true\"><defs><radialGradient id=\"malaria-m_R_0_\" cx=\".5\" cy=\".5\" r=\".55\"><stop offset=\"0\" stop-color=\"#ffb1bd\"></stop><stop offset=\".6\" stop-color=\"#f0667e\"></stop><stop offset=\"1\" stop-color=\"#c23a55\"></stop></radialGradient></defs><circle cx=\"60\" cy=\"64\" r=\"46\" fill=\"url(#malaria-m_R_0_)\" stroke=\"#8e2138\" stroke-width=\"2.5\"></circle><circle cx=\"60\" cy=\"66\" r=\"21\" fill=\"rgba(255,255,255,.2)\" stroke=\"#3f6cf0\" stroke-width=\"7\"></circle><circle cx=\"75\" cy=\"50\" r=\"7.5\" fill=\"#23349c\"></circle><g fill=\"#1d2a73\"><circle cx=\"54\" cy=\"64\" r=\"3\"></circle><circle cx=\"66\" cy=\"64\" r=\"3\"></circle></g><path d=\"M50 57l7 2M70 57l-7 2\" stroke=\"#1d2a73\" stroke-width=\"2.4\" stroke-linecap=\"round\"></path><path d=\"M54 73q6 4 12-1\" stroke=\"#1d2a73\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></svg>"},{"id":"lepto","nome":"Leptospirose","caso":"Febre depois da enchente","agente":"bacteria","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen espiral \" aria-hidden=\"true\"><defs><radialGradient id=\"lepto-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#f2c14e\"></stop><stop offset=\"1\" stop-color=\"#a0761a\"></stop></radialGradient></defs><g fill=\"none\" stroke-linecap=\"round\"><path d=\"M14 80C28 36 46 100 62 62S92 28 108 52\" stroke=\"#a0761a\" stroke-width=\"30\"></path><path d=\"M14 80C28 36 46 100 62 62S92 28 108 52\" stroke=\"url(#lepto-g_R_0_)\" stroke-width=\"24\"></path></g><g transform=\"translate(60 64) scale(0.74)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"tb","nome":"Tuberculose pulmonar","caso":"Tosse que não passa","agente":"bacteria","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen bacilo \" aria-hidden=\"true\"><defs><radialGradient id=\"tb-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#7bd88f\"></stop><stop offset=\"1\" stop-color=\"#2f7d46\"></stop></radialGradient></defs><g transform=\"rotate(-16 60 62)\"><rect x=\"12\" y=\"34\" width=\"96\" height=\"56\" rx=\"28\" fill=\"url(#tb-g_R_0_)\" stroke=\"#2f7d46\" stroke-width=\"2.6\"></rect></g><g transform=\"translate(60 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"hanse","nome":"Hanseníase","caso":"A mancha que não coça","agente":"bacteria","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen bacilo \" aria-hidden=\"true\"><defs><radialGradient id=\"hanse-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#d9a47f\"></stop><stop offset=\"1\" stop-color=\"#8a5a3a\"></stop></radialGradient></defs><g transform=\"rotate(-16 60 62)\"><rect x=\"12\" y=\"34\" width=\"96\" height=\"56\" rx=\"28\" fill=\"url(#hanse-g_R_0_)\" stroke=\"#8a5a3a\" stroke-width=\"2.6\"></rect><g fill=\"#8a5a3a\" opacity=\".35\"><circle cx=\"30\" cy=\"52\" r=\"5\"></circle><circle cx=\"86\" cy=\"76\" r=\"4.5\"></circle><circle cx=\"94\" cy=\"50\" r=\"3.5\"></circle><circle cx=\"40\" cy=\"78\" r=\"3.5\"></circle></g></g><g transform=\"translate(60 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"esquisto","nome":"Esquistossomose mansônica","caso":"Fígado grande e diarreia","agente":"helminto","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen verme \" aria-hidden=\"true\"><defs><radialGradient id=\"esquisto-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#e29b6b\"></stop><stop offset=\"1\" stop-color=\"#8f4f2a\"></stop></radialGradient></defs><g fill=\"none\" stroke-linecap=\"round\"><path d=\"M12 86C26 38 52 104 76 64S98 34 108 48\" stroke=\"#8f4f2a\" stroke-width=\"30\"></path><path d=\"M12 86C26 38 52 104 76 64S98 34 108 48\" stroke=\"url(#esquisto-g_R_0_)\" stroke-width=\"24\"></path><path d=\"M12 86C26 38 52 104 76 64S98 34 108 48\" stroke=\"#8f4f2a\" stroke-opacity=\".4\" stroke-width=\"24\" stroke-dasharray=\"2 9\"></path></g><g transform=\"translate(96 52) scale(0.62)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"chagas","nome":"Doença de Chagas aguda","caso":"Febre depois do almoço de família","agente":"protozoario","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen flagelado \" aria-hidden=\"true\"><defs><radialGradient id=\"chagas-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#d07a7a\"></stop><stop offset=\"1\" stop-color=\"#7a2f3a\"></stop></radialGradient></defs><g><path d=\"M84 52c14-4 16-18 30-22\" stroke=\"#7a2f3a\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\" class=\"flag\"></path><ellipse cx=\"52\" cy=\"64\" rx=\"40\" ry=\"31\" fill=\"url(#chagas-g_R_0_)\" stroke=\"#7a2f3a\" stroke-width=\"2.6\"></ellipse><circle cx=\"74\" cy=\"80\" r=\"7\" fill=\"#7a2f3a\" opacity=\".5\"></circle></g><g transform=\"translate(50 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"maculosa","nome":"Febre maculosa brasileira","caso":"Febre depois da fazenda","agente":"bacteria","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen bacilo \" aria-hidden=\"true\"><defs><radialGradient id=\"maculosa-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#e05a6d\"></stop><stop offset=\"1\" stop-color=\"#7d1f33\"></stop></radialGradient></defs><g transform=\"rotate(-16 60 62)\"><rect x=\"12\" y=\"34\" width=\"96\" height=\"56\" rx=\"28\" fill=\"url(#maculosa-g_R_0_)\" stroke=\"#7d1f33\" stroke-width=\"2.6\"></rect><g fill=\"#7d1f33\" opacity=\".35\"><circle cx=\"30\" cy=\"52\" r=\"5\"></circle><circle cx=\"86\" cy=\"76\" r=\"4.5\"></circle><circle cx=\"94\" cy=\"50\" r=\"3.5\"></circle><circle cx=\"40\" cy=\"78\" r=\"3.5\"></circle></g></g><g transform=\"translate(60 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"leish","nome":"Leishmaniose visceral","caso":"Febre longa e barriga grande","agente":"protozoario","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen flagelado \" aria-hidden=\"true\"><defs><radialGradient id=\"leish-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#d6b13a\"></stop><stop offset=\"1\" stop-color=\"#7a6014\"></stop></radialGradient></defs><g><path d=\"M84 52c14-4 16-18 30-22\" stroke=\"#7a6014\" stroke-width=\"5\" fill=\"none\" stroke-linecap=\"round\" class=\"flag\"></path><ellipse cx=\"52\" cy=\"64\" rx=\"40\" ry=\"31\" fill=\"url(#leish-g_R_0_)\" stroke=\"#7a6014\" stroke-width=\"2.6\"></ellipse><circle cx=\"74\" cy=\"80\" r=\"7\" fill=\"#7a6014\" opacity=\".5\"></circle><g fill=\"#7a6014\" opacity=\".3\"><circle cx=\"24\" cy=\"56\" r=\"4\"></circle><circle cx=\"36\" cy=\"84\" r=\"3.4\"></circle></g></g><g transform=\"translate(50 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"amarela","nome":"Febre amarela","caso":"Febre, vômitos e olhos amarelos","agente":"virus","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen virus \" aria-hidden=\"true\"><defs><radialGradient id=\"amarela-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#ffd84a\"></stop><stop offset=\"1\" stop-color=\"#b8860b\"></stop></radialGradient></defs><g><g><line x1=\"92\" y1=\"62\" x2=\"106\" y2=\"62\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"106\" cy=\"62\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"87.71281292110204\" y1=\"78\" x2=\"99.83716857408419\" y2=\"85\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"99.83716857408419\" cy=\"85\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"76\" y1=\"89.71281292110203\" x2=\"83\" y2=\"101.83716857408417\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"83\" cy=\"101.83716857408417\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"60\" y1=\"94\" x2=\"60\" y2=\"108\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"60\" cy=\"108\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"44.00000000000001\" y1=\"89.71281292110204\" x2=\"37.000000000000014\" y2=\"101.83716857408419\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"37.000000000000014\" cy=\"101.83716857408419\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"32.28718707889796\" y1=\"78\" x2=\"20.16283142591582\" y2=\"85\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"20.16283142591582\" cy=\"85\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"28\" y1=\"62.00000000000001\" x2=\"14\" y2=\"62.00000000000001\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"14\" cy=\"62.00000000000001\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"32.287187078897965\" y1=\"46\" x2=\"20.162831425915826\" y2=\"39\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"20.162831425915826\" cy=\"39\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"43.999999999999986\" y1=\"34.28718707889797\" x2=\"36.99999999999998\" y2=\"22.162831425915833\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"36.99999999999998\" cy=\"22.162831425915833\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"59.99999999999999\" y1=\"30\" x2=\"59.99999999999999\" y2=\"16\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"59.99999999999999\" cy=\"16\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"76\" y1=\"34.287187078897965\" x2=\"83\" y2=\"22.162831425915826\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"83\" cy=\"22.162831425915826\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><g><line x1=\"87.71281292110203\" y1=\"45.999999999999986\" x2=\"99.83716857408416\" y2=\"38.99999999999998\" stroke=\"#b8860b\" stroke-width=\"4\" stroke-linecap=\"round\"></line><circle cx=\"99.83716857408416\" cy=\"38.99999999999998\" r=\"5\" fill=\"#ffd84a\" stroke=\"#b8860b\" stroke-width=\"1.6\"></circle></g><circle cx=\"60\" cy=\"62\" r=\"34\" fill=\"url(#amarela-g_R_0_)\" stroke=\"#b8860b\" stroke-width=\"2.6\"></circle></g><g transform=\"translate(60 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"},{"id":"meningo","nome":"Doença meningocócica","caso":"Febre e manchas roxas","agente":"bacteria","svg":"<svg viewBox=\"0 0 120 120\" class=\"sp gen diplo \" aria-hidden=\"true\"><defs><radialGradient id=\"meningo-g_R_0_\" cx=\".35\" cy=\".3\" r=\".85\"><stop offset=\"0\" stop-color=\"#fff\" stop-opacity=\".55\"></stop><stop offset=\".35\" stop-color=\"#ff7ab6\"></stop><stop offset=\"1\" stop-color=\"#9c2c66\"></stop></radialGradient></defs><g><circle cx=\"40\" cy=\"64\" r=\"32\" fill=\"url(#meningo-g_R_0_)\" stroke=\"#9c2c66\" stroke-width=\"2.6\"></circle><circle cx=\"82\" cy=\"60\" r=\"32\" fill=\"url(#meningo-g_R_0_)\" stroke=\"#9c2c66\" stroke-width=\"2.6\"></circle></g><g transform=\"translate(61 62) scale(1)\"><g fill=\"#fff\"><ellipse cx=\"-10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse><ellipse cx=\"10\" cy=\"0\" rx=\"6\" ry=\"6.6\"></ellipse></g><g fill=\"#1b1030\"><circle cx=\"-9\" cy=\"1.4\" r=\"3.1\"></circle><circle cx=\"11\" cy=\"1.4\" r=\"3.1\"></circle></g><path d=\"M-17 -8l10 3M17 -8l-10 3\" stroke=\"#1b1030\" stroke-width=\"2.6\" stroke-linecap=\"round\"></path><path d=\"M-6 12q6 6 12 0\" stroke=\"#1b1030\" stroke-width=\"2.4\" fill=\"none\" stroke-linecap=\"round\"></path></g></svg>"}],"blob":"<svg viewBox=\"0 0 120 120\" class=\"sp blob\" aria-hidden=\"true\"><defs><radialGradient id=\"blob-b_R_0_\" cx=\".38\" cy=\".3\" r=\".75\"><stop offset=\"0\" stop-color=\"#56617c\"></stop><stop offset=\"1\" stop-color=\"#161b29\"></stop></radialGradient></defs><path d=\"M60 10c27 0 47 19 46 46-1 20-8 33-17 42-8 8-19 10-29 5-11 6-23 4-31-5-10-11-17-25-16-43C14 29 33 10 60 10z\" fill=\"url(#blob-b_R_0_)\" stroke=\"#6b7897\" stroke-width=\"2\"></path><path d=\"M30 40c4-10 14-18 26-20\" stroke=\"rgba(255,255,255,.18)\" stroke-width=\"5\" stroke-linecap=\"round\" fill=\"none\"></path><ellipse cx=\"44\" cy=\"50\" rx=\"7\" ry=\"3.2\" fill=\"#c9d3e6\" class=\"blob-eye\"></ellipse><ellipse cx=\"76\" cy=\"50\" rx=\"7\" ry=\"3.2\" fill=\"#c9d3e6\" class=\"blob-eye\"></ellipse><text x=\"60\" y=\"92\" text-anchor=\"middle\" font-size=\"36\" font-weight=\"800\" fill=\"#dce2f7\" opacity=\".9\" font-family=\"var(--sans)\">?</text></svg>","doctor":"<svg viewBox=\"0 0 120 130\" class=\"sp doctor\" aria-hidden=\"true\"><path d=\"M12 132c0-33 18-52 48-54 30 2 48 21 48 54z\" fill=\"#eef2f8\" stroke=\"#aeb9cc\" stroke-width=\"2\"></path><path d=\"M60 86v46\" stroke=\"#cdd5e3\" stroke-width=\"2\"></path><path d=\"M24 112c6-6 12-8 18-9M96 112c-6-6-12-8-18-9\" stroke=\"#d5dce8\" stroke-width=\"2\" fill=\"none\"></path><rect x=\"86\" y=\"98\" width=\"13\" height=\"8\" rx=\"2\" fill=\"#00f5d4\" opacity=\".9\"></rect><rect x=\"51\" y=\"62\" width=\"18\" height=\"20\" rx=\"4\" fill=\"#d9a47f\"></rect><path d=\"M40 84q20 -12 40 0\" stroke=\"#2f3a4f\" stroke-width=\"4.5\" fill=\"none\" stroke-linecap=\"round\"></path><path d=\"M40 84c-4 10 0 22 10 28M80 84c4 10 0 22-10 28\" stroke=\"#2f3a4f\" stroke-width=\"3.4\" fill=\"none\" stroke-linecap=\"round\"></path><ellipse cx=\"37\" cy=\"50\" rx=\"4.5\" ry=\"7\" fill=\"#d9a47f\"></ellipse><ellipse cx=\"83\" cy=\"50\" rx=\"4.5\" ry=\"7\" fill=\"#d9a47f\"></ellipse><circle cx=\"60\" cy=\"46\" r=\"23\" fill=\"#e2b08a\"></circle><path d=\"M36 48c-3-20 9-31 24-31s27 10 24 31c-2 10-9 16-24 16S38 58 36 48z\" fill=\"#2b2138\"></path><path d=\"M44 26c6-5 20-6 28 1\" stroke=\"rgba(255,255,255,.18)\" stroke-width=\"3\" fill=\"none\" stroke-linecap=\"round\"></path></svg>"},"fichas":{"pneumo":{"tipo":"Streptococcus pneumoniae","via":"ar","historia":"Idoso, alcoolista e tabagista. Na ausculta: crepitações, sopro tubário e macicez à percussão na base direita.","resumo":"Febre com calafrios, tosse produtiva, dor pleurítica e consolidação lobar apontam para pneumonia bacteriana típica. A gravidade (CURB-65) define onde tratar.","sintomas":["Febre alta","Tosse produtiva","Dor pleurítica"],"marcante":{"nome":"Hipoxemia","desc":"Oxigênio para a hipoxemia e reavaliação da gravidade (CURB-65: confusão, ureia, frequência respiratória, pressão e idade ≥ 65) para decidir o local de tratamento."},"tratamento":"Avaliar a gravidade pelo CURB-65 (0 pode tratar em casa; 1 ou 2 internar; 3 ou mais pode exigir UTI), iniciar antibiótico empírico que cubra pneumococo e atípicos conforme a gravidade e as comorbidades, oxigênio se houver hipoxemia e reavaliar.","cura":"bacti","notificar":null,"revisado":false,"fontes":[{"fonte":"Harrison's Manual, 20ª ed.","pag":767,"sobre":"Pneumonia típica por pneumococo tem padrão lobar."},{"fonte":"Harrison's Manual, 20ª ed.","pag":768,"sobre":"Achados do exame físico."},{"fonte":"Harrison's Manual, 20ª ed.","pag":769,"sobre":"CURB-65 define o local de tratamento."},{"fonte":"Harrison's Manual, 20ª ed.","pag":770,"sobre":"Antibiótico empírico por gravidade."}]},"dengue":{"tipo":"Vírus da dengue (Flavivírus)","via":"inseto","historia":"Dois vizinhos com o mesmo quadro. Muita água parada no quintal.","resumo":"Febre com mialgia, dor retro-orbitária e plaquetopenia em área com casos sugerem dengue. O tratamento é suporte, e antibiótico não ajuda.","sintomas":["Mialgia intensa","Dor retro-orbitária","Exantema"],"marcante":{"nome":"Fase crítica","desc":"Na defervescência, vigiar sinais de alarme (dor abdominal, vômitos, sangramento, queda de pressão) e hidratar conforme a classificação de risco."},"tratamento":"Não há antiviral específico. Hidratação conforme a classificação de risco (A a D), paracetamol ou dipirona sem AAS nem anti-inflamatórios, vigilância dos sinais de alarme na fase crítica e notificação.","cura":"suporte","notificar":"Notificação de caso suspeito.","revisado":false,"fontes":[{"fonte":"Manual de dengue (MS, 2013)","pag":15,"sobre":"Definição de caso suspeito."},{"fonte":"Manual de dengue (MS, 2013)","pag":24,"sobre":"Alarme na fase de remissão da febre."},{"fonte":"Manual de dengue (MS, 2013)","pag":25,"sobre":"Queda de plaquetas como alarme."},{"fonte":"Manual de dengue (MS, 2013)","pag":28,"sobre":"AAS contraindicado."}]},"malaria":{"tipo":"Plasmodium vivax","via":"inseto","historia":"Voltou há 15 dias de uma comunidade ribeirinha no Amazonas.","resumo":"Febre com calafrios em ciclos de 48 horas depois de viagem à Amazônia exige gota espessa. No vivax, tratar só o sangue deixa os hipnozoítos e a recaída.","sintomas":["Calafrio intenso","Paroxismo febril","Sudorese"],"marcante":{"nome":"Hipnozoítos","desc":"No P. vivax, a primaquina elimina os hipnozoítos do fígado e evita as recaídas. Ela não se usa em gestantes nem em menores de 6 meses."},"tratamento":"Confirmar pela gota espessa, tratar com cloroquina por 3 dias e primaquina por 7 dias (cura radical), exceto gestantes e menores de 6 meses, e notificar.","cura":"proto","notificar":"Notificação compulsória de malária.","revisado":false,"fontes":[{"fonte":"Caderno de Atenção Básica nº 21 (MS, 2008)","pag":101,"sobre":"Quadro clássico em ciclos."},{"fonte":"Caderno de Atenção Básica nº 21 (MS, 2008)","pag":103,"sobre":"Incubação do P. vivax."},{"fonte":"Caderno de Atenção Básica nº 21 (MS, 2008)","pag":105,"sobre":"Gota espessa é o método oficial."},{"fonte":"Caderno de Atenção Básica nº 21 (MS, 2008)","pag":106,"sobre":"Eliminar hipnozoítos."}]},"lepto":{"tipo":"Leptospira interrogans","via":"agua","historia":"Limpou a casa depois da enchente e pisou em lama sem botas. Cata material reciclável perto de um córrego.","resumo":"Febre abrupta, mialgia e sufusão conjuntival depois de contato com lama de enchente são leptospirose até prova em contrário. Hipocalemia e CPK alta ajudam a diferenciar de hepatite.","sintomas":["Febre abrupta","Mialgia intensa","Sufusão conjuntival"],"marcante":{"nome":"Síndrome de Weil","desc":"Na forma grave, repor líquidos, acompanhar a urina e a função renal e indicar diálise precoce quando necessário reduz a letalidade."},"tratamento":"Na fase precoce, doxiciclina ou amoxicilina por 5 a 7 dias sem esperar a sorologia; na fase tardia, penicilina cristalina IV por pelo menos 7 dias, suporte e diálise precoce se preciso. Notificar.","cura":"bacti","notificar":"Notificação compulsória de leptospirose.","revisado":false,"fontes":[{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":284,"sobre":"Síndrome de Weil."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":284,"sobre":"Agente helicoidal."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":287,"sobre":"Hipocalemia ajuda no diferencial."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":288,"sobre":"Doxiciclina na fase precoce."}]},"tb":{"tipo":"Mycobacterium tuberculosis","via":"ar","historia":"Tosse há 4 semanas. Um colega de trabalho foi diagnosticado há dois meses.","resumo":"Tosse por 3 semanas ou mais é sintomático respiratório: baciloscopia. O esquema é RHZE por 2 meses e RH por 4, observado, e a transmissão cai em poucos dias ou semanas de tratamento.","sintomas":["Tosse produtiva","Febre vespertina","Emagrecimento"],"marcante":{"nome":"Bacilos persistentes","desc":"O esquema dura 6 meses: 2 de RHZE e 4 de RH. Com o tratamento diretamente observado, o paciente completa o esquema e cai o risco de abandono e de recaída."},"tratamento":"Baciloscopia de duas amostras de escarro, esquema básico de 2 meses de RHZE seguidos de 4 de RH, tratamento diretamente observado, exame dos contatos e notificação.","cura":"bacti","notificar":"Notificação compulsória de tuberculose.","revisado":false,"fontes":[{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":412,"sobre":"Tosse produtiva é o sintoma mais frequente."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":412,"sobre":"Febre vespertina, sudorese, emagrecimento."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":413,"sobre":"Sintomático respiratório."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":413,"sobre":"Contatos de bacilíferos."}]},"hanse":{"tipo":"Mycobacterium leprae","via":"ar","historia":"Trabalha na roça. Um cunhado que morou na casa dela tratou hanseníase anos atrás.","resumo":"Mancha com perda de sensibilidade e nervo espessado é hanseníase: o diagnóstico é clínico e a baciloscopia negativa não exclui. Até 5 lesões é paucibacilar.","sintomas":["Mancha hipocrômica","Perda de sensibilidade","Formigamento"],"marcante":{"nome":"Reação hansênica","desc":"A reação hansênica é a principal causa de incapacidades. Trata-se com prednisona (1 a 2 mg/kg/dia) sem interromper a poliquimioterapia."},"tratamento":"Classificar como paucibacilar (até 5 lesões) e iniciar a poliquimioterapia (6 cartelas) na unidade básica, examinar os contatos, avaliar incapacidades e notificar. Em reação, prednisona sem parar a PQT.","cura":"bacti","notificar":"Notificação compulsória de hanseníase.","revisado":false,"fontes":[{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":209,"sobre":"Critério: lesão com alteração de sensibilidade."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":209,"sobre":"Paucibacilar: até 5 lesões."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":209,"sobre":"Baciloscopia negativa não exclui."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":210,"sobre":"Tratamento ambulatorial."}]},"esquisto":{"tipo":"Schistosoma mansoni","via":"agua","historia":"Mora em área endêmica de Pernambuco e pesca em açudes desde criança.","resumo":"Morador de área endêmica com diarreia, epigastralgia e fígado palpável deve fazer exame de fezes (Kato-Katz). O praziquantel é o tratamento, e a forma hepatoesplênica pode sangrar.","sintomas":["Diarreia recorrente","Epigastralgia","Fígado palpável"],"marcante":{"nome":"Hipertensão portal","desc":"Na forma hepatoesplênica, o primeiro sinal de descompensação pode ser hemorragia digestiva (hematêmese ou melena). É preciso vigiar e referenciar."},"tratamento":"Confirmar com exame parasitológico de fezes (Kato-Katz), tratar com praziquantel em dose única (50 mg/kg em adultos) avaliando contraindicações como gestação e insuficiência hepática grave, e notificar formas graves.","cura":"proto","notificar":"Notificação das formas graves em área endêmica.","revisado":false,"fontes":[{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":171,"sobre":"Forma hepatointestinal."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":171,"sobre":"Hemorragia digestiva como primeiro sinal."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":172,"sobre":"Diagnóstico por exame coprológico (Kato-Katz)."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":173,"sobre":"Praziquantel em dose única."}]},"chagas":{"tipo":"Trypanosoma cruzi","via":"alimento","historia":"Vários familiares adoeceram depois de comer o mesmo alimento num encontro de família, na Amazônia.","resumo":"Febre prolongada com edema de face e vários doentes depois do mesmo alimento sugere Chagas aguda por via oral. A gota espessa ou o esfregaço mostram o parasito, e o benznidazol deve vir cedo.","sintomas":["Febre prolongada","Edema de face","Mal-estar digestivo"],"marcante":{"nome":"Miocardite aguda","desc":"Na fase aguda pode haver miocardite difusa, às vezes só vista no ECG ou no eco. O paciente exige monitorização e suporte, além do tratamento específico."},"tratamento":"Exame parasitológico direto do sangue, tratar o mais cedo possível com benznidazol (5 mg/kg/dia por 60 dias em adultos, contraindicado na gestação), cuidar da miocardite e notificar imediatamente, com investigação do surto.","cura":"proto","notificar":"Notificação imediata de caso agudo.","revisado":false,"fontes":[{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":145,"sobre":"Manifestações da fase aguda."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":145,"sobre":"Alterações laboratoriais da fase aguda."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":147,"sobre":"Transmissão oral e surtos familiares."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":148,"sobre":"Diagnóstico parasitológico direto."}]},"maculosa":{"tipo":"Rickettsia rickettsii","via":"carrapato","historia":"Esteve numa fazenda com capivaras e cavalos há 6 dias e tirou carrapatos do corpo. O exantema surgiu no 4º dia.","resumo":"Febre abrupta com exantema nos punhos e palmas e contato com carrapato é febre maculosa até prova em contrário. O antibiótico começa na suspeita, sem esperar o exame.","sintomas":["Febre alta e cefaleia","Mialgia intensa","Exantema palmoplantar"],"marcante":{"nome":"Forma grave","desc":"Nos casos graves, a droga de escolha é o cloranfenicol venoso. Pacientes não tratados cedo podem evoluir para forma grave e óbito."},"tratamento":"Tratar já na suspeita, antes da confirmação: doxiciclina 100 mg 12/12 h ou cloranfenicol, até 3 dias depois da febre; nos casos graves, cloranfenicol IV. Coletar sorologia, retirar carrapatos com luvas e notificar.","cura":"bacti","notificar":"Notificação compulsória, pelo meio mais rápido.","revisado":false,"fontes":[{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":184,"sobre":"Exantema palmoplantar entre o 2º e o 6º dia."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":184,"sobre":"Agente: bactéria Gram-negativa intracelular."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":185,"sobre":"Picada de carrapato por 4 a 6 horas."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":185,"sobre":"Tratar na suspeita."}]},"leish":{"tipo":"Leishmania chagasi","via":"inseto","historia":"Mora na periferia de uma cidade do Nordeste, com cães no quintal. Emagreceu e está sem apetite.","resumo":"Febre longa, palidez e hepatoesplenomegalia em criança de área endêmica com cães sugerem calazar. A medula mostra o parasito. Sem tratamento, a mortalidade passa de 90%.","sintomas":["Febre irregular","Palidez","Barriga crescendo"],"marcante":{"nome":"Infecção e sangramento","desc":"Nos casos graves, o óbito costuma vir de infecções bacterianas ou de sangramentos. Trata-se a infecção e acompanham-se as plaquetas e as hemorragias."},"tratamento":"Confirmar com parasitológico de medula óssea e sorologia, tratar com antimonial pentavalente (20 mg/kg/dia de Sb⁵⁺ por 20 dias) ou anfotericina B em gestantes e risco aumentado, monitorar ECG, função renal e hepática, e notificar.","cura":"proto","notificar":"Notificação compulsória de leishmaniose visceral.","revisado":false,"fontes":[{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":277,"sobre":"Febre longa, perda de peso e anemia; letalidade sem tratamento."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":278,"sobre":"Cão como fonte de infecção urbana."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":279,"sobre":"Parasitológico: amastigotas na medula."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":279,"sobre":"Sorologia: IFI a partir de 1:80."}]},"amarela":{"tipo":"Vírus amarílico (Flavivírus)","via":"inseto","historia":"Não vacinado. Esteve numa área de mata onde macacos apareceram mortos, seis dias atrás.","resumo":"Febre com pulso lento, icterícia e vômitos escuros em não vacinado que esteve em mata com macacos mortos é febre amarela silvestre. O tratamento é de suporte, e a vacina é a prevenção.","sintomas":["Febre com pulso lento","Cefaleia e mialgia","Vômitos escuros"],"marcante":{"nome":"Período de intoxicação","desc":"Na forma grave, o paciente precisa de hospitalização, repouso e reposição de líquidos e das perdas, com assistência cuidadosa."},"tratamento":"Não existe antiviral específico: hospitalização, repouso, reposição de líquidos e das perdas e tratamento dos sintomas. Notificação compulsória com investigação de todos os casos. A vacina previne.","cura":"suporte","notificar":"Notificação compulsória e investigação obrigatória.","revisado":false,"fontes":[{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":179,"sobre":"Sinal de Faget: pulso lento para a febre."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":179,"sobre":"Período de intoxicação: vômitos em borra de café."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":180,"sobre":"Transaminases altas, AST acima da ALT."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":180,"sobre":"MAC-ELISA permite diagnóstico presuntivo."}]},"meningo":{"tipo":"Neisseria meningitidis","via":"ar","historia":"Mora em alojamento universitário. Os sintomas começaram de repente, há 12 horas.","resumo":"Febre, rigidez de nuca e petéquias formam o quadro clássico de meningococcemia. O líquor mostra diplococos Gram-negativos. O tratamento é urgente, e os contatos íntimos recebem rifampicina.","sintomas":["Febre alta e calafrios","Rigidez de nuca","Petéquias e equimoses"],"marcante":{"nome":"Choque séptico","desc":"Nas formas fulminantes há sinais de choque. Repõe-se volume e dá-se suporte intensivo enquanto o antibiótico faz efeito."},"tratamento":"Antibiótico venoso imediato (penicilina cristalina por 7 a 10 dias), suporte do choque, notificação compulsória com investigação imediata e quimioprofilaxia com rifampicina para os contatos íntimos.","cura":"bacti","notificar":"Notificação compulsória e investigação imediata.","revisado":false,"fontes":[{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":158,"sobre":"Meningococcemia: febre, petéquias e equimoses."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":158,"sobre":"Diplococos Gram-negativos."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":158,"sobre":"Formas fulminantes com choque."},{"fonte":"Guia de bolso de doenças infecciosas (MS, 2010)","pag":159,"sobre":"Líquor: glicose baixa e neutrófilos."}]}}};
+const ARTE = DADOS.arte, FICHAS = DADOS.fichas;
 const $ = s => document.querySelector(s);
 const rm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const pausa = ms => new Promise(r => setTimeout(r, rm() ? 0 : ms));
@@ -221,19 +305,36 @@ const I = {
   voltar: svg('<path d="M15 18l-6-6 6-6"/>'), x: svg('<path d="M6 6l12 12M18 6L6 18"/>'), seta: svg('<path d="M5 12h14M13 6l6 6-6 6"/>'),
   cadeado: svg('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'), check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
   alvo: svg('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>'), pular: svg('<path d="M5 5l8 7-8 7zM15 5v14"/>'),
+  bussola: svg('<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>'), livro: svg('<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7"/>'),
   ajuste: svg('<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>'),
+  termometro: svg('<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/>'), casa: svg('<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-5h4v5"/>'), folha: svg('<path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15"/><path d="M5 19l7-7"/>'),
+  mais: svg('<path d="M12 5v14M5 12h14"/>'),
 };
 const AGENTE = { bacteria: 'bactéria', virus: 'vírus', protozoario: 'protozoário', helminto: 'helminto' };
 const DOENCA = Object.fromEntries(ARTE.doencas.map(d => [d.id, d]));
 const RAMO_DE = Object.fromEntries(ARTE.capitulos.flatMap(c => c.ids.map((id, i) => [id, { ramo: c, i }])));
+// Padrão proposto para os ramos: cada um é uma área, com cor, emblema e direção no mapa.
+const IDENT = {
+  c1: { cor: '#ffb703', icone: I.termometro, dir: [1, 0], area: 'Febre aguda no plantão' },
+  c2: { cor: '#5cc8ff', icone: I.casa, dir: [0, -1], area: 'Atenção primária' },
+  c3: { cor: '#9be564', icone: I.folha, dir: [0, 1], area: 'Zoonoses' },
+};
+const FUTURO = { id: 'futuro', nome: 'Ramo futuro', sub: 'Uma área nova entra aqui', dir: [-1, 0], cor: '#6f7d96' };
+const VIAS = {
+  ar: { nome: 'Ar ou gotículas', fala: 'Alguém tossiu perto do paciente. Gotículas no ar chegaram até ele.' },
+  inseto: { nome: 'Inseto vetor', fala: 'Ao entardecer, um inseto picou o paciente.' },
+  agua: { nome: 'Água ou lama', fala: 'O paciente andou com os pés na água de enchente.' },
+  carrapato: { nome: 'Carrapato', fala: 'No mato, um carrapato se prendeu à pele do paciente.' },
+  alimento: { nome: 'Alimento', fala: 'Um alimento contaminado chegou à mesa da família.' },
+};
+const CURA = { bacti: 'Antibacterianos', proto: 'Antiparasitários', suporte: 'Tratamento de suporte (não há remédio que mate o agente)' };
 
 // ---------- Estado ----------
 const PRESETS = { comeco: [], meio: ['pneumo', 'dengue', 'tb'], tudo: ARTE.capitulos.flatMap(c => c.ids) };
-const S = { progresso: 'meio', silhueta: 'real', transicao: 'ecg', pular: 'segunda', tela: 'cheia', vencidas: new Set(PRESETS.meio), visitadas: new Set(), animando: false, atual: null };
-const CHAVE = 'prototipo-batalha-historia';
-try { const g = JSON.parse(localStorage.getItem(CHAVE) || '{}'); for (const k of ['progresso', 'silhueta', 'transicao', 'pular', 'tela']) if (g[k]) S[k] = g[k]; if (g.vencidas) S.vencidas = new Set(g.vencidas); if (g.visitadas) S.visitadas = new Set(g.visitadas); } catch { /* sem armazenamento */ }
-const guardar = () => { try { localStorage.setItem(CHAVE, JSON.stringify({ progresso: S.progresso, silhueta: S.silhueta, transicao: S.transicao, pular: S.pular, tela: S.tela, vencidas: [...S.vencidas], visitadas: [...S.visitadas] })); } catch { /* sem armazenamento */ } };
-// Cada ramo começa aberto; cada vitória abre o próximo paciente do mesmo ramo.
+const S = { progresso: 'meio', pular: 'segunda', tela: 'cheia', vencidas: new Set(PRESETS.meio), visitadas: new Set(), animando: false, atual: null, guia: 0 };
+const CHAVE = 'prototipo-batalha-historia-v2';
+try { const g = JSON.parse(localStorage.getItem(CHAVE) || '{}'); for (const k of ['progresso', 'pular', 'tela']) if (g[k]) S[k] = g[k]; if (g.vencidas) S.vencidas = new Set(g.vencidas); if (g.visitadas) S.visitadas = new Set(g.visitadas); } catch { /* sem armazenamento */ }
+const guardar = () => { try { localStorage.setItem(CHAVE, JSON.stringify({ progresso: S.progresso, pular: S.pular, tela: S.tela, vencidas: [...S.vencidas], visitadas: [...S.visitadas] })); } catch { /* sem armazenamento */ } };
 function estadoDe(id) {
   if (S.vencidas.has(id)) return 'vencido';
   const { ramo, i } = RAMO_DE[id];
@@ -242,162 +343,178 @@ function estadoDe(id) {
 let tempoToast;
 function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(tempoToast); tempoToast = setTimeout(() => el.classList.remove('on'), 2600); }
 function mover(el, quadros, opcoes) {
-  const a = el.animate(quadros, { fill: 'forwards', ...opcoes, duration: rm() ? 1 : opcoes.duration });
+  const a = el.animate(quadros, { fill: 'forwards', ...opcoes, duration: rm() ? 1 : opcoes.duration, delay: rm() ? 0 : opcoes.delay || 0 });
   return a.finished.then(() => { const { offset, easing, ...fim } = quadros[quadros.length - 1]; Object.assign(el.style, fim); a.cancel(); }).catch(() => {});
 }
 
 // ---------- Mapa ----------
-const RAIZ = { x: 110, y: 320 };
-const COLS = [310, 440, 570, 700];
-const LINHAS_Y = { c1: 130, c2: 320, c3: 510 };
-const posNo = id => { const { ramo, i } = RAMO_DE[id]; return { x: COLS[i], y: LINHAS_Y[ramo.id] }; };
-const arteNo = id => S.silhueta === 'generica' && estadoDe(id) !== 'vencido' ? ARTE.blob : DOENCA[id].svg;
-function caminhos() {
-  const lista = [];
-  for (const c of ARTE.capitulos) {
-    const y = LINHAS_Y[c.id];
-    lista.push({ para: c.ids[0], d: `M${RAIZ.x + 48} ${RAIZ.y} H${RAIZ.x + 110} V${y} H${COLS[0] - 39}` });
-    c.ids.slice(1).forEach((id, k) => lista.push({ para: id, d: `M${COLS[k] + 39} ${y} H${COLS[k + 1] - 39}` }));
+const RAIZ = { x: 660, y: 660 };
+const PRIMEIRO = 200, PASSO = 132;
+const posNo = id => { const { ramo, i } = RAMO_DE[id]; const [dx, dy] = IDENT[ramo.id].dir; const d = PRIMEIRO + i * PASSO; return { x: RAIZ.x + dx * d, y: RAIZ.y + dy * d }; };
+const posFuturo = i => ({ x: RAIZ.x + FUTURO.dir[0] * (PRIMEIRO + i * PASSO), y: RAIZ.y + FUTURO.dir[1] * (PRIMEIRO + i * PASSO) });
+// Segmentos de cada ramo, da raiz até a ponta (para desenhar e para a animação do caminho).
+function segmentos(dir, n) {
+  const [dx, dy] = dir; const lista = [];
+  for (let i = 0; i < n; i++) {
+    const de = i === 0 ? { x: RAIZ.x + dx * 48, y: RAIZ.y + dy * 48 } : { x: RAIZ.x + dx * (PRIMEIRO + (i - 1) * PASSO + 39), y: RAIZ.y + dy * (PRIMEIRO + (i - 1) * PASSO + 39) };
+    const ate = { x: RAIZ.x + dx * (PRIMEIRO + i * PASSO - 39), y: RAIZ.y + dy * (PRIMEIRO + i * PASSO - 39) };
+    lista.push(`M${de.x} ${de.y} L${ate.x} ${ate.y}`);
   }
   return lista;
 }
+function rotuloRamo(ident, nome, sub, x, y, extra = '') {
+  return `<div class="rotulo-ramo ${extra}" style="--cor:${ident.cor};left:${x}px;top:${y}px"><span class="emblema-ramo">${ident.icone || I.mais}</span><span><b>${nome}</b><small>${sub}</small></span></div>`;
+}
 function desenharMapa() {
-  const mundo = $('#mundo');
-  const linhas = caminhos().map(c => `<path class="base" d="${c.d}"/><path class="${estadoDe(c.para) === 'bloqueado' ? 'fechada' : 'aberta'}" data-para="${c.para}" d="${c.d}"/>`).join('');
-  mundo.innerHTML = `<svg class="linhas" width="900" height="640">${linhas}</svg>
-    ${ARTE.capitulos.map(c => `<div class="rotulo-ramo" style="left:${COLS[0] - 39}px;top:${LINHAS_Y[c.id] - 82}px">${c.nome}<small>${c.sub}</small></div>`).join('')}
-    <button class="no raiz" style="left:${RAIZ.x}px;top:${RAIZ.y}px" id="no-raiz" aria-label="Início: seu primeiro plantão"><span class="arte">${ARTE.doctor}</span></button>
-    ${ARTE.capitulos.flatMap(c => c.ids).map(id => htmlNo(id)).join('')}`;
-  const vencidas = S.vencidas.size; $('#progresso').textContent = `${vencidas}/12 descobertas`;
+  let linhas = '';
+  for (const c of ARTE.capitulos) segmentos(IDENT[c.id].dir, 4).forEach((d, i) => { linhas += `<path class="base" d="${d}"/><path class="${estadoDe(c.ids[i]) === 'bloqueado' ? 'fechada' : 'aberta'}" data-para="${c.ids[i]}" d="${d}"/>`; });
+  segmentos(FUTURO.dir, 3).forEach(d => { linhas += `<path class="futura" d="${d}"/>`; });
+  const rotulos = ARTE.capitulos.map(c => {
+    const p = posNo(c.ids[0]); const id = IDENT[c.id];
+    if (id.dir[0] === 1) return rotuloRamo(id, c.nome, `${id.area} · ${c.sub}`, p.x - 39, p.y - 96);
+    return rotuloRamo(id, c.nome, `${id.area} · ${c.sub}`, p.x + 52, p.y - (id.dir[1] < 0 ? 30 : 8));
+  }).join('') + rotuloRamo(FUTURO, FUTURO.nome, FUTURO.sub, posFuturo(2).x - 39, posFuturo(0).y - 96, 'futuro');
+  $('#mundo').innerHTML = `<svg class="linhas" width="1320" height="1320">${linhas}</svg>${rotulos}
+    <button class="no raiz" style="left:${RAIZ.x}px;top:${RAIZ.y}px" data-id="raiz" aria-label="Início: seu primeiro plantão"><span class="arte">${ARTE.doctor}</span></button>
+    ${ARTE.capitulos.flatMap(c => c.ids).map(htmlNo).join('')}
+    ${[0, 1, 2].map(i => `<span class="no futuro" style="left:${posFuturo(i).x}px;top:${posFuturo(i).y}px" aria-hidden="true"><span class="arte" style="color:#3a4458">${I.mais}</span></span>`).join('')}`;
+  $('#progresso').textContent = `${S.vencidas.size}/12`;
 }
 function htmlNo(id) {
-  const st = estadoDe(id); const p = posNo(id); const d = DOENCA[id];
+  const st = estadoDe(id); const p = posNo(id); const d = DOENCA[id]; const cor = IDENT[RAMO_DE[id].ramo.id].cor;
   const selo = st === 'vencido' ? I.check : st === 'disponivel' ? '?' : I.cadeado;
-  return `<button class="no ${st} ${st === 'vencido' ? '' : 'escura'}" data-id="${id}" style="left:${p.x}px;top:${p.y}px" aria-label="${st === 'vencido' ? d.nome : st === 'disponivel' ? `Paciente novo: ${d.caso}` : 'Paciente bloqueado'}">
-    <span class="arte">${arteNo(id)}</span><span class="selo-no">${selo}</span>${st === 'vencido' ? `<span class="nome-no">${d.nome}</span>` : ''}</button>`;
+  return `<button class="no ${st} ${st === 'vencido' ? '' : 'escura'}" data-id="${id}" style="--cor:${cor};left:${p.x}px;top:${p.y}px" aria-label="${st === 'vencido' ? d.nome : st === 'disponivel' ? `Paciente novo: ${d.caso}` : 'Paciente bloqueado'}">
+    <span class="arte">${d.svg}</span><span class="selo-no">${selo}</span>${st === 'vencido' ? `<span class="nome-no">${d.nome}</span>` : ''}</button>`;
 }
-// Arrastar o mapa (mouse, dedo e roda do mouse); um toque sem arrastar abre o paciente.
+// O caminho verde se desenha da raiz até a ponta aberta de cada ramo, uma vez, ao abrir o mapa (sem brilho repetido).
+async function animarCaminhos() {
+  if (rm()) return;
+  await Promise.all(ARTE.capitulos.map(async c => {
+    const abertos = c.ids.map(id => $(`.linhas path.aberta[data-para="${id}"]`)).filter(Boolean);
+    abertos.forEach(p => { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; });
+    for (const p of abertos) await mover(p, [{ strokeDashoffset: p.getTotalLength() }, { strokeDashoffset: 0 }], { duration: 260, easing: 'linear' });
+  }));
+}
 const vista = { x: 0, y: 0, escala: 1 };
 function aplicarVista() { $('#mundo').style.transform = `translate(${vista.x}px, ${vista.y}px) scale(${vista.escala})`; }
 function limitar() {
-  const v = $('#vista'); const w = 900 * vista.escala, h = 640 * vista.escala;
-  const mx = v.clientWidth * .5, my = v.clientHeight * .5;
-  vista.x = Math.min(mx, Math.max(v.clientWidth - w - mx, vista.x)); vista.y = Math.min(my, Math.max(v.clientHeight - h - my, vista.y));
+  const v = $('#vista'); const t = 1320 * vista.escala; const mx = v.clientWidth * .5, my = v.clientHeight * .5;
+  vista.x = Math.min(mx, Math.max(v.clientWidth - t - mx, vista.x)); vista.y = Math.min(my, Math.max(v.clientHeight - t - my, vista.y));
 }
 function centralizar(animar = true, foco = null) {
-  const v = $('#vista'); vista.escala = v.clientWidth < 600 ? .78 : 1;
-  const alvo = foco ? posNo(foco) : { x: v.clientWidth < 600 ? 300 : 405, y: 320 };
-  vista.x = v.clientWidth / 2 - alvo.x * vista.escala; vista.y = v.clientHeight / 2 - alvo.y * vista.escala + 10; limitar();
+  const v = $('#vista'); vista.escala = v.clientHeight < 460 || v.clientWidth < 600 ? .72 : 1;
+  const alvo = foco && foco !== 'raiz' ? posNo(foco) : { x: RAIZ.x + 120, y: RAIZ.y };
+  vista.x = v.clientWidth / 2 - alvo.x * vista.escala; vista.y = v.clientHeight / 2 - alvo.y * vista.escala; limitar();
   const m = $('#mundo');
   if (animar && !rm()) { m.style.transition = 'transform .6s cubic-bezier(.16,1,.3,1)'; setTimeout(() => { m.style.transition = ''; }, 650); }
   aplicarVista();
 }
 (() => {
   const v = $('#vista'); let ini = null, arrastou = false;
-  v.addEventListener('pointerdown', e => { ini = { x: e.clientX, y: e.clientY, vx: vista.x, vy: vista.y, alvo: e.target.closest('.no') }; arrastou = false; });
+  v.addEventListener('pointerdown', e => { ini = { x: e.clientX, y: e.clientY, vx: vista.x, vy: vista.y, alvo: e.target.closest('button.no') }; arrastou = false; });
   v.addEventListener('pointermove', e => {
     if (!ini) return; const dx = e.clientX - ini.x, dy = e.clientY - ini.y;
     if (!arrastou && Math.hypot(dx, dy) > 6) { arrastou = true; v.setPointerCapture(e.pointerId); v.classList.add('arrastando'); }
-    if (arrastou) { vista.x = ini.vx + dx; vista.y = ini.vy + dy; limitar(); aplicarVista(); }
+    if (arrastou) { vista.mexeu = true; vista.x = ini.vx + dx; vista.y = ini.vy + dy; limitar(); aplicarVista(); }
   });
-  const soltar = () => { const alvo = ini?.alvo; if (ini && !arrastou && alvo) abrirFicha(alvo.dataset.id || 'raiz'); ini = null; v.classList.remove('arrastando'); };
-  v.addEventListener('pointerup', soltar); v.addEventListener('pointercancel', () => { ini = null; v.classList.remove('arrastando'); });
-  v.addEventListener('wheel', e => { e.preventDefault(); vista.x -= e.deltaX; vista.y -= e.deltaY; limitar(); aplicarVista(); }, { passive: false });
-  v.addEventListener('keydown', e => { const no = e.target.closest('.no'); if (no && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); abrirFicha(no.dataset.id || 'raiz'); } });
+  v.addEventListener('pointerup', () => { const alvo = ini?.alvo; if (ini && !arrastou && alvo) abrirFicha(alvo.dataset.id); ini = null; v.classList.remove('arrastando'); });
+  v.addEventListener('pointercancel', () => { ini = null; v.classList.remove('arrastando'); });
+  v.addEventListener('wheel', e => { e.preventDefault(); vista.mexeu = true; vista.x -= e.deltaX; vista.y -= e.deltaY; limitar(); aplicarVista(); }, { passive: false });
+  v.addEventListener('keydown', e => { const no = e.target.closest('button.no'); if (no && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); abrirFicha(no.dataset.id); } });
 })();
 function abrirFicha(id) {
+  if (S.animando) return;
   const f = $('#ficha');
   if (id === 'raiz') {
-    f.innerHTML = `<button class="fechar-ficha" aria-label="Fechar">${I.x}</button><span class="arte">${ARTE.doctor}</span><div><p class="kicker">Início</p><h2>Seu primeiro plantão</h2><p class="sub">Três ramos de pacientes saem daqui. Cada vitória abre o próximo do mesmo ramo.</p></div>`;
+    f.innerHTML = `<button class="fechar-ficha" aria-label="Fechar">${I.x}</button><span class="arte">${ARTE.doctor}</span><div><p class="kicker">Início</p><h2>Seu primeiro plantão</h2><p class="sub">Cada ramo é uma área. Cada vitória abre o próximo paciente do mesmo ramo.</p></div>`;
   } else {
-    const st = estadoDe(id); const d = DOENCA[id]; const { ramo, i } = RAMO_DE[id];
-    const anterior = i > 0 ? DOENCA[ramo.ids[i - 1]] : null;
+    const st = estadoDe(id); const d = DOENCA[id]; const { ramo, i } = RAMO_DE[id]; const anterior = i > 0 ? DOENCA[ramo.ids[i - 1]] : null;
     const titulo = st === 'vencido' ? d.nome : st === 'disponivel' ? d.caso : 'Paciente bloqueado';
     const sub = st === 'vencido' ? `${ramo.nome} · ${i + 1} de 4 · agente: ${AGENTE[d.agente]}` : st === 'disponivel' ? `${ramo.nome} · ${i + 1} de 4 · doença: ??` : `Descubra ${anterior && S.vencidas.has(anterior.id) ? anterior.nome : 'o paciente anterior'} deste ramo para liberar.`;
-    const acoes = st === 'bloqueado' ? '' : `<div class="acoes"><button class="secundario" id="fechar-ficha2">Fechar</button><button class="primario" id="atender" data-id="${id}">${st === 'vencido' ? 'Rever o caso' : 'Atender paciente'} ${I.seta}</button></div>`;
-    f.innerHTML = `<button class="fechar-ficha" aria-label="Fechar">${I.x}</button><span class="arte ${st === 'vencido' ? '' : 'escura'}">${arteNo(id)}</span>
-      <div><p class="kicker">${st === 'vencido' ? 'Descoberta' : st === 'disponivel' ? 'Paciente novo' : 'Bloqueado'}</p><h2>${titulo}</h2><p class="sub">${sub}</p></div>${acoes}`;
+    const acoes = st === 'bloqueado' ? '' : `<div class="acoes">${st === 'vencido' ? `<button class="secundario" data-perg="${id}">${I.livro} Pergaminho</button>` : '<button class="secundario fechar-ficha2">Fechar</button>'}<button class="primario" id="atender" data-id="${id}">${st === 'vencido' ? 'Rever o caso' : 'Atender paciente'} ${I.seta}</button></div>`;
+    f.innerHTML = `<button class="fechar-ficha" aria-label="Fechar">${I.x}</button><span class="arte ${st === 'vencido' ? '' : 'escura'}">${d.svg}</span>
+      <div><p class="kicker" style="color:${IDENT[ramo.id].cor}">${st === 'vencido' ? 'Descoberta' : st === 'disponivel' ? 'Paciente novo' : 'Bloqueado'}</p><h2>${titulo}</h2><p class="sub">${sub}</p></div>${acoes}`;
   }
   f.hidden = false;
   if (!rm()) f.animate([{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.16,1,.3,1)' });
   (f.querySelector('#atender') || f.querySelector('.fechar-ficha')).focus({ preventScroll: true });
 }
 const fecharFicha = () => { $('#ficha').hidden = true; };
-
-// ---------- Cutscene de entrada: enfermaria vista de cima, em pixel art original ----------
-const U = 4; // 1 "pixel" da arte = 4 px no canvas (192 x 144 pixels de arte)
-const PAL = { k: '#1b1f2e', w: '#eef2f8', g: '#b8c2d6', s: '#e2b08a', S: '#c48f6a', h: '#2b2138', p: '#3a4a6b', b: '#151824', m: '#00c9ad', e: '#1b1f2e' };
-// Médico de costas (andando para cima) e de lado (virado para a direita), 2 quadros cada.
-const SPRITES = {
-  cima: [[
-    '....hhhh....', '...hhhhhh...', '...hhhhhh...', '...hhhhhh...', '....SssS....', '..gwwwwwwg..', '.wwwwwwwwww.', '.wwwgwwgwww.', '.swwwwwwwws.', '.swwwwwwwws.',
-    '..wwwwwwww..', '..wwwwwwww..', '...pp..pp...', '...pp..pp...', '...pp..bb...', '...bb.......'],
-  [
-    '....hhhh....', '...hhhhhh...', '...hhhhhh...', '...hhhhhh...', '....SssS....', '..gwwwwwwg..', '.wwwwwwwwww.', '.wwwgwwgwww.', '.swwwwwwwws.', '.swwwwwwwws.',
-    '..wwwwwwww..', '..wwwwwwww..', '...pp..pp...', '...pp..pp...', '...bb..pp...', '.......bb...']],
-  lado: [[
-    '....hhhh....', '...hhhhhhh..', '...hhhhsss..', '...hhsssks..', '....sssss...', '....SSss....', '...wwwwww...', '..wwwwwmww..', '..wwwwwmww..', '..wwwsswww..',
-    '...wwsswww..', '...wwwwww...', '....pp.pp...', '....pp.pp...', '....pp..bb..', '....bb......'],
-  [
-    '....hhhh....', '...hhhhhhh..', '...hhhhsss..', '...hhsssks..', '....sssss...', '....SSss....', '...wwwwww...', '..wwwwwmww..', '..wwwwwmww..', '..wwwsswww..',
-    '...wwsswww..', '...wwwwww...', '....pp.pp...', '....pp.pp...', '...bb..pp...', '.......bb...']],
-};
-function desenharSprite(ctx, mapa, x, y) {
-  mapa.forEach((linha, j) => [...linha].forEach((c, i) => { if (c !== '.') { ctx.fillStyle = PAL[c]; ctx.fillRect((x + i) * U, (y + j) * U, U, U); } }));
+// "Próximo paciente": vai ao próximo aberto, ramo por ramo, e abre a ficha.
+function proximoPaciente() {
+  const abertos = ARTE.capitulos.flatMap(c => c.ids).filter(id => estadoDe(id) === 'disponivel');
+  if (!abertos.length) { toast('Todos os pacientes da história foram descobertos.'); return; }
+  const id = abertos[S.guia % abertos.length]; S.guia++;
+  fecharFicha(); centralizar(true, id); setTimeout(() => abrirFicha(id), rm() ? 0 : 450);
 }
-const r = (ctx, cor, x, y, w, h) => { ctx.fillStyle = cor; ctx.fillRect(x * U, y * U, w * U, h * U); };
-function desenharCama(ctx, x, y, { cobertor, paciente, cabelo = '#4a3424' }) {
-  r(ctx, '#7d8aa3', x - 1, y - 1, 26, 40); r(ctx, '#aeb9cc', x, y, 24, 38);           // estrutura
-  r(ctx, '#f4f6fa', x + 2, y + 2, 20, 34);                                          // colchão
-  r(ctx, '#ffffff', x + 4, y + 3, 16, 7); r(ctx, '#d8dee9', x + 4, y + 9, 16, 1);  // travesseiro
-  if (paciente) { r(ctx, cabelo, x + 8, y + 3, 8, 4); r(ctx, '#e2b08a', x + 8, y + 6, 8, 5); r(ctx, '#1b1f2e', x + 9, y + 8, 1, 1); r(ctx, '#1b1f2e', x + 14, y + 8, 1, 1); }
-  r(ctx, cobertor, x + 2, y + 13, 20, 23); r(ctx, 'rgba(255,255,255,.18)', x + 2, y + 13, 20, 2);
-  if (paciente) r(ctx, 'rgba(0,0,0,.12)', x + 6, y + 18, 12, 14);
-  r(ctx, '#5c6880', x - 1, y + 38, 3, 2); r(ctx, '#5c6880', x + 22, y + 38, 3, 2);  // rodinhas
+
+// ---------- Pixel art: utilidades e personagens ----------
+const U = 4;
+const r = (ctx, cor, x, y, w, h) => { ctx.fillStyle = cor; ctx.fillRect(Math.round(x) * U, Math.round(y) * U, w * U, h * U); };
+// `e`: tamanho de cada pixel do desenho, em pixels da cena (2 deixa o personagem com o dobro do tamanho).
+function desenharMapaPixel(ctx, mapa, x, y, pal, espelho = false, e = 1) {
+  mapa.forEach((linha, j) => { const l = espelho ? [...linha].reverse() : [...linha]; l.forEach((c, i) => { if (c !== '.' && pal[c]) { ctx.fillStyle = pal[c]; ctx.fillRect((Math.round(x) + i * e) * U, (Math.round(y) + j * e) * U, U * e, U * e); } }); });
+}
+const PAL_MED = { k: '#1b1f2e', w: '#eef2f8', g: '#b8c2d6', s: '#e2b08a', S: '#c48f6a', h: '#2b2138', p: '#3a4a6b', b: '#151824', m: '#00c9ad' };
+const SPRITES = {
+  cima: [['....hhhh....', '...hhhhhh...', '...hhhhhh...', '...hhhhhh...', '....SssS....', '..gwwwwwwg..', '.wwwwwwwwww.', '.wwwgwwgwww.', '.swwwwwwwws.', '.swwwwwwwws.', '..wwwwwwww..', '..wwwwwwww..', '...pp..pp...', '...pp..pp...', '...pp..bb...', '...bb.......'],
+    ['....hhhh....', '...hhhhhh...', '...hhhhhh...', '...hhhhhh...', '....SssS....', '..gwwwwwwg..', '.wwwwwwwwww.', '.wwwgwwgwww.', '.swwwwwwwws.', '.swwwwwwwws.', '..wwwwwwww..', '..wwwwwwww..', '...pp..pp...', '...pp..pp...', '...bb..pp...', '.......bb...']],
+  lado: [['....hhhh....', '...hhhhhhh..', '...hhhhsss..', '...hhsssks..', '....sssss...', '....SSss....', '...wwwwww...', '..wwwwwmww..', '..wwwwwmww..', '..wwwsswww..', '...wwsswww..', '...wwwwww...', '....pp.pp...', '....pp.pp...', '....pp..bb..', '....bb......'],
+    ['....hhhh....', '...hhhhhhh..', '...hhhhsss..', '...hhsssks..', '....sssss...', '....SSss....', '...wwwwww...', '..wwwwwmww..', '..wwwwwmww..', '..wwwsswww..', '...wwsswww..', '...wwwwww...', '....pp.pp...', '....pp.pp...', '...bb..pp...', '.......bb...']],
+};
+// Pessoa de lado (olhando para a direita); `boca` abre para a tosse e `braco` sobe para levar algo à boca.
+const PESSOA = ['....hhhh....', '...hhhhhh...', '...hhhssss..', '...hhsssks..', '....sssss...', '.....sss....', '...cccccc...', '..cccccccc..', '..ccccccsc..', '..cccccsc...', '..cccccc....', '...cccccc...', '...pppppp...', '...pp..pp...', '...pp..pp...', '...pp..pp...', '...pp..pp...', '...bb..bbb..'];
+// Nas cenas de transmissão as pessoas têm o dobro do tamanho (24 x 36 pixels de cena).
+function desenharPessoa(ctx, x, y, { camisa = '#4f7cc9', cabelo = '#3a2a1e', calca = '#3a4a6b', espelho = false, boca = false, braco = false } = {}) {
+  const e = 2; const pal = { h: cabelo, s: '#e2b08a', k: '#1b1f2e', c: camisa, p: calca, b: '#1b1f2e' };
+  desenharMapaPixel(ctx, PESSOA, x, y, pal, espelho, e);
+  const px = c => espelho ? x + (11 - c) * e : x + c * e; const py = l => y + l * e;
+  if (boca) { r(ctx, '#7a1f1f', px(9), py(4), e, e); r(ctx, '#e2b08a', px(10), py(5), e, 2 * e); }
+  if (braco) { r(ctx, camisa, px(8), py(6), 2 * e, 2 * e); r(ctx, '#e2b08a', px(9), py(4), 2 * e, 2 * e); }
+}
+let semente = 7;
+const aleatorio = () => { semente = (semente * 16807) % 2147483647; return semente / 2147483647; };
+
+// ---------- Cutscene de entrada: enfermaria vista de cima ----------
+function desenharCama(ctx, x, y, { cobertor, cabelo = '#4a3424' }) {
+  r(ctx, '#7d8aa3', x - 1, y - 1, 26, 40); r(ctx, '#aeb9cc', x, y, 24, 38); r(ctx, '#f4f6fa', x + 2, y + 2, 20, 34);
+  r(ctx, '#ffffff', x + 4, y + 3, 16, 7); r(ctx, '#d8dee9', x + 4, y + 9, 16, 1);
+  r(ctx, cabelo, x + 8, y + 3, 8, 4); r(ctx, '#e2b08a', x + 8, y + 6, 8, 5); r(ctx, '#1b1f2e', x + 9, y + 8, 1, 1); r(ctx, '#1b1f2e', x + 14, y + 8, 1, 1);
+  r(ctx, cobertor, x + 2, y + 13, 20, 23); r(ctx, 'rgba(255,255,255,.18)', x + 2, y + 13, 20, 2); r(ctx, 'rgba(0,0,0,.12)', x + 6, y + 18, 12, 14);
+  r(ctx, '#5c6880', x - 1, y + 38, 3, 2); r(ctx, '#5c6880', x + 22, y + 38, 3, 2);
 }
 function desenharSala(ctx, t) {
-  // piso em xadrez claro
   for (let j = 2; j < 9; j++) for (let i = 0; i < 12; i++) r(ctx, (i + j) % 2 ? '#d3dae6' : '#dfe5ee', i * 16, j * 16, 16, 16);
-  // parede, janela, quadro e rodapé
   r(ctx, '#2f5d62', 0, 0, 192, 30); r(ctx, '#264d51', 0, 0, 192, 4); r(ctx, '#1e3e41', 0, 30, 192, 3);
   r(ctx, '#dfe7f0', 20, 6, 36, 20); r(ctx, '#8fd3e8', 22, 8, 32, 16); r(ctx, '#bfe8f4', 22, 8, 32, 5); r(ctx, '#dfe7f0', 37, 8, 2, 16); r(ctx, '#dfe7f0', 22, 15, 32, 2);
   r(ctx, '#e9edf3', 90, 8, 24, 14); r(ctx, '#1b1f2e', 92, 10, 20, 10);
-  const pico = [0, 0, 0, -3, 4, -1, 0, 0, 0, 0]; pico.forEach((dy, i) => r(ctx, '#00f5d4', 93 + i * 2, 15 + dy, 2, 1));
+  [0, 0, 0, -3, 4, -1, 0, 0, 0, 0].forEach((dy, i) => r(ctx, '#00f5d4', 93 + i * 2, 15 + dy, 2, 1));
   r(ctx, '#e9edf3', 150, 8, 12, 12); r(ctx, '#1b1f2e', 155, 10, 1, 5); r(ctx, '#1b1f2e', 156, 14, 3, 1);
-  // planta no canto
-  r(ctx, '#a0663d', 6, 38, 10, 9); r(ctx, '#7a4c2c', 6, 38, 10, 2);
-  [[4, 30, 6, 8], [10, 27, 6, 11], [14, 31, 5, 7], [8, 33, 6, 6]].forEach(([x, y, w, h]) => r(ctx, '#3e9d5c', x, y, w, h)); r(ctx, '#58bf76', 11, 28, 3, 4);
-  // leito da esquerda (outro paciente dormindo) e cortinas
-  desenharCama(ctx, 24, 52, { cobertor: '#8fb3d9', paciente: true, cabelo: '#6b6b6b' });
-  r(ctx, '#9fd0c9', 54, 46, 3, 44); r(ctx, '#7fb8b0', 54, 46, 1, 44);
-  // leito do paciente da batalha, monitor e cortina
-  desenharCama(ctx, 140, 74, { cobertor: '#e8a77c', paciente: true });
-  r(ctx, '#9fd0c9', 134, 66, 3, 48); r(ctx, '#7fb8b0', 134, 66, 1, 48);
+  r(ctx, '#a0663d', 6, 38, 10, 9); r(ctx, '#7a4c2c', 6, 38, 10, 2); [[4, 30, 6, 8], [10, 27, 6, 11], [14, 31, 5, 7], [8, 33, 6, 6]].forEach(([x, y, w, h]) => r(ctx, '#3e9d5c', x, y, w, h)); r(ctx, '#58bf76', 11, 28, 3, 4);
+  desenharCama(ctx, 24, 52, { cobertor: '#8fb3d9', cabelo: '#6b6b6b' }); r(ctx, '#9fd0c9', 54, 46, 3, 44); r(ctx, '#7fb8b0', 54, 46, 1, 44);
+  desenharCama(ctx, 140, 74, { cobertor: '#e8a77c' }); r(ctx, '#9fd0c9', 134, 66, 3, 48); r(ctx, '#7fb8b0', 134, 66, 1, 48);
   r(ctx, '#4b5568', 168, 70, 14, 12); r(ctx, '#0b1a17', 169, 71, 12, 8);
   const fase = Math.floor(t / 120) % 12; for (let i = 0; i < 12; i++) r(ctx, i === fase ? '#7dffe9' : '#00c9ad', 169 + i, 75 + (i === fase ? -2 : 0), 1, 1);
   r(ctx, '#4b5568', 174, 82, 2, 20); r(ctx, '#4b5568', 170, 101, 10, 2);
-  // porta embaixo
   r(ctx, '#9aa6ba', 82, 140, 28, 4); r(ctx, '#2a3242', 84, 141, 24, 3);
 }
 const CENA = { pos: { x: 96, y: 150 }, dir: 'cima', quadro: 0, balao: false };
 let rafCena = null, cenaAtiva = false;
 function loopCena(t) {
   if (!cenaAtiva) return;
-  const ctx = $('#tela-pixel').getContext('2d'); ctx.imageSmoothingEnabled = false;
-  ctx.clearRect(0, 0, 768, 576); desenharSala(ctx, t);
-  const sp = SPRITES[CENA.dir][CENA.quadro]; desenharSprite(ctx, sp, Math.round(CENA.pos.x) - 6, Math.round(CENA.pos.y) - 16);
+  const ctx = $('#tela-pixel').getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.clearRect(0, 0, 768, 576); desenharSala(ctx, t);
+  desenharMapaPixel(ctx, SPRITES[CENA.dir][CENA.quadro], CENA.pos.x - 6, CENA.pos.y - 16, PAL_MED);
   if (CENA.balao) { const bx = Math.round(CENA.pos.x) - 3, by = Math.round(CENA.pos.y) - 30; r(ctx, '#1b1f2e', bx - 1, by - 1, 9, 12); r(ctx, '#ffffff', bx, by, 7, 10); r(ctx, '#d63c3c', bx + 3, by + 2, 1, 4); r(ctx, '#d63c3c', bx + 3, by + 7, 1, 1); }
   rafCena = requestAnimationFrame(loopCena);
 }
-// Caminha em linha reta de onde está até (x, y), alternando os quadros da passada.
 function andar(x, y, dir, vel = 34) {
   return new Promise(resolve => {
-    CENA.dir = dir; const de = { ...CENA.pos }; const dist = Math.hypot(x - de.x, y - de.y); const dur = rm() ? 1 : dist / vel * 1000; const t0 = performance.now();
+    CENA.dir = dir; const de = { ...CENA.pos }; const dur = rm() ? 1 : Math.hypot(x - de.x, y - de.y) / vel * 1000; const t0 = performance.now();
     const passo = t => { const p = Math.min(1, (t - t0) / dur); CENA.pos = { x: de.x + (x - de.x) * p, y: de.y + (y - de.y) * p }; CENA.quadro = Math.floor((t - t0) / 160) % 2; if (p < 1 && cenaAtiva) requestAnimationFrame(passo); else { CENA.quadro = 0; resolve(); } };
     requestAnimationFrame(passo);
   });
 }
-// Texto estilo Pokémon (já decidido): letra por letra, para e espera o toque; tocar durante a digitação completa.
+// Texto estilo Pokémon: letra por letra; com o texto completo, a seta pisca e espera o toque (Enter ou espaço).
 function escrever(caixa, texto) {
   return new Promise(resolve => {
     const alvo = caixa.querySelector('.txt'); caixa.hidden = false; caixa.classList.remove('pronta'); alvo.textContent = '';
@@ -409,137 +526,275 @@ function escrever(caixa, texto) {
     timer = setInterval(() => { alvo.textContent = texto.slice(0, ++i); if (i >= texto.length) completar(); }, 28);
   });
 }
+const minusculo = t => t.charAt(0).toLowerCase() + t.slice(1);
 let pulou = false;
 async function cutscene(id) {
-  const d = DOENCA[id]; S.atualCena = id;
+  const d = DOENCA[id]; S.atual = id;
   mostrar('cena'); pulou = false; cenaAtiva = true; CENA.pos = { x: 96, y: 152 }; CENA.dir = 'cima'; CENA.balao = false;
-  $('#caixa-cena').hidden = true;
-  $('#pular').hidden = !(S.pular === 'sempre' || S.visitadas.has(id));
+  $('#caixa-cena').hidden = true; $('#pular').hidden = !(S.pular === 'sempre' || S.visitadas.has(id));
   rafCena = requestAnimationFrame(loopCena);
   await andar(96, 100, 'cima'); if (pulou) return;
   await andar(128, 100, 'lado'); if (pulou) return;
   CENA.balao = true; await pausa(700); if (pulou) return; CENA.balao = false;
-  await escrever($('#caixa-cena'), `Leito 4. Paciente com ${d.caso.charAt(0).toLowerCase() + d.caso.slice(1)}.`); if (pulou) return;
+  await escrever($('#caixa-cena'), `Leito 4. Paciente com ${minusculo(d.caso)}.`); if (pulou) return;
   await escrever($('#caixa-cena'), 'Ninguém sabe ainda o que ele tem. Vamos investigar.'); if (pulou) return;
   irParaBatalha(id);
 }
-async function irParaBatalha(id) {
-  S.visitadas.add(id); guardar();
-  $('#caixa-cena').hidden = true; $('#pular').hidden = true;
-  await transicao(id);
-}
+async function irParaBatalha(id) { S.visitadas.add(id); guardar(); $('#caixa-cena').hidden = true; $('#pular').hidden = true; await microscopio(id); }
 
-// ---------- Transições (originais) ----------
-async function transicao(id) {
+// ---------- Transição em microscópio (escolhida) ----------
+async function microscopio(id) {
   const tr = $('#transicao'); tr.hidden = false; tr.innerHTML = '';
   const app = $('#app'); const W = app.clientWidth, H = app.clientHeight;
-  if (S.transicao === 'ecg') {
-    // 1) A linha do monitor cruza a tela com um batimento.
-    const pts = []; const base = H / 2; const n = 14;
-    for (let k = 0; k <= n; k++) { const x = W * k / n; pts.push(`${x},${base}`); if (k === 6) pts.push(`${x + W / n * .3},${base - H * .22}`, `${x + W / n * .5},${base + H * .14}`, `${x + W / n * .7},${base - H * .05}`); }
-    tr.innerHTML = `<svg class="ecg" viewBox="0 0 ${W} ${H}"><path d="M${pts.join(' L')}"/></svg>`;
-    const p = tr.querySelector('path'); const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
-    await mover(p, [{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 650, easing: 'ease-in' });
-    // 2) Persianas fecham de lados alternados.
-    const faixas = 8; const barras = [];
-    for (let k = 0; k < faixas; k++) { const b = document.createElement('div'); b.className = 'persiana'; b.style.top = `${k * H / faixas}px`; b.style.height = `${H / faixas + 1}px`; b.style.transform = `translateX(${k % 2 ? 100 : -100}%)`; tr.appendChild(b); barras.push(b); }
-    await Promise.all(barras.map((b, k) => mover(b, [{ transform: `translateX(${k % 2 ? 100 : -100}%)` }, { transform: 'translateX(0)' }], { duration: 320, delay: k * 35, easing: 'cubic-bezier(.6,0,.4,1)' })));
-    tr.querySelector('.ecg').remove();
-    prepararBatalha(id); mostrar('batalha'); await pausa(180);
-    await Promise.all(barras.map((b, k) => mover(b, [{ transform: 'translateX(0)' }, { transform: `translateX(${k % 2 ? -100 : 100}%)` }], { duration: 340, delay: k * 35, easing: 'cubic-bezier(.6,0,.4,1)' })));
-  } else {
-    // Microscópio: a tela fecha num círculo sobre o paciente e reabre como uma lente sobre a batalha.
-    const q = $('#tela-pixel').getBoundingClientRect(); const a = app.getBoundingClientRect();
-    const cx = q.left - a.left + q.width * (152 / 192), cy = q.top - a.top + q.height * (88 / 144); const R = Math.hypot(W, H);
-    const iris = document.createElement('div'); iris.className = 'iris'; tr.appendChild(iris);
-    const roda = (el, x, y, rr) => ({ left: `${x - rr}px`, top: `${y - rr}px`, width: `${rr * 2}px`, height: `${rr * 2}px` });
-    Object.assign(iris.style, roda(iris, cx, cy, R));
-    await mover(iris, [roda(iris, cx, cy, R), roda(iris, cx, cy, 34), roda(iris, cx, cy, 34), roda(iris, cx, cy, 0)].map((f, k) => ({ ...f, offset: [0, .55, .8, 1][k] })), { duration: 1000, easing: 'cubic-bezier(.6,0,.3,1)' });
-    prepararBatalha(id); mostrar('batalha'); iris.remove();
-    const lente = document.createElement('div'); lente.className = 'lente'; tr.appendChild(lente);
-    Object.assign(lente.style, roda(lente, W / 2, H * .35, 0));
-    await mover(lente, [roda(lente, W / 2, H * .35, 0), { ...roda(lente, W / 2, H * .35, Math.min(W, H) * .3), offset: .45 }, roda(lente, W / 2, H * .35, R)], { duration: 900, easing: 'cubic-bezier(.5,0,.3,1)' });
-  }
+  const q = $('#tela-pixel').getBoundingClientRect(); const a = app.getBoundingClientRect();
+  const cx = q.left - a.left + q.width * (152 / 192), cy = q.top - a.top + q.height * (88 / 144); const R = Math.hypot(W, H);
+  const roda = (x, y, rr) => ({ left: `${x - rr}px`, top: `${y - rr}px`, width: `${rr * 2}px`, height: `${rr * 2}px` });
+  const iris = document.createElement('div'); iris.className = 'iris'; tr.appendChild(iris); Object.assign(iris.style, roda(cx, cy, R));
+  await mover(iris, [roda(cx, cy, R), roda(cx, cy, 34), roda(cx, cy, 34), roda(cx, cy, 0)].map((f, k) => ({ ...f, offset: [0, .55, .8, 1][k] })), { duration: 1000, easing: 'cubic-bezier(.6,0,.3,1)' });
+  prepararBatalha(id); mostrar('batalha'); iris.remove();
+  const lente = document.createElement('div'); lente.className = 'lente'; tr.appendChild(lente); Object.assign(lente.style, roda(W / 2, H * .35, 0));
+  await mover(lente, [roda(W / 2, H * .35, 0), { ...roda(W / 2, H * .35, Math.min(W, H) * .3), offset: .45 }, roda(W / 2, H * .35, R)], { duration: 900, easing: 'cubic-bezier(.5,0,.3,1)' });
   tr.hidden = true; tr.innerHTML = '';
-  falarBatalha(id);
+  falarInicio(id);
 }
 
-// ---------- Início da batalha (simulado) ----------
+// ---------- Batalha (simulada): descoberta, transmissão, vitória ----------
+function botoes(lista) { const s = $('#simular'); s.innerHTML = lista.map(([id, txt, cls]) => `<button class="${cls || 'secundario'}" id="${id}">${txt}</button>`).join(''); s.hidden = false; s.querySelector('button')?.focus({ preventScroll: true }); }
 function prepararBatalha(id) {
   cenaAtiva = false; cancelAnimationFrame(rafCena);
-  S.atual = id; $('#sp-inimigo').innerHTML = ARTE.blob; $('#sp-medico').innerHTML = ARTE.doctor;
-  $('#simular').hidden = true; $('#caixa-batalha .txt').textContent = '';
+  S.atual = id; const box = $('#sp-inimigo'); box.innerHTML = ARTE.blob; box.classList.remove('escura'); box.style.cssText = '';
+  $('#sp-medico').innerHTML = ARTE.doctor; $('#nome-inimigo').textContent = '?? · Paciente';
+  $('#simular').hidden = true; $('#relatorio').hidden = true; $('#caixa-batalha .txt').textContent = '';
 }
-async function falarBatalha(id) {
-  const d = DOENCA[id];
-  await escrever($('#caixa-batalha'), `Um paciente com ${d.caso.charAt(0).toLowerCase() + d.caso.slice(1)} chegou!`);
+async function falarInicio(id) {
+  await escrever($('#caixa-batalha'), `Um paciente com ${minusculo(DOENCA[id].caso)} chegou!`);
   await escrever($('#caixa-batalha'), 'Investigue antes de tratar. O que você vai fazer?');
-  $('#simular').hidden = false; $('#sim-vitoria').focus({ preventScroll: true });
+  botoes([['sim-acerto', 'Simular: acertar o diagnóstico', 'primario'], ['sim-derrota', 'Simular derrota']]);
 }
-// Vitória: volta ao mapa, a doença ganha cor e nome, a linha do próximo fica verde e ele abre.
+// Acertou o diagnóstico: a cena de transmissão (sem dizer o nome), depois a doença ganha cor e a batalha continua.
+async function acertarDiagnostico() {
+  const id = S.atual; $('#simular').hidden = true;
+  await escrever($('#caixa-batalha'), 'Diagnóstico confirmado! Mas como isso chegou até o paciente?');
+  await transmissao(FICHAS[id].via, id);
+  mostrar('batalha');
+  await descobrir(id);
+  await escrever($('#caixa-batalha'), 'A batalha continua. Agora trate o paciente.');
+  botoes([['sim-vitoria', 'Simular vitória', 'primario'], ['sim-derrota', 'Simular derrota']]);
+}
+async function descobrir(id) {
+  const box = $('#sp-inimigo');
+  await mover(box, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.12)', opacity: 1 }, { transform: 'scale(.2)', opacity: 0 }], { duration: 600, easing: 'ease-in' });
+  box.innerHTML = DOENCA[id].svg; box.classList.add('escura');
+  await mover(box, [{ transform: 'scale(.2)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.2,1.4,.4,1)' });
+  const arena = $('#arena').getBoundingClientRect(); const b = box.getBoundingClientRect();
+  const boom = document.createElement('span'); boom.className = 'explosao'; const s = b.width * .5;
+  Object.assign(boom.style, { left: `${b.left - arena.left + b.width / 2 - s / 2}px`, top: `${b.top - arena.top + b.height / 2 - s / 2}px`, width: `${s}px`, height: `${s}px` });
+  $('#arena').appendChild(boom);
+  mover(boom, [{ transform: 'scale(.4)', opacity: 1 }, { transform: 'scale(3)', opacity: 0 }], { duration: 800, easing: 'ease-out' }).then(() => boom.remove());
+  box.classList.remove('escura');
+  await pausa(1100);
+  $('#nome-inimigo').textContent = DOENCA[id].nome;
+  await escrever($('#caixa-batalha'), `É ${DOENCA[id].nome}!`);
+}
+function mostrarRelatorio(venceu) {
+  const id = S.atual; const d = DOENCA[id]; const rel = $('#relatorio');
+  $('#simular').hidden = true;
+  $('#cartao-rel').innerHTML = `<p class="kicker" style="color:${venceu ? 'var(--ok)' : '#ff6b81'}">Relatório</p><h2>${venceu ? 'Vitória!' : 'Derrota'}</h2>
+    <div class="linhas-rel"><div><span>Diagnóstico</span><b>${venceu ? d.nome : '??'}</b></div><div><span>Turnos</span><b>9</b></div><div><span>XP</span><b>${venceu ? '+500' : '0'}</b></div></div>
+    ${venceu ? `<button class="primario" id="ver-perg">Ver o pergaminho ${I.livro}</button>` : '<p style="margin:0;color:var(--muted);font-size:13px">A doença continua disponível para tentar de novo.</p><button class="primario" id="rel-mapa">Voltar ao mapa</button>'}`;
+  rel.hidden = false;
+  if (!rm()) rel.querySelector('.cartao').animate([{ opacity: 0, transform: 'scale(.92)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.16,1,.3,1)' });
+  rel.querySelector('button').focus({ preventScroll: true });
+}
+
+// ---------- Cutscenes de transmissão (5, por via; não dizem o nome da doença) ----------
+let rafTrans = null;
+function cenaTransmissao(via, id) {
+  const ctx = $('#tela-trans').getContext('2d'); ctx.imageSmoothingEnabled = false;
+  semente = 11; const parts = Array.from({ length: 14 }, () => ({ dy: aleatorio() * 10 - 5, v: 26 + aleatorio() * 14, t0: aleatorio() * 1800 + (aleatorio() < .5 ? 400 : 1700) }));
+  const flebotomo = id === 'leish';
+  return t => {
+    ctx.clearRect(0, 0, 768, 576);
+    if (via === 'ar') {
+      r(ctx, '#d5e6e8', 0, 0, 192, 104); r(ctx, '#bdd3d6', 0, 96, 192, 8); r(ctx, '#aab6c6', 0, 104, 192, 40);
+      r(ctx, '#e9edf3', 140, 14, 30, 22); r(ctx, '#7fbf9a', 143, 17, 24, 16);
+      r(ctx, '#8a6a45', 20, 96, 156, 4); r(ctx, '#6b5034', 24, 100, 3, 6); r(ctx, '#6b5034', 170, 100, 3, 6); // banco da sala de espera
+      const tosse = (t % 2600 > 500 && t % 2600 < 1100);
+      desenharPessoa(ctx, 40, 70, { camisa: '#e8a77c' });
+      desenharPessoa(ctx, 118, 70 + (tosse ? 1 : 0), { camisa: '#6b8f71', cabelo: '#6b6b6b', espelho: true, boca: tosse });
+      for (const p of parts) { const dt = (t - p.t0) / 1000; if (dt < 0) continue; let x = 121 - dt * p.v * 1.4, y = 79 + p.dy * dt * .7; if (x < 62) { x = 60 + (p.dy > 0 ? 1 : 0); y = 77 + Math.max(-3, Math.min(5, p.dy * .5)); } r(ctx, 'rgba(90,180,70,.95)', x, y, 1, 1); }
+    } else if (via === 'inseto') {
+      ['#ff9e6d', '#e98a77', '#d8758a', '#a96a9a', '#7a5a9c', '#4e4677'].forEach((c, i) => r(ctx, c, 0, i * 17, 192, 17));
+      r(ctx, '#ffd27a', 150, 30, 14, 14); r(ctx, '#2a2f45', 116, 52, 76, 56); r(ctx, '#3a4060', 124, 66, 10, 12); r(ctx, '#ffd27a', 126, 68, 6, 8); r(ctx, '#1e2236', 112, 48, 84, 6);
+      r(ctx, '#3d5a3a', 0, 104, 192, 40); r(ctx, '#4c6e47', 0, 104, 192, 3);
+      desenharPessoa(ctx, 48, 70, { camisa: '#d9534f' });
+      const p = Math.min(1, t / 2400); const pousado = t > 2400 && t < 3400; const sai = Math.max(0, (t - 3400) / 1200);
+      let mx = 190 - (190 - 66) * p, my = 30 + (86 - 30) * p + Math.sin(p * 18) * 8 * (1 - p);
+      if (sai > 0) { mx = 66 - sai * 80; my = 86 - sai * 70; }
+      if (pousado && Math.floor(t / 200) % 2) r(ctx, '#ff3b3b', 65, 89, 1, 1);
+      const corpo = flebotomo ? '#c9a46a' : '#2b2b2b', asa = flebotomo ? 'rgba(240,220,170,.9)' : 'rgba(220,235,255,.9)';
+      const bate = Math.floor(t / 60) % 2;
+      r(ctx, asa, mx - 2, my - 3 - bate, 3, 2); r(ctx, asa, mx + 1, my - 3 - (1 - bate), 3, 2); r(ctx, corpo, mx - 2, my, flebotomo ? 4 : 5, 2); r(ctx, corpo, mx - 3, my + 2, 1, 1); r(ctx, corpo, mx + 2, my + 2, 1, 1); r(ctx, corpo, mx, my + 2, 1, 1);
+    } else if (via === 'agua') {
+      r(ctx, '#9fb0bf', 0, 0, 192, 144); r(ctx, '#b5c3cf', 0, 0, 192, 20);
+      [[8, 40, 40, 64], [56, 30, 34, 74], [146, 36, 40, 68]].forEach(([x, y, w, h]) => { r(ctx, '#6f7f8e', x, y, w, h); r(ctx, '#55636f', x, y, w, 4); for (let j = y + 10; j < y + h - 10; j += 14) for (let i = x + 6; i < x + w - 6; i += 12) r(ctx, '#c9d6e0', i, j, 5, 6); });
+      const andou = Math.min(40, t / 90);
+      desenharPessoa(ctx, 50 + andou, 84 + (Math.floor(t / 300) % 2), { camisa: '#f0c419' });
+      r(ctx, '#8a6a45', 0, 108, 192, 36);
+      for (let i = 0; i < 16; i++) r(ctx, '#a9875e', ((i * 23 + t / 40) % 200) - 8, 110 + (i % 3) * 9, 6, 1);
+      r(ctx, '#a9875e', 46 + andou, 108, 32, 1);
+      for (const p of parts.slice(0, 8)) { const dt = ((t - p.t0 / 2) % 2400) / 2400; if (dt < 0) continue; const x = 6 + (p.v * 3) % 50 + dt * 70, y = 116 + p.dy; if (x < 52 + andou) r(ctx, '#e8d36a', x, y, 2, 1); }
+    } else if (via === 'carrapato') {
+      r(ctx, '#a8d8ea', 0, 0, 192, 92); r(ctx, '#fff6c7', 20, 14, 10, 10);
+      r(ctx, '#6fbf5f', 0, 92, 192, 52); r(ctx, '#5aa64c', 0, 92, 192, 3);
+      desenharPessoa(ctx, 76, 76, { camisa: '#3f72af', calca: '#6b5034' });
+      for (let i = 0; i < 26; i++) { const x = 20 + i * 6 + (i % 2) * 2, h = 10 + (i * 7) % 12; r(ctx, '#3f8f3a', x, 114 - h + (i % 3), 1, h); }
+      const p = Math.min(1, t / 3000); const tx = 140 - (140 - 96) * p, ty = 106 - Math.sin(p * Math.PI) * 5 - 4 * p;
+      r(ctx, '#3b2416', tx, ty, 4, 3); r(ctx, '#5a3a24', tx + 1, ty - 1, 2, 1); [[-1, 0], [-1, 2], [4, 0], [4, 2], [0, 3], [3, 3]].forEach(([dx, dy]) => r(ctx, '#1e130b', tx + dx, ty + dy, 1, 1));
+      if (t > 3200 && Math.floor(t / 220) % 2) r(ctx, '#ff3b3b', tx + 1, ty + 3, 1, 1);
+    } else {
+      r(ctx, '#f2e1c6', 0, 0, 192, 144); r(ctx, '#e2cba8', 0, 0, 192, 6); r(ctx, '#dfe7f0', 120, 16, 40, 30); r(ctx, '#9fd3e8', 122, 18, 36, 26); r(ctx, '#dfe7f0', 139, 18, 2, 26);
+      const sobe = t > 2600 && t < 3800;
+      desenharPessoa(ctx, 36, 70, { camisa: '#8e5ea2', braco: sobe });
+      desenharPessoa(ctx, 132, 70, { camisa: '#5f9e6e', cabelo: '#6b6b6b', espelho: true });
+      r(ctx, '#8a5a2b', 16, 96, 160, 6); r(ctx, '#6b4220', 22, 102, 4, 30); r(ctx, '#6b4220', 166, 102, 4, 30);
+      r(ctx, '#ffffff', 90, 90, 18, 3); r(ctx, '#e8c07a', 92, 88, 14, 2);
+      const cx = sobe ? 56 : 66, cy = sobe ? 78 : 86;
+      r(ctx, '#dfe7f0', cx, cy, 7, 10); r(ctx, '#5b2a6e', cx + 1, cy + 2, 5, 7);
+      if (!sobe && t < 2500) for (const p of parts.slice(0, 6)) { const dt = ((t - p.t0 / 3) % 1800) / 1800; if (dt < 0) continue; r(ctx, '#2a1a10', cx + 3 + Math.round(p.dy / 3), cy - 16 + dt * 18, 1, 1); }
+    }
+  };
+}
+async function transmissao(via, id) {
+  mostrar('transmissao');
+  $('#rotulo-via').textContent = `Transmissão · ${VIAS[via].nome}`; $('#caixa-trans').hidden = true;
+  const desenhar = cenaTransmissao(via, id); const t0 = performance.now(); let ativo = true;
+  const loop = t => { if (!ativo) return; desenhar(rm() ? 4000 : t - t0); rafTrans = requestAnimationFrame(loop); };
+  rafTrans = requestAnimationFrame(loop);
+  await pausa(1600);
+  await escrever($('#caixa-trans'), VIAS[via].fala);
+  ativo = false; cancelAnimationFrame(rafTrans);
+}
+
+// ---------- Pergaminho e enciclopédia ----------
+function htmlPergaminho(id) {
+  const d = DOENCA[id]; const f = FICHAS[id]; const via = VIAS[f.via];
+  return `<div class="perg-topo">${d.svg}<div><h2>${d.nome}</h2><p class="tipo">${f.tipo} · ${AGENTE[d.agente]}</p><span class="carimbo">Rascunho · aguarda revisão médica</span></div></div>
+    <h3>Resumo</h3><p>${f.resumo}</p>
+    <h3>Como chega ao paciente</h3><p><b>${via.nome}.</b> ${f.historia ? `Neste caso: ${minusculo(f.historia)}` : ''}</p>
+    <h3>Sintomas principais</h3><ul>${f.sintomas.map(s => `<li>${s}</li>`).join('')}</ul>
+    ${f.marcante ? `<h3>Complicação a vigiar</h3><p class="destaque"><b>${f.marcante.nome}.</b> ${f.marcante.desc}</p>` : ''}
+    <h3>Ponto fraco</h3><p>${CURA[f.cura] || '—'}</p>
+    <h3>Tratamento recomendado</h3><p>${f.tratamento}</p>
+    <h3>Profilaxia</h3><p class="falta">A escrever e revisar: ainda não existe no conteúdo da Batalha.</p>
+    <h3>Notificação</h3><p>${f.notificar}</p>
+    <h3>Fontes</h3><ul class="fontes">${f.fontes.map(x => `<li>${x.fonte}, p. ${x.pag}: ${x.sobre}</li>`).join('')}</ul>`;
+}
+let origemPerg = 'mapa';
+async function abrirPergaminho(id, origem) {
+  origemPerg = origem; S.atual = id;
+  $('#papel').innerHTML = htmlPergaminho(id); $('#papel').scrollTop = 0;
+  $('#perg-ok').innerHTML = origem === 'vitoria' ? `Voltar ao mapa ${I.seta}` : origem === 'enciclopedia' ? 'Voltar à enciclopédia' : 'Voltar ao mapa';
+  mostrar('pergaminho');
+  if (!rm()) {
+    const papel = $('#papel'); const h = papel.getBoundingClientRect().height;
+    papel.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 900, easing: 'cubic-bezier(.4,0,.2,1)' });
+    $('#rolo-baixo').animate([{ transform: `translateY(${-h}px)` }, { transform: 'none' }], { duration: 900, easing: 'cubic-bezier(.4,0,.2,1)' });
+  }
+  $('#perg-ok').focus({ preventScroll: true });
+}
+function sairPergaminho() { if (origemPerg === 'vitoria') voltarAoMapa(true); else if (origemPerg === 'enciclopedia') abrirEnciclopedia(); else mostrar('mapa'); }
+function abrirEnciclopedia() {
+  $('#enc-progresso').textContent = `${S.vencidas.size}/12`;
+  $('#enc-corpo').innerHTML = ARTE.capitulos.map(c => `<section class="enc-ramo" style="--cor:${IDENT[c.id].cor}"><h3><span class="emblema-ramo">${IDENT[c.id].icone}</span>${c.nome}</h3><div class="enc-grade">
+    ${c.ids.map(id => S.vencidas.has(id) ? `<button class="enc-item" data-perg-enc="${id}">${DOENCA[id].svg}<b>${DOENCA[id].nome}</b><small>Abrir o pergaminho</small></button>`
+      : `<button class="enc-item escura" disabled aria-label="Doença não descoberta">${DOENCA[id].svg}<b>???</b><small>Não descoberta</small></button>`).join('')}</div></section>`).join('');
+  mostrar('enciclopedia');
+}
+
+// ---------- Volta ao mapa ----------
 async function voltarAoMapa(venceu) {
-  const id = S.atual; mostrar('mapa');
-  if (!venceu) { desenharMapa(); centralizar(false, id); toast('A doença continua disponível para tentar de novo.'); return; }
+  const id = S.atual; mostrar('mapa', false);
+  if (!venceu) { desenharMapa(); centralizar(false, id); animarCaminhos(); return; }
   const novo = !S.vencidas.has(id);
   S.vencidas.add(id); guardar();
   const { ramo, i } = RAMO_DE[id]; const proximo = ramo.ids[i + 1];
-  S.vencidas.delete(id); desenharMapa(); S.vencidas.add(id); // desenha o estado anterior e anima a descoberta
-  centralizar(false, id);
-  if (!novo) { desenharMapa(); return; }
-  S.animando = true;
+  if (!novo) { desenharMapa(); centralizar(false, id); return; }
+  S.vencidas.delete(id); desenharMapa(); S.vencidas.add(id);
+  centralizar(false, id); S.animando = true;
   await pausa(450);
   const no = $(`.no[data-id="${id}"]`);
-  if (S.silhueta === 'generica') no.querySelector('.arte').innerHTML = DOENCA[id].svg;
   no.classList.remove('disponivel', 'escura'); no.classList.add('vencido');
   if (!rm()) no.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.35)', boxShadow: '0 0 0 10px rgba(231,196,106,.25), 0 0 40px rgba(231,196,106,.7)' }, { transform: 'scale(1)' }], { duration: 700, easing: 'ease-out' });
   no.querySelector('.selo-no').innerHTML = I.check;
   no.insertAdjacentHTML('beforeend', `<span class="nome-no">${DOENCA[id].nome}</span>`);
-  no.querySelector('.nome-no').animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 500, delay: 300, fill: 'backwards' });
-  $('#progresso').textContent = `${S.vencidas.size}/12 descobertas`;
+  $('#progresso').textContent = `${S.vencidas.size}/12`;
   if (proximo) {
     await pausa(700);
     const linha = $(`.linhas path[data-para="${proximo}"]`); const L = linha.getTotalLength();
     linha.setAttribute('class', 'aberta'); linha.style.strokeDasharray = L;
     await mover(linha, [{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 600, easing: 'ease-out' });
-    const nx = $(`.no[data-id="${proximo}"]`); nx.outerHTML = htmlNo(proximo);
-    const novoNo = $(`.no[data-id="${proximo}"]`);
-    if (!rm()) novoNo.animate([{ transform: 'scale(.6)', opacity: .4 }, { transform: 'scale(1.15)', opacity: 1 }, { transform: 'scale(1)' }], { duration: 520, easing: 'cubic-bezier(.2,1.4,.4,1)' });
+    $(`.no[data-id="${proximo}"]`).outerHTML = htmlNo(proximo);
+    if (!rm()) $(`.no[data-id="${proximo}"]`).animate([{ transform: 'scale(.6)', opacity: .4 }, { transform: 'scale(1.15)', opacity: 1 }, { transform: 'scale(1)' }], { duration: 520, easing: 'cubic-bezier(.2,1.4,.4,1)' });
     toast('Novo paciente liberado neste ramo.');
   } else toast(`Ramo "${ramo.nome}" completo!`);
   S.animando = false;
 }
 
-// ---------- Navegação e painel ----------
-function mostrar(qual) { for (const id of ['mapa', 'cena', 'batalha']) $('#' + id).hidden = id !== qual; if (qual !== 'cena') { cenaAtiva = false; cancelAnimationFrame(rafCena); } fecharFicha(); }
+// ---------- Navegação, orientação e painel ----------
+const TELAS = ['mapa', 'cena', 'batalha', 'transmissao', 'pergaminho', 'enciclopedia'];
+function mostrar(qual, animarMapa = true) {
+  for (const id of TELAS) $('#' + id).hidden = id !== qual;
+  if (qual !== 'cena') { cenaAtiva = false; cancelAnimationFrame(rafCena); }
+  fecharFicha(); ajustarQuadros();
+  if (qual === 'mapa' && animarMapa) { desenharMapa(); limitar(); aplicarVista(); animarCaminhos(); }
+}
+// As cenas em pixel art ficam em 4:3 dentro do espaço que sobrar (celular deitado ou computador).
+function ajustarQuadros() {
+  const app = $('#app'); const W = app.clientWidth, H = app.clientHeight;
+  for (const q of [$('#quadro-cena'), $('#quadro-trans')]) { const w = Math.min(W, H * 4 / 3); q.style.width = `${w}px`; q.style.height = `${w * 3 / 4}px`; }
+}
+// Celular em pé: a Batalha pede para virar o aparelho (no Android, o botão tenta girar sozinho).
+function conferirOrientacao() { const app = $('#app'); $('#girar').hidden = !(app.clientHeight > app.clientWidth && app.clientWidth < 600); }
+async function tentarGirar() {
+  try { await document.documentElement.requestFullscreen?.(); await screen.orientation.lock('landscape'); }
+  catch { toast('Este aparelho não deixa girar sozinho: vire o celular. Se não girar, desligue o bloqueio de rotação.'); }
+}
 document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.id === 'atender') { if (S.animando) return; fecharFicha(); cutscene(b.dataset.id); }
-  if (b.classList.contains('fechar-ficha') || b.id === 'fechar-ficha2') fecharFicha();
-  if (b.id === 'centralizar') centralizar();
-  if (b.id === 'voltar-hub') toast('No app, volta ao hub da Batalha.');
-  if (b.id === 'pular') { pulou = true; irParaBatalha(S.atualCena); }
-  if (b.id === 'sim-vitoria') voltarAoMapa(true);
-  if (b.id === 'sim-derrota') voltarAoMapa(false);
+  if (b.classList.contains('fechar-ficha') || b.classList.contains('fechar-ficha2')) fecharFicha();
+  if (b.dataset.perg) abrirPergaminho(b.dataset.perg, 'mapa');
+  if (b.dataset.pergEnc) abrirPergaminho(b.dataset.pergEnc, 'enciclopedia');
+  const acoes = {
+    centralizar: () => centralizar(), guia: proximoPaciente, 'voltar-hub': () => toast('No app, volta ao hub da Batalha.'), 'abrir-enc': abrirEnciclopedia,
+    'enc-voltar': () => mostrar('mapa'), pular: () => { pulou = true; irParaBatalha(S.atual); },
+    'sim-acerto': acertarDiagnostico, 'sim-vitoria': () => mostrarRelatorio(true), 'sim-derrota': () => mostrarRelatorio(false),
+    'ver-perg': () => abrirPergaminho(S.atual, 'vitoria'), 'rel-mapa': () => voltarAoMapa(false), 'perg-ok': sairPergaminho, 'perg-voltar': sairPergaminho,
+    'tentar-girar': tentarGirar,
+  };
+  if (acoes[b.id]) acoes[b.id]();
 });
 function sincronizarPainel() {
   document.querySelectorAll('.seg[data-chave]').forEach(g => g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(S[g.dataset.chave] === b.dataset.valor))));
-  $('#frame').classList.toggle('celular', S.tela === 'celular');
+  $('#frame').classList.toggle('celular', S.tela === 'celular'); $('#frame').classList.toggle('deitado', S.tela === 'deitado');
 }
 document.querySelectorAll('.seg[data-chave]').forEach(g => g.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || S.animando) return;
   const chave = g.dataset.chave; S[chave] = b.dataset.valor;
-  if (chave === 'progresso') { S.vencidas = new Set(PRESETS[b.dataset.valor]); S.visitadas = new Set(); }
+  if (chave === 'progresso') { S.vencidas = new Set(PRESETS[b.dataset.valor]); S.visitadas = new Set(); mostrar('mapa'); }
   guardar(); sincronizarPainel();
-  if (['progresso', 'silhueta'].includes(chave)) { mostrar('mapa'); desenharMapa(); }
-  if (chave === 'tela') setTimeout(() => centralizar(false), 50);
+  if (chave === 'tela') setTimeout(() => { conferirOrientacao(); ajustarQuadros(); centralizar(false); }, 60);
 }));
 const botaoProto = $('#proto-btn'); const painel = $('#proto-painel');
 const rotuloProto = () => { botaoProto.innerHTML = `${painel.hidden ? I.ajuste : I.x} Protótipo`; botaoProto.setAttribute('aria-expanded', String(!painel.hidden)); };
 botaoProto.addEventListener('click', () => { painel.hidden = !painel.hidden; rotuloProto(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!painel.hidden) { painel.hidden = true; rotuloProto(); } else fecharFicha(); } });
-$('#voltar-hub').innerHTML = I.voltar; $('#centralizar').innerHTML = I.alvo; $('#ic-pular').innerHTML = I.pular;
-new ResizeObserver(() => { if (!$('#mapa').hidden) { limitar(); aplicarVista(); } }).observe($('#app'));
-rotuloProto(); sincronizarPainel(); desenharMapa(); centralizar(false);
+$('#voltar-hub').innerHTML = I.voltar; $('#centralizar').innerHTML = I.alvo; $('#pular').innerHTML = `Pular ${I.pular}`; $('#guia').innerHTML = `${I.bussola} Próximo paciente`;
+$('#abrir-enc').innerHTML = I.livro; $('#perg-voltar').innerHTML = I.voltar; $('#enc-voltar').innerHTML = I.voltar;
+// Se a tela mudar de tamanho (girar o celular) e o jogador ainda não arrastou, o mapa volta ao centro.
+new ResizeObserver(() => { conferirOrientacao(); ajustarQuadros(); if (!$('#mapa').hidden) { if (vista.mexeu) { limitar(); aplicarVista(); } else centralizar(false); } }).observe($('#app'));
+rotuloProto(); sincronizarPainel(); conferirOrientacao(); desenharMapa(); centralizar(false); animarCaminhos();
 </script>
 </body>
 </html>

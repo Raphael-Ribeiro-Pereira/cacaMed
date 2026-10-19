@@ -33,7 +33,7 @@ Defeito e regra estão em [revisao-inteligente.md](revisao-inteligente.md#defeit
 - Conteúdo: ver [revisao-inteligente.md](revisao-inteligente.md#protótipo-do-hub-da-revisão).
 
 ### Protótipo B: Batalha, modo história v2
-- Arquivo: `docs/prototipos/batalha-historia.html` (parte 1: mapa, cutscene de entrada e transição, feita em 19/10). Parte 2: transmissão, descoberta, pergaminho e enciclopédia.
+- Arquivo: `docs/prototipos/batalha-historia.html` (partes 1 e 2, feitas em 19/10).
 - Conteúdo: mapa estilo conquistas, cutscene de entrada, transição para a batalha, pergaminho e enciclopédia, texto estilo Pokémon. Tudo em [modo-historia-v2.md](modo-historia-v2.md).
 - Perguntas em aberto que o protótipo responde: silhueta (forma real escurecida ou genérica), botão "Pular", doenças sem forma (pneumonia, dengue e malária) e a transição.
 - Os itens da Batalha **saem** da Revisão (decidido em 19/10).
@@ -42,7 +42,7 @@ Defeito e regra estão em [revisao-inteligente.md](revisao-inteligente.md#defeit
 
 1. Atualizar as docs (feito em 19/10).
 2. Protótipo A (hub da Revisão): v1 a v6 feitos em 19/10 (modo foco, trava até o fim, relatório geral em anel, o monstro do cérebro, o modo semanal com fila de ~10 min, missão e aviso de quarta); tudo decidido; pronto para o código.
-3. Protótipo B (Batalha) e aprovação, por partes: parte 1 (mapa, cutscene e transição) feita em 19/10, aguardando aprovação; parte 2 (transmissão, descoberta, pergaminho e enciclopédia) depois.
+3. Protótipo B (Batalha) e aprovação: parte 1 aprovada com ajustes e parte 2 (transmissão, descoberta, pergaminho e enciclopédia) feita em 19/10; faltam as respostas em aberto de modo-historia-v2.md.
 4. Código: ferramentas de admin e correção da entrada da Revisão (podem andar já, sem esperar o protótipo B).
 5. Código: hub da Revisão aprovado; carta do Paciente DDX; Batalha v2.
 6. Nova rodada de homologação (módulo 2), agora com os botões de admin.
