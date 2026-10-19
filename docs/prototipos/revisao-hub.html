@@ -349,7 +349,7 @@ svg{display:block}
       <button data-valor="normal">Com cartas</button><button data-valor="andamento">Carta em andamento</button><button data-valor="emdia">Em dia</button><button data-valor="vazio">Sem erros</button><button data-valor="bloqueado">Abaixo do nível 10</button>
     </div></div>
     <div class="grupo"><p>Atalhos de teste</p><div class="seg">
-      <button class="atalho-proto" id="sim-quarta">Simular quarta-feira (aviso e missão)</button><button class="atalho-proto" id="sim-cheia">Simular fila cheia (10 min)</button>
+      <button class="atalho-proto" id="sim-quarta">Simular quarta-feira (fila com 5 min ou mais)</button><button class="atalho-proto" id="sim-cheia">Simular fila lotada (10 min)</button>
       <button class="atalho-proto" id="sim-reabrir">Simular fechar e abrir o app</button><button class="atalho-proto" id="sim-relatorio">Ir direto ao relatório geral</button>
     </div></div>
     <div class="grupo"><p>Abertura</p><div class="seg" data-chave="abertura">
@@ -359,9 +359,7 @@ svg{display:block}
       <button data-valor="cheia">Tela cheia</button><button data-valor="celular">Celular</button>
     </div></div>
     <div class="grupo"><p>O que decidir</p><ol class="decisoes">
-      <li><b>Fila cheia:</b> quando um erro novo chega com a fila em 10 min, o mais antigo vai para uma <b>reserva</b> (volta numa semana com espaço) em vez de ser apagado?</li>
-      <li><b>Missão da revisão:</b> +400 XP e 2 tickets (o mesmo da maior missão diária). Aparece na quarta, ou antes se a fila encher, e fica até você fazer a revisão da semana?</li>
-      <li><b>Aviso:</b> uma vez por semana, na quarta ou quando a fila encher, o que vier primeiro?</li>
+      <li><b>Tudo decidido em 19/10.</b> Fila de ~10 min com reserva; missão de +400 XP e 2 tickets; aviso quando a fila lota ou, senão, na quarta com pelo menos 5 min de fila; a semana que acaba no meio passa as cartas para a seguinte.</li>
     </ol></div>
   </div>
 </div>
@@ -601,7 +599,7 @@ function abrirAviso(tipo) {
   const [titulo, texto, botao, icone] = {
     inicio: ['Começar a revisão?', `<p>${disponiveis.length} cartas · cerca de ${min} min pelo seu ritmo.</p>${TEXTO_TRAVA}`, 'Começar', I.cadeado],
     quarta: ['Sua revisão da semana está pronta', `<p>${disponiveis.length} cartas · cerca de ${min} min pelo seu ritmo. Que tal hoje?</p>${missao}${TEXTO_TRAVA}`, 'Começar agora', I.relogio],
-    cheia: ['Sua fila de revisão encheu', `<p>Você juntou cerca de ${LIMITE_MIN} min de erros em ${disponiveis.length} cartas. A partir de agora, cada erro novo manda o mais antigo para a reserva.</p>${missao}${TEXTO_TRAVA}`, 'Começar agora', I.brilho],
+    cheia: ['Sua fila de revisão lotou', `<p>Você juntou cerca de ${LIMITE_MIN} min de erros em ${disponiveis.length} cartas. A partir de agora, cada erro novo manda o mais antigo para a reserva.</p>${missao}${TEXTO_TRAVA}`, 'Começar agora', I.brilho],
   }[tipo];
   $('#dlg-titulo').textContent = titulo; $('#dlg-texto').innerHTML = texto; $('#dlg-sim').textContent = botao; $('#dlg-ic').innerHTML = icone;
   $('#dlg-nao').textContent = tipo === 'inicio' ? 'Agora não' : 'Depois';
