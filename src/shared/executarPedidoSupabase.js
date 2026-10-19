@@ -2,6 +2,8 @@ import { operarTreinoSupabase, eventosTreino } from './operarTreinoSupabase.js';
 import { operarRevisaoSupabase, eventosRevisao } from './operarRevisaoSupabase.js';
 import { emitirCruzadinhaSupabase, registrarPartidaSupabase, operarAdminSupabase, operarPlantaoSupabase, operarAuditoriaSupabase, operarRelacaoSupabase, operarBatalhaSupabase } from './operarJogosSupabase.js';
 import { eventosBatalha } from '../utils/batalhaRevisao.js';
+import { tentativaErroMedico } from '../utils/erroMedicoRevisao.js';
+import { AUDITORIAS } from '../utils/erroMedico.js';
 import { registrarXpSemanal } from '../utils/coroas.js';
 import { concederRecompensa, migrarEconomia } from '../utils/economia.js';
 import { dataLocalHoje, prepararMissoesDoDia } from '../utils/missoes.js';
@@ -75,6 +77,11 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
         ...(configuracao.campo === 'batalha' ? { resultado: entrada.relatorio.resultado, doencaId: entrada.doencaId, revelada: Boolean(entrada.relatorio.revelada) } : {}) } });
     // Diagnóstico, conduta e complicação da batalha alimentam a Revisão Inteligente.
     if (configuracao.campo === 'batalha' && configuracao.encerrada(entrada)) eventos.push(...eventosBatalha(entrada));
+    // Revisão v2: o caso do Erro médico encerrado vira uma tentativa da fila (entra nela se alguma etapa errou).
+    if (configuracao.campo === 'erroMedico' && configuracao.encerrada(entrada) && entrada.encerradoEm) {
+      const auditoria = AUDITORIAS.find(a => a.id === entrada.auditoriaId);
+      if (auditoria) eventos.push({ id: `resposta:${entrada.id}:${auditoria.id}`, kind: 'resposta', data: tentativaErroMedico(entrada, auditoria, entrada.encerradoEm) });
+    }
   }
   // XP semanal por matéria (Coroas) e recibos com XP e data para o histórico das estatísticas.
   if (pedido.acao !== 'admin') perfil = registrarXpSemanal(base, perfil, agora);

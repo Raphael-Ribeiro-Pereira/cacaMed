@@ -196,5 +196,17 @@ async function definePassword(user, pedido, token) {
   }
   return { sucesso: true };
 }
+// Explicação da Revisão v2 pela OpenRouter. A chave fica só no segredo OPENROUTER_API_KEY (nunca no aparelho); sem ela,
+// a ação explicarRevisao responde com a explicação revisada do banco. OPENROUTER_MODELO troca o modelo sem novo deploy.
+async function explicar(mensagens) {
+  const chave = Deno.env.get('OPENROUTER_API_KEY');
+  if (!chave) throw new Error('LLM não configurada.');
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', { method: 'POST', signal: AbortSignal.timeout(20000),
+    headers: { Authorization: 'Bearer ' + chave, 'Content-Type': 'application/json', 'HTTP-Referer': 'https://cacamed.com', 'X-Title': 'cacoMed' },
+    body: JSON.stringify({ model: Deno.env.get('OPENROUTER_MODELO') || 'qwen/qwen3.8-27b:free', messages: mensagens, max_tokens: 400, temperature: 0.2 }) });
+  if (!response.ok) throw new Error('LLM respondeu ' + response.status);
+  const body = await response.json();
+  return body.choices?.[0]?.message?.content;
+}
 Deno.serve(criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras, idPublico,
-  log: info => console.info(JSON.stringify(info)) }));
+  explicar: Deno.env.get('OPENROUTER_API_KEY') ? explicar : undefined, log: info => console.info(JSON.stringify(info)) }));

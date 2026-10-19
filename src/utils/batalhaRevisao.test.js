@@ -38,7 +38,7 @@ test('banco: três itens por doença, alternativas únicas e tema sem entregar o
   }
 });
 
-test('erros da batalha entram na fila e são revisados como quiz', () => {
+test('erros da batalha entram na fila, ficam sem carta na v2 e o motor ainda os revisa como quiz', () => {
   const { perfil, eventos } = jogarMal(admin(), 'malaria');
   const respostas = eventos.filter(e => e.kind === 'resposta').map(e => e.data);
   assert.deepEqual(respostas.map(r => [r.itemId, r.acertou]), [
@@ -47,7 +47,8 @@ test('erros da batalha entram na fila e são revisados como quiz', () => {
   const depois = new Date(Date.parse(perfil.batalha.entrada.encerradoEm) + 1000).toISOString();
   const fila = selecionarFilaRevisao(respostas, [], depois);
   assert.equal(fila.itens.length, 3);
-  const entrada = criarEntradaRevisao(fila, REV, depois, () => 0);
+  assert.equal(fila.cartas.length, 0, 'itens da Batalha sem carta (pendência de 07/10/2026)');
+  const entrada = criarEntradaRevisao({ ...fila, cartas: [{ id: 'batalha-1', modo: 'batalha', itens: fila.itens }] }, REV, depois, () => 0, 'batalha-1');
   const item = entrada.itens.find(i => i.id === 'batalha-malaria-conduta');
   assert.ok(!('correta' in item), 'o gabarito não vai para o navegador');
   let revisado = { ...perfil, revisao: { entrada } };

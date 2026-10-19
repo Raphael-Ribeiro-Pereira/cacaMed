@@ -6,6 +6,7 @@ import { conteudoBatalhaPara, validarPartidaNoBanco } from './operarJogosSupabas
 import { criarLimitador, ipDoPedido, LIMITES_API } from './limitador.js';
 import { materiaValida, validarCurso } from '../utils/curso.js';
 import { bancoPublico } from '../utils/importarBancoCSV.js';
+import { AVISO_IA, contextoExplicacao, resultadoParaExplicar, textoValido } from './explicacaoRevisao.js';
 
 export const ORIGENS_SUPABASE = new Set(['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'https://caca-med.vercel.app', 'https://cacamed.com']);
 // Pré-visualizações deste projeto na Vercel (só a conta do projeto cria esses endereços): servem para testar o site novo
@@ -54,7 +55,7 @@ export const usernameDoNome = nome => {
 };
 
 // `idPublico(playerId)`: o ID que o ranking e as Coroas mostram (S-08: HMAC com segredo do servidor).
-export function criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras, idPublico, log = () => {},
+export function criarApiSupabase({ database, identity, migrateIdentity, migratePassword, definePassword, ranking, coroas, palavras, idPublico, explicar, log = () => {},
   limitador = criarLimitador(), limites = LIMITES_API }) {
   // A consulta pública leva uma dica por palavra; as outras planilhas ficam no servidor, que sorteia ao emitir a grade.
   const palavrasPublicas = async () => { const r = await palavras(); return { ...r, banco: bancoPublico(r.banco) }; };
@@ -127,6 +128,33 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         const rows = await database('cacamed_player_state?' + filter + '&select=profile');
         try { return answer({ resultado: conteudoBatalhaPara(rows[0]?.profile, pedido.doencaId) }); }
         catch (erro) { return answer({ erro: erro.message }, 403); }
+      }
+      // Revisão v2: explicação da LLM para uma resposta errada já confirmada, com cache por item, versão e escolhas.
+      // Sem `explicar` (segredo da OpenRouter ausente) ou com falha, volta a explicação revisada do banco.
+      if (acao === 'explicarRevisao') {
+        const barradoIa = barrar('ia:' + user.uid, limites.ia);
+        if (barradoIa) return barradoIa;
+        const rows = await database('cacamed_player_state?' + filter + '&select=profile');
+        let ctx;
+        try { ctx = contextoExplicacao(resultadoParaExplicar(rows[0]?.profile, pedido)); } catch (erro) { return answer({ erro: erro.message }, 400); }
+        const base = { fallback: ctx.fallback, fonte: ctx.fonte, aviso: AVISO_IA };
+        const cache = await database('cacamed_explicacoes?chave=eq.' + encodeURIComponent(ctx.chave) + '&select=texto');
+        if (cache?.[0]) return answer({ resultado: { ...base, texto: cache[0].texto, chave: ctx.chave } });
+        let texto = null;
+        if (explicar) {
+          try { texto = textoValido(await explicar(ctx.mensagens)); } catch (erro) { log({ acao, erroIa: String(erro?.message || erro).slice(0, 200) }); }
+        }
+        if (texto) await database('cacamed_explicacoes', { method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates' },
+          body: JSON.stringify({ chave: ctx.chave, modo: ctx.modo, item_id: ctx.itemId, versao: ctx.versao, texto }) });
+        return answer({ resultado: { ...base, texto, chave: texto ? ctx.chave : null } });
+      }
+      // Reporte de explicação: vai para a revisão médica, que pode apagar o texto do cache.
+      if (acao === 'reportarExplicacao') {
+        const chave = String(pedido.chave || '');
+        if (!chave || chave.length > 2000) return answer({ erro: 'Explicação inválida.' }, 400);
+        await database('cacamed_explicacoes_reportes', { method: 'POST',
+          body: JSON.stringify({ chave, player_id: user.uid, motivo: String(pedido.motivo || '').slice(0, 500) }) });
+        return answer({ resultado: { registrado: true } });
       }
       if (acao === 'verificarUsername') {
         const username = String(pedido.username || '').trim();

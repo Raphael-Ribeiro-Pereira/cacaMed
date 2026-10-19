@@ -1,7 +1,12 @@
-import { selecionarFilaRevisao, criarEntradaRevisao, responderRevisaoPerfil, encerrarRevisaoPerfil } from '../utils/revisaoInteligente.js';
+import { selecionarFilaRevisao, criarEntradaRevisao, responderRevisaoPerfil, encerrarRevisaoPerfil, NIVEL_REVISAO } from '../utils/revisaoInteligente.js';
+import { concederRecompensa, nivelPorXP } from '../utils/economia.js';
+import '../utils/erroMedicoRevisao.js';
+
+// Revisão v2: libera no nível 10 (o administrador sempre entra). Os erros são registrados desde o nível 1.
+export const revisaoLiberada = perfil => perfil.role === 'admin' || nivelPorXP(perfil.pontuacaoTotal) >= NIVEL_REVISAO;
 
 export function operarRevisaoSupabase(perfil, pedido, tentativas, historico, recibos = [], agora = new Date().toISOString()) {
-  if (perfil.role !== 'admin') throw new Error('Revisão inteligente em piloto para administrador.');
+  if (!revisaoLiberada(perfil)) throw new Error(`A Revisão inteligente libera no nível ${NIVEL_REVISAO}.`);
   const entrada = perfil.revisao?.entrada;
   const reinicio = Date.parse(perfil.revisao?.reiniciadoEm) || 0;
   const anteriores = historico.filter(r => Date.parse(r.data) > reinicio);
@@ -13,7 +18,7 @@ export function operarRevisaoSupabase(perfil, pedido, tentativas, historico, rec
     if (pedido.acao === 'iniciarRevisao') {
       if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pedido.revisaoId || '')) throw new Error('Identificador inválido.');
       if (recibos.includes(pedido.revisaoId)) throw new Error('Esta sessão já foi encerrada.');
-      nova = criarEntradaRevisao(selecao, pedido.revisaoId, agora);
+      nova = criarEntradaRevisao(selecao, pedido.revisaoId, agora, Math.random, pedido.carta ? String(pedido.carta) : undefined);
     }
     return { ...perfil, revisao: { ...perfil.revisao, resumo: selecao.resumo, ...(nova ? { entrada: nova } : {}) } };
   }
@@ -23,6 +28,9 @@ export function operarRevisaoSupabase(perfil, pedido, tentativas, historico, rec
     { itemId: pedido.itemId, versao: pedido.versao, escolha: pedido.escolha }, anteriores, agora);
   else throw new Error('Operação inválida.');
   if (novo === perfil) return perfil;
+  // +40 XP pelo item dominado nesta resposta (não conta para missões nem tickets).
+  const ultimo = pedido.acao === 'responderRevisao' ? novo.revisao.entrada.resultados.at(-1) : null;
+  if (ultimo?.dominou) novo = { ...concederRecompensa(novo, ultimo.xp), revisao: novo.revisao };
   const resultados = novo.revisao.entrada.resultados;
   const novos = resultados.filter(r => !anteriores.some(h => h.revisaoId === pedido.revisaoId && h.itemId === r.itemId && h.versao === r.versao));
   const resumo = selecionarFilaRevisao(tentativas.filter(r => Date.parse(r.data) > reinicio), [...anteriores, ...novos], agora).resumo;

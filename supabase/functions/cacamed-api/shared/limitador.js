@@ -26,6 +26,7 @@ export const LIMITES_API = {
   jogador: [60, 60000],    // POST por jogador
   username: [20, 60000],   // verificarUsername, por jogador
   senha: [5, 900000],      // migrarSenha e definirSenha, por jogador
+  ia: [30, 3600000],       // explicarRevisao, por jogador (poupa a cota da LLM; o cache atende o resto)
 };
 
 // IP do cliente: o Cloudflare na frente do Supabase grava cf-connecting-ip. O primeiro endereço do x-forwarded-for

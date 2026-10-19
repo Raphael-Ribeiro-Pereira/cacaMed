@@ -11,7 +11,10 @@ test('revisão migrada usa erros, preserva saldo e não repete resposta confirma
   const agora = '2026-09-30T10:00:00Z';
   let perfil = { role: 'admin', pontuacaoTotal: 123, tickets: 7 };
   perfil = operarRevisaoSupabase(perfil, { acao: 'iniciarRevisao', revisaoId }, tentativas, [], [], agora);
-  assert.equal(perfil.revisao.entrada.itens.length, 1);
+  // Sessão v2: o erro e perguntas parecidas, até 7 (menos quando o banco não tem parecidas suficientes).
+  assert.ok(perfil.revisao.entrada.itens.length > 1 && perfil.revisao.entrada.itens.length <= 7);
+  assert.equal(perfil.revisao.entrada.itens[0].id, item.id);
+  assert.ok(perfil.revisao.entrada.itens.slice(1).every(i => i.parecida));
   const pedido = { acao: 'responderRevisao', revisaoId, itemId: item.id, versao: item.versao, escolha: item.correta };
   perfil = operarRevisaoSupabase(perfil, pedido, tentativas, [], [], agora);
   assert.equal(perfil.pontuacaoTotal, 123);
@@ -19,7 +22,7 @@ test('revisão migrada usa erros, preserva saldo e não repete resposta confirma
   assert.equal(perfil.revisao.resumo.disponiveis, 0);
   assert.equal(perfil.revisao.entrada.historicoConfirmado, true);
   const eventos = eventosRevisao(perfil);
-  assert.equal(eventos.length, 2);
+  assert.equal(eventos.length, 1, 'sessão aberta: só o resultado, sem recibo');
   assert.strictEqual(operarRevisaoSupabase(perfil, pedido, tentativas, [eventos[0].data], [], agora), perfil);
-  assert.throws(() => operarRevisaoSupabase({ ...perfil, role: 'jogador' }, pedido, tentativas, [], [], agora), /piloto/);
+  assert.throws(() => operarRevisaoSupabase({ ...perfil, role: 'jogador' }, pedido, tentativas, [], [], agora), /nível 10/);
 });

@@ -20,17 +20,23 @@ test('fila deduplica tentativas, ignora versões ausentes e prioriza nunca revis
     { ...primeiro, itemId: 'removido' }, { ...primeiro, versao: 999 }, ...BANCO_QUIZ.slice(2, 9).map(q => erro(q))];
   const revisoes = [{ ...primeiro, data: '2026-09-21T12:00:00.000Z', proximaRevisao: '2026-09-22T12:00:00.000Z', sequencia: 1 }];
   const fila = selecionarFilaRevisao(historico, revisoes, agora);
-  assert.equal(fila.itens.length, 5);
+  assert.equal(fila.itens.length, 9);
   assert.equal(fila.resumo.disponiveis, 9);
+  // v2: cartas de até 7 erros no Quiz.
+  assert.deepEqual(fila.resumo.cartas.map(c => [c.id, c.erros]), [['quiz-1', 7], ['quiz-2', 2]]);
   assert.equal(fila.itens[0].itemId, BANCO_QUIZ[1].id);
   assert.equal(fila.itens[0].erros, 2);
-  assert.ok(fila.itens.every(r => r.itemId !== primeiro.itemId));
-  assert.equal(new Set(fila.itens.map(chaveItemRevisao)).size, 5);
+  assert.equal(fila.itens.at(-1).itemId, primeiro.itemId, 'o já revisado vai para o fim');
+  assert.equal(new Set(fila.itens.map(chaveItemRevisao)).size, 9);
 });
 
-test('sessão não revela gabarito, usa até cinco itens e rejeita fila vazia', () => {
+test('sessão v2 abre uma carta, completa 7 com parecidas, não revela gabarito e rejeita fila vazia', () => {
   const entrada = base([erro(), erro(BANCO_FRASES[0])]).revisao.entrada;
-  assert.equal(entrada.itens.length, 2);
+  assert.equal(entrada.carta, 'quiz-1');
+  assert.ok(entrada.itens.length > 1 && entrada.itens.length <= 7);
+  assert.ok(entrada.itens.slice(1).every(i => i.parecida));
+  assert.ok(entrada.itens.every(i => i.modo === 'quiz'));
+  assert.equal(new Set(entrada.itens.map(i => i.id)).size, entrada.itens.length, 'sem repetir item');
   for (const item of entrada.itens) {
     assert.ok(!('correta' in item)); assert.ok(!('verdadeira' in item)); assert.ok(!('explicacao' in item));
   }
@@ -91,7 +97,7 @@ test('reenvio reordenado retorna estado salvo; mudança real, outra sessão ou i
   assert.throws(() => responderRevisaoPerfil(parcial, 'outra', pedido), /Sessão não encontrada/);
   assert.throws(() => responderRevisaoPerfil(inicial, 'sessao', { ...pedido, itemId: inicial.revisao.entrada.itens[1].id }), /sessão mudou/);
   const final = responder(parcial);
-  assert.equal(final.revisao.sessoes, 1); assert.equal(final.revisao.entrada.relatorio.respondidos, 2);
+  assert.equal(final.revisao.entrada.resultados.length, 2);
   assert.equal(responderRevisaoPerfil(final, 'sessao', pedido), final);
 });
 
