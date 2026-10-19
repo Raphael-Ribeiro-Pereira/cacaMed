@@ -163,6 +163,15 @@ function App() {
   const uidAtual = usuario?.uid;
   const aoConfirmarFila = useCallback(perfil => { setDadosUsuario(perfil); guardarPerfil(uidAtual, perfil, { confirmado: true }).catch(() => {}); }, [uidAtual]);
   const conexao = useConexao(dadosUsuario ? usuario : null, aoConfirmarFila);
+  // App offline: com o perfil carregado, baixa em segundo plano as telas que funcionam sem rede, para o service worker
+  // guardá-las (ele só guarda arquivos que já passaram por ele).
+  const temPerfil = Boolean(dadosUsuario);
+  useEffect(() => {
+    if (!temPerfil) return undefined;
+    const pre = () => { import('./components/SelecaoTopicos'); import('./components/Jogo'); import('./components/TreinoMedico'); };
+    const id = window.requestIdleCallback ? window.requestIdleCallback(pre, { timeout: 5000 }) : setTimeout(pre, 3000);
+    return () => (window.cancelIdleCallback ? window.cancelIdleCallback(id) : clearTimeout(id));
+  }, [temPerfil]);
   // O perfil em tela (inclusive com XP provisório) fica guardado para o app abrir sem rede.
   useEffect(() => { if (uidAtual && dadosUsuario) guardarPerfil(uidAtual, dadosUsuario).catch(() => {}); }, [uidAtual, dadosUsuario]);
   useEffect(() => {
