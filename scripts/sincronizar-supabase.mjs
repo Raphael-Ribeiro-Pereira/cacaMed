@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 const root = new URL('../', import.meta.url);
 const modules = [
   'shared/operarTreinoSupabase.js', 'utils/treinos.js', 'utils/economia.js',
-  'utils/missoes.js', 'utils/bancoTreinos.js', 'utils/revisaoInteligente.js', 'shared/operarRevisaoSupabase.js', 'shared/explicacaoRevisao.js', 'shared/operarFilaSupabase.js',
+  'utils/missoes.js', 'utils/bancoTreinos.js', 'utils/revisaoInteligente.js', 'utils/revisaoSemanal.js', 'shared/operarRevisaoSupabase.js', 'shared/explicacaoRevisao.js', 'shared/operarFilaSupabase.js',
   'shared/operarJogosSupabase.js', 'shared/executarPedidoSupabase.js',
   'shared/apiSupabase.js', 'shared/migrarSenhaSupabase.js', 'shared/limitador.js',
   'utils/plantao.js', 'utils/plantaoBanco.js', 'utils/erroMedico.js', 'utils/erroMedicoBanco.js', 'utils/causaEfeito.js', 'utils/causaEfeitoBanco.js', 'utils/importarBancoCSV.js',

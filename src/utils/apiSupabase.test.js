@@ -399,3 +399,17 @@ test('ferramenta de admin: os erros fictícios da Revisão chegam ao histórico 
   const { resultado } = await f.call({ acao: 'consultarRevisao' }, 'admin');
   assert.equal(resultado.revisao.resumo.disponiveis, 6);
 });
+
+test('Revisão semanal pela API: começar a semana congela as cartas e o relatório mostra só as cartas feitas', async () => {
+  const f = fixture();
+  await f.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'chefe' }, 'admin');
+  const linha = f.states.get('admin');
+  f.states.set('admin', { ...linha, profile: { ...linha.profile, role: 'admin' } });
+  await f.call({ acao: 'admin', operacao: 'semearRevisao' }, 'admin');
+  const { resultado } = await f.call({ acao: 'iniciarSemanaRevisao' }, 'admin');
+  assert.equal(resultado.revisao.resumo.estado, 'andamento');
+  assert.ok(resultado.revisao.semana.cartas.length >= 2);
+  const relatorio = await f.call({ acao: 'relatorioRevisao' }, 'admin');
+  assert.equal(relatorio.resultado.cartas.length, 0);
+  assert.equal(relatorio.resultado.faltam, resultado.revisao.semana.cartas.length);
+});

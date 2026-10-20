@@ -2,11 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DOENCAS, executarBatalha, obterDoenca } from './batalha.js';
 import { BANCO_BATALHA_REVISAO, respostasBatalha } from './batalhaRevisao.js';
-import { criarEntradaRevisao, responderRevisaoPerfil, selecionarFilaRevisao } from './revisaoInteligente.js';
+import { selecionarFilaRevisao } from './revisaoInteligente.js';
 import { executarPedidoSupabase } from '../shared/executarPedidoSupabase.js';
 
 const ID = '33333333-3333-4333-8333-333333333333';
-const REV = '44444444-4444-4444-8444-444444444444';
 const admin = extra => ({ uid: 'a', role: 'admin', pontuacaoTotal: 0, tickets: 2, xpTopicos: {}, economia: { versao: 2, ultimoNivelPremiado: 1 }, batalha: { tutorial: true }, ...extra });
 
 // Hipótese errada, terapia ineficaz e nenhuma resposta à complicação até perder.
@@ -38,27 +37,14 @@ test('banco: três itens por doença, alternativas únicas e tema sem entregar o
   }
 });
 
-test('erros da batalha entram na fila, ficam sem carta na v2 e o motor ainda os revisa como quiz', () => {
+test('desde 19/10/2026 os erros da Batalha não entram na Revisão; os itens antigos ficam fora da fila', () => {
   const { perfil, eventos } = jogarMal(admin(), 'malaria');
-  const respostas = eventos.filter(e => e.kind === 'resposta').map(e => e.data);
-  assert.deepEqual(respostas.map(r => [r.itemId, r.acertou]), [
-    ['batalha-malaria-diagnostico', false], ['batalha-malaria-conduta', false], ['batalha-malaria-complicacao', false]]);
-  assert.ok(respostas.every(r => r.modo === 'batalha' && r.rodadaId === ID && r.versao === 1 && r.data === perfil.batalha.entrada.encerradoEm));
+  assert.equal(eventos.filter(e => e.kind === 'resposta').length, 0, 'a Batalha não gera tentativas');
+  // O histórico antigo (gerado até 19/10) continua guardado, mas não vira item da fila.
+  const antigas = respostasBatalha(perfil.batalha.entrada);
+  assert.equal(antigas.length, 3);
   const depois = new Date(Date.parse(perfil.batalha.entrada.encerradoEm) + 1000).toISOString();
-  const fila = selecionarFilaRevisao(respostas, [], depois);
-  assert.equal(fila.itens.length, 3);
-  assert.equal(fila.cartas.length, 0, 'itens da Batalha sem carta (pendência de 07/10/2026)');
-  const entrada = criarEntradaRevisao({ ...fila, cartas: [{ id: 'batalha-1', modo: 'batalha', itens: fila.itens }] }, REV, depois, () => 0, 'batalha-1');
-  const item = entrada.itens.find(i => i.id === 'batalha-malaria-conduta');
-  assert.ok(!('correta' in item), 'o gabarito não vai para o navegador');
-  let revisado = { ...perfil, revisao: { entrada } };
-  for (const atual of entrada.itens) {
-    const original = BANCO_BATALHA_REVISAO.find(q => q.id === atual.id);
-    revisado = responderRevisaoPerfil(revisado, REV, { itemId: atual.id, versao: atual.versao, escolha: original.correta }, [], depois);
-  }
-  assert.equal(revisado.revisao.entrada.relatorio.acertos, 3);
-  assert.equal(revisado.pontuacaoTotal, perfil.pontuacaoTotal, 'revisão não concede XP');
-  assert.throws(() => responderRevisaoPerfil({ ...perfil, revisao: { entrada } }, REV, { itemId: entrada.itens[0].id, versao: 1, escolha: 'x' }, [], depois), /Alternativa/);
+  assert.equal(selecionarFilaRevisao(antigas, [], depois).itens.length, 0);
 });
 
 test('treinamento, abandono e conteúdo alterado não geram itens de revisão', () => {

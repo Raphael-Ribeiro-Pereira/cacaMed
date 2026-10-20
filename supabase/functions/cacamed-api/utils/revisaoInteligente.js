@@ -1,13 +1,18 @@
 import { BANCO_QUIZ, BANCO_FRASES } from './bancoTreinos.js';
 import { avaliarRespostaTreino, conceitoDoQuiz, frasesDoSorteio } from './treinos.js';
+import { inicioDaSemana } from './coroas.js';
 
-// Revisão Inteligente v2 (decidida em 07/10/2026; docs/revisao-inteligente.md).
+// Revisão Inteligente v2 (decidida em 07/10/2026; docs/revisao-inteligente.md), semanal desde 19/10/2026.
 export const TAMANHO_SESSAO = 7;
 export const NIVEL_REVISAO = 10;
 export const XP_DOMINIO = 40;
-// Sequência de acertos que domina o item: o terceiro acerto seguido, já no intervalo de 7 dias.
+// Sequência de acertos que domina o item: o terceiro acerto seguido. O item dominado sai da fila até um erro novo.
 export const SEQUENCIA_DOMINIO = 3;
-// Modos com carta. Os itens da Batalha continuam guardados, mas sem carta (pendência de 07/10/2026).
+// Repetição em semanas (decidida em 19/10/2026): errou ou acertou a primeira, volta na semana seguinte; acertou a
+// segunda seguida, volta duas semanas depois. A semana é a das Coroas (segunda a domingo, horário de Brasília).
+export const proximaSemanaRevisao = (agora, sequencia) =>
+  inicioDaSemana(new Date(new Date(agora).getTime() + (sequencia === 2 ? 2 : 1) * 7 * 86400000)).toISOString();
+// Modos com carta. Os erros da Batalha não entram na Revisão (decidido em 19/10/2026).
 export const MODOS_CARTA = ['quiz', 'verdadeMentira', 'erroMedico'];
 
 const DIA_REVISAO = 86400000;
@@ -31,11 +36,23 @@ export function registrarBancoRevisao(modo, banco, avaliar, apresentar) {
 export const originalRevisao = item => (BANCOS_REVISAO[item.modo] || [])
   .find(q => q.id === (item.itemId || item.id) && q.versao === Number(item.versao));
 
-function limitarFrequenciaRevisao(proxima, anteriores, agora) {
-  const recentes = anteriores.map(r => tempoRevisao(r.data))
-    .filter(data => data > agora - 7 * DIA_REVISAO && data <= agora).sort((a, b) => a - b);
-  return recentes.length >= 2 ? Math.max(proxima, recentes.at(-2) + 7 * DIA_REVISAO) : proxima;
+// Palavras que a pessoa lê para responder (decidido em 19/10/2026): enunciado e alternativas. No Erro médico, o caso
+// inteiro (prontuário e as três etapas). Base do ritmo de leitura e raciocínio e do tempo estimado da fila.
+const contarPalavras = textos => textos.join(' ').split(/\s+/).filter(p => /[\p{L}\d]/u.test(p)).length;
+const textosDe = valor => typeof valor === 'string' ? [valor] : Array.isArray(valor) ? valor.flatMap(textosDe)
+  : valor && typeof valor === 'object' ? Object.entries(valor).filter(([k]) => k !== 'id').flatMap(([, v]) => textosDe(v)) : [];
+const palavrasGuardadas = new Map();
+export function palavrasRevisao(item) {
+  const original = originalRevisao(item);
+  if (!original) return 0;
+  const chave = chaveItemRevisao(item);
+  if (!palavrasGuardadas.has(chave)) palavrasGuardadas.set(chave, item.modo === 'quiz' ? contarPalavras([original.enunciado, ...original.opcoes.map(o => o.texto)])
+    : item.modo === 'verdadeMentira' ? contarPalavras([original.texto, 'Verdadeira', 'Falsa'])
+      : contarPalavras(textosDe(APRESENTADORES_REVISAO[item.modo] ? APRESENTADORES_REVISAO[item.modo](original) : original)));
+  return palavrasGuardadas.get(chave);
 }
+// Tempo até responder, medido no aparelho (do item aparecer ao toque). Fora de 0 a 10 minutos, não é guardado.
+export const tempoRespostaValido = valor => Number.isInteger(valor) && valor > 0 && valor <= 600000;
 
 // Uma pergunta parecida errada na revisão entra na fila como se fosse um erro de partida.
 const errosDeParecidas = revisoes => revisoes.filter(r => r.parecida && r.acertou === false)
@@ -48,6 +65,8 @@ export function selecionarFilaRevisao(tentativas, revisoes, agora = new Date().t
   const grupos = new Map();
   const vistos = new Set();
   for (const r of [...tentativas, ...errosDeParecidas(revisoes)]) {
+    // Só os modos com carta: os erros da Batalha saíram da Revisão em 19/10/2026 (o histórico antigo fica guardado).
+    if (!MODOS_CARTA.includes(r.modo)) continue;
     if (!originalRevisao(r) || typeof r.acertou !== 'boolean' || !tempoRevisao(r.data)) continue;
     const chave = chaveItemRevisao(r);
     const recibo = JSON.stringify([r.rodadaId, chave]);
@@ -68,11 +87,12 @@ export function selecionarFilaRevisao(tentativas, revisoes, agora = new Date().t
     const anteriores = revisoes.filter(r => chaveItemRevisao(r) === chave).sort((a, b) => tempoRevisao(a.data) - tempoRevisao(b.data));
     const ultima = anteriores.at(-1);
     const novoErro = ultima && grupo.ultimoErro > tempoRevisao(ultima.data);
+    // Dominado (terceiro acerto seguido): sai da fila até errar de novo num jogo.
+    if (ultima && !novoErro && Number(ultima.sequencia) >= SEQUENCIA_DOMINIO) continue;
     let proxima = ultima && !novoErro ? tempoRevisao(ultima.proximaRevisao) : grupo.ultimoErro;
     if (grupo.acertou) proxima = Math.max(proxima, tempoRevisao(grupo.data) + DIA_REVISAO);
-    proxima = limitarFrequenciaRevisao(proxima, anteriores, instante);
     itens.push({ modo: grupo.modo, itemId: grupo.itemId, versao: Number(grupo.versao), tema: grupo.tema,
-      erros: grupo.erros, primeiroErro: grupo.primeiroErro, revisada: Boolean(ultima), escolhaPartida: grupo.escolhaPartida,
+      erros: grupo.erros, primeiroErro: grupo.primeiroErro, ultimoErro: grupo.ultimoErro, revisada: Boolean(ultima), escolhaPartida: grupo.escolhaPartida,
       sequencia: novoErro ? 0 : Number(ultima?.sequencia) || 0, proximaRevisao: new Date(proxima).toISOString() });
   }
   const elegiveis = itens.filter(r => tempoRevisao(r.proximaRevisao) <= instante)
@@ -137,23 +157,33 @@ export function criarEntradaRevisao(fila, id, agora = new Date().toISOString(), 
   if (!carta) throw new Error('Carta não encontrada. Atualize a revisão.');
   const excluir = new Set(fila.itens.map(chaveItemRevisao));
   const completar = carta.modo === 'erroMedico' ? [] : escolherParecidas(carta.modo, carta.itens, TAMANHO_SESSAO - carta.itens.length, excluir);
-  const itens = [...carta.itens, ...completar].map(item => {
-    const original = originalRevisao(item);
-    const base = { id: item.itemId, modo: item.modo, versao: item.versao, tema: original.tema, sequenciaAnterior: item.sequencia,
-      ...(item.parecida ? { parecida: true } : { escolhaPartida: item.escolhaPartida }) };
-    if (APRESENTADORES_REVISAO[item.modo]) return { ...base, ...APRESENTADORES_REVISAO[item.modo](original) };
-    if (item.modo === 'verdadeMentira') return { ...base, texto: original.texto };
-    const opcoes = original.opcoes.map(o => ({ ...o }));
-    for (let i = opcoes.length - 1; i > 0; i--) { const j = Math.floor(sorteio() * (i + 1)); [opcoes[i], opcoes[j]] = [opcoes[j], opcoes[i]]; }
-    return { ...base, variante: original.variante, enunciado: original.enunciado, opcoes };
-  });
+  const itens = [...carta.itens, ...completar].map(item => ({ id: item.itemId, modo: item.modo, versao: item.versao, tema: originalRevisao(item).tema,
+    sequenciaAnterior: item.sequencia, ...(item.parecida ? { parecida: true } : { escolhaPartida: item.escolhaPartida }), ...apresentarItemRevisao(item, sorteio) }));
   return { id, carta: carta.id, modo: carta.modo, itens, resultados: [], encerrada: false, historicoConfirmado: true, iniciadoEm: agora };
+}
+
+// Conteúdo do item como a tela mostra, sem o gabarito. Com `sorteio`, as alternativas do Quiz são embaralhadas.
+export function apresentarItemRevisao(item, sorteio) {
+  const original = originalRevisao(item);
+  if (!original) return null;
+  if (APRESENTADORES_REVISAO[item.modo]) return APRESENTADORES_REVISAO[item.modo](original);
+  if (item.modo === 'verdadeMentira') return { texto: original.texto };
+  const opcoes = original.opcoes.map(o => ({ ...o }));
+  if (sorteio) for (let i = opcoes.length - 1; i > 0; i--) { const j = Math.floor(sorteio() * (i + 1)); [opcoes[i], opcoes[j]] = [opcoes[j], opcoes[i]]; }
+  return { variante: original.variante, enunciado: original.enunciado, opcoes };
+}
+// Corrige uma escolha já feita (gabarito, explicação e fonte), para o relatório da semana.
+export function avaliarItemRevisao(item, escolha) {
+  const apresentado = { id: item.itemId || item.id, modo: item.modo, versao: Number(item.versao), tema: originalRevisao(item)?.tema, ...apresentarItemRevisao(item) };
+  const resposta = { itemId: apresentado.id, versao: apresentado.versao, escolha };
+  return AVALIADORES_REVISAO[item.modo] ? AVALIADORES_REVISAO[item.modo](apresentado, resposta) : avaliarRespostaTreino({ modo: item.modo, itens: [apresentado] }, resposta, 0);
 }
 
 // Escolha comparável: o Erro médico responde com uma lista.
 const mesmaEscolha = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
-export function responderRevisaoPerfil(perfil, id, resposta, historico = [], agora = new Date().toISOString()) {
+// `historico` ficou sem uso com a repetição em semanas (não há mais teto de duas revisões em 7 dias); a assinatura fica.
+export function responderRevisaoPerfil(perfil, id, resposta, historico, agora = new Date().toISOString()) {
   const stats = perfil.revisao || {};
   const entrada = stats.entrada;
   if (!entrada || entrada.id !== id) throw new Error('Sessão não encontrada. Consulte a revisão salva.');
@@ -166,14 +196,13 @@ export function responderRevisaoPerfil(perfil, id, resposta, historico = [], ago
   if (entrada.encerrada || !item || item.id !== resposta.itemId || item.versao !== resposta.versao) throw new Error('A sessão mudou. Consulte a revisão salva.');
   const avaliacao = AVALIADORES_REVISAO[item.modo] ? AVALIADORES_REVISAO[item.modo](item, resposta) : avaliarRespostaTreino({ modo: item.modo, itens: [item] }, resposta, 0);
   const sequencia = avaliacao.acertou ? item.sequenciaAnterior + 1 : 0;
-  const dias = avaliacao.acertou ? (sequencia === 1 ? 1 : sequencia === 2 ? 3 : 7) : 0;
-  const anteriores = historico.filter(r => chaveItemRevisao(r) === chaveItemRevisao(item));
-  const proxima = limitarFrequenciaRevisao(tempoRevisao(agora) + dias * DIA_REVISAO, [...anteriores, { data: agora }], tempoRevisao(agora));
   // +40 XP uma vez por item e versão, no terceiro acerto seguido (docs/revisao-inteligente.md#xp-da-revisão).
   const chave = chaveItemRevisao(item);
   const dominados = stats.dominados || [];
   const dominou = avaliacao.acertou && sequencia === SEQUENCIA_DOMINIO && !dominados.includes(chave);
-  const resultado = { ...avaliacao, modo: item.modo, data: agora, sequencia, proximaRevisao: new Date(proxima).toISOString(),
+  const proximaRevisao = sequencia >= SEQUENCIA_DOMINIO ? null : proximaSemanaRevisao(agora, sequencia);
+  const resultado = { ...avaliacao, modo: item.modo, data: agora, sequencia, proximaRevisao,
+    ...(tempoRespostaValido(resposta.tempoMs) ? { tempoMs: resposta.tempoMs } : {}),
     ...(item.parecida ? { parecida: true } : { escolhaPartida: item.escolhaPartida }), ...(dominou ? { dominou: true, xp: XP_DOMINIO } : {}) };
   const resultados = [...entrada.resultados, resultado];
   const terminou = resultados.length === entrada.itens.length;
@@ -186,7 +215,7 @@ export function responderRevisaoPerfil(perfil, id, resposta, historico = [], ago
 function relatorioRevisao(itens, resultados) {
   return { acertos: resultados.filter(r => r.acertou).length, respondidos: resultados.length, total: itens.length,
     temas: [...new Set(resultados.map(r => r.tema))], xp: resultados.reduce((t, r) => t + (r.xp || 0), 0),
-    proximaRevisao: resultados.length ? new Date(Math.min(...resultados.map(r => tempoRevisao(r.proximaRevisao)))).toISOString() : null };
+    proximaRevisao: resultados.some(r => r.proximaRevisao) ? new Date(Math.min(...resultados.filter(r => r.proximaRevisao).map(r => tempoRevisao(r.proximaRevisao)))).toISOString() : null };
 }
 
 export function encerrarRevisaoPerfil(perfil, id, agora = new Date().toISOString()) {

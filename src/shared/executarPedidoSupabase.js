@@ -1,8 +1,8 @@
 import { operarTreinoSupabase, eventosTreino } from './operarTreinoSupabase.js';
-import { operarRevisaoSupabase, eventosRevisao, sincronizarSessaoRevisao, errosFicticiosRevisao } from './operarRevisaoSupabase.js';
+import { operarRevisaoSupabase, eventosRevisao, sincronizarSessaoRevisao, errosFicticiosRevisao, revisaoLiberada } from './operarRevisaoSupabase.js';
 import { agoraDaRevisao } from '../utils/revisaoInteligente.js';
+import { avaliarLembreteRevisao, garantirMissaoRevisao, lembretePendente } from '../utils/revisaoSemanal.js';
 import { emitirCruzadinhaSupabase, registrarPartidaSupabase, operarAdminSupabase, operarPlantaoSupabase, operarAuditoriaSupabase, operarRelacaoSupabase, operarBatalhaSupabase } from './operarJogosSupabase.js';
-import { eventosBatalha } from '../utils/batalhaRevisao.js';
 import { tentativaErroMedico } from '../utils/erroMedicoRevisao.js';
 import { operarFilaSupabase } from './operarFilaSupabase.js';
 import { AUDITORIAS } from '../utils/erroMedico.js';
@@ -11,7 +11,19 @@ import { concederRecompensa, migrarEconomia } from '../utils/economia.js';
 import { dataLocalHoje, prepararMissoesDoDia } from '../utils/missoes.js';
 import { materiaValida, validarCurso } from '../utils/curso.js';
 
-export const ACOES_REVISAO = ['consultarRevisao', 'iniciarRevisao', 'responderRevisao', 'encerrarRevisao'];
+export const ACOES_REVISAO = ['consultarRevisao', 'iniciarSemanaRevisao', 'iniciarRevisao', 'responderRevisao', 'encerrarRevisao'];
+// Pedidos que podem lotar a fila da Revisão (erros de Quiz, V ou M e Erro médico).
+const PEDIDOS_COM_ERROS = ['responderTreino', 'responderAuditoria', 'sincronizarFila'];
+// A API lê o histórico (tentativas e revisões) só quando o pedido precisa: a Revisão, ou o lembrete da semana ainda
+// por disparar no primeiro pedido do dia e depois de pedidos que podem errar (no máximo a cada 30 minutos).
+export function precisaHistoricoRevisao(perfil, pedido, agora = new Date(), liberada = true) {
+  if (ACOES_REVISAO.includes(pedido.acao) || (pedido.acao === 'sincronizarFila' && pedido.item?.tipo === 'sessaoRevisao')) return true;
+  const instante = agoraDaRevisao(perfil, agora);
+  if (!liberada || !lembretePendente(perfil, instante)) return false;
+  if (perfil.dataUltimoLogin !== dataLocalHoje(new Date(agora))) return true;
+  const conferido = Date.parse(perfil.revisao?.lembreteConferidoEm) || 0;
+  return PEDIDOS_COM_ERROS.includes(pedido.acao) && Date.parse(instante) - conferido >= 30 * 60000;
+}
 export const FOTOS_CRACHA = 6;
 // Regra do crachá para um username novo; nomes antigos continuam válidos até serem trocados.
 export const usernameValido = username => /^[a-z0-9._]{3,20}$/.test(username);
@@ -43,12 +55,15 @@ function sincronizarPedidosDdx(perfil, item, opcoes) {
 }
 
 // `banco`: banco de palavras com as dicas de todas as planilhas (só a emissão da cruzadinha usa).
-export function executarPedidoSupabase(original, pedido, { recibos = [], tentativas = [], revisoes = [], agora = new Date(), banco } = {}) {
+// `historicoCompleto`: a API leu todas as tentativas e revisões do jogador (precisaHistoricoRevisao).
+export function executarPedidoSupabase(original, pedido, { recibos = [], tentativas = [], revisoes = [], agora = new Date(), banco, historicoCompleto = false } = {}) {
   let perfil = migrarEconomia(original);
   // Primeiro pedido do dia: missões novas, ofensiva e o XP do login (sem ticket).
   const preparo = prepararMissoesDoDia(perfil, dataLocalHoje(agora));
   if (preparo) perfil = { ...concederRecompensa(perfil, preparo.xpLogin), dataUltimoLogin: preparo.dataUltimoLogin,
     missoesDiarias: preparo.missoesDiarias, ofensiva: preparo.ofensiva };
+  // A missão "revisão da semana", depois de aparecer, volta todo dia até a revisão sair.
+  if (preparo) perfil = garantirMissaoRevisao(perfil, agoraDaRevisao(perfil, agora));
   const base = perfil;
   let eventos = [];
   if (pedido.acao === 'obterPerfil') return { perfil, eventos };
@@ -68,6 +83,11 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
   } else if (pedido.acao === 'emitirCruzadinha') perfil = emitirCruzadinhaSupabase(perfil, pedido, banco, agora);
   else if (pedido.acao === 'sincronizarFila') ({ perfil, eventos } = operarFilaSupabase(perfil, pedido.item, recibos, new Date(agora).toISOString()));
   else if (pedido.acao === 'tutorial') perfil = { ...perfil, tutorialCruzadinhasConcluido: true };
+  else if (pedido.acao === 'verAvisoRevisao') {
+    // O aviso da Revisão aparece uma vez por semana: a tela marca quando o jogador o viu.
+    const aviso = perfil.revisao?.aviso;
+    if (aviso && !aviso.visto) perfil = { ...perfil, revisao: { ...perfil.revisao, aviso: { ...aviso, visto: true } } };
+  }
   else if (pedido.acao === 'editarPerfil') {
     const nome = String(pedido.nome || '').trim();
     const username = String(pedido.username || '').trim();
@@ -105,8 +125,6 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
     if (configuracao.encerrada(entrada)) eventos.push({ id: `recibo:${entrada.id}`, kind: 'recibo',
       data: { modo: configuracao.campo, rodadaId: entrada.id, xpConcedido: entrada.xpConcedido, data: entrada.encerradoEm,
         ...(configuracao.campo === 'batalha' ? { resultado: entrada.relatorio.resultado, doencaId: entrada.doencaId, revelada: Boolean(entrada.relatorio.revelada) } : {}) } });
-    // Diagnóstico, conduta e complicação da batalha alimentam a Revisão Inteligente.
-    if (configuracao.campo === 'batalha' && configuracao.encerrada(entrada)) eventos.push(...eventosBatalha(entrada));
     // Revisão v2: o caso do Erro médico encerrado vira uma tentativa da fila (entra nela se alguma etapa errou).
     if (configuracao.campo === 'erroMedico' && configuracao.encerrada(entrada) && entrada.encerradoEm) {
       const auditoria = AUDITORIAS.find(a => a.id === entrada.auditoriaId);
@@ -114,6 +132,12 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
     }
   }
   // XP semanal por matéria (Coroas) e recibos com XP e data para o histórico das estatísticas.
+  // Lembrete da Revisão (fila lotada, ou a partir de quarta com 5 min de fila), contando os erros deste pedido.
+  if (historicoCompleto && revisaoLiberada(perfil)) {
+    const reinicio = Date.parse(perfil.revisao?.reiniciadoEm) || 0;
+    const doHistorico = (lista, kind) => [...lista, ...eventos.filter(e => e.kind === kind).map(e => e.data)].filter(r => Date.parse(r.data) > reinicio);
+    perfil = avaliarLembreteRevisao(perfil, doHistorico(tentativas, 'resposta'), doHistorico(revisoes, 'revisao'), agoraDaRevisao(perfil, agora));
+  }
   if (pedido.acao !== 'admin') perfil = registrarXpSemanal(base, perfil, agora);
   const ganho = Math.max(0, (Number(perfil.pontuacaoTotal) || 0) - (Number(base.pontuacaoTotal) || 0));
   eventos = eventos.map(e => e.kind === 'recibo' ? { ...e, data: { xp: e.data.xpConcedido ?? ganho, data: new Date(agora).toISOString(), ...e.data } } : e);

@@ -106,10 +106,14 @@ export default function TreinoMedico({ modo, usuario, dadosUsuario, setDadosUsua
   const item = quiz && entrada ? entrada.itens[indice] : null;
   const resultado = feedback ? entrada.resultados[feedback.indice] : null;
 
+  // Tempo até responder cada pergunta (do item aparecer ao toque): vai com a resposta e mede o ritmo da Revisão.
+  const itemVistoEm = useRef(0);
+  useEffect(() => { if (fase === 'jogo' && !feedback) itemVistoEm.current = performance.now(); }, [fase, feedback, indice]);
   const responder = opcao => {
     if (ocupado || feedback || pendente || !ativa || !item) return;
     setEscolhaEnviada(opcao);
-    enviar({ acao: 'responderTreino', entradaId: entrada.id, respostas: [...entrada.respostas, { itemId: item.id, escolha: opcao }] }, () => setFeedback({ indice }));
+    const tempoMs = Math.round(performance.now() - itemVistoEm.current);
+    enviar({ acao: 'responderTreino', entradaId: entrada.id, respostas: [...entrada.respostas, { itemId: item.id, escolha: opcao, tempoMs }] }, () => setFeedback({ indice }));
   };
   const proxima = () => { setFeedback(null); setEscolhaEnviada(null); };
 

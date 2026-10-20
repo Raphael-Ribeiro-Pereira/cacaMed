@@ -9,11 +9,14 @@ export const AVISO_IA = 'Explicação gerada por IA. Confira a fonte.';
 
 const textoAlternativa = (opcoes, id) => opcoes.find(o => o.id === id)?.texto ?? String(id);
 
-// Acha a resposta errada confirmada nesta sessão; a explicação só existe para ela.
+// Acha a resposta errada confirmada na sessão atual ou numa carta já feita da revisão da semana (o relatório geral);
+// a explicação só existe para ela.
 export function resultadoParaExplicar(perfil, { revisaoId, itemId, versao }) {
   const entrada = perfil?.revisao?.entrada;
-  if (!entrada || entrada.id !== revisaoId) throw new Error('Sessão não encontrada. Consulte a revisão salva.');
-  const r = entrada.resultados.find(x => x.itemId === itemId && x.versao === Number(versao));
+  const feita = Object.values(perfil?.revisao?.semana?.feitas || {}).find(f => f.revisaoId === revisaoId);
+  const resultados = entrada?.id === revisaoId ? entrada.resultados : feita?.resultados;
+  if (!resultados) throw new Error('Sessão não encontrada. Consulte a revisão salva.');
+  const r = resultados.find(x => x.itemId === itemId && x.versao === Number(versao));
   if (!r) throw new Error('Responda o item antes de pedir a explicação.');
   if (r.acertou) throw new Error('A explicação é só para respostas erradas.');
   return r;

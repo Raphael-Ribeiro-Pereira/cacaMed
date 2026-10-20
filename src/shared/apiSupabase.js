@@ -1,4 +1,4 @@
-import { executarPedidoSupabase, ACOES_REVISAO, usernameValido } from './executarPedidoSupabase.js';
+import { executarPedidoSupabase, ACOES_REVISAO, usernameValido, precisaHistoricoRevisao } from './executarPedidoSupabase.js';
 import { resumirHistorico } from '../utils/estatisticasPainel.js';
 import { criarMissoesDiarias, dataLocalHoje, XP_LOGIN_POR_DIA } from '../utils/missoes.js';
 import { VERSAO_ECONOMIA } from '../utils/economia.js';
@@ -7,7 +7,7 @@ import { criarLimitador, ipDoPedido, LIMITES_API } from './limitador.js';
 import { materiaValida, validarCurso } from '../utils/curso.js';
 import { bancoPublico } from '../utils/importarBancoCSV.js';
 import { AVISO_IA, contextoExplicacao, resultadoParaExplicar, textoValido } from './explicacaoRevisao.js';
-import { revisaoLiberada } from './operarRevisaoSupabase.js';
+import { revisaoLiberada, relatorioSemanaRevisao } from './operarRevisaoSupabase.js';
 import { NIVEL_REVISAO } from '../utils/revisaoInteligente.js';
 
 export const ORIGENS_SUPABASE = new Set(['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'https://caca-med.vercel.app', 'https://cacamed.com']);
@@ -137,6 +137,12 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         try { return answer({ resultado: conteudoBatalhaPara(rows[0]?.profile, pedido.doencaId) }); }
         catch (erro) { return answer({ erro: erro.message }, 403); }
       }
+      // Relatório geral da revisão da semana (o anel): leitura, só das cartas já feitas.
+      if (acao === 'relatorioRevisao') {
+        const rows = await database('cacamed_player_state?' + filter + '&select=profile');
+        try { return answer({ resultado: relatorioSemanaRevisao(rows[0]?.profile) }); }
+        catch (erro) { return answer({ erro: erro.message }, 400); }
+      }
       // Revisão v2: explicação da LLM para uma resposta errada já confirmada, com cache por item, versão e escolhas.
       // Sem `explicar` (segredo da OpenRouter ausente) ou com falha, volta a explicação revisada do banco.
       if (acao === 'explicarRevisao') {
@@ -218,9 +224,13 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         if (acao === 'editarPerfil' && novoUsername !== row.profile.username && usernameValido(novoUsername)
             && await usernameEmUso(database, novoUsername, user.uid)) return answer({ erro: 'Este username já está em uso por outro plantonista.' }, 409);
         let historico = [];
-        // A sessão da Revisão jogada sem rede também precisa do histórico (app offline).
-        if (ACOES_REVISAO.includes(acao) || (acao === 'sincronizarFila' && pedido.item?.tipo === 'sessaoRevisao')) {
-          if (!revisaoLiberada(row.profile)) return answer({ erro: `A Revisão inteligente libera no nível ${NIVEL_REVISAO}.` }, 403);
+        // A sessão da Revisão jogada sem rede também precisa do histórico (app offline). Fora da Revisão, o histórico só é
+        // lido quando o lembrete da semana ainda pode disparar (precisaHistoricoRevisao).
+        if ((ACOES_REVISAO.includes(acao) || (acao === 'sincronizarFila' && pedido.item?.tipo === 'sessaoRevisao')) && !revisaoLiberada(row.profile)) {
+          return answer({ erro: `A Revisão inteligente libera no nível ${NIVEL_REVISAO}.` }, 403);
+        }
+        const historicoCompleto = precisaHistoricoRevisao(row.profile, pedido, new Date(), revisaoLiberada(row.profile));
+        if (historicoCompleto) {
           for (let offset = 0; ; offset += 1000) {
             const page = await database('cacamed_events?' + filter + '&kind=in.(resposta,revisao)&select=data,kind&order=created_at.asc,event_id.asc&limit=1000&offset=' + offset);
             historico.push(...page);
@@ -235,7 +245,7 @@ export function criarApiSupabase({ database, identity, migrateIdentity, migrateP
         let alteracao;
         try {
           alteracao = executarPedidoSupabase(row.profile, pedido, { banco, recibos: recibo.length ? [id] : [],
-            tentativas: historico.filter(r => r.kind === 'resposta').map(r => r.data), revisoes: historico.filter(r => r.kind === 'revisao').map(r => r.data) });
+            tentativas: historico.filter(r => r.kind === 'resposta').map(r => r.data), revisoes: historico.filter(r => r.kind === 'revisao').map(r => r.data), historicoCompleto });
         } catch (erro) {
           // S-12: erro de programa (TypeError e afins) não vai para o cliente; o detalhe fica só no log.
           if (erroDePrograma(erro)) { log({ acao, erroInterno: String(erro.stack || erro).slice(0, 500) }); return answer({ erro: 'Pedido inválido.' }, 400); }

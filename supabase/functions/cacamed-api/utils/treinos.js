@@ -83,7 +83,9 @@ export function responderTreinoPerfil(perfil, modo, entradaId, respostas, agora 
   if (entrada.encerrada || respostas.length > 5 || (modo === 'quiz' ? respostas.length !== entrada.respostas.length + 1 : respostas.length !== 5) ||
       entrada.respostas.some((resposta, i) => !mesmaRespostaTreino(resposta, respostas[i]))) throw new Error('A rodada mudou em outra aba. Consulte o progresso salvo.');
   if (modo === 'verdadeMentira' && (![1, 2, 3, 4].includes(respostas.filter(r => r.escolha === true).length))) throw new Error('Selecione de uma a quatro frases verdadeiras.');
-  const resultados = respostas.map((r, i) => avaliarRespostaTreino(entrada, r, i));
+  // Tempo até responder (só o Quiz manda, item a item): vai com a resposta para o ritmo da Revisão, de 0 a 10 minutos.
+  const resultados = respostas.map((r, i) => ({ ...avaliarRespostaTreino(entrada, r, i),
+    ...(Number.isInteger(r.tempoMs) && r.tempoMs > 0 && r.tempoMs <= 600000 ? { tempoMs: r.tempoMs } : {}) }));
   const terminou = respostas.length === 5;
   entrada = { ...entrada, respostas: respostas.map(({ itemId, escolha }) => ({ itemId, escolha })), resultados, encerrada: terminou };
   let base = perfil;

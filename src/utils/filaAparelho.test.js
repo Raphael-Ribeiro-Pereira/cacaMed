@@ -150,8 +150,9 @@ test('Revisão offline: a carta abre da reserva do servidor, vai para a fila e o
   const tentativas = [{ modo: 'quiz', itemId: q.id, versao: q.versao, tema: q.tema, acertou: false, escolha: 'x', rodadaId: 'r1', data: '2026-10-18T10:00:00Z' }];
   const agora = '2026-10-19T12:00:00.000Z';
   const base = { uid: 'u', role: 'jogador', pontuacaoTotal: xpParaNivel(10), tickets: 0, dataUltimoLogin: '2026-10-19', ofensiva: { dias: 1, ultimoDia: '2026-10-19' }, missoesDiarias: [{ id: 'login' }] };
-  // Com rede: a consulta prepara a reserva de cada carta.
-  let perfil = operarRevisaoSupabase(base, { acao: 'consultarRevisao' }, tentativas, [], [], agora);
+  // Com rede: a revisão da semana começa e a consulta prepara a reserva de cada carta que falta.
+  const semana = operarRevisaoSupabase(base, { acao: 'iniciarSemanaRevisao' }, tentativas, [], [], agora);
+  let perfil = operarRevisaoSupabase(semana, { acao: 'consultarRevisao' }, tentativas, [], [], agora);
   assert.ok(perfil.revisao.offline.sessoes['quiz-1'].itens.every(i => !('correta' in i)), 'reserva sem gabarito');
   const fila = criarFila(armazemMemoria(), { agora: relogio() });
   const servico = servicoRevisaoComOffline(async () => { throw new TypeError('Failed to fetch'); }, { perfilAtual: () => perfil, online: () => false, agora: () => agora,
@@ -168,8 +169,10 @@ test('Revisão offline: a carta abre da reserva do servidor, vai para a fila e o
   // O aparelho não decide a sequência: mesmo com um item "adulterado", o servidor usa o histórico dele.
   const [item] = await fila.daConta('u');
   item.dados.itens[0].sequenciaAnterior = 2;
-  const { perfil: confirmado, eventos } = executarPedidoSupabase(base, { acao: 'sincronizarFila', item }, { tentativas, revisoes: [], agora: new Date(agora) });
+  const { perfil: confirmado, eventos } = executarPedidoSupabase(semana, { acao: 'sincronizarFila', item }, { tentativas, revisoes: [], agora: new Date(agora) });
   assert.equal(confirmado.revisao.entrada.resultados[0].sequencia, 1);
-  assert.equal(confirmado.pontuacaoTotal, base.pontuacaoTotal, 'sem XP de domínio no primeiro acerto');
+  // Sem XP de domínio no primeiro acerto; a única carta da semana fecha a revisão e paga o prêmio (35 XP por item).
+  assert.ok(confirmado.revisao.semana.concluidaEm);
+  assert.equal(confirmado.pontuacaoTotal, base.pontuacaoTotal + confirmado.revisao.entrada.resultados.length * 35);
   assert.ok(eventos.some(e => e.id === `recibo:${revisaoId}`));
 });

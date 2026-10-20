@@ -43,39 +43,40 @@ test('sessão v2 abre uma carta, completa 7 com parecidas, não revela gabarito 
   assert.throws(() => criarEntradaRevisao(selecionarFilaRevisao([], [], agora), 's'), /Nenhum item/);
 });
 
-test('acertos programam intervalos e respeitam teto semanal sem alterar economia; tipos são estritos', () => {
+test('repetição em semanas: acertou volta na semana seguinte, depois em duas, e o terceiro acerto domina e tira da fila', () => {
+  // 28/09/2026 é segunda-feira; a semana começa na segunda à 0h de Brasília (3h UTC).
   let historico = [];
   let data = agora;
-  for (const [i, dias] of [1, 6, 7].entries()) {
-    const entrada = criarEntradaRevisao(selecionarFilaRevisao([erro()], historico, data), `s${i}`, data);
+  for (const [i, volta] of ['2026-10-05T03:00:00.000Z', '2026-10-19T03:00:00.000Z', null].entries()) {
+    const entrada = criarEntradaRevisao(selecionarFilaRevisao([erro()], historico, data), 's' + i, data);
     let perfil = { ...base([erro()]), revisao: { entrada } };
     perfil = responder(perfil, historico, data);
     const resultado = perfil.revisao.entrada.resultados[0];
-    assert.equal(Date.parse(resultado.proximaRevisao) - Date.parse(data), dias * 86400000);
+    assert.equal(resultado.proximaRevisao, volta);
     assert.equal(resultado.sequencia, i + 1);
     assert.equal(perfil.pontuacaoTotal, 490); assert.equal(perfil.tickets, 9); assert.equal(perfil.missoesDiarias[0].progresso, 0);
-    historico = [...historico, resultado]; data = resultado.proximaRevisao;
+    historico = [...historico, resultado]; data = resultado.proximaRevisao || data;
   }
-  const antiga = { ...erro(), data: '2026-09-15T12:00:00.000Z', proximaRevisao: '2026-09-16T12:00:00.000Z', sequencia: 1 };
-  const entrada = criarEntradaRevisao(selecionarFilaRevisao([erro(BANCO_QUIZ[0], 'a', '2026-09-14T12:00:00.000Z')], [antiga], agora), 's', agora);
-  assert.equal(responder({ ...base([erro()]), revisao: { entrada } }, [antiga]).revisao.entrada.resultados[0].proximaRevisao, '2026-10-01T12:00:00.000Z');
+  assert.equal(selecionarFilaRevisao([erro()], historico, '2027-01-01T12:00:00.000Z').resumo.total, 0, 'dominado sai da fila');
+  assert.equal(selecionarFilaRevisao([erro(), erro(BANCO_QUIZ[0], 'novo', '2026-12-01T12:00:00.000Z')], historico, '2027-01-01T12:00:00.000Z').itens[0].sequencia, 0, 'erro novo devolve à fila');
   const p = base([erro(BANCO_FRASES[0])]); const item = p.revisao.entrada.itens[0];
   assert.throws(() => responderRevisaoPerfil(p, 'sessao', { itemId: item.id, versao: 999, escolha: true }), /sessão mudou/);
   assert.throws(() => responderRevisaoPerfil(p, 'sessao', { itemId: item.id, versao: item.versao, escolha: 'false' }), /Alternativa inválida/);
 });
 
-test('dois erros em sete dias respeitam teto de frequência, sem repetir na sessão', () => {
+test('errou na revisão: volta na semana seguinte, sem teto de frequência, e guarda o tempo da resposta', () => {
   const primeiro = responder(base([erro()]), [], agora, false);
   const r = primeiro.revisao.entrada.resultados[0];
-  assert.equal(r.proximaRevisao, agora);
-  const segundoBase = { ...primeiro, revisao: { ...primeiro.revisao, entrada: criarEntradaRevisao(selecionarFilaRevisao([erro()], [r], agora), 'segunda', agora) } };
-  const segundo = responder(segundoBase, [r], agora, false);
-  const rr = segundo.revisao.entrada.resultados[0];
-  assert.equal(rr.sequencia, 0);
-  assert.equal(rr.proximaRevisao, '2026-10-05T12:00:00.000Z');
-  const fila = selecionarFilaRevisao([erro()], [r, rr], agora);
+  assert.equal(r.sequencia, 0);
+  assert.equal(r.proximaRevisao, '2026-10-05T03:00:00.000Z');
+  const fila = selecionarFilaRevisao([erro()], [r], agora);
   assert.equal(fila.resumo.disponiveis, 0); assert.equal(fila.resumo.aguardando, 1);
-  assert.equal(selecionarFilaRevisao([erro()], [r, rr], rr.proximaRevisao).resumo.disponiveis, 1);
+  assert.equal(selecionarFilaRevisao([erro()], [r], r.proximaRevisao).resumo.disponiveis, 1);
+  const item = base([erro()]).revisao.entrada.itens[0];
+  const comTempo = responderRevisaoPerfil(base([erro()]), 'sessao', { itemId: item.id, versao: item.versao, escolha: BANCO_QUIZ[0].correta, tempoMs: 8400 }, [], agora);
+  assert.equal(comTempo.revisao.entrada.resultados[0].tempoMs, 8400);
+  const semTempo = responderRevisaoPerfil(base([erro()]), 'sessao', { itemId: item.id, versao: item.versao, escolha: BANCO_QUIZ[0].correta, tempoMs: -3 }, [], agora);
+  assert.equal('tempoMs' in semTempo.revisao.entrada.resultados[0], false, 'tempo fora de 0 a 10 min não é guardado');
 });
 
 test('novo erro reinicia sequência; acerto posterior em jogo reduz frequência', () => {

@@ -10,7 +10,9 @@ test('revisão migrada usa erros, preserva saldo e não repete resposta confirma
   const revisaoId = '11111111-1111-4111-8111-111111111111';
   const agora = '2026-09-30T10:00:00Z';
   let perfil = { role: 'admin', pontuacaoTotal: 123, tickets: 7 };
-  perfil = operarRevisaoSupabase(perfil, { acao: 'iniciarRevisao', revisaoId }, tentativas, [], [], agora);
+  assert.throws(() => operarRevisaoSupabase(perfil, { acao: 'iniciarRevisao', revisaoId, carta: 'quiz-1' }, tentativas, [], [], agora), /Comece a revisão da semana/);
+  perfil = operarRevisaoSupabase(perfil, { acao: 'iniciarSemanaRevisao' }, tentativas, [], [], agora);
+  perfil = operarRevisaoSupabase(perfil, { acao: 'iniciarRevisao', revisaoId, carta: 'quiz-1' }, tentativas, [], [], agora);
   // Sessão v2: o erro e perguntas parecidas, até 7 (menos quando o banco não tem parecidas suficientes).
   assert.ok(perfil.revisao.entrada.itens.length > 1 && perfil.revisao.entrada.itens.length <= 7);
   assert.equal(perfil.revisao.entrada.itens[0].id, item.id);
