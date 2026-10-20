@@ -135,7 +135,7 @@ function useRankingMenu(usuario, buscarRanking, obterMeuId) {
   return { lista: erro && !lista ? null : ordenada, erro: erro && !lista, delta, tentar: () => setTentativa(t => t + 1) };
 }
 
-export default function MenuPrincipal({ dadosUsuario, setTelaAtual, usuario, setDadosUsuario, buscarRanking, obterMeuId = obterMeuIdPublico }) {
+export default function MenuPrincipal({ dadosUsuario, setTelaAtual, usuario, setDadosUsuario, buscarRanking, obterMeuId = obterMeuIdPublico, servicoPerfil, topicos }) {
   const web = useLargo();
   const p = dadosUsuario || {};
   const foto = fotoDoPerfil(p);
@@ -145,7 +145,7 @@ export default function MenuPrincipal({ dadosUsuario, setTelaAtual, usuario, set
   const rank = useRankingMenu(usuario, buscarRanking, obterMeuId);
   const ir = setTelaAtual;
   const hoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
-  const ferramentas = usuario && admin && <AdminSpeedDial titulo="Ferramentas admin · Centro de Comando" acima={!web}><FerramentasAdmin usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} /></AdminSpeedDial>;
+  const ferramentas = usuario && admin && <AdminSpeedDial titulo="Ferramentas admin · Centro de Comando" acima={!web}><FerramentasAdmin usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} servicoPerfil={servicoPerfil} topicos={topicos} /></AdminSpeedDial>;
 
   if (web) return <><div className="cbt web"><div className="cbt-scr r-menu">
     <div className="scroll w-page">

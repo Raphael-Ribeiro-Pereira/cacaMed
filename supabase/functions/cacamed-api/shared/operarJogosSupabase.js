@@ -1,6 +1,7 @@
 import { concederRecompensa, nivelPorXP, xpParaNivel, VERSAO_ECONOMIA, XP_JOGO, XP_DDX, SEGUNDOS_POR_PALAVRA,
   bonusCruzadinha, bonusDdx, segundosEntre } from '../utils/economia.js';
-import { aplicarProgressoMissoes, lerMissoes, criarMissoesDiarias, dataLocalHoje } from '../utils/missoes.js';
+import { aplicarProgressoMissoes, lerMissoes, criarMissoesDiarias, dataLocalHoje, prepararMissoesDoDia } from '../utils/missoes.js';
+import { MAXIMO_RELOGIO_ADMIN } from '../utils/revisaoInteligente.js';
 import { obterCasoPlantao, executarPlantao } from '../utils/plantao.js';
 import { obterAuditoria, avaliarAuditoria } from '../utils/erroMedico.js';
 import { obterRelacao, avaliarRelacao } from '../utils/causaEfeito.js';
@@ -156,7 +157,8 @@ export function registrarPartidaSupabase(perfil, original, recibos = [], agora =
   return atualizado;
 }
 
-export function operarAdminSupabase(perfil, pedido) {
+// Ferramentas de admin (docs/plano-admin-e-prototipos.md): gravam no perfil real de quem é admin, para testar sem esperar.
+export function operarAdminSupabase(perfil, pedido, agora = new Date()) {
   const operacao = String(pedido.operacao || '');
   const valor = Number(pedido.valor);
   const inteiro = (minimo, maximo) => {
@@ -177,6 +179,49 @@ export function operarAdminSupabase(perfil, pedido) {
     if (!/^[A-Z0-9 -]{3,80}$/.test(chaveXP)) throw new Error('Tópico inválido.');
     const xp = valor === 0 ? 0 : valor === 1 ? 1 : (valor - 1) ** 2 * 1000;
     atualizado = { ...perfil, xpTopicos: { ...perfil.xpTopicos, [chaveXP]: xp } };
+  } else if (operacao === 'subirNivel') {
+    // Sobe um nível pela regra de sempre: o prêmio do nível (tickets) sai como numa partida.
+    const xp = Number(perfil.pontuacaoTotal) || 0;
+    atualizado = concederRecompensa(perfil, xpParaNivel(nivelPorXP(xp) + 1) - xp);
+    delete atualizado.nivelGlobalAdmin;
+  } else if (operacao === 'setTickets') {
+    inteiro(0, 100);
+    atualizado = { ...perfil, tickets: valor };
+  } else if (operacao === 'sortearMissoes') {
+    // valor 0 sorteia como o jogo; 4 ou 5 fixa o nível da missão mais alta. A missão de login (já paga) fica.
+    if (![0, 4, 5].includes(valor)) throw new Error('Valor fora dos limites.');
+    const atuais = lerMissoes(perfil);
+    const novas = criarMissoesDiarias(Math.random, Number(perfil.ofensiva?.dias) || 1, valor || undefined);
+    atualizado = { ...perfil, missoesDiarias: [atuais.find(m => m.id === 'login') || novas[0], ...novas.slice(1)] };
+  } else if (operacao === 'completarMissao') {
+    const missoes = lerMissoes(perfil);
+    const indice = missoes.findIndex(m => m.id === String(pedido.missaoId || '') && m.id !== 'login');
+    if (indice < 0) throw new Error('Missão não encontrada.');
+    const missao = missoes[indice];
+    if (missao.concluida) throw new Error('Esta missão já está concluída.');
+    atualizado = { ...concederRecompensa(perfil, Number(missao.recompensaXP) || 0, Number(missao.recompensaTicket) || 0),
+      missoesDiarias: missoes.map((m, i) => i === indice ? { ...m, progresso: m.meta, concluida: true } : m) };
+  } else if (operacao === 'avancarDia') {
+    // O último login volta `valor` dias e o dia de hoje abre como novo: 1 dia continua a ofensiva; 2 ou mais a zeram.
+    inteiro(1, 7);
+    const hoje = dataLocalHoje(new Date(agora));
+    const dia = new Date(`${hoje}T12:00:00Z`);
+    dia.setUTCDate(dia.getUTCDate() - valor);
+    const antes = dia.toISOString().slice(0, 10);
+    const recuado = { ...perfil, dataUltimoLogin: antes, ofensiva: { dias: Number(perfil.ofensiva?.dias) || 1, ultimoDia: antes } };
+    const preparo = prepararMissoesDoDia(recuado, hoje, Math.random);
+    atualizado = { ...concederRecompensa(recuado, preparo.xpLogin), dataUltimoLogin: preparo.dataUltimoLogin,
+      missoesDiarias: preparo.missoesDiarias, ofensiva: preparo.ofensiva };
+  } else if (operacao === 'liberarCasos') {
+    // Casos concluídos do DDX, do Erro médico e do Causa e efeito voltam a pagar XP; o resto das estatísticas fica.
+    const liberar = campo => ({ ...perfil[campo], concluidos: [] });
+    atualizado = { ...perfil, ddx: liberar('ddx'), erroMedico: liberar('erroMedico'), causaEfeito: liberar('causaEfeito') };
+  } else if (operacao === 'relogioRevisao') {
+    inteiro(0, MAXIMO_RELOGIO_ADMIN);
+    atualizado = { ...perfil, revisao: { ...perfil.revisao, relogioAdminDias: valor } };
+  } else if (operacao === 'semearRevisao') {
+    // Os erros fictícios saem como eventos (executarPedidoSupabase); o objeto novo faz a API gravar a chamada.
+    atualizado = { ...perfil };
   } else if (operacao === 'resetarProgresso') {
     atualizado = { ...perfil, pontuacaoTotal: 0, xpTopicos: {}, tickets: 0, economia: { versao: VERSAO_ECONOMIA, ultimoNivelPremiado: 1 },
       medidorTicketsCruzadinha: 0, missoesDiarias: criarMissoesCruzadinha(Math.random, Number(perfil.ofensiva?.dias) || 1),

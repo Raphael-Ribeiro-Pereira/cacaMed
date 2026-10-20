@@ -1,5 +1,6 @@
 import { operarTreinoSupabase, eventosTreino } from './operarTreinoSupabase.js';
-import { operarRevisaoSupabase, eventosRevisao, sincronizarSessaoRevisao } from './operarRevisaoSupabase.js';
+import { operarRevisaoSupabase, eventosRevisao, sincronizarSessaoRevisao, errosFicticiosRevisao } from './operarRevisaoSupabase.js';
+import { agoraDaRevisao } from '../utils/revisaoInteligente.js';
 import { emitirCruzadinhaSupabase, registrarPartidaSupabase, operarAdminSupabase, operarPlantaoSupabase, operarAuditoriaSupabase, operarRelacaoSupabase, operarBatalhaSupabase } from './operarJogosSupabase.js';
 import { eventosBatalha } from '../utils/batalhaRevisao.js';
 import { tentativaErroMedico } from '../utils/erroMedicoRevisao.js';
@@ -53,9 +54,10 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
   if (pedido.acao === 'obterPerfil') return { perfil, eventos };
   // App offline: caso do DDX jogado sem rede chega como a sequência de pedidos e é refeito aqui, em ordem.
   if (pedido.acao === 'sincronizarFila' && pedido.item?.tipo === 'pedidosDdx') return sincronizarPedidosDdx(perfil, pedido.item, { recibos, tentativas, revisoes, agora, banco });
-  if (pedido.acao === 'sincronizarFila' && pedido.item?.tipo === 'sessaoRevisao') return sincronizarSessaoRevisao(perfil, pedido.item, tentativas, revisoes, recibos, new Date(agora).toISOString());
+  // A Revisão usa o relógio do servidor, adiantado só para o admin que pediu (ferramenta de teste).
+  if (pedido.acao === 'sincronizarFila' && pedido.item?.tipo === 'sessaoRevisao') return sincronizarSessaoRevisao(perfil, pedido.item, tentativas, revisoes, recibos, agoraDaRevisao(perfil, agora));
   if (ACOES_REVISAO.includes(pedido.acao)) {
-    perfil = operarRevisaoSupabase(perfil, pedido, tentativas, revisoes, recibos);
+    perfil = operarRevisaoSupabase(perfil, pedido, tentativas, revisoes, recibos, agoraDaRevisao(perfil, agora));
     eventos = eventosRevisao(perfil);
   } else if (['iniciarTreino', 'responderTreino', 'abandonarTreino'].includes(pedido.acao)) {
     perfil = operarTreinoSupabase(perfil, pedido, recibos);
@@ -88,7 +90,8 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
   } else if (pedido.acao === 'pularTutorialBatalha') perfil = operarBatalhaSupabase(perfil, pedido);
   else if (pedido.acao === 'admin') {
     if (perfil.role !== 'admin') throw new Error('Acesso restrito ao administrador.');
-    perfil = operarAdminSupabase(perfil, pedido);
+    perfil = operarAdminSupabase(perfil, pedido, agora);
+    if (pedido.operacao === 'semearRevisao') eventos = errosFicticiosRevisao(agoraDaRevisao(perfil, agora));
   } else {
     const configuracao = [
       { acoes: ['iniciarPlantao', 'acaoPlantao'], operar: operarPlantaoSupabase, campo: 'ddx', encerrada: e => e.relatorio?.encerrado },

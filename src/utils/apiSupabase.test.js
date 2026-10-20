@@ -388,3 +388,14 @@ test('S-05: o conteúdo completo da Batalha só sai para o administrador (ou de 
   assert.ok(Array.isArray(liberado.resultado.golpes));
   assert.equal((await f.call({ acao: 'conteudoBatalha', doencaId: 'inventada' })).status, 403);
 });
+
+test('ferramenta de admin: os erros fictícios da Revisão chegam ao histórico pela API e entram na fila', async () => {
+  const f = fixture();
+  await f.call({ acao: 'cadastrar', titulo: 'Doutor', materiaPreferida: 'clinica', username: 'chefe' }, 'admin');
+  const linha = f.states.get('admin');
+  f.states.set('admin', { ...linha, profile: { ...linha.profile, role: 'admin' } });
+  assert.equal((await f.call({ acao: 'admin', operacao: 'semearRevisao' }, 'admin')).status, 200);
+  assert.equal([...f.events.values()].filter(e => e.playerId === 'admin' && e.kind === 'resposta').length, 6);
+  const { resultado } = await f.call({ acao: 'consultarRevisao' }, 'admin');
+  assert.equal(resultado.revisao.resumo.disponiveis, 6);
+});

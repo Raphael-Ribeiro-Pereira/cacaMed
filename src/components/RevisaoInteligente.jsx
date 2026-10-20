@@ -8,7 +8,7 @@ import { nivelPorXP } from '../utils/economia';
 import { NIVEL_REVISAO, XP_DOMINIO } from '../utils/revisaoInteligente';
 import { animar, registrarLatencia, useLargo } from '../utils/prototipo';
 import { MiniEcg } from './prototipoUi';
-import { BotaoCarregar, Contagem, Resultado } from './resultadoUi';
+import { Contagem, Resultado } from './resultadoUi';
 
 // Revisão Inteligente v2 (docs/revisao-inteligente.md): cartas por modo, sessões de até 7 itens (os erros e perguntas
 // parecidas), o caso do Erro médico refeito inteiro e, no fim, a revisão dos erros com a explicação da IA.
@@ -91,7 +91,8 @@ export default function RevisaoInteligente({ usuario, dadosUsuario, setDadosUsua
   const [iniciando, setIniciando] = useState(null);
   const [erro, setErro] = useState('');
   const [pendente, setPendente] = useState(null);
-  const [listar, setListar] = useState(false);
+  // A entrada é sempre o hub com as cartas; o relatório só abre ao terminar a sessão ou em "Ver última revisão".
+  const [verRelatorio, setVerRelatorio] = useState(false);
   const [contagem, setContagem] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [escolhaEnviada, setEscolhaEnviada] = useState(null);
@@ -123,11 +124,11 @@ export default function RevisaoInteligente({ usuario, dadosUsuario, setDadosUsua
   const consultar = () => enviar({ acao: 'consultarRevisao' }, () => setEscolhaEnviada(null));
   const iniciar = async carta => {
     setIniciando(carta);
-    await enviar({ acao: 'iniciarRevisao', revisaoId: crypto.randomUUID(), carta }, () => { setListar(false); setFeedback(null); setEscolhaEnviada(null); setContagem(animar()); });
+    await enviar({ acao: 'iniciarRevisao', revisaoId: crypto.randomUUID(), carta }, () => { setVerRelatorio(false); setFeedback(null); setEscolhaEnviada(null); setContagem(animar()); });
     setIniciando(null);
   };
 
-  const relatorio = entrada?.encerrada && entrada.relatorio && !listar ? entrada.relatorio : null;
+  const relatorio = entrada?.encerrada && entrada.relatorio && verRelatorio ? entrada.relatorio : null;
   const fase = contagem ? 'contagem' : ativa || feedback ? 'jogo' : relatorio ? 'resultado' : 'intro';
   const indice = feedback ? feedback.indice : entrada?.resultados?.length || 0;
   const item = entrada?.itens?.[indice];
@@ -137,8 +138,11 @@ export default function RevisaoInteligente({ usuario, dadosUsuario, setDadosUsua
     setEscolhaEnviada(escolha);
     enviar({ acao: 'responderRevisao', revisaoId: entrada.id, itemId: item.id, versao: item.versao, escolha }, () => setFeedback({ indice }));
   };
-  const proxima = () => { setFeedback(null); setEscolhaEnviada(null); };
-  const voltarCartas = () => { setListar(true); consultar(); };
+  const proxima = () => {
+    if (feedback && feedback.indice === entrada.itens.length - 1) setVerRelatorio(true);
+    setFeedback(null); setEscolhaEnviada(null);
+  };
+  const voltarCartas = () => { setVerRelatorio(false); consultar(); };
 
   useEffect(() => {
     if (fase !== 'jogo' || folha || item?.modo === 'erroMedico') return undefined;
@@ -214,11 +218,11 @@ export default function RevisaoInteligente({ usuario, dadosUsuario, setDadosUsua
             </button>; })}
         </div>}
         <div style={{ display: 'grid', gap: 8 }}>{REGRAS.map((r, i) => <div key={i} className="mission rise" style={{ '--i': i + 6, gridTemplateColumns: '26px 1fr' }}><span className="mono" style={{ color: COR, fontWeight: 700 }}>{i + 1}</span><span style={{ fontSize: 13.5 }}>{r}</span></div>)}</div>
+        {liberada && entrada?.encerrada && entrada.relatorio && <button className="ghost rise" style={{ '--i': 5 }} onClick={() => setVerRelatorio(true)}>Ver última revisão</button>}
         {liberada && <p className="note">{stats.itens || 0} {stats.itens === 1 ? 'item revisado' : 'itens revisados'} até hoje · {stats.acertos || 0} {stats.acertos === 1 ? 'acerto' : 'acertos'} · {(stats.dominados || []).length} dominados</p>}
+        {dadosUsuario?.role === 'admin' && stats.relogioAdminDias > 0 && <p className="note">Relógio da Revisão adiantado em {stats.relogioAdminDias} {stats.relogioAdminDias === 1 ? 'dia' : 'dias'} (ferramenta de admin).</p>}
         {avisoErro}
       </div>
-      {ativa && <div className="dock"><div className="info"><span>SEM CUSTO DE TICKET</span><span>SESSÃO EM ANDAMENTO</span></div>
-        <BotaoCarregar rotulo="Continuar a sessão" icone={<Play size={17} fill="currentColor" />} carregando={false} aoClicar={() => setListar(false)} desabilitado={ocupado} /></div>}
     </div></div>;
   }
 
@@ -272,7 +276,7 @@ export default function RevisaoInteligente({ usuario, dadosUsuario, setDadosUsua
           <p>As respostas confirmadas ficam salvas. Os itens que faltam continuam na fila.</p>
           <button className="primary" onClick={() => setFolha(null)}>Continuar</button>
           <button className="ghost" onClick={() => setTelaAtual('menu')}>Sair e retomar depois</button>
-          <button className="ghost" disabled={ocupado} onClick={() => { setFolha(null); enviar({ acao: 'encerrarRevisao', revisaoId: entrada.id }, () => setFeedback(null)); }}>Encerrar esta sessão</button>
+          <button className="ghost" disabled={ocupado} onClick={() => { setFolha(null); enviar({ acao: 'encerrarRevisao', revisaoId: entrada.id }, () => { setFeedback(null); setVerRelatorio(true); }); }}>Encerrar esta sessão</button>
         </motion.div>
       </>}
     </AnimatePresence>

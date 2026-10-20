@@ -57,9 +57,11 @@ export function sorteioDoDia(uid, dia) {
   };
 }
 // `sorteio` devolve um número em [0, 1), como Math.random (os testes passam um sorteio fixo).
-export function criarMissoesDiarias(sorteio = Math.random, diasOfensiva = 1) {
+// `nivelFixo` (4 ou 5) fixa o nível da missão mais alta: só as ferramentas de admin usam.
+export function criarMissoesDiarias(sorteio = Math.random, diasOfensiva = 1, nivelFixo) {
   const escolher = lista => lista[Math.min(lista.length - 1, Math.floor(sorteio() * lista.length))];
-  const nivelAlto = sorteio() < 1 / 3 ? 5 : 4;
+  const sorteado = sorteio() < 1 / 3 ? 5 : 4;
+  const nivelAlto = [4, 5].includes(nivelFixo) ? nivelFixo : sorteado;
   return [missaoDeLogin(diasOfensiva), ...[1, 2, 3, nivelAlto].map(nivel => novaMissao(escolher(CATALOGO_MISSOES[nivel]), nivel))];
 }
 

@@ -153,6 +153,8 @@ A captura do usuário mostra a Revisão abrindo no relatório da última sessão
 
 Regra decidida: **a entrada da Revisão é sempre o hub**, com as cartas disponíveis, o resumo (itens revisados, dominados, próxima revisão) e a opção de rever o último relatório. O relatório só aparece logo ao terminar uma sessão. Antes de mexer no código, o hub é prototipado (ver [plano de protótipos](#prototipo-do-hub-da-revisão)).
 
+**Corrigido em 20/10/2026** (branch `feat/economia-v3`): a tela atual abre sempre nas cartas; o relatório abre ao terminar a sessão (ou ao encerrá-la) e pelo botão "Ver última revisão"; "Voltar às cartas" volta ao hub. Conferido na homologação local: terminar uma carta, fechar e abrir de novo volta às cartas. O hub novo do protótipo entra depois, no porte da Revisão.
+
 ### Protótipo do hub da Revisão
 
 Protótipo em [`docs/prototipos/revisao-hub.html`](prototipos/revisao-hub.html), para aprovação antes do código. Abre direto no navegador, sem build. Conteúdo das perguntas é fictício.

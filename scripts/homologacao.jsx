@@ -25,7 +25,7 @@ import { MATERIAS, semanaCoroas, fimDaSemana } from '../src/utils/coroas';
 import { resumirHistorico } from '../src/utils/estatisticasPainel';
 import { executarPedidoSupabase } from '../src/shared/executarPedidoSupabase';
 import { BANCO_QUIZ, BANCO_FRASES } from '../src/utils/bancoTreinos';
-import { selecionarFilaRevisao, criarEntradaRevisao, responderRevisaoPerfil, encerrarRevisaoPerfil, chaveItemRevisao } from '../src/utils/revisaoInteligente';
+import { selecionarFilaRevisao, criarEntradaRevisao, responderRevisaoPerfil, encerrarRevisaoPerfil, chaveItemRevisao, agoraDaRevisao } from '../src/utils/revisaoInteligente';
 import { criarEntradaTreino, responderTreinoPerfil } from '../src/utils/treinos';
 import { BANCO_REVISAO_ERRO } from '../src/utils/erroMedicoRevisao';
 import { obterAuditoria } from '../src/utils/erroMedico';
@@ -75,19 +75,21 @@ async function servicoPerfil(_, acao, pedido) {
   if (acao === 'reportarExplicacao') return { registrado: true };
   if (['consultarRevisao', 'iniciarRevisao', 'responderRevisao', 'encerrarRevisao'].includes(acao)) {
     repararRevisaoLocal();
-    if (acao === 'consultarRevisao') return guardar({ ...salvo, revisao: { ...salvo.revisao, resumo: selecionarFilaRevisao(historico.tentativas, historico.revisoes).resumo } });
+    // Relógio da Revisão adiantado pela ferramenta de admin (menu), como no servidor.
+    const agora = agoraDaRevisao(salvo);
+    if (acao === 'consultarRevisao') return guardar({ ...salvo, revisao: { ...salvo.revisao, resumo: selecionarFilaRevisao(historico.tentativas, historico.revisoes, agora).resumo } });
     if (acao === 'iniciarRevisao') {
       if (salvo.revisao?.entrada && !salvo.revisao.entrada.encerrada) return salvo;
-      const fila = selecionarFilaRevisao(historico.tentativas, historico.revisoes);
-      return guardar({ ...salvo, revisao: { ...salvo.revisao, resumo: fila.resumo, entrada: criarEntradaRevisao(fila, pedido.revisaoId, undefined, Math.random, pedido.carta) } });
+      const fila = selecionarFilaRevisao(historico.tentativas, historico.revisoes, agora);
+      return guardar({ ...salvo, revisao: { ...salvo.revisao, resumo: fila.resumo, entrada: criarEntradaRevisao(fila, pedido.revisaoId, agora, Math.random, pedido.carta) } });
     }
-    guardar(acao === 'encerrarRevisao' ? encerrarRevisaoPerfil(salvo, pedido.revisaoId)
-      : responderRevisaoPerfil(salvo, pedido.revisaoId, { escolha: pedido.escolha, versao: pedido.versao, itemId: pedido.itemId }, historico.revisoes));
+    guardar(acao === 'encerrarRevisao' ? encerrarRevisaoPerfil(salvo, pedido.revisaoId, agora)
+      : responderRevisaoPerfil(salvo, pedido.revisaoId, { escolha: pedido.escolha, versao: pedido.versao, itemId: pedido.itemId }, historico.revisoes, agora));
     const ultimo = acao === 'responderRevisao' ? salvo.revisao.entrada.resultados.at(-1) : null;
     if (ultimo?.dominou) guardar({ ...concederRecompensa(salvo, ultimo.xp), revisao: salvo.revisao });
     if (acao === 'responderRevisao' && simularFalhaRevisao) { simularFalhaRevisao = false; throw new Error('Falha simulada após salvar a resposta.'); }
     repararRevisaoLocal();
-    return guardar({ ...salvo, revisao: { ...salvo.revisao, resumo: selecionarFilaRevisao(historico.tentativas, historico.revisoes).resumo } });
+    return guardar({ ...salvo, revisao: { ...salvo.revisao, resumo: selecionarFilaRevisao(historico.tentativas, historico.revisoes, agora).resumo } });
   }
   if (simularSemInternet && ['iniciarTreino', 'responderTreino', 'abandonarTreino'].includes(acao)) throw new TypeError('Failed to fetch');
   const stats = salvo.treinos?.[pedido.modo] || {};
@@ -279,7 +281,8 @@ export function Homologacao() {
       ['Garantir 3 tickets', () => setDados(guardar({ ...salvo, tickets: Math.max(3, Number(salvo.tickets) || 0) }))],
       ['Reiniciar Batalha (3 tickets)', () => { setDados(guardar({ ...salvo, tickets: 3, batalha: {} })); trocarModo('batalha'); }],
       ['Semear painel, coroas e histórico', () => setDados(semearPainel())]] },
-    { titulo: 'Revisão', itens: [['Criar erros fictícios (Quiz, V ou M e Erro médico)', () => { setDados(semearErrosRevisao()); trocarModo('revisao'); }]] },
+    { titulo: 'Revisão', itens: [['Criar erros fictícios (Quiz, V ou M e Erro médico)', () => { setDados(semearErrosRevisao()); trocarModo('revisao'); }],
+      ['Ferramentas de admin (relógio, missões, nível, tickets): no botão do Menu', () => trocarModo('menu')]] },
     { titulo: 'Cruzadinha', itens: [['Esquelético no nível 3 (dicas extras)', () => setDados(guardar({ ...salvo, xpTopicos: { ...salvo.xpTopicos, 'ANATOMIA-SISTEMA ESQUELETICO': 4000 } }))],
       ['Esquecer palavras respondidas', () => setDados(guardar({ ...salvo, palavrasRespondidas: {} }))],
       ['Rever tutorial da cruzadinha', () => setDados(guardar({ ...salvo, tutorialCruzadinhasConcluido: false, estatisticas: {}, estatisticasGerais: {} }))]] },
@@ -288,7 +291,7 @@ export function Homologacao() {
       ['Falha ao gravar a cruzadinha', simular.falhaCruzadinha], ['Falha no próximo pedido (cruzadinha admin, DDX)', simular.falhaGenerica]] },
   ];
   const botaoFerramenta = 'block w-full rounded-lg border border-cyan-500/20 bg-[#0B1120] px-3 py-2 text-left text-sm text-white hover:border-cyan-400';
-  const ferramentas = <AdminSpeedDial titulo="Homologação · dados fictícios locais" lado="esquerda">
+  const ferramentas = <AdminSpeedDial titulo="Homologação · dados fictícios locais" lado="esquerda" acima>
     <p className="mb-3 text-xs text-slate-300">Dados fictícios locais, sem gravação no perfil real. Tela atual: <b>{modo}</b>.</p>
     {grupos.map((g, i) => <details key={g.titulo} open={i === 0} className="mb-2"><summary className="cursor-pointer py-1 text-sm font-bold text-cyan-400">{g.titulo}</summary>
       <div className="mt-1 grid gap-1.5">{g.itens.map(([rotulo, aoClicar]) => <button key={rotulo} type="button" className={botaoFerramenta} onClick={aoClicar}>{rotulo}</button>)}</div></details>)}
@@ -298,7 +301,7 @@ export function Homologacao() {
   : modo === 'selecaoDDX' ? <PlantaoMedico usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoGenerico} />
   : modo === 'erroMedico' ? <ErroMedico usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoGenerico} />
   : modo === 'causaEfeito' ? <CausaEfeito usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoGenerico} />
-  : modo === 'menu' ? <MenuPrincipal usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} buscarRanking={rankingFicticio} obterMeuId={idFicticioDoJogador} />
+  : modo === 'menu' ? <MenuPrincipal usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} buscarRanking={rankingFicticio} obterMeuId={idFicticioDoJogador} servicoPerfil={servicoGenerico} topicos={Object.keys(BANCO_FICTICIO)} />
   : modo === 'login' ? <Login setTelaAtual={navegar} conta={contaFicticia} />
   : modo === 'cadastro' ? <Cadastro setTelaAtual={navegar} conta={contaFicticia} onContaConfirmada={() => navegar('cadastro2email')} />
   : modo === 'cadastro2' ? <Cadastro2 usuario={usuarioGoogle} conta={contaFicticia} servicoPerfil={servicoEntrada} onConcluido={perfil => { setDados(perfil); navegar('menu'); }} />

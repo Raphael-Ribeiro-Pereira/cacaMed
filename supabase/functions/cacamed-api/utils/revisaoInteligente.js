@@ -11,6 +11,13 @@ export const SEQUENCIA_DOMINIO = 3;
 export const MODOS_CARTA = ['quiz', 'verdadeMentira', 'erroMedico'];
 
 const DIA_REVISAO = 86400000;
+// Ferramenta de admin: o relógio da Revisão adiantado em dias, para ver os intervalos sem esperar. Só vale para o
+// administrador; as respostas dadas nesse tempo ficam com a data adiantada.
+export const MAXIMO_RELOGIO_ADMIN = 60;
+export const agoraDaRevisao = (perfil, agora = new Date().toISOString()) => {
+  const dias = perfil?.role === 'admin' ? Math.min(MAXIMO_RELOGIO_ADMIN, Math.max(0, Number(perfil.revisao?.relogioAdminDias) || 0)) : 0;
+  return new Date(new Date(agora).getTime() + dias * DIA_REVISAO).toISOString();
+};
 export const chaveItemRevisao = item => JSON.stringify([item.modo, item.itemId || item.id, Number(item.versao)]);
 const tempoRevisao = valor => Number.isFinite(Date.parse(valor)) ? Date.parse(valor) : 0;
 const BANCOS_REVISAO = { quiz: BANCO_QUIZ, verdadeMentira: BANCO_FRASES };

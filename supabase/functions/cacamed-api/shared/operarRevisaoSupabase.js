@@ -1,6 +1,8 @@
 import { selecionarFilaRevisao, criarEntradaRevisao, responderRevisaoPerfil, encerrarRevisaoPerfil, chaveItemRevisao, originalRevisao, NIVEL_REVISAO } from '../utils/revisaoInteligente.js';
 import { concederRecompensa, nivelPorXP } from '../utils/economia.js';
-import '../utils/erroMedicoRevisao.js';
+import { BANCO_QUIZ, BANCO_FRASES } from '../utils/bancoTreinos.js';
+import { BANCO_REVISAO_ERRO } from '../utils/erroMedicoRevisao.js';
+import { obterAuditoria } from '../utils/erroMedico.js';
 
 // Revisão v2: libera no nível 10 (o administrador sempre entra). Os erros são registrados desde o nível 1.
 export const revisaoLiberada = perfil => perfil.role === 'admin' || nivelPorXP(perfil.pontuacaoTotal) >= NIVEL_REVISAO;
@@ -38,6 +40,27 @@ export function operarRevisaoSupabase(perfil, pedido, tentativas, historico, rec
   const novos = resultados.filter(r => !anteriores.some(h => h.revisaoId === pedido.revisaoId && h.itemId === r.itemId && h.versao === r.versao));
   const resumo = selecionarFilaRevisao(tentativas.filter(r => Date.parse(r.data) > reinicio), [...anteriores, ...novos], agora).resumo;
   return { ...novo, revisao: { ...novo.revisao, resumo, entrada: { ...novo.revisao.entrada, historicoConfirmado: true } } };
+}
+
+// Ferramenta de admin: 3 erros do Quiz, 2 do V ou M e 1 caso do Erro médico, sorteados no banco, como respostas
+// erradas de uma rodada fictícia de agora. Viram tentativas da fila como as de um jogo de verdade.
+export function errosFicticiosRevisao(agora, sorteio = Math.random) {
+  const sortear = (lista, quantidade) => {
+    const copia = [...lista];
+    for (let i = copia.length - 1; i > 0; i--) { const j = Math.floor(sorteio() * (i + 1)); [copia[i], copia[j]] = [copia[j], copia[i]]; }
+    return copia.slice(0, quantidade);
+  };
+  const rodadaId = `admin-${crypto.randomUUID()}`;
+  const erradaDe = q => q.opcoes ? q.opcoes.find(o => o.id !== q.correta).id : !q.verdadeira;
+  const tentativas = [...sortear(BANCO_QUIZ, 3), ...sortear(BANCO_FRASES, 2)].map(q => ({ modo: q.opcoes ? 'quiz' : 'verdadeMentira',
+    itemId: q.id, versao: q.versao, tema: q.tema, escolha: erradaDe(q) }));
+  for (const item of sortear(BANCO_REVISAO_ERRO, 1)) {
+    const caso = obterAuditoria(item.id);
+    tentativas.push({ modo: 'erroMedico', itemId: item.id, versao: item.versao, tema: item.tema,
+      escolha: caso.perguntas.map(p => p.alternativas.find(a => a.id !== p.correta).id) });
+  }
+  return tentativas.map(t => ({ id: `resposta:${rodadaId}:${t.modo}:${t.itemId}`, kind: 'resposta',
+    data: { ...t, acertou: false, rodadaId, data: new Date(agora).toISOString() } }));
 }
 
 export function eventosRevisao(perfil) {

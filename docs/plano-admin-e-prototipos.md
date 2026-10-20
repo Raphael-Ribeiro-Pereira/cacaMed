@@ -1,6 +1,6 @@
 # Plano: ferramentas de admin e protótipos (19/10/2026)
 
-Resultado da homologação do módulo 2 de [validacao-19-10.md](validacao-19-10.md): o módulo está quase aprovado. O usuário não conseguiu testar várias coisas porque faltam atalhos de admin, e a entrada da Revisão está errada. Este plano organiza o que fazer, na ordem. **Nada aqui foi implementado ainda.**
+Resultado da homologação do módulo 2 de [validacao-19-10.md](validacao-19-10.md): o módulo está quase aprovado. O usuário não conseguiu testar várias coisas porque faltam atalhos de admin, e a entrada da Revisão está errada. Este plano organiza o que fazer, na ordem. **Os itens 1 e 2 foram feitos em 20/10/2026** (branch `feat/economia-v3`, sem deploy); o resto segue a ordem do fim.
 
 ## 1. Botões de admin para testar (código)
 
@@ -20,9 +20,27 @@ Regras: nenhuma ferramenta aparece para quem não é admin; todas gravam no perf
 
 Na homologação local (`scripts/homologacao.jsx`) as mesmas operações também ganham botão, com dados fictícios.
 
+### Feito em 20/10/2026
+
+O painel do admin (botão no Menu, só para `role: 'admin'`) agora tem grupos, e cada botão é uma operação do `operarAdminSupabase`, validada no servidor e com teste (`src/utils/ferramentasAdmin.test.js`):
+
+| Grupo | Botões |
+| --- | --- |
+| **Nível e XP** | Subir 1 nível (paga os tickets do nível, como numa partida); definir XP global; definir nível global; nível de um tópico da cruzadinha (a operação já existia no servidor, agora tem tela) |
+| **Tickets** | Definir o saldo, de 0 a 100 |
+| **Missões do dia** | Completar cada missão (paga a recompensa); sortear de novo (normal, com nível 4 ou com nível 5); simular o dia seguinte (ofensiva +1, login pago, missões novas); simular 2 dias sem entrar (ofensiva volta a 1) |
+| **Revisão** | Criar 6 erros fictícios (3 do Quiz, 2 do V ou M e 1 caso do Erro médico, sorteados no banco, gravados como respostas erradas); relógio da Revisão +1, +3 ou +7 dias, e "Real" para voltar |
+| **Casos (DDX)** | Liberar os casos concluídos do DDX, do Erro médico e do Causa e efeito, que voltam a pagar XP |
+| **Zerar progresso** | Pede um segundo toque para confirmar |
+
+Diferenças do plano:
+- **Relógio da Revisão** no lugar de "adiantar as reapresentações": o admin adianta o relógio só da própria Revisão, em dias. Com ele, um item chega a dominado em três sessões (acerta, +1 dia, acerta, +3 dias, acerta), por isso **"marcar como quase dominado" não foi feito**. As respostas dadas com o relógio adiantado ficam com a data adiantada; jogador nunca é afetado.
+- **Abrir um caso não revisado** já existia: o admin vê os casos em revisão na lista do DDX.
+- Na homologação, as mesmas ferramentas ficam no botão do Menu (à direita), rodando o motor do servidor sobre o perfil fictício; o relógio também vale para a Revisão local.
+
 ## 2. Corrigir a entrada da Revisão
 
-Defeito e regra estão em [revisao-inteligente.md](revisao-inteligente.md#defeito-achado-na-homologação-de-19102026-a-entrada-da-revisão). Resumo: a Revisão abre no hub; o relatório só aparece ao terminar a sessão ou em "Ver última revisão".
+Defeito e regra estão em [revisao-inteligente.md](revisao-inteligente.md#defeito-achado-na-homologação-de-19102026-a-entrada-da-revisão). Resumo: a Revisão abre no hub; o relatório só aparece ao terminar a sessão ou em "Ver última revisão". **Corrigido em 20/10/2026** na tela atual (a v2 do hub, já aprovada no protótipo, vem no item 5).
 
 ## 3. Protótipos antes do código
 
@@ -43,7 +61,7 @@ Defeito e regra estão em [revisao-inteligente.md](revisao-inteligente.md#defeit
 1. Atualizar as docs (feito em 19/10).
 2. Protótipo A (hub da Revisão): v1 a v6 feitos em 19/10 (modo foco, trava até o fim, relatório geral em anel, o monstro do cérebro, o modo semanal com fila de ~10 min, missão e aviso de quarta); tudo decidido; pronto para o código.
 3. Protótipo B (Batalha): partes 1 e 2 aprovadas em 19/10, com as cenas refeitas em desenho animado; falta só a revisão médica das cadeias de transmissão.
-4. Código: ferramentas de admin e correção da entrada da Revisão (podem andar já, sem esperar o protótipo B).
+4. Código: ferramentas de admin e correção da entrada da Revisão: **feito em 20/10/2026**.
 5. Código: hub da Revisão aprovado; carta do Paciente DDX; Batalha v2.
 6. Nova rodada de homologação (módulo 2), agora com os botões de admin.
 
