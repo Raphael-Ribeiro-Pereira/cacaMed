@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, BrainCircuit, ClipboardCheck, GitBranch, HeartPulse, Lock, Play, RotateCcw, ScanLine, Shuffle, Stethoscope, Ticket, Trophy } from 'lucide-react';
+import { BookOpen, BrainCircuit, Clock, ClipboardCheck, GitBranch, HeartPulse, Lock, Play, RotateCcw, ScanLine, Shuffle, Sparkles, Stethoscope, Ticket, Trophy } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
 import { obterMeuIdPublico } from '../services/rankingPublico';
 import { carregarRanking, rankingEmCache } from '../services/rankingSessao';
 import { DOENCAS } from '../utils/batalha';
 import { nivelPorXP, progressoGlobal } from '../utils/economia';
 import { NIVEL_REVISAO } from '../utils/revisaoInteligente';
+import { MISSAO_REVISAO, lembreteDaSemana, revisaoTravada } from '../utils/revisaoSemanal';
 import { fotoDoPerfil } from '../utils/fotosCracha';
 import { lerMissoes } from '../utils/missoes';
 import { CASOS_PLANTAO } from '../utils/plantao';
@@ -16,6 +19,7 @@ import { Blob } from './batalhaArte';
 import { Missions, RankPreview, UserBadge } from './cascaUi';
 import { Tabbar } from './prototipoUi';
 import '../prototipo.css';
+import '../revisaoSemana.css';
 
 // Centro de comando portado do protótipo de movimento: celular com barra de abas e web em grade,
 // com a barra lateral vinda do App. Batalha e Revisão aparecem só para o administrador (pilotos).
@@ -82,13 +86,44 @@ function Revisao({ p, ir }) {
   const r = p.revisao;
   const andamento = r?.entrada && !r.entrada.encerrada;
   const liberada = p.role === 'admin' || nivelPorXP(p.pontuacaoTotal) >= NIVEL_REVISAO;
-  const cartas = r?.resumo?.cartas?.length;
+  const estado = r?.resumo?.estado;
+  const cartas = estado === 'pronta' ? r.resumo.cartas.length : 0;
   return <button className="mode wide rise" style={{ '--i': 3 }} onClick={() => ir('revisaoInteligente')}>
     <span className="ico" style={{ background: 'rgba(0,245,212,.1)', color: 'var(--mint)' }}><RotateCcw /></span>
     <span style={{ display: 'grid', gap: 2, minWidth: 0 }}><b>Revisão inteligente</b>
-      <small>{!liberada ? `Libera no nível ${NIVEL_REVISAO}. Seus erros já estão sendo guardados.` : andamento ? 'Sessão em andamento' : cartas ? `${cartas} carta${cartas === 1 ? '' : 's'} para rever` : 'Reveja seus erros em sessões curtas'} · sem ticket</small></span>
+      <small>{!liberada ? `Libera no nível ${NIVEL_REVISAO}. Seus erros já estão sendo guardados.` : estado === 'andamento' || andamento ? 'Revisão da semana em andamento'
+        : estado === 'concluida' ? 'Revisão da semana feita' : cartas ? `${cartas} carta${cartas === 1 ? '' : 's'} nesta semana · ~${Math.max(1, Math.round(r.resumo.segundos / 60))} min` : 'Seus erros da semana, em cerca de 10 minutos'} · sem ticket</small></span>
     <span className="ddx-side">{!liberada && <span className="tag"><Lock size={11} /> NÍVEL {NIVEL_REVISAO}</span>}</span>
   </button>;
+}
+
+// Lembrete da Revisão (decidido em 19/10/2026): a fila lotou, ou a partir de quarta com 5 min ou mais. Aparece uma vez
+// por semana; "Começar agora" já começa a revisão da semana (o aviso traz o texto da trava).
+function AvisoRevisao({ p, usuario, servico, setDadosUsuario, ir }) {
+  const [fechado, setFechado] = useState(false);
+  const [ocupado, setOcupado] = useState(false);
+  const aviso = lembreteDaSemana(p, new Date());
+  if (!usuario || !aviso || aviso.visto || fechado || revisaoTravada(p)) return null;
+  const marcar = () => servico(usuario, 'verAvisoRevisao').then(setDadosUsuario).catch(() => {});
+  const comecar = async () => {
+    setOcupado(true);
+    try { await servico(usuario, 'verAvisoRevisao'); setDadosUsuario(await servico(usuario, 'iniciarSemanaRevisao')); } catch { /* a Revisão mostra o erro e o botão de começar */ }
+    setOcupado(false); setFechado(true); ir('revisaoInteligente');
+  };
+  const cheia = aviso.motivo === 'cheia';
+  return <div className="cbt" style={{ position: 'fixed', inset: 0, zIndex: 95, background: 'transparent', pointerEvents: 'none' }}><AnimatePresence>
+    <motion.div className="rv-dlg-fundo" style={{ pointerEvents: 'auto' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <motion.div className="rv-dlg" role="alertdialog" aria-modal="true" aria-label="Revisão da semana" initial={{ y: 16 }} animate={{ y: 0 }}>
+        <span className="rv-dlg-ic">{cheia ? <Sparkles size={22} /> : <Clock size={22} />}</span>
+        <h2>{cheia ? 'Sua fila de revisão lotou' : 'Sua revisão da semana está pronta'}</h2>
+        <p>{cheia ? `Você juntou cerca de ${aviso.minutos || 10} min de erros. A partir de agora, cada erro novo manda o mais antigo para a reserva.` : `Cerca de ${aviso.minutos} min pelo seu ritmo. Que tal hoje?`}</p>
+        <p className="rv-missao"><Sparkles /><span>Missão de hoje: <b>revisão da semana · +{MISSAO_REVISAO.recompensaXP} XP e {MISSAO_REVISAO.recompensaTicket} tickets</b></span></p>
+        <p>Depois de começar, você só sai da revisão quando terminar todas as cartas da semana. Até lá, os outros modos do jogo ficam bloqueados, mesmo se você fechar e abrir o app.</p>
+        <div className="rv-dlg-acoes"><button className="ghost" disabled={ocupado} onClick={() => { setFechado(true); marcar(); }}>Depois</button>
+          <button className="primary" disabled={ocupado} onClick={comecar}>{ocupado ? 'Abrindo...' : 'Começar agora'}</button></div>
+      </motion.div>
+    </motion.div>
+  </AnimatePresence></div>;
 }
 
 function Ddx({ p, web, ir }) {
@@ -145,6 +180,7 @@ export default function MenuPrincipal({ dadosUsuario, setTelaAtual, usuario, set
   const rank = useRankingMenu(usuario, buscarRanking, obterMeuId);
   const ir = setTelaAtual;
   const hoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const aviso = <AvisoRevisao p={p} usuario={usuario} servico={servicoPerfil || chamarPerfilPlanilha} setDadosUsuario={setDadosUsuario} ir={ir} />;
   const ferramentas = usuario && admin && <AdminSpeedDial titulo="Ferramentas admin · Centro de Comando" acima={!web}><FerramentasAdmin usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} servicoPerfil={servicoPerfil} topicos={topicos} /></AdminSpeedDial>;
 
   if (web) return <><div className="cbt web"><div className="cbt-scr r-menu">
@@ -170,7 +206,7 @@ export default function MenuPrincipal({ dadosUsuario, setTelaAtual, usuario, set
         </section>
       </div>
     </div>
-  </div></div>{ferramentas}</>;
+  </div></div>{ferramentas}{aviso}</>;
 
   return <><div className="cbt"><div className="cbt-scr r-menu">
     <div className="scroll">
@@ -194,5 +230,5 @@ export default function MenuPrincipal({ dadosUsuario, setTelaAtual, usuario, set
       <RankPreview lista={rank.lista} erro={rank.erro} aoTentar={rank.tentar} delta={rank.delta} foto={foto} compact ir={ir} />
     </div>
     <Tabbar on="menu" ir={ir} />
-  </div></div>{ferramentas}</>;
+  </div></div>{ferramentas}{aviso}</>;
 }

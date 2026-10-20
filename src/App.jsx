@@ -18,6 +18,7 @@ const Ranking = lazy(() => import('./components/Ranking'));
 const Estatisticas = lazy(() => import('./components/Estatisticas'));
 const Cadastro2 = lazy(() => import('./components/Cadastro2'));
 import { chamarPerfilPlanilha } from './services/perfilPlanilha';
+import { revisaoTravada } from './utils/revisaoSemanal';
 import { fotoDoPerfil } from './utils/fotosCracha';
 import { animar } from './utils/prototipo';
 import { carregarRanking } from './services/rankingSessao';
@@ -106,7 +107,8 @@ function App() {
         if (perfil && animar()) { setEtapaAbertura(3); await espera(350); if (!sessaoAtual()) return; }
         setDadosUsuario(perfil);
         if (perfil) guardarPerfil(user.uid, perfil, { confirmado: true }).catch(() => {});
-        setTelaAtual(perfil ? 'menu' : 'cadastro2');
+        // Com a revisão da semana começada, o app reabre direto nas cartas.
+        setTelaAtual(!perfil ? 'cadastro2' : revisaoTravada(perfil) ? 'revisaoInteligente' : 'menu');
         setErroPerfil('');
       } catch (erro) {
         if (!sessaoAtual()) return;
@@ -114,7 +116,7 @@ function App() {
         if (!erro.status) {
           const guardado = await perfilGuardado(user.uid).catch(() => null);
           if (!sessaoAtual()) return;
-          if (guardado?.perfil) { setDadosUsuario(guardado.perfil); setTelaAtual('menu'); setErroPerfil(''); return; }
+          if (guardado?.perfil) { setDadosUsuario(guardado.perfil); setTelaAtual(revisaoTravada(guardado.perfil) ? 'revisaoInteligente' : 'menu'); setErroPerfil(''); return; }
           if (guardado?.vencida) { setErroPerfil('Faz mais de 15 dias do último acesso com internet. Conecte-se para entrar de novo; o que você jogou sem rede continua guardado.'); setTelaAtual('erroPerfil'); return; }
         }
         setErroPerfil(erro.message || 'Não foi possível carregar seu perfil.');
@@ -158,7 +160,9 @@ function App() {
     return () => controlador.abort();
   }, [tentativaBanco]);
 
-  const comCasca = Boolean(usuario && dadosUsuario && TELAS_CASCA.includes(telaAtual) && !carregandoAuth);
+  // Revisão da semana começada: o app fica nela até terminar as cartas, mesmo fechando e abrindo (trava de 19/10/2026).
+  const tela = usuario && revisaoTravada(dadosUsuario) && !['login', 'cadastro', 'cadastro2', 'erroPerfil'].includes(telaAtual) ? 'revisaoInteligente' : telaAtual;
+  const comCasca = Boolean(usuario && dadosUsuario && TELAS_CASCA.includes(tela) && !carregandoAuth);
   // App offline: indicador de rede e envio da fila do aparelho; o perfil confirmado pelo servidor substitui o provisório.
   const uidAtual = usuario?.uid;
   const aoConfirmarFila = useCallback(perfil => { setDadosUsuario(atual => manterProvisorias(perfil, atual)); guardarPerfil(uidAtual, perfil, { confirmado: true }).catch(() => {}); }, [uidAtual]);
@@ -192,33 +196,33 @@ function App() {
 
   return (
     <Suspense fallback={<div className="stitch-page stitch-loading" role="status">Carregando...</div>}>
-      {telaAtual === 'login' && <Login setTelaAtual={setTelaAtual} />}
+      {tela === 'login' && <Login setTelaAtual={setTelaAtual} />}
       {usuario && dadosUsuario && <IndicadorConexao conexao={conexao} />}
-      {comCasca && <BarraLateral tela={telaAtual} ir={setTelaAtual} p={dadosUsuario} foto={fotoDoPerfil(dadosUsuario)} aoPassarRanking={() => { carregarRanking().catch(() => {}); }} />}
+      {comCasca && <BarraLateral tela={tela} ir={setTelaAtual} p={dadosUsuario} foto={fotoDoPerfil(dadosUsuario)} aoPassarRanking={() => { carregarRanking().catch(() => {}); }} />}
       {/* Conta confirmada pelo código: recarrega a sessão, e o App abre o Cadastro 2.0 (ou o menu, se já houver perfil). */}
-      {telaAtual === 'cadastro' && <Cadastro setTelaAtual={setTelaAtual} aoCriarConta={ativo => { cadastroEmAndamento.current = ativo; }}
+      {tela === 'cadastro' && <Cadastro setTelaAtual={setTelaAtual} aoCriarConta={ativo => { cadastroEmAndamento.current = ativo; }}
         onContaConfirmada={() => { cadastroEmAndamento.current = false; setTentativaPerfil(valor => valor + 1); }} />}
-      {telaAtual === 'cadastro2' && usuario && <Cadastro2 usuario={usuario} onConcluido={perfil => { setDadosUsuario(perfil); setTelaAtual('menu'); }} />}
-      {telaAtual === 'erroPerfil' && <main className="stitch-page stitch-loading flex-col p-6 text-center"><p role="alert">{erroPerfil}</p><div className="flex gap-3"><button className="stitch-primary" onClick={() => setTentativaPerfil(valor => valor + 1)}>Tentar novamente</button><button className="stitch-back" onClick={sairDaConta}>Voltar ao login</button></div></main>}
-      {telaAtual === 'menu' && usuario && <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} usuario={usuario} setDadosUsuario={setDadosUsuario} topicos={Object.keys(bancoDePalavras || {})} />}
-      {telaAtual === 'perfil' && usuario && <PerfilUsuario usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
+      {tela === 'cadastro2' && usuario && <Cadastro2 usuario={usuario} onConcluido={perfil => { setDadosUsuario(perfil); setTelaAtual('menu'); }} />}
+      {tela === 'erroPerfil' && <main className="stitch-page stitch-loading flex-col p-6 text-center"><p role="alert">{erroPerfil}</p><div className="flex gap-3"><button className="stitch-primary" onClick={() => setTentativaPerfil(valor => valor + 1)}>Tentar novamente</button><button className="stitch-back" onClick={sairDaConta}>Voltar ao login</button></div></main>}
+      {tela === 'menu' && usuario && <MenuPrincipal dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} usuario={usuario} setDadosUsuario={setDadosUsuario} topicos={Object.keys(bancoDePalavras || {})} />}
+      {tela === 'perfil' && usuario && <PerfilUsuario usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       
       {/* CRUZADINHAS */}
-      {telaAtual === 'topicos' && usuario && <SelecaoTopicos setTelaAtual={setTelaAtual} iniciarJogo={iniciarJogo} dadosUsuario={dadosUsuario} bancoDePalavras={bancoDePalavras || {}} estadoBanco={estadoBanco} erroBanco={erroBanco} recarregarBanco={() => setTentativaBanco(valor => valor + 1)} usuario={usuario} setDadosUsuario={setDadosUsuario} />}
-      {telaAtual === 'jogo' && usuario && (
+      {tela === 'topicos' && usuario && <SelecaoTopicos setTelaAtual={setTelaAtual} iniciarJogo={iniciarJogo} dadosUsuario={dadosUsuario} bancoDePalavras={bancoDePalavras || {}} estadoBanco={estadoBanco} erroBanco={erroBanco} recarregarBanco={() => setTentativaBanco(valor => valor + 1)} usuario={usuario} setDadosUsuario={setDadosUsuario} />}
+      {tela === 'jogo' && usuario && (
         <Jogo bancoDePalavras={bancoDePalavras} materia={materia} subMateria={subMateria} setTelaAtual={setTelaAtual} usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} />
       )}
       
-      {['quiz', 'verdadeMentira'].includes(telaAtual) && usuario && <TreinoMedico key={telaAtual} modo={telaAtual} usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
-      {telaAtual === 'revisaoInteligente' && usuario && <RevisaoInteligente usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
+      {['quiz', 'verdadeMentira'].includes(tela) && usuario && <TreinoMedico key={tela} modo={tela} usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
+      {tela === 'revisaoInteligente' && usuario && <RevisaoInteligente usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
       {/* PAINÉIS DE DADOS */}
-      {telaAtual === 'ranking' && usuario && <Ranking usuario={usuario} dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
-      {telaAtual === 'estatisticas' && usuario && <Estatisticas usuario={usuario} dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
+      {tela === 'ranking' && usuario && <Ranking usuario={usuario} dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
+      {tela === 'estatisticas' && usuario && <Estatisticas usuario={usuario} dadosUsuario={dadosUsuario} setTelaAtual={setTelaAtual} />}
       
-      {telaAtual === 'selecaoDDX' && usuario && <PlantaoMedico usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
-      {telaAtual === 'erroMedico' && usuario && <ErroMedico usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
-      {telaAtual === 'causaEfeito' && usuario && <CausaEfeito usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
-      {telaAtual === 'batalha' && usuario && <BatalhaDiagnostica usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
+      {tela === 'selecaoDDX' && usuario && <PlantaoMedico usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
+      {tela === 'erroMedico' && usuario && <ErroMedico usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
+      {tela === 'causaEfeito' && usuario && <CausaEfeito usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
+      {tela === 'batalha' && usuario && <BatalhaDiagnostica usuario={usuario} dadosUsuario={dadosUsuario} setDadosUsuario={setDadosUsuario} setTelaAtual={setTelaAtual} />}
 
     </Suspense>
   );

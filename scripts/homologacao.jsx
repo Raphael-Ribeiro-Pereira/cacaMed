@@ -23,14 +23,14 @@ import { escolhasDoCadastro } from '../src/utils/entrada';
 import { calcularIdPublico } from '../src/services/rankingPublico';
 import { MATERIAS, semanaCoroas, fimDaSemana } from '../src/utils/coroas';
 import { resumirHistorico } from '../src/utils/estatisticasPainel';
-import { executarPedidoSupabase } from '../src/shared/executarPedidoSupabase';
+import { executarPedidoSupabase, ACOES_REVISAO } from '../src/shared/executarPedidoSupabase';
 import { BANCO_QUIZ, BANCO_FRASES } from '../src/utils/bancoTreinos';
-import { selecionarFilaRevisao, criarEntradaRevisao, responderRevisaoPerfil, encerrarRevisaoPerfil, chaveItemRevisao, agoraDaRevisao } from '../src/utils/revisaoInteligente';
+import { chaveItemRevisao } from '../src/utils/revisaoInteligente';
+import { relatorioSemanaRevisao } from '../src/shared/operarRevisaoSupabase';
 import { criarEntradaTreino, responderTreinoPerfil } from '../src/utils/treinos';
 import { BANCO_REVISAO_ERRO } from '../src/utils/erroMedicoRevisao';
 import { obterAuditoria } from '../src/utils/erroMedico';
 import { contextoExplicacao, resultadoParaExplicar, AVISO_IA } from '../src/shared/explicacaoRevisao';
-import { concederRecompensa } from '../src/utils/economia';
 import { criarMissoesDiarias, dataLocalHoje } from '../src/utils/missoes';
 import '../src/index.css';
 
@@ -44,15 +44,6 @@ let simularFalhaRevisao = false;
 // App offline: os pedidos de treino falham como falta de rede, e a tela corrige no aparelho (XP provisório).
 let simularSemInternet = false;
 const guardarHistorico = () => localStorage.setItem(chaveHistorico, JSON.stringify(historico));
-function repararRevisaoLocal() {
-  for (const resultado of salvo.revisao?.entrada?.resultados || []) {
-    if (!historico.revisoes.some(r => r.revisaoId === salvo.revisao.entrada.id && chaveItemRevisao(r) === chaveItemRevisao(resultado))) {
-      historico.revisoes.push({ ...resultado, revisaoId: salvo.revisao.entrada.id });
-    }
-  }
-  guardarHistorico();
-  if (salvo.revisao?.entrada) guardar({ ...salvo, revisao: { ...salvo.revisao, entrada: { ...salvo.revisao.entrada, historicoConfirmado: true } } });
-}
 // Erros fictícios da Revisão v2: três do Quiz, dois do V ou M e um caso do Erro médico, com a escolha errada da partida.
 function semearErrosRevisao() {
   const data = new Date(Date.now() - 2 * 86400000).toISOString();
@@ -65,7 +56,7 @@ function semearErrosRevisao() {
   guardarHistorico(); return guardar({ ...inicial, revisao: {} });
 }
 async function servicoPerfil(_, acao, pedido) {
-  if (acao === 'obterPerfil') { repararRevisaoLocal(); return salvo; }
+  if (acao === 'obterPerfil') return salvo;
   await espera(900);
   // Explicação simulada: o mesmo contexto do servidor, com um texto fictício no lugar da IA.
   if (acao === 'explicarRevisao') {
@@ -73,23 +64,14 @@ async function servicoPerfil(_, acao, pedido) {
     return { texto: `[Simulação da IA] ${ctx.fallback}`, fallback: ctx.fallback, fonte: ctx.fonte, aviso: AVISO_IA, chave: ctx.chave };
   }
   if (acao === 'reportarExplicacao') return { registrado: true };
-  if (['consultarRevisao', 'iniciarRevisao', 'responderRevisao', 'encerrarRevisao'].includes(acao)) {
-    repararRevisaoLocal();
-    // Relógio da Revisão adiantado pela ferramenta de admin (menu), como no servidor.
-    const agora = agoraDaRevisao(salvo);
-    if (acao === 'consultarRevisao') return guardar({ ...salvo, revisao: { ...salvo.revisao, resumo: selecionarFilaRevisao(historico.tentativas, historico.revisoes, agora).resumo } });
-    if (acao === 'iniciarRevisao') {
-      if (salvo.revisao?.entrada && !salvo.revisao.entrada.encerrada) return salvo;
-      const fila = selecionarFilaRevisao(historico.tentativas, historico.revisoes, agora);
-      return guardar({ ...salvo, revisao: { ...salvo.revisao, resumo: fila.resumo, entrada: criarEntradaRevisao(fila, pedido.revisaoId, agora, Math.random, pedido.carta) } });
-    }
-    guardar(acao === 'encerrarRevisao' ? encerrarRevisaoPerfil(salvo, pedido.revisaoId, agora)
-      : responderRevisaoPerfil(salvo, pedido.revisaoId, { escolha: pedido.escolha, versao: pedido.versao, itemId: pedido.itemId }, historico.revisoes, agora));
-    const ultimo = acao === 'responderRevisao' ? salvo.revisao.entrada.resultados.at(-1) : null;
-    if (ultimo?.dominou) guardar({ ...concederRecompensa(salvo, ultimo.xp), revisao: salvo.revisao });
+  // Revisão semanal: o mesmo motor do servidor sobre o histórico fictício (tentativas e revisões), com o relógio do admin.
+  if (acao === 'relatorioRevisao') return relatorioSemanaRevisao(salvo);
+  if ([...ACOES_REVISAO, 'verRelatorioRevisao', 'verAvisoRevisao'].includes(acao)) {
+    const { perfil, eventos } = executarPedidoSupabase(salvo, { ...pedido, acao }, { tentativas: historico.tentativas, revisoes: historico.revisoes, historicoCompleto: true });
+    registrarEventos(eventos);
+    guardar(perfil);
     if (acao === 'responderRevisao' && simularFalhaRevisao) { simularFalhaRevisao = false; throw new Error('Falha simulada após salvar a resposta.'); }
-    repararRevisaoLocal();
-    return guardar({ ...salvo, revisao: { ...salvo.revisao, resumo: selecionarFilaRevisao(historico.tentativas, historico.revisoes, agora).resumo } });
+    return perfil;
   }
   if (simularSemInternet && ['iniciarTreino', 'responderTreino', 'abandonarTreino'].includes(acao)) throw new TypeError('Failed to fetch');
   const stats = salvo.treinos?.[pedido.modo] || {};
@@ -124,6 +106,7 @@ function registrarEventos(eventos) {
   historico.recibos ||= [];
   for (const evento of eventos) {
     if (evento.kind === 'resposta' && !historico.tentativas.some(t => t.rodadaId === evento.data.rodadaId && t.itemId === evento.data.itemId)) historico.tentativas.push(evento.data);
+    if (evento.kind === 'revisao' && !historico.revisoes.some(r => r.revisaoId === evento.data.revisaoId && chaveItemRevisao(r) === chaveItemRevisao(evento.data))) historico.revisoes.push(evento.data);
     if (evento.kind === 'recibo' && !historico.recibos.some(r => r.id === evento.id)) historico.recibos.push({ id: evento.id, data: evento.data, created_at: new Date().toISOString() });
   }
   guardarHistorico();
@@ -309,7 +292,7 @@ export function Homologacao() {
   : modo === 'batalha' ? <BatalhaDiagnostica usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('quiz')} servicoPerfil={servicoBatalha} />
   : modo === 'ranking' ? <Ranking usuario={inicial} dadosUsuario={dados} setTelaAtual={navegar} buscarRanking={rankingFicticio} buscarCoroas={coroasFicticias} obterMeuId={idFicticioDoJogador} />
   : modo === 'estatisticas' ? <Estatisticas usuario={inicial} dadosUsuario={dados} setTelaAtual={navegar} servicoPerfil={servicoCracha} />
-  : modo === 'perfil' ? <PerfilUsuario usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoCracha} aoSair={async () => {}} /> : modo === 'revisao' ? <RevisaoInteligente usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('quiz')} servicoPerfil={servicoPerfil} /> : <TreinoMedico key={modo} modo={modo} usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('revisao')} servicoPerfil={servicoPerfil} />}</>;
+  : modo === 'perfil' ? <PerfilUsuario usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoCracha} aoSair={async () => {}} /> : modo === 'revisao' ? <RevisaoInteligente usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={navegar} servicoPerfil={servicoPerfil} /> : <TreinoMedico key={modo} modo={modo} usuario={inicial} dadosUsuario={dados} setDadosUsuario={setDados} setTelaAtual={() => trocarModo('revisao')} servicoPerfil={servicoPerfil} />}</>;
 }
 const root = import.meta.hot?.data.root || createRoot(document.getElementById('root'));
 if (import.meta.hot) import.meta.hot.data.root = root;

@@ -87,6 +87,10 @@ export function executarPedidoSupabase(original, pedido, { recibos = [], tentati
     // O aviso da Revisão aparece uma vez por semana: a tela marca quando o jogador o viu.
     const aviso = perfil.revisao?.aviso;
     if (aviso && !aviso.visto) perfil = { ...perfil, revisao: { ...perfil.revisao, aviso: { ...aviso, visto: true } } };
+  } else if (pedido.acao === 'verRelatorioRevisao') {
+    // O monstro do fim aparece uma vez: depois de visto, o relatório da semana abre sem ele.
+    const semana = perfil.revisao?.semana;
+    if (semana?.concluidaEm && !semana.relatorioVisto) perfil = { ...perfil, revisao: { ...perfil.revisao, semana: { ...semana, relatorioVisto: true } } };
   }
   else if (pedido.acao === 'editarPerfil') {
     const nome = String(pedido.nome || '').trim();

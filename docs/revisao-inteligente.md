@@ -53,7 +53,7 @@ Exemplo do usuário: o jogador errou as perguntas alfa, beta e gama do Quiz, o c
   - a alternativa que ele marcou na partida e a que marcou na revisão. Se as duas forem iguais, aparece só uma. Numa pergunta parecida, que não veio de partida, aparece só a da revisão;
   - a alternativa correta;
   - abaixo das alternativas, a explicação de por que cada alternativa marcada não é a resposta. Essa explicação é escrita pela LLM ([abaixo](#llm-na-tela-de-revisão)).
-- **Repetição espaçada:** a pergunta errada continua guardada para repetir. Vale a regra atual de 1, 3 e 7 dias, com teto de duas revisões por semana. Uma pergunta parecida que ele errar também entra na fila.
+- **Repetição espaçada:** a pergunta errada continua guardada para repetir. Desde 19/10/2026 a repetição é em semanas (ver a [revisão semanal](#revisão-semanal-decidida-em-19102026)); a regra de 1, 3 e 7 dias com teto de duas revisões por semana saiu. Uma pergunta parecida que ele errar também entra na fila.
 
 ### Verdade ou mentira
 
@@ -239,12 +239,54 @@ O usuário pensou a Revisão como um **modo semanal**, não diário.
 
 Regra da memória do projeto: o protótipo traz as decisões de fluxo; no código, o visual segue os componentes atuais do app.
 
+### Porte para o código (20/10/2026, branch `feat/economia-v3`, sem deploy)
+
+**Servidor e motor:**
+- `src/utils/revisaoSemanal.js`: ritmo da pessoa, fila da semana por tempo, reserva, estado da semana, prêmio, missão e lembrete. `src/utils/revisaoInteligente.js`: repetição em semanas e contagem de palavras.
+- **Ações novas:**
+  - `iniciarSemanaRevisao`: congela as cartas da semana e liga a trava;
+  - `relatorioRevisao`: leitura, com as cartas feitas, o gabarito, a explicação e o tempo esperado e a indecisão de cada item;
+  - `verAvisoRevisao` e `verRelatorioRevisao`: marcam o aviso e o monstro como vistos.
+- **Mudanças nas ações de antes:**
+  - `iniciarRevisao` só abre carta da semana começada, e cada carta abre uma vez;
+  - `responderRevisao` guarda o tempo até responder (`tempoMs`);
+  - a última carta fecha a semana, paga o prêmio e conclui a missão.
+- **Tempo de resposta:** o Quiz (no jogo) e a Revisão mandam `tempoMs` com a resposta; o servidor guarda de 0 a 10 minutos.
+- **Leitura do histórico:** a API só lê o histórico fora da Revisão quando o lembrete ainda pode disparar na semana. Isso vale no primeiro pedido do dia e depois de pedidos que podem errar, no máximo a cada 30 minutos.
+- **Batalha:** os erros não geram mais itens; os antigos ficam guardados, fora da fila.
+
+**Tela:**
+- `src/components/RevisaoInteligente.jsx`: o hub, o aviso de início, a sessão, o anel e o monstro, nesta ordem do fluxo.
+- `src/components/revisaoSemana.jsx`: carta, baralho, leque em furacão, anel com o painel do relatório e monstro.
+- `src/utils/revisaoCartas.js`: a geometria do protótipo.
+- `src/utils/revisaoAnalise.js`: a análise "O que pode estar influenciando seus erros".
+- **No app:** a trava fica em `App.jsx`: com a semana começada, só a Revisão aparece, e o app reabre nela. O menu mostra o aviso da semana, e "Começar agora" já começa a revisão.
+- **Conferido na homologação (desktop e celular):**
+  - começar a semana, o leque em furacão e a carta em andamento;
+  - as cartas que ficam verdes e o anel;
+  - o painel do relatório, os certinhos e o monstro, com o coração e o prêmio;
+  - "Tudo revisado nesta semana" e o relatório reaberto sem o monstro.
+
+**Defeito corrigido no caminho:** a tela da Revisão consultava a fila sem parar, uma vez a cada resposta do servidor, em laço. O serviço era recriado a cada perfil novo, e a consulta dependia dele. O defeito veio com o app offline neste branch (não está em produção).
+
+**Escolhas do agente onde o protótipo não dizia** (o usuário pode trocar):
+1. **Item dominado sai da fila** até um erro novo num jogo. Não volta mais a cada semana.
+2. **Aviso de quarta:** vale do primeiro acesso a partir de quarta até domingo, se a fila tiver 5 min ou mais e o aviso ainda não tiver aparecido na semana. Assim, quem não entra na quarta também recebe.
+3. **Os ~10 minutos contam as perguntas parecidas** que completam as cartas de 7, estimadas pela média dos erros da carta.
+4. **Semana que vira no meio:** a revisão terminada na semana seguinte conta como a revisão daquela semana. Nela não abre outra, e o prêmio sai uma vez.
+5. **Sem "encerrar a carta" com a trava:** sair de uma carta volta ao leque com ela em andamento.
+6. **Ritmo padrão:** 0,42 s por palavra, o do protótipo, com peso de 12 respostas. O ritmo usa as últimas 200 respostas certas com tempo medido (Quiz no jogo e Revisão). O V ou M no jogo não tem tempo por frase.
+7. **"O que pode estar influenciando seus erros"** é por regras, como no protótipo, e a tela não diz que é IA. Ver as pendências.
+8. **"Cada item, explicado":** mostra as alternativas com a certa e a marcada, a explicação revisada nos acertos e a explicação da IA nos erros (a mesma de antes). O "porquê" de cada alternativa errada continua como conteúdo pendente.
+
 ### Pendências
 
 1. **Marcações `grave`:** revisão médica caso a caso no gabarito do Paciente DDX.
 2. **Carta do Paciente DDX:** implementar no motor depois das marcações.
-3. **Hub da Revisão:** protótipo v5 (modo foco, trava até o fim, relatório geral em anel, o monstro e o modo semanal) feito; tudo decidido em 19/10; pronto para portar ao código.
-4. **Explicação por alternativa:** conteúdo novo, sobretudo no Quiz e no Erro médico, com fonte e revisão médica (pré-requisito do relatório geral).
+3. **Hub da Revisão:** portado ao código em 20/10/2026 ([porte](#porte-para-o-código-20102026-branch-feateconomia-v3-sem-deploy)).
+4. **Explicação por alternativa:** conteúdo novo, sobretudo no Quiz e no Erro médico, com fonte e revisão médica. O relatório geral já funciona sem ela, com a explicação revisada e a da IA.
+5. **Análise escrita pela IA** no relatório de cada carta: hoje é por regras; a versão da IA usa os mesmos números, com cache e o aviso de IA.
+6. **Tempo por etapa no Erro médico:** hoje o tempo é do caso inteiro (do prontuário ao parecer).
 
 ## Experiência e decisões
 
