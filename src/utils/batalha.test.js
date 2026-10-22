@@ -144,3 +144,20 @@ test('história v2: os três ramos começam abertos e cada vitória abre o próx
   assert.equal(historiaLiberada(vazio, 'inexistente'), false);
   assert.equal(vencidasNaHistoria({ concluidos: ['pneumo:1', 'tb:1'], historia: 1 }).size, 2);
 });
+
+test('história v2: a vitória entra em concluidos e não mexe no progresso linear antigo', () => {
+  const ID = '55555555-5555-4555-8555-555555555555';
+  const base = { uid: 'a', role: 'admin', pontuacaoTotal: 0, tickets: 0, xpTopicos: {}, economia: { versao: 3, ultimoNivelPremiado: 1 },
+    dataUltimoLogin: dataLocalHoje(), ofensiva: { dias: 1, ultimoDia: dataLocalHoje() }, missoesDiarias: [missaoDeLogin(1)],
+    batalha: { tutorial: true, historia: 2, concluidos: ['pneumo:1'], descobertas: [] } };
+  const d = obterDoenca('malaria');
+  let p = executarPedidoSupabase(base, { acao: 'iniciarBatalha', modo: 'historia', doencaId: 'malaria', pet: 'pulsa', entradaId: ID }).perfil;
+  const acoes = [{ t: 'hipotese', id: d.id }];
+  let estado = executarBatalha(d, 'pulsa', acoes);
+  while (!estado.fim) { acoes.push(estado.buff && !estado.neutral && !estado.cd.critica ? { t: 'golpe', id: 'critica' } : !estado.cd[d.cura] ? { t: 'golpe', id: d.cura } : { t: 'golpe', id: 'suporte' }); estado = executarBatalha(d, 'pulsa', acoes); }
+  p = executarPedidoSupabase(p, { acao: 'acaoBatalha', entradaId: ID, acoes }).perfil;
+  assert.equal(estado.fim, 'vitoria');
+  assert.equal(p.batalha.historia, 2, 'o progresso linear antigo fica como estava');
+  assert.ok(p.batalha.concluidos.includes('malaria:1'));
+  assert.equal(estadoNaHistoria(p.batalha, 'lepto'), 'disponivel', 'a vitória abre o próximo do ramo, sem marcar como vencido');
+});

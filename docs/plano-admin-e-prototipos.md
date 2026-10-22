@@ -62,7 +62,7 @@ Defeito e regra estão em [revisao-inteligente.md](revisao-inteligente.md#defeit
 2. Protótipo A (hub da Revisão): v1 a v6 feitos em 19/10 (modo foco, trava até o fim, relatório geral em anel, o monstro do cérebro, o modo semanal com fila de ~10 min, missão e aviso de quarta); tudo decidido; pronto para o código.
 3. Protótipo B (Batalha): partes 1 e 2 aprovadas em 19/10, com as cenas refeitas em desenho animado; falta só a revisão médica das cadeias de transmissão.
 4. Código: ferramentas de admin e correção da entrada da Revisão: **feito em 20/10/2026**.
-5. Código: hub da Revisão aprovado (**portado em 20/10/2026**, ver [o porte](revisao-inteligente.md#porte-para-o-código-20102026-branch-feateconomia-v3-sem-deploy)); carta do Paciente DDX (espera as marcações `grave` com revisão médica); Batalha v2.
+5. Código: hub da Revisão aprovado (**portado em 20/10/2026**, ver [o porte](revisao-inteligente.md#porte-para-o-código-20102026-branch-feateconomia-v3-sem-deploy)); carta do Paciente DDX (espera as marcações `grave` com revisão médica); Batalha v2 (**portada em 22/10/2026**, ver [o porte](modo-historia-v2.md#porte-para-o-código-22102026)).
 6. Nova rodada de homologação (módulo 2), agora com os botões de admin.
 
 Nada disso muda o pacote de quinta, 22/10.

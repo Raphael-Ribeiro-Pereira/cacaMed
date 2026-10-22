@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Award, BookOpen, Brain, Check, Clock3, Crosshair, Lock, Medal, RotateCcw, Sparkles, Swords, Target, Ticket, Trophy } from 'lucide-react';
 import { chamarPerfilPlanilha } from '../services/perfilPlanilha';
-import { AGENTE, DOENCAS, MOVES, PETS } from '../utils/batalha';
+import { AGENTE, DOENCAS, MOVES, PETS, vencidasNaHistoria } from '../utils/batalha';
 import { MATERIAS, materiaDoTopico } from '../utils/coroas';
 import { progressoGlobal } from '../utils/economia';
 import { MODOS, dadosModo } from '../utils/modosPerfil';
@@ -202,7 +202,7 @@ export default function Estatisticas({ usuario, dadosUsuario, setTelaAtual, serv
     { t: 'Mão firme', d: '50 acertos no Quiz', ic: Target, v: Math.min(50, n(p.treinos?.quiz?.acertos)), m: 50 },
     { t: 'Plantão perfeito', d: 'Concluir um Plantão médico seguro', ic: Award, v: Math.min(1, n(p.ddx?.seguros)), m: 1 },
     { t: 'Caçador de diagnósticos', d: `Descobrir as ${DOENCAS.length} doenças da Batalha`, ic: Crosshair, v: bt.descobertas.length, m: DOENCAS.length },
-    { t: 'Road to Doctor', d: 'Concluir a História da Batalha', ic: Swords, v: Math.min(DOENCAS.length, n(bt.historia)), m: DOENCAS.length },
+    { t: 'Road to Doctor', d: 'Concluir a História da Batalha', ic: Swords, v: vencidasNaHistoria(bt).size, m: DOENCAS.length },
     { t: 'Sequência de 7', d: '7 cruzadinhas seguidas', ic: Medal, v: Math.min(7, recorde), m: 7 },
   ];
 

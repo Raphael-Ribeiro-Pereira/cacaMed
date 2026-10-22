@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Check, ChevronLeft, FlaskConical, PawPrint, Pointer, Search, Shield, Stethoscope, X, Zap } from 'lucide-react';
 import { AGENTE, MOVES, PET_QUANDO, aplicarAcao, executarBatalha, examesDe, hipotesesDe, obterPet } from '../utils/batalha';
 import { Blob, Doctor, PetArt, Retrato, Species } from './batalhaArte';
+import { CenaTransmissao } from './batalhaHistoria';
 
 const SEM_ANIMACAO = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const MORTO = Symbol('morto');
@@ -68,6 +69,10 @@ export default function BatalhaArena({ entrada, doenca, web, usuario, servicoPer
   const [erroFinal, setErroFinal] = useState('');
   const [folha, setFolha] = useState(null);
   const [novaPista, setNovaPista] = useState(0);
+  // Modo história v2: a cena de transmissão antes da descoberta (só na história e com a cadeia escrita).
+  const historia = entrada.modo === 'historia' && Boolean(d.via && d.cadeia?.length);
+  const [transmissao, setTransmissao] = useState(null);
+  const [onda, setOnda] = useState(0);
   const TUT = useMemo(() => passos(web), [web]);
   const [ti, setTi] = useState(tutorial && !entrada.acoes.length ? 0 : TUT.length);
   const passo = ti < TUT.length ? TUT[ti] : null;
@@ -116,7 +121,8 @@ export default function BatalhaArena({ entrada, doenca, web, usuario, servicoPer
     else if (codigo === 'heal') { setMeFx('heal'); await pausa(600); setMeFx(''); }
     else if (codigo === 'me-hurt') { setFx('shake'); setMeFx('hurt'); await pausa(620); setFx(''); setMeFx(''); }
     else if (codigo === 'scan') { setFx('scan'); await pausa(800); setFx(''); }
-    else if (codigo === 'reveal') { setFx('flash'); await pausa(260); setFoeFx('appear'); await pausa(700); setFx(''); setFoeFx(''); }
+    // Descoberta: a forma real aparece escura, uma onda de luz sai dela e ela ganha cor.
+    else if (codigo === 'reveal') { setFoeFx('descobre'); setOnda(n => n + 1); await pausa(2000); setFoeFx(''); }
     else if (codigo === 'evolve') { setFoeFx('evolve'); await pausa(1700); setFoeFx('evolved'); await pausa(500); setFoeFx(''); }
     else if (codigo === 'pet-cast') { setPetFx('cast'); await tiro('pet'); setPetFx(''); }
     else if (codigo === 'pet-ready') setPetFx('ready');
@@ -169,6 +175,16 @@ export default function BatalhaArena({ entrada, doenca, web, usuario, servicoPer
     let pistasAntes = estadoRef.current.clues.length;
     try {
       for (const ev of r.eventos) {
+        // Antes de o nome aparecer: na história, a cena de como a doença chegou ao paciente; depois, a doença
+        // desconhecida encolhe e some.
+        if (ev.fx === 'reveal') {
+          if (historia) {
+            await dizer('Diagnóstico confirmado! Mas como isso chegou até o paciente?');
+            await new Promise(ok => setTransmissao(() => ok));
+            setTransmissao(null);
+          }
+          setFoeFx('some'); await pausa(600);
+        }
         setVis(ev);
         if (ev.pistas > pistasAntes) { setNovaPista(n => n + 1); pistasAntes = ev.pistas; }
         await efeito(ev.fx);
@@ -273,7 +289,7 @@ export default function BatalhaArena({ entrada, doenca, web, usuario, servicoPer
             <AnimatePresence>{s.buff && <motion.span key="bf" className="buff" initial={{ scale: 0, rotate: -12 }} animate={{ scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: .6 }}><Shield size={12} />{d.buff.nome}</motion.span>}</AnimatePresence>
             {s.neutral && <span className="buff off"><Check size={12} />{d.buff.nome} {d.buff.neutra}</span>}
           </div>
-          <div className="bt-foe"><span className="pad foe-pad" /><div className={`fx ${foeFx}`}><div className="idle">{s.revealed ? <Species id={d.id} evolved={s.evolved} /> : <Blob />}</div></div></div>
+          <div className="bt-foe"><span className="pad foe-pad" /><div className={`fx ${foeFx}`}><div className="idle">{s.revealed ? <Species id={d.id} evolved={s.evolved} /> : <Blob />}</div></div>{onda > 0 && foeFx === 'descobre' && <span key={onda} className="hv-onda-luz" />}</div>
           <div className="bt-me">
             <span className="pad me-pad" />
             <div className={`fx doc ${meFx}`}><Doctor /></div>
@@ -362,5 +378,6 @@ export default function BatalhaArena({ entrada, doenca, web, usuario, servicoPer
         </motion.div>
       </>}
     </AnimatePresence>
+    {transmissao && <CenaTransmissao doenca={d} aoFim={transmissao} />}
   </div>;
 }

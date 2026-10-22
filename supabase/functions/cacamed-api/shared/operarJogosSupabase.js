@@ -5,7 +5,7 @@ import { MAXIMO_RELOGIO_ADMIN } from '../utils/revisaoInteligente.js';
 import { obterCasoPlantao, executarPlantao } from '../utils/plantao.js';
 import { obterAuditoria, avaliarAuditoria } from '../utils/erroMedico.js';
 import { obterRelacao, avaliarRelacao } from '../utils/causaEfeito.js';
-import { DOENCAS, executarBatalha, historiaLiberada, obterDoenca, obterPet, recompensaBatalha, relatorioBatalha, vencidasNaHistoria } from '../utils/batalha.js';
+import { DOENCAS, executarBatalha, historiaLiberada, obterDoenca, obterPet, recompensaBatalha, relatorioBatalha } from '../utils/batalha.js';
 import { escolherDica, lembrarDica, lembrarRespostas, palavraDaMemoria } from '../utils/memoriaPalavras.js';
 import { entradasDaGrade, gerarTabuleiro } from '../utils/motorTabuleiro.js';
 const criarMissoesCruzadinha = criarMissoesDiarias;
@@ -490,9 +490,9 @@ export function operarBatalhaSupabase(perfil, pedido, recibos = [], aleatorio = 
     xpTopicos: { ...perfil.xpTopicos, 'DDX-BATALHA': (Number(perfil.xpTopicos?.['DDX-BATALHA']) || 0) + xp },
     batalha: { ...stats, entrada, descobertas,
       tutorial: stats.tutorial || entrada.modo === 'tutorial',
+      // Os ramos andam em paralelo desde 19/10/2026: as vitórias ficam em `concluidos`; `historia` fica como estava
+      // (o progresso linear antigo, que vencidasNaHistoria ainda conta).
       concluidos,
-      // Quantas doenças da história já foram vencidas (os ramos andam em paralelo desde 19/10/2026).
-      historia: vencidasNaHistoria({ ...stats, concluidos }).size,
       partidas: stats.partidas + 1, vitorias: stats.vitorias + Number(venceu), xp: stats.xp + xp, golpes, pets, ...(buffs ? { buffs } : {}),
       historico: [...stats.historico, { id: entrada.id, modo: entrada.modo, doencaId: doenca.id, versao: doenca.versao, resultado: estado.fim, xp, data: encerradoEm }].slice(-30),
     } };

@@ -1,6 +1,6 @@
 # Batalha diagnóstica: modo história v2 e texto estilo Pokémon
 
-Decidido com o usuário em 09/10/2026. **Nada disto está implementado.** O modo atual (a "Road to Doctor" da tela de Batalha, o relatório e os "Diagnósticos descobertos") continua como descrito em [ddx-batalha-diagnostica.md](ddx-batalha-diagnostica.md) até cada etapa sair. O andamento fica no [cronograma](cronograma-recuperacao-caca-med.md#plano-de-09102026--cadastro-bancos-separados-batalha-e-ddx-público).
+Decidido com o usuário em 09/10/2026. **Portado para o código em 22/10/2026** (branch `feat/economia-v3`, sem deploy; ver [o porte](#porte-para-o-código-22102026)). O modo atual (a "Road to Doctor" da tela de Batalha, o relatório e os "Diagnósticos descobertos") continua como descrito em [ddx-batalha-diagnostica.md](ddx-batalha-diagnostica.md) até cada etapa sair. O andamento fica no [cronograma](cronograma-recuperacao-caca-med.md#plano-de-09102026--cadastro-bancos-separados-batalha-e-ddx-público).
 
 ## Referências e regra de arte
 
@@ -149,6 +149,42 @@ Arquivo: [`docs/prototipos/batalha-historia.html`](prototipos/batalha-historia.h
 13. **Celular em pé:** aviso "Vire o celular" (com um celular girando), que bloqueia a Batalha até virar. O botão "Girar a tela" tenta girar sozinho no Android (tela cheia e trava de orientação). No iPhone o navegador não deixa forçar a orientação, então o aviso pede para virar e, se não girar, desligar o bloqueio de rotação. No celular deitado, as cenas em pixel art se ajustam à altura.
 
 **Para o código (quando aprovar):** a orientação não dá para forçar por tela num site; o manifesto do app instalável vale para o app inteiro. Por isso o aviso fica na entrada da Batalha (e o botão de girar no Android). O padrão dos ramos vira dados no conteúdo: cada capítulo ganha cor, emblema e direção.
+
+## Porte para o código (22/10/2026)
+
+**Conteúdo e regras:**
+- `src/utils/batalhaConteudo.js`: cada doença ganhou `via` (uma das 5 cenas) e `cadeia` (as duas falas abaixo); cada capítulo, `cor`, `icone`, `direcao` e `area`. São só apresentação, então a `versao` das doenças não mudou. No pacote do site, saem com o resto do conteúdo clínico ainda não revisado.
+- **Ramos em paralelo** (`historiaLiberada` e `estadoNaHistoria` em `src/utils/batalha.js`, conferidos também no servidor): os três ramos começam abertos, e cada vitória abre o próximo paciente do mesmo ramo. As vitórias ficam em `concluidos`. O campo `historia` (progresso linear antigo) fica congelado e ainda conta como vitória.
+- Campos opcionais `profilaxia` e `marcante` (texto) em cada doença: o pergaminho já mostra quando existirem. Enquanto não existem, a profilaxia aparece como "ainda não escrita".
+
+**Tela:**
+- `src/components/batalhaHistoria.jsx`: mapa, ficha, cena de entrada, microscópio, cena de transmissão, pergaminho, enciclopédia e aviso de virar o celular.
+- `src/utils/batalhaCenasSvg.js`: as cenas em desenho animado, portadas do protótipo.
+- `src/batalhaHistoria.css`: os estilos.
+- **Ligação:** `BatalhaDiagnostica.jsx` liga tudo; `BatalhaArena.jsx` toca a cena de transmissão e a descoberta nova.
+- **Fluxo:**
+  1. No mapa, o jogador abre a ficha do paciente e toca em "Atender paciente".
+  2. Escolhe o pet.
+  3. Cena de entrada.
+  4. Microscópio.
+  5. Arena. Ao acertar o diagnóstico: "Mas como isso chegou até o paciente?", depois a cena de transmissão e a descoberta.
+  6. Relatório. Na vitória, "Ver o pergaminho"; dele, a volta ao mapa, onde o paciente ganha cor e o próximo do ramo abre com um salto.
+  7. Na derrota, "Voltar ao mapa".
+- **Conferido na homologação local (computador, celular em pé e deitado):**
+  - mapa e ficha;
+  - cena de entrada, com o "Pular" na segunda visita;
+  - microscópio e a cena de transmissão do inseto (malária);
+  - descoberta, vitória, pergaminho e a volta ao mapa com o próximo paciente;
+  - enciclopédia e o aviso de virar o celular.
+
+**Escolhas do agente onde o protótipo não dizia** (o usuário pode trocar):
+1. **O pet é escolhido antes da cena de entrada:** o servidor precisa do pet para abrir a batalha.
+2. **"Pular" da segunda vez em diante**, contado por aparelho.
+3. **A descoberta nova vale em todos os modos:** a doença desconhecida encolhe, a forma real aparece escura, sai a onda de luz e ela ganha cor, também no treino e no Duelo. A cena de transmissão é só da história.
+4. **Botão de revisão do admin no mapa** ("liberar todos os pacientes"), como o mapa antigo tinha, para conferir as 12 doenças.
+5. **A enciclopédia e a lista "Diagnósticos descobertos" do hub abrem o pergaminho** de toda doença descoberta, inclusive pelo Duelo.
+6. **A "Road to Doctor" e o mapa antigo saíram.** A biblioteca de fontes fica na enciclopédia.
+7. **O aviso de virar o celular vale para toda a Batalha** quando o celular está em pé (largura abaixo de 600 px).
 
 ## Cadeias de transmissão (rascunho para revisão médica)
 
