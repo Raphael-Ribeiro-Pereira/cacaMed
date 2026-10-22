@@ -69,6 +69,17 @@ export const obterPet = id => {
   return pet;
 };
 export const capituloDe = id => CAPITULOS.find(c => c.ids.includes(id));
+// Modo história v2 (decidido em 19/10/2026): os três ramos começam abertos e cada vitória abre o próximo paciente do
+// mesmo ramo. Vencidas: as doenças de `concluidos` ("id:versão") e, do progresso linear antigo, as `historia` primeiras.
+export const vencidasNaHistoria = stats => new Set([...(stats?.concluidos || []).map(k => String(k).split(':')[0]),
+  ...DOENCAS.slice(0, Math.max(0, Number(stats?.historia) || 0)).map(d => d.id)]);
+export function historiaLiberada(stats, id) {
+  const cap = capituloDe(id);
+  if (!cap) return false;
+  const i = cap.ids.indexOf(id);
+  return i === 0 || vencidasNaHistoria(stats).has(cap.ids[i - 1]);
+}
+export const estadoNaHistoria = (stats, id) => vencidasNaHistoria(stats).has(id) ? 'vencido' : historiaLiberada(stats, id) ? 'disponivel' : 'bloqueado';
 // Em cada batalha aparecem 5 hipóteses: a certa e 4 diferenciais da própria doença, sempre na mesma ordem.
 export const hipotesesDe = doenca => [doenca.id, ...doenca.dif]
   .sort((a, b) => hash(doenca.id + a) - hash(doenca.id + b))

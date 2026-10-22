@@ -2,6 +2,9 @@
 // (não a página impressa). As citações foram conferidas em 02/10/2026 contra o texto dos arquivos recebidos.
 // Exames numéricos são ilustrativos. Nada foi revisado por médico: `revisado: false` mantém o modo
 // restrito ao administrador. Ao mudar uma doença, aumente a `versao` dela.
+// Modo história v2 (19/10/2026): `via` e `cadeia` (a cena de transmissão e o pergaminho) e, nos capítulos, a cor, o
+// emblema, a direção e a área de cada ramo do mapa. São só apresentação: mudar esse texto não muda a `versao`.
+// As cadeias foram escritas pelo agente e aguardam revisão médica (docs/modo-historia-v2.md).
 export const VERSAO_CONTEUDO_BATALHA = '2026-10-02';
 
 export const FONTES_BATALHA = {
@@ -49,6 +52,10 @@ export const CAPITULOS_BATALHA = [
   "nome": "Primeiro plantão",
   "sub": "Febre e dor no corpo",
   "rede": "Atenção Primária e Urgência",
+  "cor": "#ffb703",
+  "icone": "termometro",
+  "direcao": [1, 0],
+  "area": "Febre aguda no plantão",
   "ids": [
    "pneumo",
    "dengue",
@@ -63,6 +70,10 @@ export const CAPITULOS_BATALHA = [
   "nome": "Vigilância no território",
   "sub": "Doenças que a unidade básica acompanha",
   "rede": "Atenção Primária",
+  "cor": "#5cc8ff",
+  "icone": "casa",
+  "direcao": [0, -1],
+  "area": "Atenção primária",
   "ids": [
    "tb",
    "hanse",
@@ -77,6 +88,10 @@ export const CAPITULOS_BATALHA = [
   "nome": "Do mato ao pronto-socorro",
   "sub": "Zoonoses e urgências infecciosas",
   "rede": "Urgência e Emergência",
+  "cor": "#9be564",
+  "icone": "folha",
+  "direcao": [0, 1],
+  "area": "Zoonoses",
   "ids": [
    "maculosa",
    "leish",
@@ -162,6 +177,11 @@ export const DOENCAS_BATALHA = [
   "capitulo": "Tosse, febre e dor ao respirar",
   "paciente": "Seu Joaquim, 67",
   "queixa": "Febre há 3 dias, tosse e dor do lado direito ao respirar fundo.",
+  "via": "ar",
+  "cadeia": [
+   "A bactéria vive no nariz e na garganta de muita gente saudável, sem causar doença.",
+   "Alguém tossiu perto do paciente e as gotículas chegaram até ele. Às vezes, depois de uma gripe, a bactéria desce para o pulmão."
+  ],
   "ataque": 8,
   "golpes": [
    {
@@ -254,6 +274,11 @@ export const DOENCAS_BATALHA = [
   "capitulo": "Febre e dor no corpo",
   "paciente": "Luana, 24",
   "queixa": "Febre alta há 4 dias, dor no corpo e atrás dos olhos.",
+  "via": "inseto",
+  "cadeia": [
+   "Antes, uma fêmea do mosquito Aedes aegypti picou uma pessoa doente e levou o vírus. Depois de alguns dias, o mosquito ficou pronto para transmitir.",
+   "Agora, ela picou o paciente."
+  ],
   "ataque": 7,
   "golpes": [
    {
@@ -360,6 +385,11 @@ export const DOENCAS_BATALHA = [
   "capitulo": "Febre que vai e volta",
   "paciente": "Tiago, 35",
   "queixa": "Febre com calafrios que vem e volta, cansaço e dor de cabeça.",
+  "via": "inseto",
+  "cadeia": [
+   "Antes, uma fêmea do mosquito Anopheles picou uma pessoa doente e levou o parasita, um protozoário, que amadureceu dentro dela.",
+   "Agora, ela picou o paciente."
+  ],
   "ataque": 7,
   "golpes": [
    {
@@ -460,6 +490,11 @@ export const DOENCAS_BATALHA = [
   "capitulo": "Febre depois da enchente",
   "paciente": "Seu Jorge, 44",
   "queixa": "Febre há 8 dias, dor muscular forte e olhos amarelados depois da enchente.",
+  "via": "agua",
+  "cadeia": [
+   "Ratos e outros animais soltam a bactéria na urina. Na enchente, ela se mistura à água e à lama.",
+   "O paciente andou na água e na lama, e a bactéria entrou pela pele e pelas mucosas."
+  ],
   "ataque": 7,
   "golpes": [
    {
@@ -578,6 +613,11 @@ export const DOENCAS_BATALHA = [
   "capitulo": "Tosse que não passa",
   "paciente": "Seu Carlos, 38",
   "queixa": "Tosse com catarro há 4 semanas, febre à tarde e emagrecimento.",
+  "via": "ar",
+  "cadeia": [
+   "Uma pessoa doente, ainda sem tratamento, solta o bacilo ao tossir, falar ou espirrar, e ele fica no ar de lugares fechados.",
+   "O paciente passou muito tempo nesse ambiente e respirou o bacilo."
+  ],
   "ataque": 7,
   "golpes": [
    {
@@ -691,6 +731,11 @@ export const DOENCAS_BATALHA = [
   "capitulo": "A mancha que não coça",
   "paciente": "Dona Neide, 52",
   "queixa": "Mancha clara no braço que não coça, com a pele ‘dormente’.",
+  "via": "ar",
+  "cadeia": [
+   "A bactéria passa pelas gotículas do nariz e da boca de uma pessoa doente que ainda não se trata. Com o tratamento, ela para de transmitir.",
+   "O paciente conviveu de perto, por muito tempo, com essa pessoa."
+  ],
   "ataque": 6,
   "golpes": [
    {
@@ -808,6 +853,11 @@ export const DOENCAS_BATALHA = [
   "capitulo": "Fígado grande e diarreia",
   "paciente": "Seu Raimundo, 38",
   "queixa": "Diarreia e dor no estômago há meses, com a barriga mais volumosa.",
+  "via": "agua",
+  "cadeia": [
+   "Fezes de pessoas infectadas chegam à água doce. As larvas crescem dentro de um caramujo e saem dele prontas para atravessar a pele.",
+   "O paciente entrou no açude, e as larvas atravessaram a pele das pernas."
+  ],
   "ataque": 6,
   "golpes": [
    {
@@ -913,6 +963,11 @@ export const DOENCAS_BATALHA = [
   "capitulo": "Febre depois do almoço de família",
   "paciente": "Dona Lúcia, 41",
   "queixa": "Febre há 10 dias com o rosto inchado, depois de um encontro de família.",
+  "via": "alimento",
+  "cadeia": [
+   "O barbeiro infectado pode ser moído junto com frutas, como o açaí, ou sujar o alimento com as fezes.",
+   "A família tomou o alimento contaminado, e o parasita entrou pela boca."
+  ],
   "ataque": 7,
   "golpes": [
    {
@@ -1023,6 +1078,11 @@ export const DOENCAS_BATALHA = [
   "capitulo": "Febre depois da fazenda",
   "paciente": "Seu Edson, 33",
   "queixa": "Febre alta, dor de cabeça e no corpo, e manchas que começaram nos punhos e nas palmas.",
+  "via": "carrapato",
+  "cadeia": [
+   "O carrapato-estrela se infecta ao picar animais como capivaras e cavalos.",
+   "No mato, um carrapato se prendeu à pele do paciente e ficou ali por horas, tempo para passar a bactéria."
+  ],
   "ataque": 8,
   "golpes": [
    {
@@ -1140,6 +1200,11 @@ export const DOENCAS_BATALHA = [
   "capitulo": "Febre longa e barriga grande",
   "paciente": "Heitor, 5",
   "queixa": "Febre há dois meses, muito pálido, emagrecendo e com a barriga crescendo.",
+  "via": "inseto",
+  "cadeia": [
+   "Antes, um mosquito-palha (flebótomo) picou um cão infectado, o principal reservatório na cidade, e levou o parasita.",
+   "Agora, ele picou o paciente."
+  ],
   "ataque": 7,
   "golpes": [
    {
@@ -1250,6 +1315,11 @@ export const DOENCAS_BATALHA = [
   "capitulo": "Febre, vômitos e olhos amarelos",
   "paciente": "Seu Osvaldo, 45",
   "queixa": "Febre alta, dor de cabeça, vômitos e agora a pele e os olhos amarelos.",
+  "via": "inseto",
+  "cadeia": [
+   "Na mata, mosquitos silvestres picam macacos infectados e levam o vírus. Os macacos adoecem como nós: eles avisam que o vírus está por perto e não devem ser mortos.",
+   "O paciente, sem vacina, foi picado perto da mata."
+  ],
   "ataque": 8,
   "golpes": [
    {
@@ -1356,6 +1426,11 @@ export const DOENCAS_BATALHA = [
   "capitulo": "Febre e manchas roxas",
   "paciente": "Júlia, 19",
   "queixa": "Febre alta, dor de cabeça intensa, vômitos e manchas roxas pelo corpo, em 12 horas.",
+  "via": "ar",
+  "cadeia": [
+   "A bactéria vive na garganta de pessoas saudáveis, que a carregam sem saber.",
+   "Num contato próximo, as gotículas e a saliva passaram para o paciente."
+  ],
   "ataque": 9,
   "golpes": [
    {

@@ -5,7 +5,7 @@ import { MAXIMO_RELOGIO_ADMIN } from '../utils/revisaoInteligente.js';
 import { obterCasoPlantao, executarPlantao } from '../utils/plantao.js';
 import { obterAuditoria, avaliarAuditoria } from '../utils/erroMedico.js';
 import { obterRelacao, avaliarRelacao } from '../utils/causaEfeito.js';
-import { DOENCAS, executarBatalha, obterDoenca, obterPet, recompensaBatalha, relatorioBatalha } from '../utils/batalha.js';
+import { DOENCAS, executarBatalha, historiaLiberada, obterDoenca, obterPet, recompensaBatalha, relatorioBatalha, vencidasNaHistoria } from '../utils/batalha.js';
 import { escolherDica, lembrarDica, lembrarRespostas, palavraDaMemoria } from '../utils/memoriaPalavras.js';
 import { entradasDaGrade, gerarTabuleiro } from '../utils/motorTabuleiro.js';
 const criarMissoesCruzadinha = criarMissoesDiarias;
@@ -442,7 +442,7 @@ export function operarBatalhaSupabase(perfil, pedido, recibos = [], aleatorio = 
       if (!stats.tutorial) throw new Error('Conclua o treinamento antes.');
       if (modo === 'historia') {
         doenca = obterDoenca(String(pedido.doencaId || ''));
-        if (DOENCAS.indexOf(doenca) > stats.historia && !admin) throw new Error('Esta batalha ainda está bloqueada.');
+        if (!historiaLiberada(stats, doenca.id) && !admin) throw new Error('Esta batalha ainda está bloqueada.');
       } else {
         if ((Number(perfil.tickets) || 0) < 1) throw new Error('Tickets insuficientes. Conclua Cruzadinhas, Quiz ou Verdade ou mentira para ganhar tickets.');
         // Sorteada no servidor: o jogador escolhe o pet sem saber a doença.
@@ -479,19 +479,20 @@ export function operarBatalhaSupabase(perfil, pedido, recibos = [], aleatorio = 
   const venceu = estado.fim === 'vitoria';
   const encerradoEm = new Date().toISOString();
   entrada = { ...entrada, acoes, relatorio: relatorioBatalha(estado, doenca, entrada.pet), linhas, xpConcedido: xp, encerradoEm };
-  const indice = DOENCAS.indexOf(doenca);
   // Contadores do painel de estatísticas: habilidades, pets e buffs enfrentados.
   const golpes = { ...stats.golpes };
   for (const acao of acoes) if (acao.t === 'golpe') golpes[acao.id] = (Number(golpes[acao.id]) || 0) + 1;
   const pet = { esc: 0, ativ: 0, suc: 0, ...stats.pets?.[entrada.pet] };
   const pets = { ...stats.pets, [entrada.pet]: { esc: pet.esc + 1, ativ: pet.ativ + Number(estado.petUsed), suc: pet.suc + Number(estado.petUsed && venceu) } };
   const buffs = estado.evolved ? { ...stats.buffs, [doenca.id]: (Number(stats.buffs?.[doenca.id]) || 0) + 1 } : stats.buffs;
+  const concluidos = entrada.modo === 'historia' && venceu ? [...new Set([...stats.concluidos, chave])] : stats.concluidos;
   return { ...concederRecompensa(perfil, xp),
     xpTopicos: { ...perfil.xpTopicos, 'DDX-BATALHA': (Number(perfil.xpTopicos?.['DDX-BATALHA']) || 0) + xp },
     batalha: { ...stats, entrada, descobertas,
       tutorial: stats.tutorial || entrada.modo === 'tutorial',
-      historia: entrada.modo === 'historia' && venceu && indice === stats.historia ? stats.historia + 1 : stats.historia,
-      concluidos: entrada.modo === 'historia' && venceu ? [...new Set([...stats.concluidos, chave])] : stats.concluidos,
+      concluidos,
+      // Quantas doenças da história já foram vencidas (os ramos andam em paralelo desde 19/10/2026).
+      historia: vencidasNaHistoria({ ...stats, concluidos }).size,
       partidas: stats.partidas + 1, vitorias: stats.vitorias + Number(venceu), xp: stats.xp + xp, golpes, pets, ...(buffs ? { buffs } : {}),
       historico: [...stats.historico, { id: entrada.id, modo: entrada.modo, doencaId: doenca.id, versao: doenca.versao, resultado: estado.fim, xp, data: encerradoEm }].slice(-30),
     } };

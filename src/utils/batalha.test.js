@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CAPITULOS, DOENCAS, EXAMES, HIPOTESES, aplicarAcao, criarEstado, executarBatalha, hipotesesDe, obterDoenca, recompensaBatalha } from './batalha.js';
+import { CAPITULOS, DOENCAS, EXAMES, HIPOTESES, aplicarAcao, criarEstado, estadoNaHistoria, executarBatalha, hipotesesDe, historiaLiberada, obterDoenca, recompensaBatalha, vencidasNaHistoria } from './batalha.js';
 import { FONTES_BATALHA } from './batalhaConteudo.js';
 import { executarPedidoSupabase } from '../shared/executarPedidoSupabase.js';
 import { dataLocalHoje, missaoDeLogin } from './missoes.js';
@@ -130,4 +130,17 @@ test('servidor: duelo cobra um ticket, sorteia a doença e permite abandonar sem
   assert.equal(perfil.batalha.entrada.relatorio.resultado, 'abandono');
   assert.equal(perfil.pontuacaoTotal, 0);
   assert.throws(() => pedir(admin({ tickets: 0, batalha: { tutorial: true } }), { acao: 'iniciarBatalha', modo: 'x1', pet: 'capsi', entradaId: ID }), /Tickets/);
+});
+
+test('história v2: os três ramos começam abertos e cada vitória abre o próximo paciente do mesmo ramo', () => {
+  const vazio = { concluidos: [] };
+  assert.deepEqual(['pneumo', 'tb', 'maculosa'].map(id => estadoNaHistoria(vazio, id)), ['disponivel', 'disponivel', 'disponivel']);
+  assert.equal(estadoNaHistoria(vazio, 'dengue'), 'bloqueado');
+  const umaVitoria = { concluidos: ['pneumo:1'] };
+  assert.equal(estadoNaHistoria(umaVitoria, 'pneumo'), 'vencido');
+  assert.equal(estadoNaHistoria(umaVitoria, 'dengue'), 'disponivel');
+  assert.equal(estadoNaHistoria(umaVitoria, 'hanse'), 'bloqueado', 'outro ramo não anda');
+  assert.equal(estadoNaHistoria({ historia: 2 }, 'malaria'), 'disponivel', 'o progresso linear antigo continua valendo');
+  assert.equal(historiaLiberada(vazio, 'inexistente'), false);
+  assert.equal(vencidasNaHistoria({ concluidos: ['pneumo:1', 'tb:1'], historia: 1 }).size, 2);
 });
